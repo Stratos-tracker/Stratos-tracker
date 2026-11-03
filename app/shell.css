@@ -1,0 +1,707 @@
+/* Stratos application shell: top bar, navigation rail and the home stat strip.
+   Shared by every page so the chrome is identical across the app. Colours come
+   from the page tokens (--surface/--ui/--ui2/--acc/--txt/--mut) with fallbacks
+   for pages that did not define the full set. */
+
+/* Tokens live on :root: the top bar is mounted on pages that are not the grid
+   shell (logbook, pilot), and they need the same measurements there. */
+:root {
+  --shell-bar: 52px;
+  --shell-line: rgba(126, 176, 220, .13);
+  --shell-panel: #070e17;
+  --shell-soft: rgba(255, 255, 255, .045);
+  --shell-ink: #e8f1fa;
+  --shell-mute: #8299ae;
+  --shell-accent: #38bdf8;
+  --shell-good: #34d399;
+  --shell-warn: #f6c453;
+  --shell-font: "Bahnschrift", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────── */
+.tb {
+  grid-row: 1;
+  height: var(--shell-bar);
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  padding-top: env(safe-area-inset-top, 0px);
+  box-sizing: content-box;
+  background: var(--shell-panel);
+  border-bottom: 1px solid var(--shell-line);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+.tb-brand {
+  display: flex; align-items: center; gap: 9px;
+  color: var(--shell-ink); text-decoration: none; font-weight: 750;
+  font-size: 13px; letter-spacing: .16em; white-space: nowrap;
+}
+.tb-brand:hover { text-decoration: none; }
+.tb-mark {
+  width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center;
+  background: var(--shell-soft); border: 1px solid var(--shell-line); color: var(--shell-accent);
+}
+.tb-mark svg { width: 16px; height: 16px; }
+.tb-brand small {
+  display: block; font-size: 8.5px; letter-spacing: .2em; color: var(--shell-mute);
+  font-weight: 600; margin-top: -2px;
+}
+.tb-nav { display: flex; gap: 2px; margin-left: 4px; }
+.tb-nav a {
+  color: var(--shell-mute); font-size: 12px; font-weight: 650; text-decoration: none;
+  padding: 6px 9px; border-radius: 8px; border: 1px solid transparent;
+}
+.tb-nav a:hover { color: var(--shell-ink); background: var(--shell-soft); border-color: var(--shell-line); text-decoration: none; }
+.tb-nav a[aria-current="page"] { color: var(--shell-ink); background: var(--shell-soft); border-color: var(--shell-line); }
+.tb-gap { flex: 1 1 auto; }
+
+.tb .status {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 28px; padding: 0 11px; border-radius: 999px;
+  background: var(--shell-soft); border: 1px solid var(--shell-line);
+  font-size: 11px; font-weight: 650; letter-spacing: .04em;
+  color: var(--shell-mute); white-space: nowrap;
+}
+.tb .status i { width: 7px; height: 7px; border-radius: 50%; background: var(--shell-mute); flex: 0 0 auto; }
+.tb .status.is-live { color: var(--shell-good); }
+.tb .status.is-live i { background: var(--shell-good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--shell-good) 18%, transparent); }
+.tb .status.is-wait { color: var(--shell-warn); }
+.tb .status.is-wait i { background: var(--shell-warn); }
+.tb .status.is-off { color: var(--shell-mute); }
+.tb .status.is-off i { background: var(--shell-mute); }
+
+.tb-perf {
+  height: 28px; padding: 0 8px; border-radius: 8px;
+  background: var(--shell-soft); border: 1px solid var(--shell-line);
+  color: var(--shell-ink); font: inherit; font-size: 11px; font-weight: 600;
+  cursor: pointer;
+}
+.tb-perf:hover { border-color: var(--shell-accent); }
+.tb-actions { display: flex; align-items: center; gap: 6px; }
+.tb-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 30px; min-width: 30px; padding: 0 9px; border-radius: 8px;
+  background: none; border: 1px solid transparent; color: var(--shell-mute);
+  font: inherit; font-size: 12px; font-weight: 600; text-decoration: none; cursor: pointer;
+}
+.tb-btn:hover { color: var(--shell-ink); background: var(--shell-soft); border-color: var(--shell-line); text-decoration: none; }
+.tb-btn svg { width: 16px; height: 16px; }
+/* The EFB sits beside the account controls with a tinted edge so the second
+   product is visible without competing with the five destinations. */
+.tb-efb {
+  color: color-mix(in srgb, var(--shell-accent) 82%, var(--shell-ink));
+  border-color: color-mix(in srgb, var(--shell-accent) 30%, transparent);
+  background: color-mix(in srgb, var(--shell-accent) 10%, transparent);
+}
+.tb-efb:hover {
+  color: var(--shell-ink);
+  border-color: color-mix(in srgb, var(--shell-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--shell-accent) 18%, transparent);
+}
+@media (max-width: 720px) { .tb-efb span { display: none; } }
+.tb-avatar {
+  width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--shell-accent) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--shell-accent) 34%, transparent);
+  color: var(--shell-accent); font-size: 11px; font-weight: 700; letter-spacing: .04em;
+}
+
+/* ── Content column ──────────────────────────────────────────────── */
+.app-shell .app-main {
+  grid-row: 2; display: grid; grid-template-rows: minmax(0, 1fr);
+  min-width: 0; min-height: 0;
+}
+.app-shell .app-main > #app { height: 100%; min-height: 0; }
+
+/* ── Content column ────────────────────────────────────────────────
+   The Flight Deck's map is full bleed: the content cell is one row, and every
+   panel floats over it. The career totals live on the Pilot dashboard. */
+
+/* ── Compact screens ─────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .app-shell { --shell-bar: 48px; }
+  /* Pages without a rail put the five destinations on their own row inside
+     the bar, so the phone keeps the same navigation as the desktop. */
+  .tb { gap: 8px; padding: 0 10px; height: auto; min-height: var(--shell-bar); flex-wrap: wrap; row-gap: 2px; }
+  .tb-nav {
+    order: 20; width: 100%; margin: 0 -10px; padding: 4px 10px 6px;
+    display: flex; justify-content: space-between; gap: 0;
+    overflow-x: auto; scrollbar-width: none;
+    border-top: 1px solid var(--shell-line);
+  }
+  .tb-nav::-webkit-scrollbar { display: none; }
+  /* Five short labels fit the phone width without a sideways scroll. */
+  /* Equal columns, so all five fit; a two-word destination wraps instead of
+     scrolling the row sideways. */
+  .tb-nav a { flex: 1 1 0; min-width: 0; padding: 4px 1px; text-align: center; white-space: normal; line-height: 1.15; font-size: 10px; letter-spacing: 0; border-radius: 5px; }
+  /* An empty search slot and the flex gap only push the actions onto another row. */
+  .tb-search:empty, .tb-gap { display: none; }
+  /* Where the five links are in the bar, the mark is enough identity: the
+     wordmark is what pushes the action cluster onto a second row. */
+  .tb:has(.tb-nav) .tb-brand .tb-name { display: none; }
+  .tb-brand small { font-size: 9.5px; letter-spacing: .04em; max-width: 16ch; }
+  .tb-status .status span { display: none; }
+  .tb-status .status { padding: 0 9px; }
+}
+@media (max-width: 420px) {
+  .tb-perf { display: none; }
+}
+
+/* Nothing animates for people who ask the system to stop it. */
+@media (prefers-reduced-motion: reduce) {
+  .app-shell .rail-item { transition: none; }
+}
+
+
+/* ── Midnight finish ───────────────────────────────────────────────
+   A quieter bar, a denser rail and flatter surfaces. Everything here is
+   static colour and one 120 ms hover fade; nothing paints per frame. */
+.tb {
+  gap: 12px;
+  background: var(--shell-panel);
+  border-bottom: 1px solid var(--shell-line);
+  font-family: var(--shell-font);
+}
+.tb-brand { letter-spacing: .19em; font-size: 12.5px; }
+.tb-mark {
+  width: 26px; height: 26px; border-radius: 8px;
+  background: color-mix(in srgb, var(--shell-accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--shell-accent) 26%, transparent);
+}
+.tb-brand small { font-size: 8px; letter-spacing: .24em; color: #5f768c; }
+.tb-nav a { font-size: 11.5px; padding: 6px 10px; border-radius: 7px; }
+.tb-nav a:hover { background: var(--shell-soft); border-color: transparent; }
+.tb-nav a[aria-current="page"] {
+  color: var(--shell-accent); background: color-mix(in srgb, var(--shell-accent) 11%, transparent);
+  border-color: transparent;
+}
+.tb .status {
+  height: 26px; padding: 0 10px; border-radius: 999px;
+  background: rgba(255, 255, 255, .03); border: 1px solid var(--shell-line);
+  font-size: 10.5px; letter-spacing: .05em; font-weight: 650;
+}
+.tb .status i { width: 6px; height: 6px; }
+.tb .tb-perf {
+  height: 26px; border-radius: 7px; background: rgba(255, 255, 255, .03);
+  border: 1px solid var(--shell-line); font-size: 10.5px; padding: 0 7px;
+  color: var(--shell-ink);
+}
+.tb .tb-avatar {
+  width: 26px; height: 26px;
+  background: color-mix(in srgb, var(--shell-accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--shell-accent) 30%, transparent);
+}
+
+/* Stat strip: quiet labels, crisp numbers. */
+
+/* ═══ Stratos Flight Deck: sidebar and bar finish ═══════════════════
+   Navy and charcoal surfaces, one blue accent, hairline dividers and no
+   glow. Nothing here paints per frame: every rule is static colour and a
+   120 ms hover fade. The page still owns its layout grid. */
+
+:root {
+  --shell-panel: #0a1420;
+  --shell-rail-bg: #0c1826;
+  --shell-line: rgba(122, 160, 205, .14);
+  --shell-line-strong: rgba(122, 160, 205, .22);
+  --shell-soft: rgba(255, 255, 255, .04);
+  --shell-ink: #e7eef7;
+  --shell-mute: #8397ac;
+  --shell-faint: #61748a;
+  --shell-accent: #38bdf8;
+  --shell-accent-soft: rgba(56, 189, 248, .12);
+  --shell-good: #3ecf8e;
+  --shell-warn: #e9c05e;
+  --shell-font: "Bahnschrift", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────── */
+.tb {
+  gap: 14px;
+  padding: 0 14px;
+  background: var(--shell-panel);
+  border-bottom: 1px solid var(--shell-line);
+}
+.tb-brand { letter-spacing: .17em; font-size: 12px; gap: 8px; }
+.tb-mark {
+  width: 26px; height: 26px; border-radius: 7px;
+  background: var(--shell-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--shell-accent) 24%, transparent);
+}
+.tb-brand small { font-size: 7.5px; letter-spacing: .26em; color: var(--shell-faint); }
+
+/* Page identity lives in the bar; the number of headings per screen stays one. */
+.tb-title {
+  display: flex; align-items: baseline; gap: 9px; min-width: 0;
+  padding-left: 14px; margin-left: 2px;
+  border-left: 1px solid var(--shell-line);
+}
+.tb-title b {
+  font-size: 13px; font-weight: 700; letter-spacing: .015em;
+  color: var(--shell-ink); white-space: nowrap;
+}
+.tb-crumb {
+  font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--shell-faint); white-space: nowrap;
+}
+
+.tb .status {
+  height: 26px; padding: 0 10px; border-radius: 999px;
+  background: rgba(255, 255, 255, .03); border: 1px solid var(--shell-line);
+  font-size: 10.5px; font-weight: 650; letter-spacing: .05em;
+}
+.tb .status i { width: 6px; height: 6px; }
+.tb .status.is-live i { box-shadow: none; }
+.tb-perf {
+  height: 26px; border-radius: 7px; padding: 0 8px;
+  background: rgba(255, 255, 255, .03); border: 1px solid var(--shell-line);
+  color: var(--shell-ink); font-size: 10.5px; font-weight: 600;
+}
+.tb-perf:hover { border-color: var(--shell-line-strong); }
+.tb-btn { height: 28px; min-width: 28px; border-radius: 7px; white-space: nowrap; }
+.tb-btn:hover { background: var(--shell-soft); border-color: transparent; }
+.tb-avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--shell-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--shell-accent) 30%, transparent);
+  color: var(--shell-accent); font-size: 10.5px; letter-spacing: .06em;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────── */
+#tabs {
+  background: var(--shell-rail-bg);
+  border-right: 1px solid var(--shell-line);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 12px 10px;
+  gap: 1px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+#tabs::before { display: none; }
+
+#tabs .rail-group {
+  margin: 14px 0 6px;
+  padding: 0 9px;
+  font-size: 9.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--shell-faint);
+  white-space: nowrap;
+}
+#tabs .rail-group:first-child { margin-top: 2px; }
+
+#tabs .tab {
+  position: relative; box-sizing: border-box;
+  display: flex; align-items: center; gap: 10px;
+  min-height: 34px; padding: 0 10px;
+  border: 1px solid transparent; border-radius: 7px;
+  background: none;
+  color: var(--shell-mute);
+  font-size: 12.5px; font-weight: 620; letter-spacing: .01em;
+  text-align: left; text-decoration: none;
+  transition: color .12s ease, background-color .12s ease, border-color .12s ease;
+}
+#tabs .tab:hover:not(:disabled) {
+  color: var(--shell-ink); background: var(--shell-soft);
+  border-color: transparent; box-shadow: none; transform: none;
+}
+#tabs .tab[aria-current="page"] {
+  color: var(--shell-ink); background: var(--shell-accent-soft);
+}
+#tabs .tab[aria-current="page"]::before {
+  content: ""; position: absolute; left: -10px; top: 8px; bottom: 8px;
+  width: 2px; border-radius: 0 2px 2px 0; background: var(--shell-accent);
+}
+#tabs .tab b {
+  flex: 0 0 auto; width: 17px; height: 17px;
+  display: grid; place-items: center; color: currentColor;
+}
+#tabs .tab b svg { width: 17px; height: 17px; }
+#tabs .tab[aria-current="page"] b { color: var(--shell-accent); }
+#tabs .tab span {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 12.5px; letter-spacing: .01em;
+}
+
+#tabs .rail-toggle {
+  margin-top: auto; color: var(--shell-faint);
+  border-top: 0; border-radius: 10px; padding-top: 0;
+  flex: 0 0 auto;
+}
+#tabs .rail-toggle:hover { color: var(--shell-ink); background: none; }
+
+/* Icon-only rail: labels and group headings step aside, tooltips carry the name. */
+.app-shell[data-collapsed="1"] #tabs { padding: 12px 8px; }
+.app-shell[data-collapsed="1"] #tabs .rail-group { display: none; }
+.app-shell[data-collapsed="1"] #tabs .tab { justify-content: center; padding: 0; }
+.app-shell[data-collapsed="1"] #tabs .tab[aria-current="page"]::before { left: -8px; }
+.app-shell[data-collapsed="1"] #tabs .rail-toggle { justify-content: center; }
+
+/* ── Home stat strip: quiet labels, crisp tabular numbers ────────── */
+
+/* ── Compact screens ─────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .tb-title { border-left: 0; padding-left: 0; }
+  .tb-crumb { display: none; }
+  #tabs { padding: 6px; border-right: 0; }
+  #tabs .rail-group { display: none; }
+  #tabs .tab { justify-content: center; padding: 0 6px; }
+  #tabs .tab[aria-current="page"]::before { left: auto; right: 10px; left: 10px; top: auto; bottom: 0; height: 2px; width: auto; border-radius: 2px 2px 0 0; }
+}
+@media (max-width: 560px) {
+  .tb-title { display: none; }
+}
+
+/* The map page marks its active panel with `.act` (see tabHi in index.html);
+   every other page marks the current destination with aria-current. One look. */
+#tabs .tab.act { color: var(--shell-ink); background: var(--shell-accent-soft); }
+#tabs .tab.act b { color: var(--shell-accent); }
+#tabs .tab.act::before {
+  content: ""; position: absolute; left: -10px; top: 8px; bottom: 8px;
+  width: 2px; border-radius: 0 2px 2px 0; background: var(--shell-accent); box-shadow: none;
+}
+#tabs .tab.on b { color: var(--shell-good); }
+.app-shell[data-collapsed="1"] #tabs .tab.act::before { left: -8px; }
+@media (max-width: 767px) {
+  #tabs .tab.act::before {
+    left: 10px; right: 10px; top: auto; bottom: 0; height: 2px; width: auto;
+    border-radius: 2px 2px 0 0;
+  }
+}
+
+/* ═══ Flight Deck chrome: the bar reference ═════════════════════════
+   Brand with a live state line, one centred search, Support Us / Go Premium
+   and the UTC clock on the right, one circular rail on the left. Static colour
+   plus a 110 ms hover fade; nothing here paints per frame. */
+
+.tb { display: flex; align-items: center; gap: 12px; }
+.tb-brand { flex: 0 0 auto; }
+.tb-name { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+
+/* The state line under the wordmark. The map page's own node is moved in here,
+   so the wording matches the feed the page is actually reading. */
+.tb-brand .tb-state {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: none;
+  color: var(--shell-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 30ch;
+}
+.tb-state[data-state="live"] { color: var(--shell-good); }
+.tb-state[data-state="wait"] { color: var(--shell-warn); }
+#appbar [data-shell-status] {
+  background: none; border: 0; box-shadow: none; padding: 0; min-height: 0;
+  font: inherit; font-size: 10px; font-weight: 600; letter-spacing: .05em;
+  color: inherit; cursor: pointer; text-align: left;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#appbar [data-shell-status]:hover { color: var(--shell-ink); }
+
+/* One search. On the rail pages it is centred on the bar itself, not on the
+   space the brand and the right-hand cluster leave over: it floats out of the
+   flow so unequal sides cannot drag it off centre. Pages that carry a nav keep
+   the flex row, and below 1350 px there is no room left to float in anyway. */
+.tb-search { flex: 1 1 auto; display: flex; justify-content: center; min-width: 0; }
+.tb--rail .tb-search {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(520px, 42vw);
+}
+@media (max-width: 1350px) {
+  .tb--rail .tb-search { position: static; transform: none; width: auto; flex: 1 1 auto; }
+}
+#appbar #sb {
+  display: flex; align-items: center; gap: 9px;
+  width: min(520px, 100%); height: 34px; padding: 0 14px;
+  border-radius: 10px; background: rgba(255, 255, 255, .04);
+  border: 1px solid var(--shell-line); box-shadow: none;
+  transition: border-color .11s ease, background-color .11s ease;
+}
+#appbar #sb:focus-within {
+  border-color: var(--shell-accent);
+  background: rgba(255, 255, 255, .06);
+}
+/* The field has no outline of its own, so keyboard focus draws the ring around
+   the whole pill. Clicking still gets the accent border, without the ring. */
+#appbar #sb:has(#q:focus-visible) {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--shell-accent) 45%, transparent);
+}
+#appbar #sb span { font-size: 14px; color: var(--shell-faint); }
+#appbar #q {
+  flex: 1; min-width: 0; padding: 0; border: 0; background: none;
+  color: var(--shell-ink); font: inherit; font-size: 12.5px; outline: none;
+}
+#appbar #q::placeholder { color: var(--shell-faint); }
+
+.tb-status { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; }
+
+/* Support Us / Go Premium: an invitation, not a paywall. */
+.tb-support {
+  display: flex; flex-direction: column; align-items: flex-end; justify-content: center;
+  gap: 0; height: 34px; padding: 0 10px; border-radius: 9px;
+  background: none; border: 1px solid transparent; min-height: 0; cursor: pointer;
+  transition: background-color .11s ease, border-color .11s ease;
+}
+.tb-support span { font-size: 9.5px; font-weight: 600; letter-spacing: .06em; color: var(--shell-mute); }
+.tb-support b { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 750; color: #f0b45e; letter-spacing: .01em; }
+.tb-support b svg { width: 12px; height: 12px; }
+.tb-support:hover { background: var(--shell-soft); border-color: var(--shell-line); }
+
+/* UTC clock: HHMMZ over the date, local time on click. */
+.tb-clock {
+  display: flex; flex-direction: column; align-items: flex-end; justify-content: center;
+  gap: 0; height: 34px; padding: 0 10px; border-radius: 9px;
+  background: none; border: 1px solid transparent; min-height: 0; cursor: pointer;
+  transition: background-color .11s ease, border-color .11s ease;
+}
+.tb-clock b { font-size: 12.5px; font-weight: 700; letter-spacing: .04em; color: var(--shell-ink); font-variant-numeric: tabular-nums; }
+.tb-clock small { font-size: 9px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--shell-faint); }
+.tb-clock:hover { background: var(--shell-soft); border-color: var(--shell-line); }
+
+/* Support dialog: what the button means, and where it goes when configured. */
+.shell-dialog {
+  max-width: 460px; width: calc(100vw - 40px); padding: 20px 22px;
+  border-radius: 16px; border: 1px solid var(--shell-line-strong);
+  background: var(--shell-panel); color: var(--shell-ink);
+  font-family: var(--shell-font); box-shadow: 0 24px 60px rgba(0, 0, 0, .5);
+}
+.shell-dialog::backdrop { background: rgba(3, 7, 12, .62); }
+.shell-dialog h2 { margin: 0 0 8px; font-size: 18px; letter-spacing: .01em; }
+.shell-dialog p { margin: 0 0 12px; font-size: 13px; line-height: 1.55; color: var(--shell-mute); }
+.shell-dialog-note { border-left: 2px solid var(--shell-warn); padding-left: 11px; }
+.shell-dialog-cta {
+  display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 650;
+  color: var(--shell-accent); text-decoration: none;
+}
+.shell-dialog-cta svg { width: 15px; height: 15px; }
+.shell-dialog-row { display: flex; justify-content: flex-end; margin-top: 4px; }
+.shell-dialog-close {
+  padding: 7px 14px; border-radius: 8px; font: inherit; font-size: 12.5px; cursor: pointer;
+  background: var(--shell-soft); border: 1px solid var(--shell-line); color: var(--shell-ink);
+}
+
+/* ═══ Navigation rail: labelled sidebar ↔ icon rail ═════════════════
+   One rail, two widths. The expanded list is the readable form; the icon rail
+   keeps the same 42 px row rhythm so toggling never makes the page jump. The
+   page's own stylesheet still draws the last tab as a phone bottom bar, so all
+   of this is scoped to desktop. */
+@media (min-width: 768px) {
+  .app-shell { --rail: 244px; }
+  /* 60 px keeps a 40 px hit target either side of the icon. */
+  .app-shell[data-collapsed="1"] { --rail: 60px; }
+  /* The rail is a grid column: border-box keeps its padding inside the column. */
+  .app-shell #tabs { box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--shell-line-strong) transparent; }
+  .app-shell #tabs::-webkit-scrollbar { width: 8px; }
+  .app-shell #tabs::-webkit-scrollbar-thumb { background: var(--shell-line-strong); border-radius: 99px; }
+
+  /* Expanded: an icon and a sentence-case label on one row. */
+  #tabs .tab {
+    flex: 0 0 42px; height: 42px; min-height: 42px;
+    flex-direction: row; align-items: center; justify-content: flex-start;
+    gap: 10px; padding: 0 10px;
+  }
+  #tabs .tab span {
+    display: block; flex: 1 1 auto; min-width: 0;
+    font-size: 12.5px; font-weight: 620; letter-spacing: .01em; line-height: 1.2;
+    text-align: left; text-transform: none;
+  }
+  #tabs .tab b, #tabs .tab b svg { width: 18px; height: 18px; }
+  #tabs .tab[aria-current="page"] span, #tabs .tab.act span { font-weight: 650; }
+  #tabs .rail-group { margin: 16px 0 5px; padding: 0 10px; }
+  #tabs .rail-group:first-child { margin-top: 6px; }
+
+  /* The live feed marks its own tab so its icon can carry the state. That is a
+     status hint, never a second "you are here" beside the current page. */
+  #tabs .tab.on:not(.act):not([aria-current="page"]) { background: none; color: var(--shell-mute); }
+  #tabs .tab.on b { color: var(--shell-good); }
+
+  /* The collapse control is a full row when expanded, an icon when collapsed. */
+  #tabs .rail-toggle {
+    position: sticky; bottom: 0; z-index: 1;
+    background: var(--shell-rail-bg);
+    /* The same colour extends over the divider band, so rows scrolling under a
+       pinned control never show through. */
+    box-shadow: 0 -10px 0 var(--shell-rail-bg);
+    justify-content: flex-start; gap: 9px;
+    margin-top: auto; padding: 0 10px; color: var(--shell-mute);
+  }
+  #tabs .rail-toggle span { font-size: 12px; font-weight: 600; }
+  #tabs .rail-toggle::before {
+    content: ""; position: absolute; left: 0; right: 0; top: -10px;
+    height: 1px; background: var(--shell-line);
+  }
+
+  .app-shell[data-collapsed="1"] #tabs { padding: 10px 9px; align-items: center; }
+  /* The icon rail is nameless by design; the tooltip carries the name. */
+  .app-shell[data-collapsed="1"] #tabs .tab span { display: none; }
+  .app-shell[data-collapsed="1"] #tabs .tab {
+    justify-content: center; padding: 0; width: 100%; height: 42px; flex: 0 0 42px;
+    min-height: 42px; gap: 0; border-radius: 10px;
+  }
+  .app-shell[data-collapsed="1"] #tabs .tab b,
+  .app-shell[data-collapsed="1"] #tabs .tab b svg { width: 19px; height: 19px; }
+  .app-shell[data-collapsed="1"] #tabs .tab.act,
+  .app-shell[data-collapsed="1"] #tabs .tab[aria-current="page"] { background: var(--shell-accent-soft); }
+  .app-shell[data-collapsed="1"] #tabs .rail-toggle { justify-content: center; padding: 0; }
+  .app-shell[data-collapsed="1"] #tabs .rail-toggle::before { display: none; }
+  .app-shell[data-collapsed="1"] #tabs .tab.act::before { left: -9px; }
+}
+
+/* The icon rail's only label: a tooltip that follows hover and keyboard focus.
+   A native title never appears for keyboard users, which left the icons nameless. */
+.rail-tip {
+  position: fixed; z-index: 60; transform: translateY(-50%);
+  padding: 6px 10px; border-radius: 8px;
+  background: var(--shell-panel); color: var(--shell-ink);
+  border: 1px solid var(--shell-line-strong);
+  font-family: var(--shell-font); font-size: 11.5px; font-weight: 600; letter-spacing: .01em;
+  white-space: nowrap; pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .42);
+}
+.rail-tip[hidden] { display: none; }
+
+/* ── Keyboard focus ─────────────────────────────────────────────────
+   One ring for the whole chrome, in the shell accent. Rail rows draw it inside
+   the pill so the rail's own scroll box can never clip it. */
+#appbar a:focus-visible,
+#appbar button:focus-visible,
+#appbar input:focus-visible,
+#appbar select:focus-visible,
+#tabs a:focus-visible,
+#tabs button:focus-visible,
+.shell-dialog a:focus-visible,
+.shell-dialog button:focus-visible {
+  outline: 2px solid var(--shell-accent);
+  outline-offset: 2px;
+}
+#tabs .tab:focus-visible { outline-offset: -2px; }
+
+/* ── Narrow desktops ───────────────────────────────────────────────
+   The Pilot pages carry six nav links beside the whole action cluster; below
+   1024 px that row is wider than the window and used to widen the page, which
+   put a horizontal scrollbar under every pilot screen. The bar drops the
+   invitation and the resource profile first (both still live in Settings),
+   then the clock once the nav needs the room. */
+@media (max-width: 1024px) {
+  .tb-support, .tb-perf-wrap { display: none; }
+}
+@media (max-width: 800px) {
+  .tb-clock { display: none; }
+}
+
+/* ── Phone ─────────────────────────────────────────────────────────
+   The bar keeps the brand, the search and the pilot; Support, the clock, the
+   resource profile and the settings shortcut live in the panels there, so the
+   row never has to scroll sideways. These rules sit last so they win against
+   the base rules above, which a media query alone would not. */
+@media (max-width: 767px) {
+  .tb-support, .tb-clock, .tb-perf-wrap { display: none; }
+  /* The phone rail runs along the bottom; a side tooltip has nowhere to go. */
+  .rail-tip { display: none; }
+  .tb-actions a[href*="settings"] { display: none; }
+  #appbar #sb { width: 100%; padding: 0 10px; }
+  /* The bottom rail is the only navigation on a phone, so its labels must
+     stay visible even though the desktop rail opens collapsed. */
+  .app-shell[data-collapsed="1"] #tabs .tab span { display: block; }
+  #tabs .tab span { font-size: 10px; letter-spacing: .01em; }
+  /* The bottom rail scrolls inside its own strip instead of widening the page. */
+  #tabs { overflow-x: auto; overflow-y: hidden; }
+  /* Map controls clear of the card and the bottom rail, not behind either. */
+  #fab { top: auto; bottom: calc(74px + env(safe-area-inset-bottom, 0px)); right: 8px; }
+}
+@media (max-width: 560px) {
+  /* The floating card fills the phone instead of hanging over its edge. */
+  #fc { left: 10px; right: 10px; width: auto; }
+  .fr { font-size: 22px; }
+  .fg b { font-size: 13px; }
+}
+
+/* ── Website download offer ─────────────────────────────────────────
+   Website chrome only: app/js/downloads.js mounts it when the page is the
+   public https site, never in the packaged app or on the bridge's own page.
+   It sits in the free strip at the top of the map, above the cards but below
+   the chart view, and stays out of the map's own controls. */
+.dl-offer {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  box-sizing: border-box;
+  width: min(436px, calc(100% - 24px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 11px 13px 12px;
+  border-radius: 14px;
+  background: linear-gradient(165deg, rgba(16, 30, 43, .97), rgba(7, 14, 23, .98));
+  border: 1px solid rgba(56, 189, 248, .26);
+  box-shadow: 0 14px 38px rgba(3, 9, 16, .46);
+  color: #e8f1fa;
+  font-family: var(--shell-font);
+  text-align: left;
+}
+.dl-offer[hidden], .dl-chip[hidden] { display: none; }
+.dl-top { display: flex; align-items: center; gap: 8px; }
+.dl-eyebrow {
+  font-size: 9.5px; font-weight: 750; letter-spacing: .16em; text-transform: uppercase;
+  color: #38bdf8;
+}
+.dl-ver {
+  font-size: 10px; font-weight: 700; letter-spacing: .04em; color: #9fd8f5;
+  border: 1px solid rgba(56, 189, 248, .3); border-radius: 999px; padding: 1px 6px;
+}
+.dl-sp { flex: 1 1 auto; }
+.dl-x {
+  flex: 0 0 auto; width: 22px; height: 22px; min-height: 0; padding: 0;
+  display: grid; place-items: center; border-radius: 7px; cursor: pointer;
+  background: transparent; border: 1px solid rgba(126, 176, 220, .24);
+  color: #8299ae; font-size: 11px; line-height: 1;
+}
+.dl-x:hover { color: #e8f1fa; border-color: rgba(56, 189, 248, .5); }
+.dl-line { margin: 0; font-size: 11px; line-height: 1.4; color: #8fa7bb; }
+.dl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.dl-btn {
+  display: flex; flex-direction: column; gap: 1px; min-width: 0;
+  padding: 7px 9px; border-radius: 9px; text-decoration: none;
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid rgba(126, 176, 220, .18);
+  color: #e8f1fa;
+}
+.dl-btn:hover { background: rgba(56, 189, 248, .12); border-color: rgba(56, 189, 248, .55); text-decoration: none; }
+.dl-btn:focus-visible { outline: 2px solid #38bdf8; outline-offset: 1px; }
+.dl-plat { font-size: 12px; font-weight: 700; letter-spacing: .01em; color: #e8f1fa; }
+.dl-note { font-size: 9.5px; letter-spacing: .02em; color: #8299ae; }
+.dl-warn { color: #f6c453; }
+.dl-retry {
+  align-self: flex-start; min-height: 0; padding: 6px 12px; border-radius: 8px; cursor: pointer;
+  font-size: 11.5px; font-weight: 700; color: #e8f1fa;
+  background: rgba(56, 189, 248, .14); border: 1px solid rgba(56, 189, 248, .45);
+}
+.dl-retry:hover:not(:disabled) { background: rgba(56, 189, 248, .24); }
+.dl-retry:disabled { opacity: .55; cursor: default; }
+.dl-foot { display: flex; align-items: center; gap: 8px; border-top: 1px solid rgba(126, 176, 220, .12); padding-top: 7px; }
+.dl-all { font-size: 10px; font-weight: 650; letter-spacing: .02em; color: #7fb8d6; text-decoration: none; }
+.dl-all:hover { color: #38bdf8; text-decoration: none; }
+.dl-ver-note { margin-left: auto; font-size: 9px; letter-spacing: .04em; color: #63788b; }
+/* After dismissal: one small control where the panel was. */
+.dl-chip {
+  position: absolute; left: 50%; transform: translateX(-50%); top: 10px; z-index: 6;
+  display: inline-flex; align-items: center; gap: 5px;
+  min-height: 0; padding: 5px 11px; border-radius: 999px; cursor: pointer;
+  font-family: var(--shell-font); font-size: 10.5px; font-weight: 700; letter-spacing: .03em;
+  background: rgba(7, 14, 23, .9); color: #a9c6da;
+  border: 1px solid rgba(56, 189, 248, .24);
+  box-shadow: 0 6px 18px rgba(3, 9, 16, .35);
+}
+.dl-chip:hover { color: #e8f1fa; border-color: rgba(56, 189, 248, .55); }
+.dl-chip:focus-visible { outline: 2px solid #38bdf8; outline-offset: 1px; }
+@media (max-width: 520px) {
+  .dl-offer { top: 8px; width: calc(100% - 16px); padding: 10px 11px 11px; }
+  .dl-grid { gap: 5px; }
+  .dl-btn { padding: 6px 8px; }
+  .dl-chip { top: 8px; }
+}
+/* The chart view is a full-screen document; the offer steps aside for it. */
+.chartmode .dl-offer, .chartmode .dl-chip { display: none !important; }

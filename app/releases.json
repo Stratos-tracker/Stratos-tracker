@@ -1,0 +1,955 @@
+{
+  "schemaVersion": 1,
+  "product": "stratos",
+  "source": "https://github.com/Nyclyy/stratos-tracker",
+  "latest": {
+    "version": "2.1.30",
+    "releasedAt": "2026-10-31",
+    "severity": "normal",
+    "summary": "1 new feature and 1 performance change.",
+    "changelog": {
+      "features": [
+        "Track flight position over the existing X-Plane link and ship the cabin audio."
+      ],
+      "improvements": [],
+      "fixes": [],
+      "performance": [
+        "Ship aircraft photo backups and the rebuilt performance calculator."
+      ],
+      "ui": [],
+      "compatibility": [],
+      "other": [
+        "Publish the 2.1.29 download table.",
+        "Publish the 2.1.28 download table."
+      ]
+    }
+  },
+  "releases": [
+    {
+      "version": "2.1.30",
+      "releasedAt": "2026-10-31",
+      "severity": "normal",
+      "summary": "1 new feature and 1 performance change.",
+      "changelog": {
+        "features": [
+          "Track flight position over the existing X-Plane link and ship the cabin audio."
+        ],
+        "improvements": [],
+        "fixes": [],
+        "performance": [
+          "Ship aircraft photo backups and the rebuilt performance calculator."
+        ],
+        "ui": [],
+        "compatibility": [],
+        "other": [
+          "Publish the 2.1.29 download table.",
+          "Publish the 2.1.28 download table."
+        ]
+      }
+    },
+    {
+      "version": "2.1.29",
+      "releasedAt": "2026-10-29",
+      "severity": "normal",
+      "summary": "Aircraft photos now resolve when only a Mode S address is reported and fall back to a labelled photo of another live aircraft of the same airline and type, while the Performance page is rebuilt around a bundled, versioned aircraft database.",
+      "changelog": {
+        "features": [
+          "Aircraft that report a Mode S address but no registration get their own Planespotters photo, linked to its page and credited to the photographer.",
+          "When the feed reports neither a registration nor an address, the card shows a labelled backup: a random live aircraft of the same airline and type, with its registration named.",
+          "The Performance page loads six bundled profiles — A321-200, A321neo, A340-600, 777-200ER, 777-200LR, 777-300ER — detects a ToLiss or FlightFactor airframe, and allows manual selection."
+        ],
+        "improvements": [
+          "Performance figures name their source and are labelled verified, interpolated, estimated or unavailable; field lengths and V-speeds say they are unavailable rather than being estimated.",
+          "Performance inputs prefill from the simulator and weather and stay editable, with no file import or dataset for a pilot to manage."
+        ],
+        "fixes": [
+          "The tracker reads the ADS-B aircraft type field correctly, so real airliners are no longer rejected as backup photo candidates.",
+          "A failed ADS-B lookup is reported as unavailable instead of being described as no aircraft flying."
+        ],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      },
+      "downloads": {
+        "windows": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.29/Stratos-Setup.exe",
+          "sha256": "0496a01d2c5760dc90a665c01a7c2bfd6b8a3c27401bd888e1fed92aee1611a1",
+          "size": 108115201
+        },
+        "mac-arm64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.29/Stratos-2.1.29-mac-arm64.dmg",
+          "sha256": "062e30a0be41ba264a7b73b334b3de4d17e2979fb92ceec1a72d4d4e63028ed9",
+          "size": 123991241
+        },
+        "mac-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.29/Stratos-2.1.29-mac-x64.dmg",
+          "sha256": "3b7d87356684acd8b5f9a3ca1ad6c19bd37c71e0831e9f7fa9661d0e390babbc",
+          "size": 129298651
+        },
+        "linux-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.29/Stratos-2.1.29-linux-x64.AppImage",
+          "sha256": "25b7a7da229d54f4250b9ded6c7c5ca545a400d342839c43d5110b9d8b6155e4",
+          "size": 144883216
+        }
+      }
+    },
+    {
+      "version": "2.1.28",
+      "releasedAt": "2026-10-28",
+      "severity": "normal",
+      "summary": "Every operator in the EFB's airline picker now wears its own mark — 49 real logos in place of two-letter initials — with the source and licence of each one recorded in the app.",
+      "changelog": {
+        "features": [
+          "Airline appearance draws 49 operators with their own mark on the deck and in the settings preview, up from nine."
+        ],
+        "improvements": [
+          "Marks are single-tone masks, so each logo takes its airline's accent colour instead of bringing its own palette onto the deck.",
+          "The four operators with no freely licensed mark — United, China Eastern, Malaysia and Garuda — keep a designator roundel, and ATTRIBUTION.md names each one and the reason."
+        ],
+        "fixes": [
+          "Ryanair's bundled wordmark masked as a solid block; it now shows the letters.",
+          "WestJet's bundled artwork drew nothing at all; it is replaced with a mark that renders."
+        ],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      },
+      "downloads": {
+        "windows": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.28/Stratos-Setup.exe",
+          "sha256": "32aa406f834faa3be320a9861a64ea76cfcbf2afeda4743f8f3c3397fe47709b",
+          "size": 108086794
+        },
+        "mac-arm64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.28/Stratos-2.1.28-mac-arm64.dmg",
+          "sha256": "bc1b0f8adc6fef791287c55eaffaa98186929e0950fa6f992b7a85f825ecce8f",
+          "size": 123993270
+        },
+        "mac-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.28/Stratos-2.1.28-mac-x64.dmg",
+          "sha256": "daa15b2df124aaf54644571b8fa2314e4ad5432960efa4b38f558728d92857df",
+          "size": 129266073
+        },
+        "linux-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.28/Stratos-2.1.28-linux-x64.AppImage",
+          "sha256": "700acf97fc89f4513d877c91d32b3d3e05e6029b5eda3856c46e6479e1301a1f",
+          "size": 144854815
+        }
+      }
+    },
+    {
+      "version": "2.1.27",
+      "releasedAt": "2026-10-28",
+      "severity": "normal",
+      "summary": "Route lines are drawn the way a chart draws them — great circles, and across the date line instead of over the continents in between — a Pacific plan is fitted across the Pacific with its panel beside it, a shallow globe is sharp on its first still frame, and the EFB's airline picker now covers 53 operators.",
+      "changelog": {
+        "features": [
+          "A fitted view can show a plan that spans half the world: the chart may zoom out past the zoom buttons' own floor, so a Singapore–Newark plan is on one screen at once.",
+          "The route panel narrows the chart rather than covering it, and the plan is fitted into the space the panel leaves as soon as the panel has been measured.",
+          "Airline appearance offers 53 operators — searchable by name, ICAO or IATA code — so most SimBrief callsigns can wear their own colours instead of the Stratos default."
+        ],
+        "improvements": [
+          "Each leg is drawn along its great circle, so a long oceanic leg bends the way it does on a chart instead of running ruler-straight.",
+          "A leg across the date line leaves one edge and re-enters on the other, rather than crossing every continent in between.",
+          "A plan that crosses the date line is centred on the ocean it crosses, not on the Atlantic.",
+          "A chart shifted to make room for a panel keeps looking at the same place: the offset is a drawing shift, not a change in longitude."
+        ],
+        "fixes": [
+          "The Flight Deck's plan line had the same fault and is drawn the same way — sampled, unwrapped at the date line and wrapped at the edges.",
+          "The Navigator no longer frames its first view as though the route panel were closed, which left the plan under the panel until the window was resized."
+        ],
+        "performance": [
+          "The globe is painted whole on the first still frame when its pane fits one frame's sampling — a shallow view is sharp with no settle — while a deep zoom still fills in a band at a time."
+        ],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      },
+      "downloads": {
+        "windows": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.27/Stratos-Setup.exe",
+          "sha256": "79d4be83805b086518094f0ff47798ad8914911f3c37907e4f23d9f7e9666cf8",
+          "size": 107787566
+        },
+        "mac-arm64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.27/Stratos-2.1.27-mac-arm64.dmg",
+          "sha256": "db4c3a8fa21364a771b4e77d4e9af91e0ebe0804949b0bf890b6a8a3f98d851f",
+          "size": 123627533
+        },
+        "mac-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.27/Stratos-2.1.27-mac-x64.dmg",
+          "sha256": "8324dce1fa193ccb5cd1fe64432a0745e885ca2b47834a7c7d8fdbb41b70fe9f",
+          "size": 128951172
+        },
+        "linux-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.27/Stratos-2.1.27-linux-x64.AppImage",
+          "sha256": "06ddb00c8cea882c6036cee727aad689b1eebbcb6f8d998e1cfe33fe6019e107",
+          "size": 144526880
+        }
+      }
+    },
+    {
+      "version": "2.1.26",
+      "releasedAt": "2026-10-27",
+      "severity": "normal",
+      "summary": "The Flight Deck map gets the same globe as the Flight Planner — real NASA imagery and real terrain shading, with the ground under the centre read from the tiles — and the EFB gains a Flight Planner that builds an IFR route from published navigation data.",
+      "changelog": {
+        "features": [
+          "The EFB Flight Planner builds a route on a real chart: choose a departure airport, add waypoints, VORs and fixes that exist in the data around the view, then an arrival, and continue to a separate SID and STAR page.",
+          "Navigation points around the chart come from OurAirports and the simulator’s own navigation data. A tap resolves to the published record nearest it, or to an exact custom coordinate — never a generated W01.",
+          "Globe mode on both maps: the tracker and the planner share one movable globe with four surfaces — bundled outlines that make no request, NASA Blue Marble imagery through NASA GIBS, and terrain from the AWS terrain tiles.",
+          "An explicit Read terrain action reports the ground at the centre with the level and ground resolution it was read at, and how many samples inside the radius actually had data."
+        ],
+        "improvements": [
+          "The tracker’s map gains Projection and Globe surface controls, a camera reset and its own attribution line, and remembers the projection and surface you chose.",
+          "The airline you are flying appears as its real mark in the EFB header and in Settings instead of its code text.",
+          "Reset plan clears the departure, route, procedures, fuel and alternate in one action, keeping your saved plans.",
+          "A georeferenced approach chart still opens flat on the tracker, and closing it returns to the globe with the route reframed."
+        ],
+        "fixes": [
+          "Touching down at the arrival airport no longer erases the trail behind the flight, and the place badge on the globe names a feature on the near side of the sphere.",
+          "Moving a waypoint works on the globe as it does on the flat chart."
+        ],
+        "performance": [
+          "The globe is painted at a level chosen from the sphere instead of from a temporary coarse frame, so turning it no longer fetches and shades a second set of tiles — measured zero image requests during a drag."
+        ],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      },
+      "downloads": {
+        "windows": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.26/Stratos-Setup.exe",
+          "sha256": "98a41ba51ad3675593127e03b1d20057b962259c80a925a4c584c54ba3f28f54",
+          "size": 107755277
+        },
+        "mac-arm64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.26/Stratos-2.1.26-mac-arm64.dmg",
+          "sha256": "3907af2ba70b104acce70dee7d4abe8a8cb7dad75bd583bfa0dc417449672c73",
+          "size": 123613998
+        },
+        "mac-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.26/Stratos-2.1.26-mac-x64.dmg",
+          "sha256": "cb24a788d9835a92cc847c5856f7df1c2796ea665ad8299c713de48c8ea41712",
+          "size": 128911434
+        },
+        "linux-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.26/Stratos-2.1.26-linux-x64.AppImage",
+          "sha256": "5d6cd8a4f5004352fc3ad62e98e2b555e64c9314c9c56ead2eaff13864e35d89",
+          "size": 144489650
+        }
+      }
+    },
+    {
+      "version": "2.1.25",
+      "releasedAt": "2026-10-25",
+      "severity": "normal",
+      "summary": "The bag stands on its own on a tablet, and opening Stratos on a phone no longer strands you on a browser error page when the PC is off.",
+      "changelog": {
+        "features": [
+          "Stratos EFB installs to a tablet home screen as its own app: efb.html has its own manifest, a standalone window, its own id and icons, so an iPad keeps the Flight Deck icon too."
+        ],
+        "improvements": [
+          "Opening Stratos on a phone while the PC is idle now leaves you on the hosted Flight Deck, which works without a simulator, and offers one tap to the map the PC serves instead of claiming the address cannot be reached."
+        ],
+        "fixes": [
+          "The hop to the PC is a deliberate tap, never a navigation on load: an address the browser cannot answer can no longer replace the app with an error page it could not undo.",
+          "Connect on the hosted page opens the PC this phone already knows, or the fixed local name on a first visit, so the pairing page is not looked for again.",
+          "The phone keeps tracking once it is on the PC page: the live stream is same-origin there, reconnects after a suspend, and asks for no code, no URL and no button."
+        ],
+        "performance": [],
+        "ui": [
+          "The offer names the machine it opens, is dismissible for the session, and appears only on a touch screen with a small viewport."
+        ],
+        "compatibility": [],
+        "other": []
+      },
+      "downloads": {
+        "windows": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.25/Stratos-Setup.exe",
+          "sha256": "e0bf15d132edef626f6a84183c29fd57efe435b965e196df9f75eb7763b48459",
+          "size": 107334063
+        },
+        "mac-arm64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.25/Stratos-2.1.25-mac-arm64.dmg",
+          "sha256": "90f6fd799484d6ac9de36c87e4c1b05b8c015801d9d9aa86b18035781bcfd22f",
+          "size": 123128040
+        },
+        "mac-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.25/Stratos-2.1.25-mac-x64.dmg",
+          "sha256": "c41451faaf779b3d413173aaa83257b88560d00947886c463ccce074a0bbd7fa",
+          "size": 128443466
+        },
+        "linux-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.25/Stratos-2.1.25-linux-x64.AppImage",
+          "sha256": "bef7dab26e726f2f050a3bacfe6ad662fa3f1bc77dbf310a988648aee5157237",
+          "size": 144030589
+        }
+      }
+    },
+    {
+      "version": "2.1.24",
+      "releasedAt": "2026-10-25",
+      "severity": "normal",
+      "summary": "Stratos EFB arrives: an iPad-style flight bag beside the tracker, and a flown trail that no longer disappears when the wheels touch down.",
+      "changelog": {
+        "features": [
+          "Stratos EFB is a second product at efb.html: an aviation tablet with a home screen of app icons, a dock, a status bar and a Home control, opened from the Flight Deck rail and the top bar.",
+          "Eleven apps, each with its own layout: Briefing reads the stored SimBrief plan with procedures, runways, times, weights, fuel and the published OFP PDF, and labels where every value came from.",
+          "Charts uses the same FAA d-TPP catalogue, viewer, validity window and Premium rule as the tracker; Weather decodes NOAA METAR and TAF, with runway wind components and the observation time.",
+          "Performance computes pressure and density altitude, ISA deviation and wind components, and reads V-speeds and field lengths only from a validated dataset you import, without extrapolation.",
+          "Weight & Balance, Fuel, Documents, Airports, Live Flight, Logbook and Settings complete the bag over the tracker's own plan, weather, charts, telemetry and logbook."
+        ],
+        "improvements": [
+          "Fuel keeps each category separate, reconciles it against the filed block, unit-checks every value and names a component the plan does not state instead of treating it as zero.",
+          "Weight & Balance checks the plan's weights against the plan's own limits and refuses a centre of gravity without station data: a wrong trim figure is worse than a blank one.",
+          "EFB settings remember the default aircraft, weight unit, wallpaper, motion, SimBrief ID, weather refresh and chart source, and write each change as it is made."
+        ],
+        "fixes": [
+          "A flown trail no longer resets on landing: the rollout record the bridge opens is appended to the flight already drawn, on the Flight Deck, the phone and the EFB. A flight elsewhere still clears it.",
+          "The EFB chart catalogue loads again: the endpoint returns the records themselves, and the app read them as a field of a wrapper, so every airport said its catalogue was empty. KEWR lists 52 documents.",
+          "The EFB no longer draws a tablet inside a tablet: on an iPad, a touch screen or a tight window the screen fills the viewport, and the status bar and dock keep clear of the safe-area insets."
+        ],
+        "performance": [],
+        "ui": [
+          "The EFB home grid is sized like a tablet: six columns in landscape, five in tablet portrait and four on a phone, instead of eleven tiny tiles in a wide frame.",
+          "Every EFB app has its own icon and identity in one dark aviation language, with restrained transitions, a dock, clear empty states and a Home control in each view."
+        ],
+        "compatibility": [],
+        "other": [
+          "Sources and licensing record where each EFB figure comes from, including that no aircraft performance dataset is bundled or licensed and that the app is a simulator planning aid, not certified performance."
+        ]
+      },
+      "downloads": {
+        "windows": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.24/Stratos-Setup.exe",
+          "sha256": "a353f056da97e38a0a3662e3d1df5eac98581b42db176892db30e699fc2fd806",
+          "size": 107327476
+        },
+        "mac-arm64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.24/Stratos-2.1.24-mac-arm64.dmg",
+          "sha256": "646c6560f0b4cc63ee9a408abe986fab0cdf82699593f6c0f0d74cf647b40bb6",
+          "size": 123123906
+        },
+        "mac-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.24/Stratos-2.1.24-mac-x64.dmg",
+          "sha256": "ac2fcdeb6d200278ac2a2fb1d633390f00f491fb11aa122f67c6123e2ac438d8",
+          "size": 128438232
+        },
+        "linux-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.24/Stratos-2.1.24-linux-x64.AppImage",
+          "sha256": "2f1a82f19faf3b2d94a2b6c4412d30b02489f7efc3132d6225456d89a8cf7367",
+          "size": 144022355
+        }
+      }
+    },
+    {
+      "version": "2.1.23",
+      "releasedAt": "2026-10-25",
+      "severity": "normal",
+      "summary": "The phone opens the same map as the PC with your aircraft on it, the flown trail eases through turns, and the flight-plan card shows the cruise level and opens your SimBrief OFP.",
+      "changelog": {
+        "features": [
+          "Opening Stratos on a phone now hands it to the map your PC serves, which pairs itself and shows live telemetry: no code, no address to type and no settings.",
+          "The flight-plan card has an OFP action that opens the SimBrief document for the imported plan. When SimBrief publishes no PDF for a plan, its OFP text is shown in the Flight summary instead of a dead button.",
+          "The compact flight-plan card states the planned cruise level (CRZ FL350) and the distance remaining, so neither needs the card expanded."
+        ],
+        "improvements": [
+          "A flown trail is drawn through rounded corners: a turn curves instead of kinking at the sample rate. The recorded positions are not moved, and the phone's map uses the same curve."
+        ],
+        "fixes": [
+          "The bridge the desktop app starts now listens on the local network, so a phone can reach it; one-tap pairing previously answered that the bridge was reachable only on this PC.",
+          "The packaged bridge now carries the pages it serves, so a phone opening the page the PC provides no longer lands on a 404.",
+          "The phone no longer claims live simulator data while none is arriving: it says which part it is waiting for.",
+          "SimBrief responses that state the planned level as an initial cruise altitude now supply the cruise level instead of leaving it blank."
+        ],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      },
+      "downloads": {
+        "windows": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.23/Stratos-Setup.exe",
+          "sha256": "b9e05919d93c940751b4471acfcb791acf57d3066d04868f4c93b63300690689",
+          "size": 107105001
+        },
+        "mac-arm64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.23/Stratos-2.1.23-mac-arm64.dmg",
+          "sha256": "73607b2910acf77c2bec251f1916fa551ef59ddb9adf528450c5827f040be638",
+          "size": 122882347
+        },
+        "mac-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.23/Stratos-2.1.23-mac-x64.dmg",
+          "sha256": "9a66b7e18cad5ff8a15de8a67aed639b903a2661d65e7a0c95ef7972fd9ec421",
+          "size": 128245604
+        },
+        "linux-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.23/Stratos-2.1.23-linux-x64.AppImage",
+          "sha256": "95cf211e1bb430bebdcfe59ce00a31d26661aed0a9b2942bc07d1fb9867d2e0e",
+          "size": 143768227
+        }
+      }
+    },
+    {
+      "version": "2.1.22",
+      "releasedAt": "2026-10-24",
+      "severity": "normal",
+      "summary": "A calmer, more professional Stratos: five destinations on every page, a real flight-plan card in place of the pencil, and SimBrief SID and STAR that finally import.",
+      "changelog": {
+        "features": [
+          "Five top-level destinations on every page — Flight Deck, Flight Planning, Logbook, Explore and Profile — with Live, Charts, Weather and the data pack one tap away in the map's tools menu.",
+          "The flight-plan card replaces the pencil control: callsign, aircraft, departure and arrival, SID and STAR with their planned runways, cruise, distance and time.",
+          "It expands in place for route, alternate, weather, weights, fuel, passengers, cargo and live progress, and remembers whether it is open.",
+          "Explore gathers Weather, Airports, Charts, Statistics and Live in one hub, linked from its own strip on the Explore page.",
+          "Settings documents the palette on an aviation colour board: cyan, violet, amber, white, charcoal, grey, red and green, each with its HEX and its job, beside real controls and map symbols.",
+          "SimBrief SID and STAR now import from the fields SimBrief actually writes, including plans with Detailed Navlog off, and a shortened ident is restored to the full published name when the plan's IFPS route confirms it."
+        ],
+        "improvements": [
+          "The card keeps the SID above its departure runway and the STAR above its arrival runway, even while the rest of it is minimized.",
+          "The map rail and every page bar share one navigation list, with labels and tooltips shortened to match.",
+          "The flight summary prints ICAO codes instead of airport objects, and a detected callsign takes precedence over the plan's."
+        ],
+        "fixes": [
+          "A SimBrief plan no longer imports with no SID or STAR: they are read from `general`, where SimBrief writes them.",
+          "A plan without navlog fixes still imports its SID, STAR and runways and keeps the current route, instead of failing the whole import.",
+          "The weather search no longer pushes its Search button off a phone screen, and the toolbar no longer overflows at 390 px.",
+          "The Live page marks Explore as its section instead of leaving the bottom bar with no current item."
+        ],
+        "performance": [],
+        "ui": [
+          "Selected waypoints and the night accent now use the exact violet and cyan the colour board documents.",
+          "The flight-plan card uses the shell's panel styling, with a compact summary line and a single control to expand or minimize it."
+        ],
+        "compatibility": [
+          "No storage format change: a plan stored by 2.1.21 gains its SID and STAR from its own route text the next time it is opened."
+        ],
+        "other": []
+      },
+      "downloads": {
+        "windows": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.22/Stratos-Setup.exe",
+          "sha256": "2a21e09c718577edc0038d6c532f4921ce13a5e11164f209bd7ac6c26bd83e48",
+          "size": 105668980
+        },
+        "mac-arm64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.22/Stratos-2.1.22-mac-arm64.dmg",
+          "sha256": "9d2ed361dc497dfcc9d0fbe4ece42fa5f0482d72df84b76950b3bd3a10f36790",
+          "size": 121410681
+        },
+        "mac-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.22/Stratos-2.1.22-mac-x64.dmg",
+          "sha256": "6e96b2333439fac3f0dfa25bfe69d237233e0deb61f798e82424128f06ec15ea",
+          "size": 126745009
+        },
+        "linux-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.22/Stratos-2.1.22-linux-x64.AppImage",
+          "sha256": "6c0c4fde8e35f52ff59971223bc4b0804890927265b2e870a9d327a3ccc08a55",
+          "size": 142317538
+        }
+      }
+    },
+    {
+      "version": "2.1.21",
+      "releasedAt": "2026-10-24",
+      "severity": "normal",
+      "summary": "A phone finds the simulator in one tap, its map shows nearby traffic with the paths Stratos actually recorded, and TOC, TOD and SID/STAR follow the planned route.",
+      "changelog": {
+        "features": [
+          "One tap connects a phone: it finds the PC on the network, pairs itself and reconnects after a Wi-Fi change or a bridge restart. No QR code and no address to type; networks that block multicast keep the relay.",
+          "The phone's live map shows nearby aircraft, from VATSIM and from the traffic the bridge already polls, behind a Traffic layer button. Tap one for its altitude, speed, heading, distance and its recorded path.",
+          "A clicked aircraft's trail is the path Stratos recorded, kept for 45 minutes in the bridge's store: it survives a reload and matches on the PC and the phone, and a relayed phone gets it too.",
+          "The flown path is drawn as a trajectory coloured by height above ground, white on the ground through blue, green, yellow and orange to magenta at the flight levels, for your own aircraft and for any traffic you select.",
+          "SID and STAR paths follow the published legs from the runway to the procedure's last fix, from the simulator's CIFP data or the bundled FAA dataset, adding only the legs the plan does not draw.",
+          "TOC and TOD are placed on the planned route itself, calculated from the cruise level, the climb and descent profile and the constraints available, and they move when the cruise level or route changes."
+        ],
+        "improvements": [
+          "Waypoint markers are separated by meaning, SID, STAR, VOR, en-route fix, airport, TOC and TOD, and a selected point turns purple with a heavier ring on both mouse and touch.",
+          "The aircraft card detects a registration when the feed does not report one, shows a verified photo for it, and collapses to a strip keeping SID and STAR with the departure and arrival runways beneath.",
+          "A trail states how many positions it holds and where they came from, and the phone names the bridge or the relay.",
+          "Procedure data is cached, traffic polling stops while its layer is hidden, and a phone on the relay reuses the desktop's traffic list instead of fetching a second feed."
+        ],
+        "fixes": [
+          "TOC and TOD no longer appear at an arbitrary point: they are interpolated along the ordered route legs and kept inside the segment they belong to.",
+          "A no-position sample, a duplicate or an out-of-order one can no longer bend a traffic trail.",
+          "The phone's status line reports Connecting, Connected, Reconnecting and Disconnected from the actual socket instead of staying on its last label."
+        ],
+        "performance": [
+          "The bridge posts only the trail samples the relay has not seen, at most 400 points every 15 seconds, and stops when the simulator is idle."
+        ],
+        "ui": [
+          "Traffic is drawn as small heading glyphs with the selected aircraft painted last, so a neighbour cannot cover it."
+        ],
+        "compatibility": [
+          "The relay gained /api/traffic. An older relay answers 404 and a hosted phone falls back to VATSIM traffic with no relay trails; desktop builds before this version cannot post traffic to it."
+        ],
+        "other": []
+      },
+      "downloads": {
+        "windows": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.21/Stratos-Setup.exe",
+          "sha256": "87c95fcfca46a008964324e53056753de472939e7a70ed8d96d6efd496424d16",
+          "size": 105650818
+        },
+        "mac-arm64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.21/Stratos-2.1.21-mac-arm64.dmg",
+          "sha256": "611d32b3a9efb6500d235318b6db11bbd5acd0ef7eaa4238ae29239f7ed95dc2",
+          "size": 121382971
+        },
+        "mac-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.21/Stratos-2.1.21-mac-x64.dmg",
+          "sha256": "6a112d365b7392d14202da588b79ce119c5067928ec96935dc5d53b5203bd0f7",
+          "size": 126712639
+        },
+        "linux-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.21/Stratos-2.1.21-linux-x64.AppImage",
+          "sha256": "146a81b361696d017ff93856224f7d64d5acdfff22383ae26aa5d7e41bc451c1",
+          "size": 142297325
+        }
+      }
+    },
+    {
+      "version": "2.1.20",
+      "releasedAt": "2026-10-23",
+      "severity": "normal",
+      "summary": "The route is drawn with chart symbols, long legs carry their heading and distance, and map labels are set in a chart typeface.",
+      "changelog": {
+        "features": [
+          "Route points carry a symbol by meaning: a crosshair for an en-route fix, a star on an airway, a triangle for a SID, a diamond for a STAR, a ring for an airport, amber for a VOR, pink for an NDB, a hexagon otherwise.",
+          "TOC and TOD appear on the plan from the altitudes it already carries, with the cruise level beside them; nothing is added to the route.",
+          "Every leg of 50 nm or more shows its distance and initial heading on a small tag at the midpoint.",
+          "The aircraft card works out a registration the feed did not report, from the simulator's aircraft title, a Mode S address or a VATSIM callsign, and labels it as detected."
+        ],
+        "improvements": [
+          "Airport, waypoint, navaid and traffic labels are set in the shell's condensed technical face with slight tracking, so idents stay readable while covering less of the map.",
+          "Waypoint symbols sit a step above the route band, so a fix reads as a mark on the line rather than a thicker part of it.",
+          "Labels give way instead of overprinting: each is checked against the ones already placed this frame, and a leg tag is dropped rather than laid over a name."
+        ],
+        "fixes": [
+          "The desktop build could not reach the registration database because hexdb.io was missing from its CORS allowlist.",
+          "A build with no registration lookup route said the registration did not exist; it now says the lookup is unavailable there."
+        ],
+        "performance": [],
+        "ui": [
+          "Distance and heading sit horizontally on a tag beside the leg, held clear of the course, instead of being rotated along it."
+        ],
+        "compatibility": [],
+        "other": []
+      },
+      "downloads": {
+        "windows": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.20/Stratos-Setup.exe",
+          "sha256": "8fab0999785277e95a9fc45b4b915e2631276bab79a924fd493330bb97a7e741",
+          "size": 103873424
+        },
+        "mac-arm64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.20/Stratos-2.1.20-mac-arm64.dmg",
+          "sha256": "5f2bd44db8bf1f908f682c1ab47fc6b128906f6030c636aa19d44b87443f1004",
+          "size": 119582696
+        },
+        "mac-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.20/Stratos-2.1.20-mac-x64.dmg",
+          "sha256": "cf46267fe22670ebbf38c5dceeda2106fc3625db94574ef377f1a249509c0b8d",
+          "size": 124922284
+        },
+        "linux-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.20/Stratos-2.1.20-linux-x64.AppImage",
+          "sha256": "e24d892ef2a0ff5b9599bcdcb3bc8bf69d3e7aea7de2a40a3916c26ddd40b5f1",
+          "size": 140366156
+        }
+      }
+    },
+    {
+      "version": "2.1.19",
+      "releasedAt": "2026-10-23",
+      "severity": "normal",
+      "summary": "The aircraft card now tells a missing photo route apart from a registration that has no photo.",
+      "changelog": {
+        "features": [],
+        "improvements": [
+          "The card separates three answers: a photo, no published photo for that registration, and a deployment that cannot look photos up at all."
+        ],
+        "fixes": [
+          "A build without the photo route said no photo was published for the registration; it now says the lookup is unavailable there instead of making a claim it cannot check."
+        ],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      },
+      "downloads": {
+        "windows": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.19/Stratos-Setup.exe",
+          "sha256": "94b26a82d45c2841c28eea3a3f4a51a9e7d5297cbedd9eb376e3787ef03bb5c1",
+          "size": 103857404
+        },
+        "mac-arm64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.19/Stratos-2.1.19-mac-arm64.dmg",
+          "sha256": "21576642dc41a8e4719af3df1aba0ebf4b35e9f9387eab8eec08ed4eb94c0fc6",
+          "size": 119585839
+        },
+        "mac-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.19/Stratos-2.1.19-mac-x64.dmg",
+          "sha256": "cecf383febab39ac31c39b99ce23f0e7facd08b9c1c58878ac0e2c84dfc4c4e5",
+          "size": 124912873
+        },
+        "linux-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.19/Stratos-2.1.19-linux-x64.AppImage",
+          "sha256": "a16851038bff640645761fed90198149e9230381a6909b8f7693abf08ae0f132",
+          "size": 140345714
+        }
+      }
+    },
+    {
+      "version": "2.1.18",
+      "releasedAt": "2026-10-23",
+      "severity": "normal",
+      "summary": "One aircraft card with a spotter photo of its registration, drag it where you want and expand it for the rest.",
+      "changelog": {
+        "features": [
+          "Selecting an aircraft opens one card on the left: a spotter photo of its registration, the callsign, type, altitude, speed, heading and vertical speed. The duplicate panel on the right is gone.",
+          "The card drags by its header, stays where you put it, and expands for registration, type, source, position, trail and the altitude profile.",
+          "The registration is read from the ADS-B feed, or from the simulator for your own aircraft, and matched to a published photo."
+        ],
+        "improvements": [
+          "A registration with no published photo says so, with the aircraft type, instead of showing an unrelated airframe.",
+          "Track, Center and Clear trail moved into the card, so following an aircraft no longer needs a second panel."
+        ],
+        "fixes": [
+          "The aircraft subtitle no longer repeats the type and registration, and names the live feed the position came from.",
+          "VATSIM pilots report no registration, and the card now says it was not reported rather than leaving a blank line."
+        ],
+        "performance": [],
+        "ui": [
+          "Every photo credits its photographer and links to the photo page on Planespotters, whose terms ask for both."
+        ],
+        "compatibility": [
+          "Photos load through the app's own /api/photo route, which the local dev server also serves; the desktop build supplies the header the photo service requires."
+        ],
+        "other": []
+      },
+      "downloads": {
+        "windows": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.18/Stratos-Setup.exe",
+          "sha256": "101cd7c8d20147528a7263e4b212b15dc76f0b6684b7ffddbf78b0142e215f35",
+          "size": 103859294
+        },
+        "mac-arm64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.18/Stratos-2.1.18-mac-arm64.dmg",
+          "sha256": "6ba5fce9dd6e4b715d31b16f658a7bbc72653d7873e87e86798d4f35c2c4887b",
+          "size": 119571795
+        },
+        "mac-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.18/Stratos-2.1.18-mac-x64.dmg",
+          "sha256": "1bbf18f6caf97ced7c5843bb6ac48f20683e3e2b6a6bd7ccd2d9fc9f51eae7fe",
+          "size": 124911006
+        },
+        "linux-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.18/Stratos-2.1.18-linux-x64.AppImage",
+          "sha256": "6e239332a51b474eb0bc503bd0babc152022c06226941ea050db3e197f2d66a6",
+          "size": 140345691
+        }
+      }
+    },
+    {
+      "version": "2.1.17",
+      "releasedAt": "2026-10-23",
+      "severity": "normal",
+      "summary": "Live VATSIM traffic, a flight plan you can edit on its own map, and a flight overview split into tabs.",
+      "changelog": {
+        "features": [
+          "Traffic source in Map layers: VATSIM shows pilots online now with callsign, type, altitude and speed, next to the existing live ADS-B feeds; an airport panel also names the controllers online for that airport.",
+          "The route planner's map now shows the plan: select a waypoint or the leg between two of them for its coordinates, altitude, distances and connected legs, then Move up, Move down, Direct or Delete it, or drag to move it.",
+          "Flight overview is split into Overview, Route, Flight data and Weather, with the aircraft identified by type and matched to a silhouette where artwork exists.",
+          "SimBrief is connected once: Settings saves the Pilot ID or username and every import reuses it."
+        ],
+        "improvements": [
+          "Live ADS-B works from a local copy of the app: npm run dev serves it and fetches the feeds server-side, so the browser's cross-origin rules no longer block them.",
+          "Map layers offers only the traffic sources that answer. Volanta, ElevateX and Flightradar24 were removed instead of sitting there with no data."
+        ],
+        "fixes": [
+          "The first ADS-B mirror was read with the wrong key, so its aircraft were thrown away and every poll fell through to a slower fallback.",
+          "VATSIM pilots appeared only after a delayed retry because the first poll ran before the feed parser had loaded.",
+          "The corner traffic badge said 'aircrafts' for a count of aircraft.",
+          "The desktop build could not read VATSIM's live feed or one ADS-B mirror because those hosts were missing from its CORS allowlist."
+        ],
+        "performance": [],
+        "ui": [
+          "The corner badge counts aircraft or pilots according to the source in use, and names it in the tooltip."
+        ],
+        "compatibility": [],
+        "other": [
+          "npm run dev starts a local server with the same traffic proxy the hosted build uses; a plain static server still serves the files but cannot reach the ADS-B feeds."
+        ]
+      },
+      "downloads": {
+        "windows": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.17/Stratos-Setup.exe",
+          "sha256": "9e9ded5e4a1c7bce0ce8905df3584a35d123eaa08a075765f3a0519aa417f032",
+          "size": 103849832
+        },
+        "mac-arm64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.17/Stratos-2.1.17-mac-arm64.dmg",
+          "sha256": "b3c30e8a4e92a906a35c022a7fdbcdb6c8bada15123cf5dde750138e4e0d825f",
+          "size": 119604464
+        },
+        "mac-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.17/Stratos-2.1.17-mac-x64.dmg",
+          "sha256": "29118881ee16a52a412e98fec35bf22b93b709d3bec8a14fa9c3ddad4d5becf2",
+          "size": 124907396
+        },
+        "linux-x64": {
+          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.17/Stratos-2.1.17-linux-x64.AppImage",
+          "sha256": "a5849aebfeeb75a49cb6a0665773e8cc0a86da70365be6bf9fe25190a957781a",
+          "size": 140333416
+        }
+      }
+    },
+    {
+      "version": "2.1.16",
+      "releasedAt": "2026-10-21",
+      "severity": "normal",
+      "summary": "The flight plan now lives on the Flight Deck map.",
+      "changelog": {
+        "features": [
+          "The planned route draws on the Flight Deck map as soon as it exists, fitted into view and labelled, instead of appearing only on a separate planning map.",
+          "The route has its own layer toggle, so it can be hidden while keeping airports, navaids and traffic on screen."
+        ],
+        "improvements": [
+          "The map and the planner share one active route: adding or clearing waypoints on the map updates the plan, and a route edited in the planner appears on the map without pressing Send to map."
+        ],
+        "fixes": [
+          "A route opened on the map is zoomed to fit, so it no longer loads correctly and still sits off the edge of the last view."
+        ],
+        "performance": [],
+        "ui": [
+          "The planner button is now Show on Flight Deck, because the route is already on the map."
+        ],
+        "compatibility": [],
+        "other": []
+      }
+    },
+    {
+      "version": "2.1.15",
+      "releasedAt": "2026-10-21",
+      "severity": "normal",
+      "summary": "Release notes written for readers, and every release now proves its own Windows update path.",
+      "changelog": {
+        "features": [
+          "Release notes can be written by hand for a version and are validated against the same schema the app reads, so an update describes what actually changed instead of repeating commit subjects."
+        ],
+        "improvements": [
+          "Every published release now runs the Windows update test automatically: it installs the previous build, lets it update itself to the new one, and checks the installed version.",
+          "The release manifest also carries the hand-written notes for older versions, so a build that skips several releases still shows the full history."
+        ],
+        "fixes": [],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      }
+    },
+    {
+      "version": "2.1.14",
+      "releasedAt": "2026-10-20",
+      "severity": "normal",
+      "summary": "Stratos updates itself, plans around real winds, and carries aircraft checklists to a paired phone.",
+      "changelog": {
+        "features": [
+          "Stratos updates itself: the app reads the published release manifest, names what changed, verifies the download against the published checksum and restarts into the new build.",
+          "Route weather in the planner: surface observations for the airports on the route, and winds aloft from the NOAA Aviation Weather Center worked into each leg's winds and cruise temperature.",
+          "Aircraft checklists with per-flight progress, using the same profile and the same ticks on the desktop app and a paired phone.",
+          "Phone pairing shows a QR code in Settings, so a phone opens the bridge URL without typing it."
+        ],
+        "improvements": [
+          "The update centre in Settings reports the installed build, the latest release, the last check and the full release history, with a changelog viewer for every version.",
+          "The chart browser asks a provider registry for each region and says which publisher would be needed, instead of substituting a diagram Stratos has no right to display.",
+          "A paired phone can revoke its own access, and Settings can revoke one phone or all of them."
+        ],
+        "fixes": [
+          "The sticky pilot sub-navigation no longer lets the page heading show through its tabs.",
+          "Long bridge values and data paths wrap instead of widening Settings on a phone."
+        ],
+        "performance": [],
+        "ui": [
+          "Settings groups the update state, release history and simulator details into one page that fits a phone at 390 px."
+        ],
+        "compatibility": [],
+        "other": [
+          "The release workflow generates the manifest from the tagged commits, publishes the notes as the release body, and reads the published assets back to verify them.",
+          "The chart browser check creates its screenshot folder, so it runs from a fresh checkout."
+        ]
+      }
+    },
+    {
+      "version": "2.1.13",
+      "releasedAt": "2026-10-19",
+      "severity": "normal",
+      "summary": "1 change outside the main categories.",
+      "changelog": {
+        "features": [],
+        "improvements": [],
+        "fixes": [],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": [
+          "Open official charts inside Stratos instead of redirecting to ChartFox."
+        ]
+      }
+    },
+    {
+      "version": "2.1.12",
+      "releasedAt": "2026-10-19",
+      "severity": "normal",
+      "summary": "2 changes outside the main categories.",
+      "changelog": {
+        "features": [],
+        "improvements": [],
+        "fixes": [],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": [
+          "Let Settings check for updates without waiting for a quit.",
+          "Update installed Windows builds from GitHub releases."
+        ]
+      }
+    },
+    {
+      "version": "2.1.11",
+      "releasedAt": "2026-10-19",
+      "severity": "normal",
+      "summary": "1 change outside the main categories.",
+      "changelog": {
+        "features": [],
+        "improvements": [],
+        "fixes": [],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": [
+          "Read the world payload line-ending agnostically in the test."
+        ]
+      }
+    },
+    {
+      "version": "2.1.10",
+      "releasedAt": "2026-10-19",
+      "severity": "normal",
+      "summary": "4 interface changes.",
+      "changelog": {
+        "features": [],
+        "improvements": [],
+        "fixes": [],
+        "performance": [],
+        "ui": [
+          "Let the rail tooltip settle before naming an icon.",
+          "Finish the navigation rail: a labelled sidebar and real keyboard focus.",
+          "Finish the Flight Deck chrome: centred search, honest times, phone fit.",
+          "Ship the Flight Deck chrome and an offline Natural Earth world map."
+        ],
+        "compatibility": [],
+        "other": [
+          "Report the measured spread for the world sheet rebuild."
+        ]
+      }
+    },
+    {
+      "version": "2.1.9",
+      "releasedAt": "2026-10-19",
+      "severity": "normal",
+      "summary": "1 change outside the main categories.",
+      "changelog": {
+        "features": [],
+        "improvements": [],
+        "fixes": [],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": [
+          "Place SimBrief TOD on a 3 degree descent path."
+        ]
+      }
+    },
+    {
+      "version": "2.1.8",
+      "releasedAt": "2026-10-18",
+      "severity": "normal",
+      "summary": "1 new feature, 2 fixes and 1 interface change.",
+      "changelog": {
+        "features": [
+          "Add Route Discovery: pick a mood, get three real routes."
+        ],
+        "improvements": [],
+        "fixes": [
+          "Correct the test counts in the report.",
+          "Fix the collapsed grid and repaint the chrome in midnight navy."
+        ],
+        "performance": [],
+        "ui": [
+          "Drop the unused rail component and the dead nav hook."
+        ],
+        "compatibility": [],
+        "other": []
+      }
+    },
+    {
+      "version": "2.1.7",
+      "releasedAt": "2026-10-18",
+      "severity": "normal",
+      "summary": "1 fix and 2 interface changes.",
+      "changelog": {
+        "features": [],
+        "improvements": [],
+        "fixes": [
+          "Stop the map overlays reserving space for the old bottom tab bar."
+        ],
+        "performance": [],
+        "ui": [
+          "Keep the desktop rail from doubling the top bar's border.",
+          "Move navigation into a real sidebar and unify the bar across pages."
+        ],
+        "compatibility": [],
+        "other": [
+          "Give the map page a status bar and a career strip."
+        ]
+      }
+    },
+    {
+      "version": "2.1.6",
+      "releasedAt": "2026-10-18",
+      "severity": "normal",
+      "summary": "1 new feature, 2 fixes and 3 interface changes.",
+      "changelog": {
+        "features": [
+          "Add a multi-station watchlist to the Weather Center."
+        ],
+        "improvements": [],
+        "fixes": [
+          "Correct the documented bridge data path to stratos-desktop.",
+          "Stop the bridge's pairing token from reaching the repository."
+        ],
+        "performance": [],
+        "ui": [
+          "Make the dashboard customizer reorderable by dragging and harden its saved layout.",
+          "Pin tracker panel surface colours per theme instead of computing them with color-mix.",
+          "Collapse the duplicated design tokens into one system and drop per-frame backdrop blur."
+        ],
+        "compatibility": [],
+        "other": [
+          "Check a published release's installer instead of trusting the upload.",
+          "Let the release stamp accept the version already in the repository.",
+          "Embed the full Weather Center in the map's METAR tab.",
+          "Stamp the release tag into the app and bridge version.",
+          "Name the airport in the Weather Center header and share one station request per search.",
+          "Assert that a saved dashboard order and density survive a reload.",
+          "Define card, tile and table surfaces once and alias the page class names to them.",
+          "Label map route points by name, enlarge TOC/TOD, and move SimBrief import into the Route panel."
+        ]
+      }
+    }
+  ]
+}
