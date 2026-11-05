@@ -132,7 +132,7 @@ test('a packaged build can update itself from the GitHub releases', () => {
 
   const config = read('electron-builder.config.cjs');
   assert.match(config, /provider: 'github'/, 'the packaged app-update.yml points at GitHub');
-  assert.match(config, /repo: 'stratos-tracker'/, 'the update provider names this repository');
+  assert.match(config, /repo: 'Stratos-tracker'/, 'the update provider names this repository');
 
   const workflow = read('.github/workflows/release.yml');
   assert.match(workflow, /dist\/latest\.yml/, 'the release ships the updater manifest');

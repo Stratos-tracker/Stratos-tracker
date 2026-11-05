@@ -22,7 +22,7 @@ const draftMode = args.includes('--draft');
 const deep = args.includes('--deep');
 const positional = args.filter(arg => !arg.startsWith('--'));
 
-const REPO = 'Nyclyy/stratos-tracker';
+const REPO = 'Stratos-tracker/Stratos-tracker';
 const MIN_INSTALLER_BYTES = 30 * 1000 * 1000;
 // The installers are also mirrored to our own host (scripts/publish-installers.mjs),
 // and the manifest the site serves then points there. Both are legitimate; any

@@ -18,7 +18,7 @@ const PLATFORMS = {
   'linux-x64': /-linux-x64\.AppImage$/i,
 };
 
-const REPO = 'Nyclyy/stratos-tracker';
+const REPO = 'Stratos-tracker/Stratos-tracker';
 const CACHE_S = 300;
 
 function isWebUrl(value) {

@@ -17,7 +17,7 @@
 
 export const MANIFEST_URLS = [
   'releases.json',
-  'https://github.com/Nyclyy/stratos-tracker/releases/latest/download/releases.json',
+  'https://github.com/Stratos-tracker/Stratos-tracker/releases/latest/download/releases.json',
 ];
 
 export const CACHE_KEY = 'stratos.update.cache';

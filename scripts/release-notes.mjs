@@ -189,7 +189,7 @@ export function emptyManifest() {
   return {
     schemaVersion: 1,
     product: 'stratos',
-    source: 'https://github.com/Nyclyy/stratos-tracker',
+    source: 'https://github.com/Stratos-tracker/Stratos-tracker',
     latest: null,
     releases: [],
   };

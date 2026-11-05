@@ -19,7 +19,7 @@
    canvas keeps running underneath it, and no map state is read or written.
    tests/downloads.test.mjs exercises the decisions and the parsing directly. */
 
-const REPO = 'Nyclyy/stratos-tracker';
+const REPO = 'Stratos-tracker/Stratos-tracker';
 const LATEST_RELEASE_API = `https://api.github.com/repos/${REPO}/releases/latest`;
 const MANIFEST_URL = 'releases.json';
 const DOWNLOAD_ENDPOINT = '/api/download';

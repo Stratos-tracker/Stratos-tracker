@@ -30,7 +30,7 @@ module.exports = {
   // reads: the latest published release, including its latest.yml manifest.
   // The workflow still does the upload itself, so building never publishes.
   publish: [
-    { provider: 'github', owner: 'Nyclyy', repo: 'stratos-tracker', releaseType: 'release' },
+    { provider: 'github', owner: 'Stratos-tracker', repo: 'Stratos-tracker', releaseType: 'release' },
   ],
   files: [
     'electron-main.cjs',
