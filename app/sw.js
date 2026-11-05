@@ -21,6 +21,20 @@ const SHELL = [
   'efb-flightplan.css',
   'manifest-efb.webmanifest',
   'js/efb.js',
+  // The account pages are static, so they open offline too; every account API
+  // call is cross-origin and never touches this cache.
+  'account.html',
+  'login.html',
+  'signup.html',
+  'forgot.html',
+  'reset.html',
+  'verify.html',
+  'account.css',
+  'js/account/api.js',
+  'js/account/ui.js',
+  'js/account/auth.js',
+  'js/account/live.js',
+  'js/account/dashboard.js',
 ];
 
 self.addEventListener('install', event => {

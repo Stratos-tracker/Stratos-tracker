@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Forgot password · Stratos</title>
+<meta name="theme-color" content="#06080a">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="stylesheet" href="stratos-ui.css">
+<link rel="stylesheet" href="account.css">
+<meta name="robots" content="noindex">
+</head>
+<body class="acct" data-auth="forgot">
+<header class="acct-top">
+  <a class="acct-brand" href="index.html">
+    <span data-brand-mark aria-hidden="true"></span>
+    <span>STRATOS<small>ACCOUNT</small></span>
+  </a>
+  <nav class="acct-top__nav">
+    <a href="login.html">Sign in</a>
+  </nav>
+</header>
+
+<main class="acct-main">
+  <section class="auth-card" aria-labelledby="auth-title">
+    <div class="auth-head">
+      <h1 id="auth-title">Reset your password</h1>
+      <p>Enter the email on your account and we will send a link that works once.</p>
+    </div>
+
+    <div class="alert" id="auth-error" role="alert" hidden></div>
+    <div class="alert" id="auth-ok" role="status" hidden></div>
+
+    <form class="auth-form" id="auth-form" novalidate>
+      <div class="field">
+        <label for="email">Email</label>
+        <div class="field__row">
+          <input id="email" name="email" type="email" inputmode="email" autocomplete="email"
+                 spellcheck="false" autocapitalize="none" required placeholder="you@example.com">
+        </div>
+      </div>
+
+      <button class="btn btn--primary btn--wide" id="submit" type="submit">Send reset link</button>
+      <a class="btn btn--ghost btn--wide" id="auth-continue" href="login.html" hidden>Back to sign in</a>
+    </form>
+
+    <p class="auth-alt">Remembered it? <a href="login.html">Sign in</a></p>
+  </section>
+</main>
+
+<p class="auth-foot">
+  For your privacy the page answers the same way whether or not that address has an account.
+</p>
+
+<script type="module" src="js/account/auth.js"></script>
+</body>
+</html>

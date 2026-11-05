@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Create your account · Stratos</title>
+<meta name="description" content="Create a Stratos account to keep your logbook and live flight synchronized across devices.">
+<meta name="theme-color" content="#06080a">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="stylesheet" href="stratos-ui.css">
+<link rel="stylesheet" href="account.css">
+</head>
+<body class="acct" data-auth="signup">
+<header class="acct-top">
+  <a class="acct-brand" href="index.html">
+    <span data-brand-mark aria-hidden="true"></span>
+    <span>STRATOS<small>ACCOUNT</small></span>
+  </a>
+  <nav class="acct-top__nav">
+    <a href="index.html">Flight Deck</a>
+    <a href="login.html">Sign in</a>
+  </nav>
+</header>
+
+<main class="acct-main">
+  <section class="auth-card" aria-labelledby="auth-title">
+    <div class="auth-head">
+      <h1 id="auth-title">Create your account</h1>
+      <p>One account for your PC, iPhone and iPad. Your bridge stays on the PC.</p>
+    </div>
+
+    <div class="alert" id="auth-error" role="alert" hidden></div>
+    <div class="alert" id="auth-ok" role="status" hidden></div>
+
+    <form class="auth-form" id="auth-form" novalidate>
+      <div class="field">
+        <label for="username">Username</label>
+        <div class="field__row">
+          <input id="username" name="username" type="text" autocomplete="nickname"
+                 maxlength="24" required placeholder="How your name appears">
+        </div>
+        <p class="field__hint">2–24 characters. Shown on your dashboard.</p>
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <div class="field__row">
+          <input id="email" name="email" type="email" inputmode="email" autocomplete="email"
+                 spellcheck="false" autocapitalize="none" required placeholder="you@example.com">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="field__row">
+          <input id="password" name="password" type="password" autocomplete="new-password"
+                 required placeholder="At least 10 characters">
+          <button class="field__toggle" type="button" data-toggle-password="password" aria-label="Show password">Show</button>
+        </div>
+        <div class="strength" id="strength" data-score="0">
+          <div class="strength__track" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          <small id="strength-label">At least 10 characters</small>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="password2">Repeat password</label>
+        <div class="field__row">
+          <input id="password2" name="password2" type="password" autocomplete="new-password"
+                 required placeholder="Type it again">
+        </div>
+      </div>
+
+      <button class="btn btn--primary btn--wide" id="submit" type="submit">Create account</button>
+      <a class="btn btn--ghost btn--wide" id="auth-continue" href="account.html" hidden>Open my dashboard</a>
+    </form>
+
+    <p class="auth-alt">Already have an account? <a href="login.html">Sign in</a></p>
+  </section>
+</main>
+
+<p class="auth-foot">
+  Passwords are stored only as a salted PBKDF2 hash. We never see or keep your password.
+</p>
+
+<script type="module" src="js/account/auth.js"></script>
+</body>
+</html>

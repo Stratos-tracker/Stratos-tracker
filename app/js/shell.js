@@ -39,6 +39,7 @@ const ICON = {
   progress: SVG('<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3"/>'),
   checklist: SVG('<path d="M6 3h10a2 2 0 0 1 2 2v16H6a2 2 0 0 1-2-2z"/><path d="M8 8l1.6 1.6L12 7M8 13l1.6 1.6L12 12M14 9h2M14 14h2"/>'),
   phone: SVG('<rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 5.5h2M10.5 18.5h3"/>'),
+  user: SVG('<circle cx="12" cy="8" r="4"/><path d="M4 20.5c0-4.1 3.6-6.5 8-6.5s8 2.4 8 6.5"/>'),
   // The EFB is a second product, not a sixth destination: it gets its own
   // control in the bar so it is one press from every page without changing the
   // five-tab navigation the tracker is built around.
@@ -332,6 +333,19 @@ function bindRailTips(shell, rail) {
   };
 }
 
+/**
+ * The account entry in the bar. One destination either way: a signed-in browser
+ * opens the dashboard, a stranger opens sign-in. The token is read, never
+ * validated here, so the bar cannot claim a session the service would refuse.
+ */
+function accountButton() {
+  let signedIn = false;
+  try { signedIn = Boolean(localStorage.getItem('stratos.account.token')); } catch (_) { /* private mode */ }
+  const href = signedIn ? 'account.html' : 'login.html';
+  const label = signedIn ? 'My Stratos account' : 'Sign in to Stratos';
+  return `<a class="tb-btn" href="${href}" title="${label}" aria-label="${label}">${ICON.user}</a>`;
+}
+
 function buildBar(bar, { theme = false, rail = false, search = null, status = null } = {}) {
   const mode = readMode();
   const title = bar.dataset.title || PAGE_TITLE[S.page] || 'Stratos';
@@ -365,6 +379,7 @@ function buildBar(bar, { theme = false, rail = false, search = null, status = nu
         </select>
       </label>
       <a class="tb-btn" href="pilot.html#settings?panel=phone" title="Connect a phone" aria-label="Connect a phone">${ICON.phone}</a>
+      ${accountButton()}
       <a class="tb-btn" href="pilot.html#settings" title="Settings" aria-label="Settings">${ICON.settings}</a>
       <a class="tb-btn" href="logbook.html#profile" title="Pilot profile" aria-label="Pilot profile"><span class="tb-avatar">PF</span></a>
     </div>`;

@@ -1,27 +1,61 @@
-# Stratos phone relay on Cloudflare Workers.
+# Stratos relay + account API on Cloudflare Workers.
 #
-# Deploy:  npx wrangler deploy --config relay/worker/wrangler.toml
-# Local:   npx wrangler dev    --config relay/worker/wrangler.toml
+# Deploy:  npx wrangler deploy  --config relay/worker/wrangler.toml
+# Local:   npx wrangler dev     --config relay/worker/wrangler.toml --local
 #
-# A Worker plus one Durable Object, both inside the free plan: no card, no
-# sleeping process, and the pairing survives eviction because sessions are kept
-# in Durable Object storage.
+# One Worker, three bindings:
+#   RELAY  the original phone-pairing relay (untouched)
+#   LIVE   one Durable Object per account, for the live flight WebSocket
+#   DB     D1: accounts, sessions, logbook, preferences
+#
+# Setup, once:
+#   npx wrangler d1 create stratos-accounts
+#   # paste the returned database_id below, then:
+#   npx wrangler d1 execute stratos-accounts --remote \
+#     --config relay/worker/wrangler.toml --file relay/worker/schema.sql
+#   npx wrangler secret put EMAIL_API_KEY   # optional: verification/reset mail
 name = "stratos-relay"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
 
 [durable_objects]
-bindings = [{ name = "RELAY", class_name = "RelaySessions" }]
+bindings = [
+  { name = "RELAY", class_name = "RelaySessions" },
+  { name = "LIVE", class_name = "AccountLive" },
+]
 
+# Migrations are append-only: v1 created the relay, v2 adds the live room.
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["RelaySessions"]
 
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["AccountLive"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "stratos-accounts"
+# Created with `npx wrangler d1 create stratos-accounts` (region ENAM).
+database_id = "935237dd-1df2-459e-989d-15b65bea8cb7"
+
 [vars]
 # Bearer tokens are required on every route that carries data, so a wide CORS
-# allow-list is not an exposure. Narrow it to your PWA origin if you prefer:
-#   ALLOWED_ORIGINS = "https://stratos-tracker.com,https://www.stratos-tracker.com"
+# allow-list is not an exposure. Narrow it to your PWA origin if you prefer.
+# The site's own origins and the local dev server are listed so a production
+# deployment can be locked down without editing code.
 ALLOWED_ORIGINS = "*"
+# Where verification and reset links point. Must be the public site.
+APP_BASE_URL = "https://www.stratos-tracker.com"
+# PBKDF2 work factor. workerd refuses anything above 100000, so this is the
+# strongest value the runtime allows. The count is stored per user, so raising it
+# later never breaks accounts created at a lower one.
+PBKDF2_ITERATIONS = "100000"
+# Optional: transactional email for confirmation and reset links. Without a key
+# the API returns the link to the app in development so the flow still works and
+# says plainly that nothing was emailed.
+# EMAIL_FROM = "Stratos <accounts@stratos-tracker.com>"
+# EMAIL_API_URL = "https://api.resend.com/emails"
 
 [observability]
 enabled = true

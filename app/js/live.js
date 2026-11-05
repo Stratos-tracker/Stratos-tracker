@@ -81,6 +81,10 @@ function paintAirline(callsign) {
 
 let relayConfig = readRelay();
 let relayClient = null;
+// The account feed is the third source: a signed-in phone watching the PC through
+// the Stratos account service, with no bridge and no pairing code involved.
+let accountFeed = null;
+let accountSource = false;
 let telemetryClient = null;
 let bridgeSource = false;
 let lastState = null;
@@ -519,6 +523,9 @@ function startRelay() {
   if (!relayConfig) { pairingScreen(); return; }
   stopBridge();
   bridgeSource = false;
+  accountSource = false;
+  accountFeed?.stop();
+  accountFeed = null;
   relayClient?.stop();
   relayClient = new RelayClient({
     url: relayConfig.url,
@@ -555,9 +562,106 @@ function startRelay() {
   render();
 }
 
+/**
+ * Watch this account's live flight instead of a local bridge.
+ *
+ * This is the phone case: no simulator and no bridge on the device, only the
+ * account service. The frame is mapped into the same `lastState` shape the
+ * bridge path uses, so the map, the numbers and the flight strip all render
+ * through the one code path. Returns false when nobody is signed in, so the
+ * caller can fall back to the pairing screen.
+ */
+async function startAccount() {
+  try {
+    const api = await import('./account/api.js');
+    if (!api.savedToken()) return false;
+  } catch (_) {
+    return false;
+  }
+
+  stopBridge();
+  relayClient?.stop();
+  relayClient = null;
+  bridgeSource = false;
+  accountSource = true;
+  accountFeed?.stop();
+
+  view.innerHTML = '<div class="card"><div class="card-head"><h1 style="font-size:20px">Waiting for your PC</h1></div>'
+    + '<p class="muted small">Signed in to your Stratos account. The flight appears here as soon as the bridge on your PC publishes a position — no simulator or bridge is needed on this device.</p></div>';
+  setStatus('connecting', 'Connecting…');
+
+  try {
+    const { LiveFeed } = await import('./account/live.js');
+    accountFeed = new LiveFeed({
+      onState: frame => {
+        if (!frame) return;
+        const snapshot = frame.snapshot;
+        if (!snapshot) {
+          // Nothing has been published yet, or the PC cleared its flight.
+          lastState = null;
+          render();
+          setStatus('waiting', 'Waiting for your PC');
+          return;
+        }
+        const route = snapshot.route || {};
+        const aircraft = snapshot.aircraft || {};
+        lastState = {
+          name: 'Your account',
+          updatedAt: Number(frame.updatedAt) || Date.now(),
+          stale: Boolean(frame.stale),
+          snapshot: {
+            ts: snapshot.ts,
+            phase: snapshot.phase,
+            telemetry: { ...(snapshot.telemetry || {}), callsign: snapshot.callsign || '' },
+            flight: {
+              depAirport: route.dep || '',
+              arrAirport: route.dest || '',
+              callsign: snapshot.callsign || '',
+              aircraft: aircraft.type || '',
+              registration: aircraft.registration || '',
+              cruiseAlt: route.cruiseAlt,
+              progress: route.progress,
+              distanceNm: route.distanceNm,
+              remainingNm: route.remainingNm,
+              etaMinutes: route.etaMinutes,
+            },
+            recent: lastState?.snapshot?.recent || [],
+            stats: lastState?.snapshot?.stats || null,
+          },
+        };
+        render();
+      },
+      onStatus: status => {
+        const labels = {
+          connecting: ['connecting', 'Connecting…'],
+          connected: ['connected', 'Your PC'],
+          polling: ['connected', 'Your PC'],
+          reconnecting: ['connecting', 'Reconnecting…'],
+          offline: ['offline', 'No network'],
+          'signed-out': ['unpaired', 'Signed out'],
+        };
+        const [dot, text] = labels[status.state] || ['connecting', 'Connecting…'];
+        setStatus(dot, text);
+        const note = document.getElementById('connection-note');
+        if (note && status.detail) note.textContent = status.detail;
+      },
+    });
+    await accountFeed.start();
+  } catch (_) {
+    accountSource = false;
+    return false;
+  }
+  startTimer();
+  render();
+  return true;
+}
+
 async function startBridge(base = defaultBridgeBase()) {
   relayClient?.stop();
   relayClient = null;
+  accountFeed?.stop();
+  accountFeed = null;
+  accountSource = false;
   bridgeSource = true;
   try {
     const health = await bridgeHealth(base);
@@ -886,7 +990,10 @@ view.addEventListener('click', event => {
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     relayClient && relayClient.stop();
+    accountFeed && accountFeed.stop();
     telemetryClient && telemetryClient.pause();
+  } else if (accountSource && accountFeed) {
+    accountFeed.start();
   } else if (bridgeSource) {
     telemetryClient?.resume();
   } else if (relayConfig && !relayClient) {
@@ -900,7 +1007,10 @@ document.addEventListener('visibilitychange', () => {
 // A Wi-Fi change or a tunnel is the common way a phone drops the stream. Retry
 // at once when the network returns instead of waiting out the backoff.
 window.addEventListener('online', () => {
-  if (bridgeSource && telemetryClient) {
+  if (accountSource && accountFeed) {
+    accountFeed.stop();
+    accountFeed.start();
+  } else if (bridgeSource && telemetryClient) {
     telemetryClient.open();
   } else if (relayConfig) {
     if (!relayClient) startRelay();
@@ -926,6 +1036,9 @@ window.addEventListener('offline', () => setStatus('offline'));
     return;
   }
   if (saved) { startRelay(); return; }
+  // A signed-in browser on the hosted site has no bridge to reach, so the
+  // account is the source. This is the phone case the whole feature exists for.
+  if (await startAccount()) return;
   if (query.get('code')) {
     const url = query.get('relay') || 'https://';
     if (/^https?:\/\//.test(url) && url !== 'https://') {

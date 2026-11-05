@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sign in · Stratos</title>
+<meta name="description" content="Sign in to Stratos to see your logbook, aircraft and live flight on every device.">
+<meta name="theme-color" content="#06080a">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="stylesheet" href="stratos-ui.css">
+<link rel="stylesheet" href="account.css">
+</head>
+<body class="acct" data-auth="login">
+<header class="acct-top">
+  <a class="acct-brand" href="index.html">
+    <span data-brand-mark aria-hidden="true"></span>
+    <span>STRATOS<small>ACCOUNT</small></span>
+  </a>
+  <nav class="acct-top__nav">
+    <a href="index.html">Flight Deck</a>
+    <a href="signup.html">Create account</a>
+  </nav>
+</header>
+
+<main class="acct-main">
+  <section class="auth-card" aria-labelledby="auth-title">
+    <div class="auth-head">
+      <h1 id="auth-title">Sign in</h1>
+      <p>Your logbook, aircraft and live flight, on every device you fly with.</p>
+    </div>
+
+    <div class="alert" id="auth-error" role="alert" hidden></div>
+    <div class="alert" id="auth-ok" role="status" hidden></div>
+
+    <form class="auth-form" id="auth-form" novalidate>
+      <div class="field">
+        <label for="email">Email</label>
+        <div class="field__row">
+          <input id="email" name="email" type="email" inputmode="email" autocomplete="username"
+                 spellcheck="false" autocapitalize="none" required placeholder="you@example.com">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="field__row">
+          <input id="password" name="password" type="password" autocomplete="current-password"
+                 required placeholder="Your password">
+          <button class="field__toggle" type="button" data-toggle-password="password" aria-label="Show password">Show</button>
+        </div>
+      </div>
+
+      <div class="auth-row">
+        <span>Stays signed in for 30 days</span>
+        <a href="forgot.html">Forgot password?</a>
+      </div>
+
+      <button class="btn btn--primary btn--wide" id="submit" type="submit">Sign in</button>
+      <a class="btn btn--ghost btn--wide" id="auth-continue" href="account.html" hidden>Open my dashboard</a>
+    </form>
+
+    <p class="auth-alt">New to Stratos? <a href="signup.html">Create an account</a></p>
+  </section>
+</main>
+
+<p class="auth-foot">
+  One account keeps your logbook and live flight in step across your PC, phone and tablet.
+  <a href="index.html">Continue without an account</a>
+</p>
+
+<script type="module" src="js/account/auth.js"></script>
+</body>
+</html>

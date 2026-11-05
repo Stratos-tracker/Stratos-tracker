@@ -23,7 +23,12 @@
  *   * The relay accepts data only; there is no command channel back to the PC.
  */
 
-const VERSION = '1.2.0';
+import { handleAccountApi } from './accounts.js';
+import { AccountLive } from './live.js';
+
+export { AccountLive };
+
+const VERSION = '2.0.0';
 const CODE_TTL_MS = 5 * 60 * 1000;
 const READ_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const STALE_MS = 15 * 1000;
@@ -550,7 +555,7 @@ function corsHeaders(allow, origin) {
       headers['Access-Control-Allow-Origin'] = allowed.includes('*') ? '*' : origin;
       headers.Vary = 'Origin';
       headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
-      headers['Access-Control-Allow-Methods'] = 'GET, POST, DELETE, OPTIONS';
+      headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS';
       headers['Access-Control-Max-Age'] = '600';
     }
   }
@@ -562,11 +567,30 @@ function json(status, payload, headers) {
 }
 
 /**
- * The public entry point. Every request is forwarded to the single relay object,
- * which owns all session state; nothing is stored in the Worker itself.
+ * The public entry point.
+ *
+ * Account routes are answered here (D1 plus one live Durable Object per user);
+ * every other route keeps the original contract and is forwarded to the single
+ * relay object unchanged, so the bridge, the phone pairing and their tests are
+ * not affected by the account layer.
  */
 export default {
   async fetch(request, env) {
+    const url = new URL(request.url);
+    const origin = request.headers.get('origin');
+    const allow = env.ALLOWED_ORIGINS || '*';
+    const cors = corsHeaders(allow, origin);
+
+    if (request.method.toUpperCase() === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: cors });
+    }
+    if (!originAllowed(allow, origin)) {
+      return json(403, { ok: false, error: 'Origin not allowed' }, cors);
+    }
+
+    const accountResponse = await handleAccountApi(request, env, url, cors);
+    if (accountResponse) return accountResponse;
+
     const id = env.RELAY.idFromName('stratos-relay');
     const stub = env.RELAY.get(id);
     // Env is not visible inside the Durable Object, so the CORS allow-list

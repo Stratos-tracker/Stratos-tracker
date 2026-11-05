@@ -355,6 +355,66 @@ Browser automation was available for the charts check on Windows (Playwright + C
 - The public ADS-B providers and NOAA can rate-limit or block a network. The UI reports the failure; it does not substitute demo aircraft.
 - The leaked `VERCEL_OIDC_TOKEN` from the old `env.download` file is removed from the working tree, but it remains in Git history. **Revoke that token in Vercel** and do not restore the file. Rewriting history is intentionally left to the repository owner.
 
+## 8a. Accounts, sign-in and cross-device sync
+
+Stratos accounts run on the same Cloudflare Worker that already relays phone traffic. There is no second backend and no second deployment: `relay/worker` gained a D1 database for identity and logbook data and one Durable Object per account for the live flight WebSocket. The existing relay routes, pairing contract, EFB, map, bridge and desktop packaging are untouched.
+
+### How a flight reaches a second device
+
+1. The bridge runs on the PC exactly as before and streams cleaned telemetry on `GET /stream` (server-sent events).
+2. A signed-in Stratos page on the PC reads that stream and posts one small snapshot a second to `POST /api/live/ingest`. This is the only new outbound request; the bridge code did not change.
+3. The Worker authenticates the bearer token, derives the account's Durable Object from the user id, and broadcasts the snapshot to every socket in that account's room.
+4. A phone or tablet signs in, asks for a single-use ticket, opens `/api/live/ws`, and is redrawn from the pushed frames. If a proxy blocks upgrades the same data is polled from `GET /api/live`. No simulator or bridge runs on the phone, and the PC's address is never published.
+
+### Security properties
+
+- Passwords are stored only as PBKDF2-HMAC-SHA256 (salt and iteration count per user). The count is 100,000, which is the maximum workerd accepts — it refuses anything higher at runtime — and it is stored per user so it can be raised later without breaking existing accounts. Nothing reversible is written.
+- Sessions are opaque 32-byte tokens; only their SHA-256 digest is stored, so a database dump cannot be replayed. Tokens slide for 30 days, are listed in Settings, and can be revoked individually or all at once.
+- Every data route requires a bearer token and resolves the account from it. Flights are keyed `(user_id, id)`, so a client-chosen id cannot read or overwrite another account's record; there is no route that accepts a user id from the request.
+- Verification and reset links are single-use and expiring, and used links are refused. `forgot` answers the same way whether or not the address exists.
+- Password change and reset revoke the other sessions. Avatar values must be `https:` URLs or small `data:image` payloads, so a `javascript:` or `data:text/html` URL cannot be stored.
+- The site uses `Authorization: Bearer` in `localStorage` rather than cookies on purpose: the site is on its own domain while the API is on `workers.dev`, and Safari on iPhone blocks third-party cookies on exactly the device this feature targets.
+
+### One-time setup
+
+```bash
+npx wrangler d1 create stratos-accounts
+# put the printed database_id into relay/worker/wrangler.toml, then:
+npx wrangler d1 execute stratos-accounts --remote \
+  --config relay/worker/wrangler.toml --file relay/worker/schema.sql
+npx wrangler secret put EMAIL_API_KEY   # optional, enables real mail
+npx wrangler deploy --config relay/worker/wrangler.toml
+```
+
+The Worker must keep its existing name (`stratos-relay`) so phones that pair today keep working; the account routes live on the same origin under `/api/`.
+
+Email: `EMAIL_API_URL` defaults to Resend's endpoint and `EMAIL_FROM` to `Stratos <accounts@stratos-tracker.com>`. With no `EMAIL_API_KEY` the API does not pretend to send: it returns the link in the response so the flow is testable, and the page says plainly that email is not configured. Set the key before inviting users.
+
+### Pointing the site at the service
+
+The pages default to the deployed relay (`app/js/lib/connect.js` → `DEFAULT_RELAY`), and to `http://127.0.0.1:8788` when opened from localhost. Override without editing code by setting `window.STRATOS_ACCOUNT_API`, or once per browser with `localStorage['stratos.account.api']`.
+
+### What is synchronized
+
+Live position, altitude, ground speed, heading, vertical speed, phase, callsign, aircraft type and registration, departure and destination, route progress and remaining distance, the full logbook (upserted both ways on sign-in), career totals and aircraft statistics computed from those flights, and preferences (`resourceMode`, `livePublish`).
+
+### Verifying a deployment
+
+The backend has an end-to-end suite against a local Worker:
+
+```bash
+npx wrangler dev --config relay/worker/wrangler.toml --local --port 8788
+node relay/worker/test/accounts.mjs http://127.0.0.1:8788
+```
+
+It covers sign-up, duplicate and weak-password refusal, unauthenticated access, verification and reuse, wrong-password refusal, a second device signing in, profile edits, avatar scheme rejection, preference round-trip, logbook idempotency, dashboard totals, two viewers watching one published flight, ticket reuse, position validation, account isolation, password reset invalidating old sessions, the non-revealing forgot response, and logout. Client helpers have unit tests in `tests/account.test.mjs`, part of `npm test`.
+
+### Known limits
+
+- A browser cannot reach an HTTP bridge from an HTTPS page (mixed content), so live publishing starts only when the PC has the tracker open from the bridge itself. The dashboard says when no bridge is reachable instead of pretending to publish.
+- Email delivery requires a provider key; until one is set, links are returned to the requester.
+- Email verification is not enforced as a login gate. An unverified account can sign in and the dashboard shows an “Email not confirmed” chip with a resend control; this is a deliberate trade-off so a mail outage cannot lock a pilot out of their own logbook.
+
 ## 9. Attribution
 
 Map data © OpenStreetMap contributors (ODbL). Airport data from OurAirports (CC0). Weather from NOAA Aviation Weather Center (public domain). The bundled SID/STAR dataset is the FAA's Coded Instrument Flight Procedures (public domain) with runway thresholds from OurAirports (CC0). FAA terminal procedures are fetched from the official site and shown in the in-app viewer; Stratos does not redistribute a chart library. See `SOURCES_AND_LICENSING.md`.

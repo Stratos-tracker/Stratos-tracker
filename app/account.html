@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Stratos · Account</title>
+<meta name="description" content="Your Stratos dashboard: live flight, logbook totals, aircraft and account settings.">
+<meta name="theme-color" content="#06080a">
+<meta name="robots" content="noindex">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="stratos-ui.css">
+<link rel="stylesheet" href="account.css">
+</head>
+<body class="acct" data-account>
+<header class="acct-top">
+  <a class="acct-brand" href="index.html">
+    <span data-brand-mark aria-hidden="true"></span>
+    <span>STRATOS<small>ACCOUNT</small></span>
+  </a>
+  <nav class="acct-top__nav">
+    <a href="index.html">Flight Deck</a>
+    <a href="logbook.html">Logbook</a>
+    <a href="#settings">Settings</a>
+  </nav>
+</header>
+
+<main class="dash" id="dash" hidden>
+  <section class="dash-head">
+    <div class="avatar" data-avatar aria-hidden="true"></div>
+    <div class="dash-head__id">
+      <h1 data-username>—</h1>
+      <p data-email>—</p>
+      <div class="dash-head__meta">
+        <span class="chip" data-verify-chip hidden></span>
+        <span class="chip chip--live" data-live-chip hidden><i></i>Live</span>
+        <span class="chip" data-sync-chip hidden></span>
+      </div>
+    </div>
+    <div class="dash-head__actions">
+      <button class="btn btn--sm" type="button" data-refresh>Refresh</button>
+      <button class="btn btn--sm btn--danger" type="button" data-signout>Sign out</button>
+    </div>
+  </section>
+
+  <div class="alert" id="dash-error" role="alert" hidden></div>
+  <div class="alert" id="dash-ok" role="status" hidden></div>
+
+  <div class="kpis">
+    <div class="kpi"><b data-kpi="flights">—</b><span>Total flights</span></div>
+    <div class="kpi"><b data-kpi="hours">—</b><span>Total hours</span></div>
+    <div class="kpi"><b data-kpi="distance">—</b><span>Distance flown (nm)</span></div>
+    <div class="kpi"><b data-kpi="viewers">—</b><span>Devices watching</span></div>
+  </div>
+
+  <div class="dash-grid">
+    <section class="panel" aria-labelledby="live-head">
+      <div class="panel__head">
+        <h2 id="live-head">Current live flight</h2>
+        <span class="spacer"></span>
+        <span class="chip" data-live-state>No live flight</span>
+      </div>
+      <div class="panel__body">
+        <div id="live-body">
+          <div class="empty"><b>Nothing live right now</b><span>Start the bridge and fly on your PC. This card fills in by itself, on this device and every other one.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="aircraft-head">
+      <div class="panel__head"><h2 id="aircraft-head">Aircraft</h2></div>
+      <div class="panel__body" id="aircraft-body">
+        <div class="empty"><span>No aircraft flown yet.</span></div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="recent-head">
+      <div class="panel__head">
+        <h2 id="recent-head">Recent flights</h2>
+        <span class="spacer"></span>
+        <a href="logbook.html">Full logbook</a>
+      </div>
+      <div class="panel__body panel__body--flush" id="recent-body">
+        <div class="empty"><span>Your logbook is empty.</span></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel" id="settings" aria-labelledby="settings-head">
+    <div class="panel__head">
+      <h2 id="settings-head">Account settings</h2>
+      <span class="spacer"></span>
+      <span class="chip" data-member-since></span>
+    </div>
+    <div class="panel__body">
+      <div class="settings">
+
+        <div>
+          <h3 class="set-heading">Profile</h3>
+          <form class="auth-form" id="profile-form" novalidate>
+            <div class="avatar-pick">
+              <div class="avatar avatar--lg" data-avatar-lg aria-hidden="true"></div>
+              <div>
+                <button class="btn btn--sm" type="button" data-avatar-pick>Change picture</button>
+                <button class="btn btn--sm btn--ghost" type="button" data-avatar-clear>Remove</button>
+                <p class="set-note">PNG, JPEG or WebP. It is cropped square and shrunk on this device before upload.</p>
+              </div>
+              <input type="file" id="avatar-input" accept="image/png,image/jpeg,image/webp">
+            </div>
+            <div class="set-grid">
+              <div class="field">
+                <label for="profile-username">Username</label>
+                <div class="field__row">
+                  <input id="profile-username" type="text" maxlength="24" autocomplete="nickname" required>
+                </div>
+              </div>
+              <div class="field">
+                <label for="profile-email">Email</label>
+                <div class="field__row">
+                  <input id="profile-email" type="email" readonly disabled>
+                </div>
+                <p class="field__hint">Contact support to move an account to a new address.</p>
+              </div>
+            </div>
+            <div class="set-actions">
+              <button class="btn btn--primary" id="profile-save" type="submit">Save profile</button>
+            </div>
+          </form>
+        </div>
+
+        <div>
+          <h3 class="set-heading">Password</h3>
+          <form class="auth-form" id="password-form" novalidate>
+            <div class="set-grid">
+              <div class="field field--wide">
+                <label for="cur-password">Current password</label>
+                <div class="field__row">
+                  <input id="cur-password" type="password" autocomplete="current-password" required>
+                  <button class="field__toggle" type="button" data-toggle-password="cur-password" aria-label="Show password">Show</button>
+                </div>
+              </div>
+              <div class="field">
+                <label for="new-password">New password</label>
+                <div class="field__row">
+                  <input id="new-password" type="password" autocomplete="new-password" required>
+                  <button class="field__toggle" type="button" data-toggle-password="new-password" aria-label="Show password">Show</button>
+                </div>
+                <div class="strength" id="strength" data-score="0">
+                  <div class="strength__track" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+                  <small id="strength-label">At least 10 characters</small>
+                </div>
+              </div>
+              <div class="field">
+                <label for="new-password2">Repeat new password</label>
+                <div class="field__row">
+                  <input id="new-password2" type="password" autocomplete="new-password" required>
+                </div>
+              </div>
+            </div>
+            <div class="set-actions">
+              <button class="btn btn--primary" id="password-save" type="submit">Change password</button>
+              <span class="set-note">Other devices are signed out.</span>
+            </div>
+          </form>
+        </div>
+
+        <div>
+          <h3 class="set-heading">Sync and live publishing</h3>
+          <div class="pref-row">
+            <div>
+              <label for="pref-live">Publish my live flight from this computer</label>
+              <small>Only runs while this page is open and the bridge is reachable.</small>
+            </div>
+            <input id="pref-live" type="checkbox" checked>
+          </div>
+          <div class="pref-row">
+            <div>
+              <label for="pref-resources">Map detail on this device</label>
+              <small>Shared with every device you sign in on.</small>
+            </div>
+            <select id="pref-resources">
+              <option value="auto">Automatic</option>
+              <option value="normal">Normal</option>
+              <option value="low">Low data</option>
+            </select>
+          </div>
+          <div class="set-actions" style="margin-top:14px">
+            <button class="btn btn--sm" id="pref-save" type="button">Save preferences</button>
+            <button class="btn btn--sm btn--ghost" id="sync-now" type="button">Sync logbook now</button>
+            <span class="set-note" id="sync-note"></span>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="set-heading">Signed-in devices</h3>
+          <div class="panel panel__body--flush" style="border-radius:10px">
+            <div class="rows" id="sessions-body">
+              <div class="row"><div class="row__main"><span>Loading…</span></div></div>
+            </div>
+          </div>
+          <div class="set-actions" style="margin-top:12px">
+            <button class="btn btn--sm btn--danger" id="signout-all" type="button">Sign out everywhere</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="dash-foot">
+    <span>Stratos account · <span data-api-host></span></span>
+    <span><a href="index.html">Flight Deck</a> · <a href="efb.html">EFB</a> · <a href="#settings">Settings</a></span>
+  </div>
+</main>
+
+<main class="acct-main" id="boot">
+  <section class="auth-card">
+    <div class="auth-head">
+      <h1>Opening your account</h1>
+      <p>Checking the session on this device…</p>
+    </div>
+    <div class="alert alert--info">If this stays here, <a href="login.html">sign in</a> again.</div>
+  </section>
+</main>
+
+<script type="module" src="js/account/dashboard.js"></script>
+</body>
+</html>
