@@ -3,28 +3,46 @@
   "product": "stratos",
   "source": "https://github.com/Nyclyy/stratos-tracker",
   "latest": {
-    "version": "2.1.30",
-    "releasedAt": "2026-10-31",
+    "version": "2.1.31",
+    "releasedAt": "2026-11-05",
     "severity": "normal",
-    "summary": "1 new feature and 1 performance change.",
+    "summary": "2 new features.",
     "changelog": {
       "features": [
+        "Add the 2.1.30 release entry to the update manifest.",
         "Track flight position over the existing X-Plane link and ship the cabin audio."
       ],
       "improvements": [],
       "fixes": [],
-      "performance": [
-        "Ship aircraft photo backups and the rebuilt performance calculator."
-      ],
+      "performance": [],
       "ui": [],
       "compatibility": [],
       "other": [
-        "Publish the 2.1.29 download table.",
-        "Publish the 2.1.28 download table."
+        "Publish the 2.1.29 download table."
       ]
     }
   },
   "releases": [
+    {
+      "version": "2.1.31",
+      "releasedAt": "2026-11-05",
+      "severity": "normal",
+      "summary": "2 new features.",
+      "changelog": {
+        "features": [
+          "Add the 2.1.30 release entry to the update manifest.",
+          "Track flight position over the existing X-Plane link and ship the cabin audio."
+        ],
+        "improvements": [],
+        "fixes": [],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": [
+          "Publish the 2.1.29 download table."
+        ]
+      }
+    },
     {
       "version": "2.1.30",
       "releasedAt": "2026-10-31",
