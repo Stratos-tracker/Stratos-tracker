@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('stratosDesktop', {
   getUpdateStatus: () => ipcRenderer.invoke('updater:status'),
   checkForUpdates: () => ipcRenderer.invoke('updater:check'),
   installUpdate: () => ipcRenderer.invoke('updater:install'),
+  openUpdateDownload: url => ipcRenderer.invoke('updates:open-download', url),
   // Download progress and verification results, pushed from the main process.
   // The payload is the same status object as getUpdateStatus().
   onUpdateProgress: callback => {

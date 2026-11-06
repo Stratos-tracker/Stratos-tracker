@@ -11,6 +11,8 @@ import {
   CHECK_INTERVAL_MS,
   checkForUpdate,
   changelogGroups,
+  downloadFor,
+  platformKey,
   formatChecked,
   formatDate,
   isRequired,
@@ -151,7 +153,7 @@ function el(tag, className, text) {
 }
 
 /** A dialog shell shared by the announcement and the changelog viewer. */
-function mountDialog({ label, onClose }) {
+function mountDialog({ label, onClose, dismissible = true }) {
   ensureStyles();
   const backdrop = el('div', 'su-backdrop');
   const modal = el('div', 'su-modal');
@@ -171,7 +173,14 @@ function mountDialog({ label, onClose }) {
     onClose?.();
   };
   const onKey = event => {
-    if (event.key === 'Escape') { event.stopPropagation(); close(); return; }
+    if (event.key === 'Escape') {
+      event.stopPropagation();
+      // A required update has no dismiss affordance: Escape must not be a
+      // quieter Remind me later.
+      if (dismissible) close();
+      else event.preventDefault();
+      return;
+    }
     // Keep focus inside the dialog while it is open.
     if (event.key !== 'Tab') return;
     const focusable = [...modal.querySelectorAll('button,a[href],input,select,[tabindex]:not([tabindex="-1"])')]
@@ -235,12 +244,12 @@ export function showUpdateDialog({
   onLater,
   onDetails,
   onClose,
-  applyLabel = 'Update now',
+  applyLabel = 'Update Now',
   laterLabel = 'Remind me later',
 } = {}) {
-  const { modal, close } = mountDialog({ label: 'Stratos update available', onClose });
   const kind = updateKind(release, installedVersion);
   const required = isRequired(release, installedVersion);
+  const { modal, close } = mountDialog({ label: 'Stratos update available', onClose, dismissible: !required });
   const groups = changelogGroups(release);
   const preview = [];
   for (const group of groups) {
@@ -256,16 +265,18 @@ export function showUpdateDialog({
       <div class="su-eyebrow ${kind === 'critical' ? 'is-critical' : kind === 'important' ? 'is-important' : ''}">
         <i></i><span>${esc(SEVERITY_LABEL[kind] || 'Update available')}</span>
       </div>
-      <h2>A new Stratos update is available.</h2>
-      <p class="su-sub">Stratos ${esc(release.version)} is published${release.releasedAt ? ` on ${esc(formatDate(release.releasedAt))}` : ''}.
-        ${platform === 'desktop' ? 'The signed installer is downloaded from the official release and verified before it runs.' : 'Your logbook, routes and settings stay on this device.'}</p>
+      <h2>A new version of Stratos is available</h2>
+      <p class="su-sub">Update Stratos to get the latest improvements, features, and bug fixes.</p>
       <div class="su-versions">
         <div class="su-version"><span>Installed</span><b>v${esc(installedVersion)}</b></div>
         <span class="su-arrow" aria-hidden="true">→</span>
         <div class="su-version is-new"><span>Available</span><b>v${esc(release.version)}</b></div>
         <div class="su-meta"><b>${esc(formatDate(release.releasedAt) || 'Date not published')}</b>${esc(release.summary || '')}</div>
       </div>
-      ${required ? `<p class="su-reason"><strong>Why this update is required:</strong> ${esc(release.reason || `This build is older than the supported minimum of v${release.minimumSupported}.`)}</p>` : ''}
+      ${required ? `<p class="su-reason"><strong>Why this update is required:</strong> ${esc(release.reason
+        || (release.minimumSupported
+          ? `This build is older than the supported minimum of v${release.minimumSupported}.`
+          : 'The version you are running is no longer supported, so Stratos has to be updated.'))}</p>` : ''}
       ${!required && kind === 'critical' && release.reason ? `<p class="su-reason"><strong>Why this update matters:</strong> ${esc(release.reason)}</p>` : ''}
     </div>
     <div class="su-body">
@@ -286,7 +297,7 @@ export function showUpdateDialog({
       <button class="su-btn primary" data-apply type="button">${esc(applyLabel)}</button>
     </div>
     <p class="su-note" data-foot-note>${platform === 'desktop'
-      ? 'Stratos closes while the installer runs. The version is confirmed in Settings → Updates after it restarts.'
+      ? 'The download opens in your browser. Run the installer when it finishes; your logbook, routes and settings stay exactly where they are.'
       : 'Stratos never reloads while you are flight tracking without asking. Your saved flights are untouched.'}</p>`;
 
   const progress = modal.querySelector('[data-progress]');
@@ -329,6 +340,12 @@ export function showUpdateDialog({
         busy = false;
         applyButton.disabled = false;
         if (laterButton) laterButton.disabled = false;
+      } else if (laterButton) {
+        // The download is open and the instructions are on screen; the second
+        // button becomes a plain Close so the pilot can go back to the app.
+        busy = false;
+        laterButton.disabled = false;
+        laterButton.textContent = 'Close';
       }
     } catch (error) {
       busy = false;
@@ -571,9 +588,9 @@ export function initAppUpdates({ desktop = null, installedVersion = APP_VERSION,
   ensureStyles();
   const state = { registration: null, waiting: null, result: null, dialogOpen: false, timer: null, setProgress: null };
 
-  // Keep the open dialog honest while the installer downloads: the main
-  // process reports the percentage, and a finished download has been verified
-  // against latest.yml before this event exists.
+  // The native updater reports download progress when a build enables it
+  // (STRATOS_NATIVE_UPDATER=1). The published release uses the installer path,
+  // so this listener simply stays silent there.
   const progressOff = desktop?.onUpdateProgress?.(event => {
     if (!state.dialogOpen || !state.setProgress || !event) return;
     if (event.state === 'downloading') {
@@ -655,39 +672,34 @@ export function initAppUpdates({ desktop = null, installedVersion = APP_VERSION,
         state.dialogOpen = false;
         writeDismissed(null, result.release);
       },
-      onApply: async ({ setProgress, close }) => {
+      onApply: async ({ setProgress }) => {
         state.setProgress = setProgress;
-        if (desktop?.checkForUpdates) {
-          setProgress({ percent: null, label: 'Asking for the release…', note: 'The installer is verified against the published checksum before it runs.' });
-          const status = await desktop.checkForUpdates().catch(error => ({ error: error.message }));
-          if (status?.supported === false) throw new Error('This build cannot update itself. Install the published Windows release.');
-          if (status?.error) throw new Error(status.error);
-          if (status?.downloaded) {
-            await desktop.installUpdate?.();
-            close();
-            return;
-          }
-          setProgress({ percent: null, label: 'Downloading the signed installer…', note: 'You can keep using Stratos; it restarts when the download is verified.' });
-          return;
+        // Updates are installers, not updater feeds: the release publishes one
+        // per platform and this opens the right one. Nothing here modifies the
+        // installed app, so a failed download can never corrupt an installation.
+        const url = downloadFor(result.release, platformKey());
+        if (!url) throw new Error('No installer is published for this platform yet.');
+        setProgress({
+          percent: null,
+          label: 'Opening the installer download…',
+          note: 'Your logbook, routes, aircraft profiles and SimBrief settings are not touched.',
+        });
+        if (desktop?.openUpdateDownload) {
+          const opened = await desktop.openUpdateDownload(url).catch(error => ({ ok: false, message: error.message }));
+          if (!opened || opened.ok === false) throw new Error((opened && opened.message) || 'The download could not be opened.');
+        } else {
+          window.open(url, '_blank', 'noopener');
         }
-        if (!state.registration && navigator.serviceWorker) {
-          state.registration = await navigator.serviceWorker.getRegistration().catch(() => null);
-        }
-        // Ask the browser for the deployed shell first: a reload alone can keep
-        // serving the cached HTML if a new worker is waiting to take over.
-        if (state.registration) {
-          setProgress({ percent: null, label: 'Checking the deployed build…', note: '' });
-          await refreshServiceWorker(state.registration);
-          await new Promise(resolve => setTimeout(resolve, 600));
-        }
-        if (state.registration?.waiting) {
-          setProgress({ percent: null, label: 'Activating the new build…', note: 'The page reloads once. Open flights keep their recorded track.' });
-          await activateServiceWorker(state.registration);
-          location.reload();
-          return;
-        }
-        setProgress({ percent: null, label: 'Loading the new build…', note: 'The page reloads once; saved flights stay in the logbook.' });
-        setTimeout(() => location.reload(), 350);
+        setProgress({
+          percent: 100,
+          label: `Stratos ${result.release.version} is downloading`,
+          note: 'Run the installer when it finishes: Stratos closes and reopens with your data intact. On macOS, open the DMG and drag Stratos to Applications.',
+        });
+        // The installer is the whole update path: the dialog stays open with the
+        // instructions and closing it applies nothing. A waiting service worker
+        // is a shell refresh with its own notice, so this never falls through
+        // into it and reloads the page instead.
+        return;
       },
       onDetails: () => showChangelogDialog(result.release, { installedVersion }),
       onClose: () => { state.dialogOpen = false; },

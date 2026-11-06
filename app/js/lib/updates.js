@@ -15,9 +15,17 @@
    Nothing here touches the DOM; app/js/update-ui.js draws the interface and
    tests/updates.test.mjs exercises these functions directly. */
 
+/* `version.json` is the small manifest written for every release: latest and
+   minimum supported version, the download URLs, the notes and the date. It is
+   served from the site and also lives on main, so a client never depends on a
+   GitHub asset existing. `releases.json` is the full history and is used as the
+   fallback, which also keeps older clients working. */
 export const MANIFEST_URLS = [
+  'version.json',
   'releases.json',
-  'https://github.com/Stratos-tracker/Stratos-tracker/releases/latest/download/releases.json',
+  // The last resort is main itself: the release page no longer attaches a copy
+  // of the manifest, so a raw file is the address that always exists.
+  'https://raw.githubusercontent.com/Stratos-tracker/Stratos-tracker/main/app/version.json',
 ];
 
 export const CACHE_KEY = 'stratos.update.cache';
@@ -176,6 +184,72 @@ export function validateManifest(raw) {
   };
 }
 
+/* ── version.json ───────────────────────────────────────────────────── */
+
+/** True when a payload is the small single-release manifest. */
+export function isVersionManifest(raw) {
+  return Boolean(raw && typeof raw === 'object' && !Array.isArray(raw)
+    && (raw.latestVersion || raw.minimumSupportedVersion));
+}
+
+/**
+ * Validate `version.json` and convert it to the shape the rest of the app uses.
+ * A client that reads it must end up with exactly the same release object as a
+ * client reading the full manifest, or the two could disagree about severity.
+ */
+export function validateVersionManifest(raw) {
+  const problems = [];
+  const version = text(raw && raw.latestVersion, 32).replace(/^v/i, '');
+  if (!parseVersion(version)) problems.push('latestVersion must be a version such as 2.1.34.');
+  const minimum = text(raw && raw.minimumSupportedVersion, 32).replace(/^v/i, '');
+  if (minimum && !parseVersion(minimum)) problems.push('minimumSupportedVersion must be a version.');
+
+  const downloads = {};
+  const declared = raw && raw.downloads && typeof raw.downloads === 'object' ? raw.downloads : null;
+  for (const [platform, entry] of Object.entries(declared || {})) {
+    if (!entry || typeof entry !== 'object') continue;
+    const url = text(entry.url, 500);
+    if (!/^https:\/\//i.test(url)) continue;
+    downloads[platform] = {
+      url,
+      sha256: /^[a-f0-9]{64}$/i.test(String(entry.sha256 || '')) ? String(entry.sha256).toLowerCase() : '',
+      size: Number(entry.size) > 0 ? Number(entry.size) : null,
+    };
+  }
+  const downloadUrl = text(raw && raw.downloadUrl, 500);
+  if (!Object.keys(downloads).length) {
+    if (/^https:\/\//i.test(downloadUrl)) downloads.any = { url: downloadUrl, sha256: '', size: null };
+    else problems.push('A downloadUrl (or a downloads table) is required.');
+  }
+
+  const items = stringList(raw && raw.releaseNotes);
+  const notes = raw && raw.notes && typeof raw.notes === 'object' ? raw.notes : (items.length ? { features: items } : {});
+  const release = problems.length ? null : normalizeRelease({
+    version,
+    releasedAt: text(raw && (raw.releaseDate || raw.releasedAt), 40),
+    // `mandatory: true` is the explicit switch; severity is the older way of
+    // saying the same thing, and both are honoured.
+    severity: raw && raw.mandatory === true ? 'critical' : (raw && raw.severity) || 'normal',
+    reason: text(raw && raw.reason, 500),
+    summary: text(raw && raw.summary, 400),
+    minimumSupported: minimum,
+    changelog: notes,
+    downloads,
+  });
+  if (release && !items.length && !totalChanges(release)) problems.push('version.json lists no release notes.');
+
+  return {
+    ok: problems.length === 0,
+    manifest: problems.length === 0 ? { schemaVersion: 1, latest: release, releases: [release] } : null,
+    problems,
+  };
+}
+
+/** Validate either manifest shape; the rest of the module sees one shape. */
+export function validateAnyManifest(raw) {
+  return isVersionManifest(raw) ? validateVersionManifest(raw) : validateManifest(raw);
+}
+
 export function findRelease(manifest, version) {
   return (manifest?.releases || []).find(release => release.version === version)
     || (manifest?.latest?.version === version ? manifest.latest : null);
@@ -193,7 +267,10 @@ export function updateKind(release, installedVersion) {
 /** True only when the install is genuinely too old for the published release. */
 export function isRequired(release, installedVersion) {
   if (!release) return false;
-  if (release.severity === 'critical' && release.reason) return true;
+  // `mandatory: true` is published as severity "critical", and that alone makes
+  // the update required: a manifest must not be able to turn a required update
+  // back into a dismissible one by leaving its reason out.
+  if (release.severity === 'critical') return true;
   return Boolean(release.minimumSupported) && isNewer(release.minimumSupported, installedVersion);
 }
 
@@ -257,6 +334,9 @@ export function clearDismissed(storage) {
  */
 export function shouldPrompt(release, { installedVersion, dismissed = null } = {}) {
   if (!release || !isNewer(release.version, installedVersion)) return false;
+  // A required update is announced every launch, whatever was dismissed before:
+  // "Remind me later" is not a way out of a version the app can no longer run on.
+  if (isRequired(release, installedVersion)) return true;
   if (!dismissed || dismissed.version !== release.version) return true;
   if (SEVERITY_RANK[release.severity] > SEVERITY_RANK[dismissed.severity]) return true;
   if (dismissed.fingerprint && dismissed.fingerprint !== releaseFingerprint(release)) return true;
@@ -291,7 +371,7 @@ async function requestManifest(url, { fetchImpl, timeoutMs }) {
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
-    const checked = validateManifest(payload);
+    const checked = validateAnyManifest(payload);
     if (!checked.ok) throw new Error(checked.problems[0] || 'The release manifest is malformed.');
     return { manifest: checked.manifest, url };
   } finally {
@@ -459,6 +539,32 @@ export function formatDate(value) {
   const date = new Date(value || '');
   if (Number.isNaN(date.getTime())) return '';
   return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+/**
+ * The platform key used by the download table: windows, mac-arm64, mac-x64 or
+ * linux-x64. Detection is deliberately conservative — an unknown platform gets
+ * the manifest's generic download instead of a wrong installer.
+ */
+export function platformKey(nav = typeof navigator !== 'undefined' ? navigator : null) {
+  const agent = String((nav && nav.userAgent) || '');
+  if (/Windows/i.test(agent)) return 'windows';
+  if (/Android/i.test(agent)) return 'linux-x64';
+  if (/Mac OS X|Macintosh/i.test(agent)) {
+    // Apple Silicon reports arm64; an Intel Mac must not be handed the arm64 build.
+    return /arm64|aarch64/i.test(agent) ? 'mac-arm64' : 'mac-x64';
+  }
+  if (/Linux|X11/i.test(agent)) return 'linux-x64';
+  return '';
+}
+
+/** The installer URL for a release and platform, or '' when none is published. */
+export function downloadFor(release, platform = platformKey()) {
+  const downloads = (release && release.downloads) || {};
+  const direct = platform && downloads[platform] && downloads[platform].url;
+  if (direct) return direct;
+  const fallback = downloads.any || downloads.windows;
+  return (fallback && fallback.url) || '';
 }
 
 export function formatBytes(bytes) {

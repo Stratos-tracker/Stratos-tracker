@@ -136,8 +136,9 @@ test('update severity is reported honestly and never fabricates a gate', () => {
   assert.equal(updateKind(release('2.1.14', { severity: 'important' }), '2.1.13'), 'important');
   assert.equal(updateKind(release('2.1.14', { severity: 'critical', reason: 'Security fix.' }), '2.1.13'), 'critical');
   assert.equal(isRequired(release('2.1.14', { severity: 'critical', reason: 'Security fix.' }), '2.1.13'), true);
-  // A critical label without a reason is not enough to call an update required.
-  assert.equal(isRequired(release('2.1.14', { severity: 'critical' }), '2.1.13'), false);
+  // `mandatory: true` is published as critical and is enough on its own: leaving
+  // the reason out must not quietly turn a required update into a dismissible one.
+  assert.equal(isRequired(release('2.1.14', { severity: 'critical' }), '2.1.13'), true);
   const minimum = release('2.1.14', { minimumSupported: '2.1.10' });
   assert.equal(updateKind(minimum, '2.1.8'), 'critical', 'a build below the supported minimum is a real compatibility case');
   assert.equal(isRequired(minimum, '2.1.8'), true);
@@ -154,6 +155,11 @@ test('a dismissed release is not asked about twice, unless it changes or gets mo
   const dismissed = readDismissed(storage);
   assert.equal(dismissed.version, '2.1.14');
   assert.equal(shouldPrompt(published, { installedVersion: '2.1.13', dismissed }), false);
+
+  // A required update is announced on every launch, whatever was dismissed.
+  const required = release('2.1.14', { severity: 'critical' });
+  writeDismissed(storage, required, new Date('2026-10-20T10:00:00Z'));
+  assert.equal(shouldPrompt(required, { installedVersion: '2.1.13', dismissed: readDismissed(storage) }), true, 'a required update is announced even after it was dismissed');
 
   const serious = release('2.1.14', { severity: 'important' });
   assert.equal(shouldPrompt(serious, { installedVersion: '2.1.13', dismissed }), true, 'a severity increase is a new reason to ask');
@@ -458,4 +464,74 @@ test('the checked-in release manifest is valid and its latest entry matches the 
   assert.equal(checked.manifest.latest.version, appVersion, 'the manifest and the app report the same version');
   assert.deepEqual(validateReleaseManifest(raw), []);
   assert.ok(raw.releases.length >= 2, 'previous release notes are retained');
+});
+
+test('version.json drives the same update decision as the full manifest', async () => {
+  const {
+    validateVersionManifest, validateAnyManifest, checkForUpdate, downloadFor, platformKey,
+  } = await import('../app/js/lib/updates.js');
+
+  const base = 'https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.0';
+  const raw = {
+    schemaVersion: 1,
+    latestVersion: '2.2.0',
+    minimumSupportedVersion: '2.1.0',
+    mandatory: false,
+    releaseDate: '2026-11-07',
+    downloadUrl: `${base}/Stratos-Setup.exe`,
+    downloads: {
+      windows: { url: `${base}/Stratos-Setup.exe`, sha256: 'a'.repeat(64), size: 1000 },
+      'mac-arm64': { url: `${base}/Stratos-2.2.0-mac-arm64.dmg`, sha256: 'b'.repeat(64), size: 1000 },
+    },
+    releaseNotes: ['Faster charts', 'Fixed a logbook edge case'],
+    notes: { features: ['Faster charts'], fixes: ['Fixed a logbook edge case'] },
+  };
+
+  const checked = validateVersionManifest(raw);
+  assert.equal(checked.ok, true, checked.problems.join('; '));
+  assert.equal(checked.manifest.latest.version, '2.2.0');
+  assert.equal(checked.manifest.latest.minimumSupported, '2.1.0');
+  assert.equal(checked.manifest.latest.changelog.features[0], 'Faster charts');
+  assert.equal(checked.manifest.latest.downloads.windows.url, raw.downloadUrl);
+  assert.equal(checked.manifest.releases.length, 1, 'one release is all a version manifest describes');
+  assert.equal(validateAnyManifest(raw).ok, true, 'either manifest shape is accepted');
+
+  // `mandatory` is the explicit switch and outranks the older severity field.
+  const forced = validateVersionManifest({ ...raw, mandatory: true });
+  assert.equal(forced.manifest.latest.severity, 'critical');
+
+  // A malformed manifest is refused with a reason rather than half-applied.
+  assert.equal(validateVersionManifest({ latestVersion: 'two' }).ok, false);
+  assert.equal(validateVersionManifest({ ...raw, downloadUrl: 'http://insecure/x.exe', downloads: {} }).ok, false);
+
+  const storage = {
+    store: new Map(),
+    getItem(key) { return this.store.get(key) ?? null; },
+    setItem(key, value) { this.store.set(key, String(value)); },
+    removeItem(key) { this.store.delete(key); },
+  };
+  const fetchImpl = async () => ({ ok: true, json: async () => raw });
+  const available = await checkForUpdate({ installedVersion: '2.1.34', fetchImpl, storage, urls: ['version.json'] });
+  assert.equal(available.state, 'available');
+  assert.equal(available.release.version, '2.2.0');
+  assert.equal(available.release.changelog.fixes.length, 1, 'the notes come from the manifest, never the dialog');
+
+  const current = await checkForUpdate({ installedVersion: '2.2.0', fetchImpl, storage, urls: ['version.json'] });
+  assert.equal(current.state, 'current', 'a client on the latest version is never prompted');
+
+  // An unreachable manifest is an error state, not a fabricated update.
+  const offline = await checkForUpdate({
+    installedVersion: '2.1.34',
+    storage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+    fetchImpl: async () => { throw new Error('offline'); },
+    urls: ['version.json'],
+  });
+  assert.equal(offline.state, 'error');
+  assert.equal(offline.release, null);
+
+  assert.match(downloadFor(raw), /Stratos-Setup\.exe$/, 'the Windows installer is offered to Windows');
+  assert.equal(platformKey({ userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }), 'windows');
+  assert.equal(platformKey({ userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' }), 'mac-x64');
+  assert.equal(platformKey({ userAgent: 'Mozilla/5.0 (Macintosh; arm64 Mac OS X 14_0)' }), 'mac-arm64');
+  assert.equal(platformKey({ userAgent: 'Mozilla/5.0 (X11; Linux x86_64)' }), 'linux-x64');
 });

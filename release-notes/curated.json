@@ -1,4 +1,22 @@
 {
+  "2.1.35": {
+    "summary": "The update notice comes from version.json, opens the right installer, and the release page keeps four files.",
+    "changelog": {
+      "features": [
+        "Stratos checks version.json on startup and every six hours, and offers an available update in the app instead of depending on an updater feed.",
+        "The dialog shows the installed and published versions, the published notes, and Update Now or Remind me later; a required update explains why and cannot be postponed.",
+        "Update Now opens the installer for the platform that is running and leaves the installation, logbook, routes and settings untouched."
+      ],
+      "improvements": [
+        "Publishing a release writes version.json beside releases.json, so the version, minimum supported version, download URLs, notes and date are one generated record.",
+        "The Settings update centre, the startup dialog and the manifest smoke test all read the same release object."
+      ],
+      "fixes": [
+        "A missing or unreachable manifest no longer produces updater errors on launch; the app carries on and checks again later.",
+        "The release page carries one installer per platform and nothing else."
+      ]
+    }
+  },
   "2.1.34": {
     "summary": "A worldwide chart library: every country resolves to its official publisher, with the FAA still embedded.",
     "changelog": {

@@ -42,12 +42,6 @@ const PLATFORMS = [
   { key: 'linux-x64', installer: `Stratos-${version}-linux-x64.AppImage` },
 ];
 
-const FEEDS = {
-  'latest.yml': { files: ['Stratos-Setup.exe'] },
-  'latest-mac.yml': { files: [`Stratos-${version}-mac-arm64.zip`, `Stratos-${version}-mac-x64.zip`] },
-  'latest-linux.yml': { files: [`Stratos-${version}-linux-x64.AppImage`] },
-};
-
 const failures = [];
 const pass = message => console.log(`  ok   ${message}`);
 const fail = message => { failures.push(message); console.log(`  FAIL ${message}`); };
@@ -103,14 +97,11 @@ if (draftMode) pass(release.draft ? 'release is a draft awaiting publication' : 
 else release.draft ? fail('release is still a draft') : pass('release is published');
 
 const byName = new Map((release.assets || []).map(asset => [asset.name, asset]));
-// Only installers and update feeds belong on the release page. Blockmaps,
-// checksum sidecars and copies of the notes or the manifest are deliberately
-// absent: the manifest is served from main and GitHub publishes the digests.
-const required = new Set([
-  ...PLATFORMS.map(platform => platform.installer),
-  ...Object.values(FEEDS).flatMap(feed => feed.files),
-  ...Object.keys(FEEDS),
-]);
+// One installer per platform is the whole release page. Updates are announced
+// from version.json and installed by running the published installer, so feeds,
+// update ZIPs, blockmaps, checksum sidecars and copies of the notes or manifest
+// are deliberately absent; GitHub publishes the digests itself.
+const required = new Set(PLATFORMS.map(platform => platform.installer));
 
 let attached = 0;
 for (const name of required) {
@@ -178,36 +169,6 @@ if (!latest) {
   }
 }
 
-// Each feed is what electron-updater downloads and trusts. Its hashes must describe
-// the exact bytes GitHub serves, or an update would be refused or, worse, accepted
-// from a file that differs from what was tested.
-for (const [name, spec] of Object.entries(FEEDS)) {
-  const feedAsset = byName.get(name);
-  if (!feedAsset) continue;
-  let feed = null;
-  try {
-    feed = yaml.load((await downloadAsset(feedAsset)).toString('utf8'));
-  } catch (error) {
-    fail(`${name} could not be parsed: ${error.message}`);
-    continue;
-  }
-  feed?.version === version ? pass(`${name} is for ${version}`) : fail(`${name} is for ${feed?.version}, expected ${version}`);
-  const listed = new Map((feed?.files || []).map(file => [file.url, file]));
-  for (const file of spec.files) {
-    const entry = listed.get(file);
-    const target = byName.get(file);
-    if (!entry) {
-      fail(`${name} does not list ${file}`);
-      continue;
-    }
-    if (!target) continue;
-    const bytes = await downloadAsset(target);
-    if (entry.sha512 !== sha512Base64(bytes)) fail(`${name} sha512 for ${file} does not match the published bytes`);
-    else if (sha256Hex(bytes) !== digestOf(target)) fail(`${file} bytes do not match GitHub's digest`);
-    else if (Number(entry.size) !== bytes.length) fail(`${name} size for ${file} is ${entry.size}, published bytes are ${bytes.length}`);
-    else pass(`${name} describes ${file} exactly`);
-  }
-}
 
 // --deep reads the version resource Windows shows in the installer's Properties,
 // which is the version an installed copy reports.
