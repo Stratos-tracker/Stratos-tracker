@@ -9,7 +9,8 @@
  * browser gets the identical server-side fetch and no duplicate allowlist.
  *
  * Usage: npm run dev   (then open http://127.0.0.1:8123)
- * Env:   PORT (default 8123), HOST (default 127.0.0.1)
+ * Env:   PORT (default 8123), HOST (default 127.0.0.1), and STRATOS_BRIDGE
+ *        (default http://127.0.0.1:8765) for the simulator's own procedure data.
  */
 import http from 'node:http';
 import fs from 'node:fs';
@@ -78,9 +79,45 @@ function adapt(handler) {
 
 const trafficApi = adapt(traffic);
 const photoApi = adapt(photo);
+/* The procedure deck asks its own origin first (`/procedures.json`): that is
+   the desktop build's bridge, answering from the simulator's own CIFP. A
+   browser preview has no bridge on its origin, so this forwards that one path
+   to a bridge running on this PC (STRATOS_BRIDGE, default the standard port).
+   The simulator's files cover the whole world, so a preview can draw the real
+   SID, STAR and approach geometry the FAA dataset does not carry. With no
+   bridge answering, a plain 404 is passed back and the deck falls through to
+   /api/procedures and the bundled dataset exactly as before. */
+const BRIDGE = (process.env.STRATOS_BRIDGE || 'http://127.0.0.1:8765').replace(/\/+$/, '');
+
+async function bridgeProcedures(req, res) {
+  const miss = () => {
+    res.statusCode = 404;
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.end('Not found');
+  };
+  let upstream;
+  try {
+    upstream = await fetch(BRIDGE + req.url, { signal: AbortSignal.timeout(30000) });
+  } catch (_) {
+    miss();
+    return;
+  }
+  const body = await upstream.text().catch(() => null);
+  if (!upstream.ok || body == null) {
+    miss();
+    return;
+  }
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  if (req.method === 'HEAD') res.end();
+  else res.end(body);
+}
+
 /* The same serverless handlers the hosted site uses, so the EFB's weather,
    charts and airport search work in a local browser too. */
 const ROUTES = {
+  '/procedures.json': bridgeProcedures,
   '/api/traffic': trafficApi,
   '/api/photo': photoApi,
   '/api/weather': adapt(weather),

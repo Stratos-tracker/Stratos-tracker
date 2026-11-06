@@ -1562,3 +1562,12 @@ test('the tracker map runs the same globe module and surfaces as the EFB', async
   // the near side, or it reads the place behind the globe.
   assert.ok(page.includes('const p=g.globeProject(it.y,it.x,cam);if(!p)continue;'), 'the place badge names a feature on the near side');
 });
+
+test('the procedure tip names the data that answered and a procedure it drops', async () => {
+  const fs = await import('node:fs');
+  const deck = fs.readFileSync(new URL('../app/js/procdeck-ui.js', import.meta.url), 'utf8');
+  assert.match(deck, /const source = depInfo\.source \|\| arrInfo\.source/, 'the tip names the source that actually answered');
+  assert.ok(!deck.includes('`Procedures: FAA CIFP · US airports${'), 'a US-only label is not printed when the simulator answered');
+  assert.match(deck, /is not in this data/, 'a plan procedure the cycle lacks is named instead of silently forgotten');
+  assert.match(deck, /it has \$\{near\.join/, 'and the alternatives it does publish are offered');
+});

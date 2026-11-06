@@ -279,3 +279,36 @@ test('procedures endpoint: it serves the bundled dataset and explains what it ca
   assert.equal((await callApi({})).status, 400);
   assert.equal((await callApi({ airport: 'KSEA' }, 'POST')).status, 405);
 });
+
+test('procdeck: a procedure published as one runway leg draws without a runway', () => {
+  const solo = {
+    ok: true, airport: 'LEMD', cycle: '2610', source: 'X-Plane 12 CIFP (Custom Data)',
+    runways: { 18: { lat: 40.4719, lon: -3.5608 } },
+    procedures: {
+      sid: [], approach: [],
+      star: [{ id: 'ZMR5A', transitions: [
+        { id: 'RW18B', runway: '18', combined: true, complete: true, skipped: 0, points: [
+          { id: 'ZMR', lat: 41.2, lon: -5.6, terminator: 'IF' },
+          { id: 'RW18', lat: 40.4719, lon: -3.5608, terminator: 'TF' },
+        ] },
+      ] }],
+    },
+  };
+  const path = pathFor(solo, { kind: 'star', ident: 'ZMR5A' });
+  assert.equal(path.ok, true, 'the only published leg is the whole procedure, not a choice');
+  assert.deepEqual(path.points.map(p => p.id), ['ZMR', 'RW18']);
+
+  // Two runway legs are a real choice: the runway picks one, and no runway is
+  // refused rather than guessed.
+  const pair = { ...solo, procedures: { ...solo.procedures, star: [{ id: 'ZMR5A', transitions: [
+    solo.procedures.star[0].transitions[0],
+    { id: 'RW32B', runway: '32', combined: false, complete: true, skipped: 0, points: [
+      { id: 'ZMR', lat: 41.2, lon: -5.6, terminator: 'IF' },
+      { id: 'RW32', lat: 40.4719, lon: -3.5608, terminator: 'TF' },
+    ] },
+  ] }] } };
+  const undecided = pathFor(pair, { kind: 'star', ident: 'ZMR5A' });
+  assert.equal(undecided.ok, false);
+  assert.equal(undecided.reason, 'no-transition');
+  assert.equal(pathFor(pair, { kind: 'star', ident: 'ZMR5A', runway: '32' }).ok, true);
+});

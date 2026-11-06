@@ -146,6 +146,21 @@ async function compute() {
     // Only an airport the dataset actually answered may disown a remembered
     // procedure. An airport outside coverage keeps the pilot's choice so the
     // panel and the map say the geometry is missing instead of forgetting it.
+    // A remembered procedure this data does not publish is named before it is
+    // dropped, so the panel says which cycle lacks it instead of forgetting the
+    // plan's own STAR without a word.
+    const dropped = [];
+    const staleName = (payload, kind, ident) => {
+      if (!ident || !(payload && payload.ok === true) || known(payload, kind, ident)) return '';
+      const root = ident.slice(0, 3);
+      const near = procedureList(payload, kind).map(proc => proc.id)
+        .filter(id => id.slice(0, 3) === root && id !== ident).slice(0, 3);
+      return `${KINDS[kind].label} ${ident} is not in this data${near.length ? ` (it has ${near.join(', ')})` : ''}`;
+    };
+    const staleSid = staleName(depPayload, 'sid', state.sid);
+    const staleStar = staleName(arrPayload, 'star', state.star);
+    if (staleSid) dropped.push(staleSid);
+    if (staleStar) dropped.push(staleStar);
     if (depPayload && depPayload.ok === true && !known(depPayload, 'sid', state.sid)) { state.sid = ''; state.sidTrans = ''; }
     if (arrPayload && arrPayload.ok === true && !known(arrPayload, 'star', state.star)) { state.star = ''; state.starTrans = ''; }
     if (!known(arrPayload, 'approach', state.approach)) { state.approach = ''; state.approachTrans = ''; }
@@ -168,12 +183,17 @@ async function compute() {
     // have to guess whether a procedure is selected, unavailable or out of area.
     const tip = typeof document !== 'undefined' ? document.getElementById('dkproctip') : null;
     if (tip) {
-      const cycle = describe(arrPayload).cycle || describe(depPayload).cycle;
+      const depInfo = describe(depPayload), arrInfo = describe(arrPayload);
+      const cycle = arrInfo.cycle || depInfo.cycle;
+      // The source that actually answered, not a fixed label: the simulator's
+      // own CIFP covers the world, the bundled FAA file only the United States.
+      const source = depInfo.source || arrInfo.source || 'bundled FAA CIFP · US airports';
       const missing = [];
       if (state.sid && !next.some(layer => layer.kind === 'sid' && layer.ok)) missing.push(`SID ${state.sid} (${state.dep})`);
       if (state.star && !next.some(layer => layer.kind === 'star' && layer.ok)) missing.push(`STAR ${state.star} (${state.arr})`);
       if (state.approach && !next.some(layer => layer.kind === 'approach' && layer.ok)) missing.push(`approach ${state.approach}`);
-      tip.textContent = `Procedures: FAA CIFP · US airports${cycle ? ` · AIRAC ${cycle}` : ''}`
+      tip.textContent = `Procedures: ${source}${cycle ? ` · AIRAC ${cycle}` : ''}`
+        + (dropped.length ? ` · ${dropped.join(' · ')}` : '')
         + (missing.length ? ` · no geometry for ${missing.join(', ')}` : '')
         + (state.approach ? '' : ' · missed approach needs an approach selection');
     }

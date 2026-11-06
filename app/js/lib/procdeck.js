@@ -233,6 +233,10 @@ export function pathFor(payload, { kind = 'sid', ident = '', runway = '', transi
       return id !== '' && id !== 'ALL' && !id.startsWith('RW');
     });
     pieces = trunk ? [trunk, ...(branch ? [branch] : [])] : branch ? [branch] : [];
+    // One published transition and it is a runway leg: that is the whole
+    // procedure, not a choice to make, so a plan that names no runway still
+    // draws it. Several runway legs still need the runway to pick one.
+    if (!pieces.length && transitions.length === 1) pieces = [transitions[0]];
   }
   if (!pieces.length) {
     return failure('no-transition', `${procedure.id} publishes no legs for ${rwy ? 'runway ' + rwy : 'that choice'} in this dataset.`);
