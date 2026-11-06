@@ -124,6 +124,50 @@ a { color: var(--acc); }
 .ac-stat b { display: block; font-size: 15px; font-variant-numeric: tabular-nums; }
 .ac-stat span { font-size: 10px; color: var(--mut); }
 
+/* ── Aircraft photography ── */
+.ac-card { overflow: hidden; }
+.ac-photo { display: block; width: calc(100% + 28px); margin: -12px -14px 10px; height: 96px; object-fit: cover; background: var(--ui2); }
+.ac-photo.no-shot { display: none; }
+.fl-shot { width: 64px; height: 44px; flex: 0 0 64px; border-radius: 8px; object-fit: cover; background: var(--ui2); border: 1px solid var(--coast); }
+.fl-shot.no-shot { display: none; }
+.acp-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.acp-head h2 { margin: 0; font-size: 18px; }
+.acp-reg { font-size: 13px; font-weight: 700; letter-spacing: .08em; color: var(--acc); }
+.acp-meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--mut); margin-bottom: 10px; }
+.acp-shot { margin: 0 0 8px; border-radius: 14px; overflow: hidden; background: var(--ui2); border: 1px solid var(--coast); }
+.acp-shot img { display: block; width: 100%; max-height: 300px; object-fit: cover; }
+.acp-shot figcaption { padding: 7px 10px; font-size: 10.5px; color: var(--mut); }
+.acp-shot a { color: var(--acc); text-decoration: none; }
+.acp-shot a:hover { text-decoration: underline; }
+.acp-shot.none { display: flex; flex-direction: column; gap: 4px; padding: 22px 14px; text-align: center; }
+.acp-shot.none b { font-size: 15px; }
+.acp-shot.none span { font-size: 11.5px; color: var(--mut); }
+.acp-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 2px; }
+.acp-btn { background: var(--ui2); border: 1px solid var(--coast); border-radius: 9px; color: var(--txt); font: inherit; font-size: 12px; font-weight: 600; padding: 8px 13px; cursor: pointer; }
+.acp-btn:hover { border-color: var(--acc); }
+.acp-btn:disabled { opacity: .45; cursor: default; }
+.acp-btn.primary { background: var(--acc); border-color: var(--acc); color: #04212b; }
+.acp-msg { font-size: 11.5px; color: var(--mut); }
+.acp-gallery { display: grid; gap: 8px; }
+.acp-stage { position: relative; border-radius: 12px; overflow: hidden; background: var(--ui2); border: 1px solid var(--coast); }
+.acp-stage img { display: block; width: 100%; max-height: 280px; object-fit: contain; background: #05090f; }
+.acp-stage .acp-nav { position: absolute; top: 50%; transform: translateY(-50%); }
+.acp-stage .acp-nav.prev { left: 8px; }
+.acp-stage .acp-nav.next { right: 8px; }
+.acp-empty { padding: 26px 14px; text-align: center; font-size: 12px; color: var(--mut); }
+.acp-thumbs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.acp-thumb { position: relative; flex: 0 0 auto; width: 72px; height: 50px; border-radius: 8px; overflow: hidden; border: 2px solid transparent; background: var(--ui2); }
+.acp-thumb.on { border-color: var(--acc); }
+.acp-thumb .pick { display: block; width: 100%; height: 100%; padding: 0; border: 0; background: none; cursor: pointer; }
+.acp-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.acp-thumb .x { position: absolute; top: 1px; right: 1px; width: 17px; height: 17px; border: 0; border-radius: 5px; background: rgba(3,7,18,.72); color: #e2e8f0; font-size: 11px; line-height: 1; cursor: pointer; }
+.acp-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.acp-bar label { font-size: 11px; color: var(--mut); display: flex; align-items: center; gap: 6px; }
+.acp-bar select { background: var(--land); border: 1px solid var(--coast); border-radius: 8px; color: var(--txt); font: inherit; font-size: 12px; padding: 6px 8px; }
+.acp-upload { display: inline-flex; align-items: center; gap: 6px; background: var(--ui2); border: 1px dashed var(--coast); border-radius: 9px; padding: 7px 11px; font-size: 12px; cursor: pointer; }
+.acp-upload input { display: none; }
+@media (max-width: 480px) { .fl-shot { width: 52px; flex-basis: 52px; height: 40px; } }
+
 /* ── Achievements ── */
 .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 10px; }
 .ach-card {
@@ -313,6 +357,13 @@ a { color: var(--acc); }
 <script type="module">
   import { BUNDLED_AIRPORTS } from './js/data/airports.js';
   window.StratosAirports = BUNDLED_AIRPORTS;
+</script>
+<script type="module">
+  /* The aircraft photography helpers are a module so the Flight Deck and the
+     logbook read Planespotters metadata and local screenshots the same way. */
+  import * as aircraftMedia from './js/lib/aircraftgallery.js';
+  window.AIRCRAFT_MEDIA = aircraftMedia;
+  window.dispatchEvent(new Event('aircraft-media-ready'));
 </script>
 <script>
 'use strict';
@@ -915,6 +966,7 @@ function renderFlights() {
     return;
   }
   el.innerHTML = flights.map(flightRowHtml).join('');
+  queueMicrotask(hydrateFlightPhotos);
 }
 
 function flightRowHtml(f) {
@@ -930,6 +982,7 @@ function flightRowHtml(f) {
     : (f.landingVS != null ? Math.round(f.landingVS) + ' fpm' : '');
   const replayable = Array.isArray(f.track) && f.track.length > 1;
   return `<div class="flight-row ${incomplete?'fl-incomplete':''}" onclick="openFlight('${f.id}')">
+    ${f.registration ? `<img class="fl-shot" alt="" loading="lazy" data-flight-reg="${escHtml(f.registration)}">` : ''}
     <div class="fl-badge">${dep}→${arr}</div>
     <div class="fl-main">
       <div class="fl-route">${dep} → ${arr}</div>
@@ -950,6 +1003,7 @@ function renderAircraft() {
   }
   el.innerHTML = sorted.map(([name, data]) => `
     <div class="ac-card" onclick="openAircraft(decodeURIComponent('${encodeURIComponent(name)}'))">
+      ${data.reg ? `<img class="ac-photo" alt="" loading="lazy" data-flight-reg="${escHtml(data.reg)}">` : ''}
       <div class="ac-type">${name}</div>
       <div class="ac-reg">${data.reg || ''} · Last flown ${data.last ? new Date(data.last).toLocaleDateString(undefined,{month:'short',day:'numeric'}) : '—'}</div>
       <div class="ac-stats">
@@ -1071,6 +1125,7 @@ function showCloudSetup() {
 
 /* ── Detail panel ── */
 function openFlight(id) {
+  if (acProfile) closeDetail();
   const f = allFlights.find(x => x.id === id);
   if (!f) return;
   const dur = f.takeoffTime && f.landingTime ? fmtHours((f.landingTime-f.takeoffTime)/3600000) : '—';
@@ -1118,30 +1173,262 @@ function openFlight(id) {
   document.getElementById('detail-panel').classList.add('show');
 }
 
-function openAircraft(name) {
-  const flights = allFlights.filter(f => f.aircraft === name && f.complete && !f.incomplete);
-  const hours = flights.reduce((a,f) => {
-    return a + (f.takeoffTime && f.landingTime ? (f.landingTime-f.takeoffTime)/3600000 : 0);
-  }, 0);
-  document.getElementById('detail-inner').innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <h2 style="margin:0">✈ ${name}</h2>
-      <button onclick="closeDetail()" style="background:var(--ui2);border:1px solid var(--coast);border-radius:8px;color:var(--txt);font:inherit;padding:6px 10px;cursor:pointer">✕</button>
-    </div>
-    <div class="detail-grid">
-      <div class="detail-cell"><span>FLIGHTS</span><b>${flights.length}</b></div>
-      <div class="detail-cell"><span>HOURS</span><b>${fmtHours(hours)}</b></div>
-    </div>
-    <div class="section" style="margin-top:12px">
-      <h2>Flight History</h2>
-      ${flights.slice(0,20).map(flightRowHtml).join('')}
+/* ════════════════════════════════════════════════════════════════════
+   AIRCRAFT PHOTOGRAPHY
+   The spotter photograph comes from Planespotters.net through the app's
+   /api/photo route; only its metadata is cached, never a copy of the image.
+   The pilot's own screenshots live in IndexedDB and are never uploaded.
+═══════════════════════════════════════════════════════════════════════ */
+const acPhotos = new Map();
+let acProfile = null;
+
+function acMediaApi() { return window.AIRCRAFT_MEDIA || null; }
+
+function acLookup(registration, { force = false } = {}) {
+  const api = acMediaApi();
+  if (!api) return Promise.resolve({ state: 'unavailable' });
+  const key = api.photoCacheKey({ registration });
+  if (!key) return Promise.resolve({ state: 'none', reason: 'no-airframe' });
+  if (!force && acPhotos.has(key)) return Promise.resolve(acPhotos.get(key));
+  return api.lookupPhoto({ registration }, { force }).then(outcome => {
+    acPhotos.set(key, outcome);
+    return outcome;
+  });
+}
+
+/** Show a photo beside flights and aircraft cards, one lookup per airframe. */
+async function hydrateFlightPhotos() {
+  const images = [...document.querySelectorAll('img[data-flight-reg]:not([data-shot])')].slice(0, 12);
+  for (const image of images) {
+    image.dataset.shot = '1';
+    const outcome = await acLookup(image.dataset.flightReg);
+    if (outcome.state === 'ok' && outcome.photo) {
+      image.src = outcome.photo.thumb || outcome.photo.src;
+      image.alt = 'Aircraft ' + image.dataset.flightReg;
+      image.title = outcome.photo.photographer
+        ? 'Photo: ' + outcome.photo.photographer + ' · Planespotters.net'
+        : 'Photo: Planespotters.net';
+      image.classList.add('has-shot');
+    } else {
+      image.classList.add('no-shot');
+      image.removeAttribute('src');
+    }
+  }
+}
+
+function acSpotterMessage(p) {
+  if (!p.reg) return 'No registration is reported for this aircraft, so a photograph cannot be matched to it.';
+  if (!p.spotter) return 'Looking up a photograph by registration…';
+  if (p.spotter.state === 'none') return 'Planespotters.net has no photograph of ' + p.reg + '.';
+  return 'The photo lookup did not answer. Find Image tries again.';
+}
+
+function acGalleryHtml(p) {
+  const api = acMediaApi();
+  const count = p.photos.length;
+  const stage = count ? p.photos[p.index] : null;
+  const image = stage && p.urls[p.index]
+    ? `<img src="${escHtml(p.urls[p.index])}" alt="A photo of ${escHtml(p.name)} added by the pilot">`
+    : '';
+  const nav = count > 1
+    ? '<button class="acp-btn acp-nav prev" type="button" onclick="slideAircraft(-1)" aria-label="Previous photo">‹</button>'
+      + '<button class="acp-btn acp-nav next" type="button" onclick="slideAircraft(1)" aria-label="Next photo">›</button>'
+    : '';
+  const thumbs = count ? `<div class="acp-thumbs">${p.photos.map((photo, index) => `
+    <span class="acp-thumb${index === p.index ? ' on' : ''}">
+      <button class="pick" type="button" onclick="pickAircraftPhoto(${index})" aria-label="Photo ${index + 1}"><img src="${escHtml(p.urls[index] || '')}" alt="" loading="lazy"></button>
+      <button class="x" type="button" onclick="removeAircraftPhoto(${photo.id}, event)" title="Remove this photo">✕</button>
+    </span>`).join('')}</div>` : '';
+  const intervals = (api ? api.SLIDESHOW_INTERVALS : [0, 4, 6, 8, 12, 20]);
+  return `<div class="acp-stage">${image || '<div class="acp-empty">No photos of your own yet. Add a screenshot and it stays on this device.</div>'}${nav}</div>
+    ${thumbs}
+    <div class="acp-bar">
+      <label class="acp-upload">Add photos<input type="file" accept="image/*" multiple onchange="addAircraftPhotos(this)"></label>
+      <label>Slideshow
+        <select onchange="setAircraftSlideshow(this.value)">${intervals.map(seconds => `<option value="${seconds}"${seconds === p.interval ? ' selected' : ''}>${seconds ? `every ${seconds}s` : 'off'}</option>`).join('')}</select>
+      </label>
+      <span class="acp-msg">${count ? `${p.index + 1} of ${count}` : ''}${p.interval && count > 1 ? ' · cycling' : ''}</span>
     </div>`;
+}
+
+function renderAircraftGallery() {
+  const p = acProfile;
+  if (!p) return;
+  const host = document.getElementById('acp-gallery');
+  if (host) host.innerHTML = acGalleryHtml(p);
+}
+
+function stopAircraftSlideshow() {
+  if (acProfile && acProfile.timer) { clearInterval(acProfile.timer); acProfile.timer = null; }
+}
+
+function startAircraftSlideshow() {
+  stopAircraftSlideshow();
+  const p = acProfile;
+  if (!p || !p.interval || p.photos.length < 2) return;
+  p.timer = setInterval(() => {
+    if (!acProfile || acProfile !== p) return;
+    p.index = (acMediaApi() ? acMediaApi().nextSlide(p.index, p.photos.length) : (p.index + 1) % p.photos.length);
+    renderAircraftGallery();
+  }, p.interval * 1000);
+}
+
+function renderAircraftProfile() {
+  const p = acProfile;
+  if (!p) return;
+  stopAircraftSlideshow();
+  const photo = p.spotter && p.spotter.state === 'ok' ? p.spotter.photo : null;
+  const flights = allFlights.filter(f => f.aircraft === p.name && f.complete && !f.incomplete);
+  const hours = flights.reduce((sum, f) => sum + (f.takeoffTime && f.landingTime ? (f.landingTime - f.takeoffTime) / 3600000 : 0), 0);
+  const shot = photo
+    ? `<figure class="acp-shot"><a href="${escHtml(photo.link)}" target="_blank" rel="noopener"><img src="${escHtml(photo.src)}" alt="${escHtml(p.name)} ${escHtml(p.reg)}" loading="lazy" referrerpolicy="no-referrer"></a><figcaption>Planespotters ${photo.photographer ? '© ' + escHtml(photo.photographer) : '.net'} · <a href="${escHtml(photo.link)}" target="_blank" rel="noopener">original photograph</a></figcaption></figure>`
+    : `<div class="acp-shot none"><b>${escHtml(p.reg || p.name)}</b><span>${escHtml(acSpotterMessage(p))}</span></div>`;
+  document.getElementById('detail-inner').innerHTML = `
+    <div class="acp-head"><h2>✈ ${escHtml(p.name)}</h2><button class="acp-btn" type="button" onclick="closeDetail()">✕</button></div>
+    <div class="acp-meta"><span class="acp-reg">${escHtml(p.reg || '—')}</span><span>${escHtml(p.name)}</span><span>${flights.length} flight${flights.length === 1 ? '' : 's'} · ${fmtHours(hours)}</span></div>
+    ${shot}
+    <div class="acp-tools">
+      <button class="acp-btn primary" type="button" onclick="findAircraftImage()"${p.reg && !p.busy ? '' : ' disabled'}>Find Image</button>
+      <span class="acp-msg">${escHtml(p.notice || (photo ? 'Spotter photo shown with credit and a link to the original.' : ''))}</span>
+    </div>
+    <div class="section" style="margin-top:12px"><h2>Photo gallery</h2><div id="acp-gallery" class="acp-gallery">${acGalleryHtml(p)}</div></div>
+    <div class="section"><h2>Flight history</h2>${flights.length ? flights.slice(0, 20).map(flightRowHtml).join('') : '<div class="empty-block" style="padding:16px 0">No completed flights yet.</div>'}</div>`;
+  startAircraftSlideshow();
+  queueMicrotask(hydrateFlightPhotos);
+}
+
+async function loadAircraftProfile() {
+  const p = acProfile;
+  if (!p) return;
+  const api = acMediaApi();
+  renderAircraftProfile();
+  const [spotter, photos, saved] = await Promise.all([
+    p.reg ? acLookup(p.reg) : Promise.resolve({ state: 'none', reason: 'no-registration' }),
+    p.key && api ? api.listAircraftPhotos(p.key).catch(() => []) : Promise.resolve([]),
+    api ? api.getGallerySetting('slideshow', 8).catch(() => 8) : Promise.resolve(0),
+  ]);
+  if (acProfile !== p) return;
+  p.spotter = spotter;
+  p.photos = photos;
+  p.urls = photos.map(row => URL.createObjectURL(row.blob));
+  p.index = 0;
+  p.interval = api ? api.slideshowInterval(saved) : 0;
+  renderAircraftProfile();
+}
+
+async function reloadAircraftPhotos() {
+  const p = acProfile;
+  if (!p) return;
+  const api = acMediaApi();
+  (p.urls || []).forEach(url => URL.revokeObjectURL(url));
+  p.photos = p.key && api ? await api.listAircraftPhotos(p.key).catch(() => []) : [];
+  p.urls = p.photos.map(row => URL.createObjectURL(row.blob));
+  p.index = Math.min(p.index, Math.max(0, p.photos.length - 1));
+  renderAircraftProfile();
+}
+
+function openAircraft(name) {
+  if (acProfile) closeDetail();
+  const row = (stats.acMap && stats.acMap[name]) || {};
+  const reg = String(row.reg || '').trim().toUpperCase();
+  const api = acMediaApi();
+  acProfile = {
+    name, reg, key: api ? api.aircraftKey({ registration: reg, type: name }) : '',
+    photos: [], urls: [], index: 0, interval: 8, timer: null, spotter: null, busy: false, notice: '',
+  };
+  document.getElementById('detail-inner').innerHTML = '<div class="e-loading" style="padding:24px 0">Loading the aircraft…</div>';
   document.getElementById('detail-panel').classList.add('show');
+  renderAircraftProfile();
+  loadAircraftProfile();
+}
+
+function slideAircraft(step) {
+  const p = acProfile;
+  if (!p || p.photos.length < 2) return;
+  p.index = acMediaApi() ? acMediaApi().nextSlide(p.index, p.photos.length, step) : (p.index + step + p.photos.length) % p.photos.length;
+  renderAircraftGallery();
+}
+
+function pickAircraftPhoto(index) {
+  const p = acProfile;
+  if (!p || !p.photos[index]) return;
+  p.index = index;
+  renderAircraftGallery();
+}
+
+async function setAircraftSlideshow(value) {
+  const p = acProfile;
+  if (!p) return;
+  const api = acMediaApi();
+  p.interval = api ? api.slideshowInterval(value) : Number(value) || 0;
+  if (api) await api.setGallerySetting('slideshow', p.interval).catch(() => {});
+  renderAircraftGallery();
+  startAircraftSlideshow();
+}
+
+async function addAircraftPhotos(input) {
+  const p = acProfile;
+  const api = acMediaApi();
+  if (!p || !api) { showToast('Photo storage is not available on this page.'); return; }
+  if (!p.key) { showToast('This aircraft has no registration, so photos cannot be attached.'); return; }
+  const files = [...(input.files || [])].slice(0, 12);
+  let added = 0;
+  let failed = '';
+  for (const file of files) {
+    try { await api.addAircraftPhoto(p.key, file); added += 1; }
+    catch (error) { failed = error.message || 'The photo could not be stored.'; }
+  }
+  input.value = '';
+  p.notice = added ? `${added} photo${added === 1 ? '' : 's'} added on this device.` : failed;
+  await reloadAircraftPhotos();
+  if (added) showToast(p.notice);
+}
+
+async function removeAircraftPhoto(id, event) {
+  if (event) event.stopPropagation();
+  const p = acProfile;
+  const api = acMediaApi();
+  if (!p || !api || !confirm('Remove this photo from the aircraft gallery?')) return;
+  await api.deleteAircraftPhoto(id).catch(() => {});
+  await reloadAircraftPhotos();
+}
+
+async function findAircraftImage() {
+  const p = acProfile;
+  if (!p || !p.reg) return;
+  p.busy = true;
+  p.notice = 'Searching Planespotters.net for ' + p.reg + '…';
+  renderAircraftProfile();
+  const outcome = await acLookup(p.reg, { force: true });
+  if (acProfile !== p) return;
+  p.spotter = outcome;
+  p.busy = false;
+  p.notice = outcome.state === 'ok'
+    ? 'Photograph refreshed from Planespotters.net.'
+    : outcome.state === 'none'
+      ? 'No photograph of ' + p.reg + ' is published.'
+      : 'The photo service did not answer. Try again in a moment.';
+  renderAircraftProfile();
 }
 
 function closeDetail() {
+  if (acProfile) {
+    stopAircraftSlideshow();
+    (acProfile.urls || []).forEach(url => URL.revokeObjectURL(url));
+    acProfile = null;
+  }
   document.getElementById('detail-panel').classList.remove('show');
 }
+
+/* The module that owns the lookup cache runs after this inline script; when it
+   is ready, fill in the photos already on screen. */
+(function waitForAircraftMedia() {
+  if (window.AIRCRAFT_MEDIA) { queueMicrotask(hydrateFlightPhotos); return; }
+  window.addEventListener('aircraft-media-ready', () => {
+    hydrateFlightPhotos();
+    if (acProfile) loadAircraftProfile();
+  }, { once: true });
+})();
 
 async function deleteFlight(id) {
   if (!confirm('Delete this flight record? This cannot be undone.')) return;

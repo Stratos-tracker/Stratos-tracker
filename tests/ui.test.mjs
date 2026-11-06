@@ -1314,6 +1314,7 @@ test('published SID and STAR layers come from real data, under the route line', 
   assert.match(page, /data-dk-layer="sid"/, 'a SID is a layer the pilot can switch');
   assert.match(page, /data-dk-layer="star"/, 'so is a STAR');
   assert.match(page, /data-dk-layer="approach"/, 'and an approach');
+  assert.match(page, /data-dk-layer="missed"/, 'and a missed approach layer, off by default');
   assert.match(page, /fcProcHtml\(o\)/, 'the card reports the procedure source');
   assert.match(page, /PROCG\.notes\.join\(' · '\)/, 'and any limitation the source reported');
 });

@@ -19,6 +19,7 @@ export const KINDS = {
   sid: { key: 'sid', label: 'SID', title: 'Departure', color: '#f472b6' },
   star: { key: 'star', label: 'STAR', title: 'Arrival', color: '#a78bfa' },
   approach: { key: 'approach', label: 'APP', title: 'Approach', color: '#fbbf24' },
+  missed: { key: 'missed', label: 'MISSED', title: 'Missed approach', color: '#fb7185' },
 };
 
 const up = value => String(value == null ? '' : value).trim().toUpperCase();
@@ -318,6 +319,65 @@ export function pathFor(payload, { kind = 'sid', ident = '', runway = '', transi
     skipped,
     notes,
     runwayThreshold: threshold,
+    source: String(payload.source || ''),
+    cycle: String(payload.cycle || ''),
+    airport: String(payload.airport || ''),
+  };
+}
+
+/** The published missed-approach legs for one approach.
+ *
+ * They are not part of the path to the runway: an approach that goes around
+ * flies them instead. The dataset stores them apart from the final segment;
+ * a simulator bridge that still carries them inside the approach returns them
+ * through the fallback, which takes only the legs after the runway. */
+export function missedPathFor(payload, { ident = '', runway = '' } = {}) {
+  if (!payload || payload.ok !== true) {
+    return failure('unavailable', (payload && payload.error) || 'Procedure data is not available for this airport.');
+  }
+  const list = (payload.procedures && payload.procedures.approach) || [];
+  const procedure = list.find(item => up(item && item.id) === up(ident));
+  if (!procedure) {
+    return failure('not-in-data', `${payload.airport || 'This airport'} has no approach ${up(ident) || ''} in this dataset.`.replace('  ', ' '));
+  }
+
+  let segments = [];
+  let complete = true;
+  let skipped = 0;
+  let served = String(runway || '').replace(/^RW/i, '').toUpperCase();
+  const published = procedure.missed;
+  if (published && Array.isArray(published.points)) {
+    const points = cleanPoints(published.points);
+    if (points.length) segments = [points];
+    complete = published.complete !== false;
+    skipped = Number(published.skipped) || 0;
+    served = served || String(published.runway || '');
+  } else {
+    // A bridge payload keeps the missed legs in order after the runway leg.
+    const transitions = Array.isArray(procedure.transitions) ? procedure.transitions : [];
+    const final = transitions.find(item => up(item.id) === '') || transitions.find(item => (item.points || []).some(p => up(p.id).startsWith('RW')));
+    const points = cleanPoints((final && final.points) || []);
+    const at = points.findIndex(point => up(point.id).startsWith('RW'));
+    if (at >= 0) {
+      segments = [points.slice(at + 1)].filter(segment => segment.length);
+      const match = up(points[at].id).match(/^RW(\d{2}[LRCB]?)$/);
+      if (match && !served) served = match[1];
+    }
+  }
+  if (!segments.length) {
+    return failure('no-missed', `${procedure.id} publishes no missed-approach legs in this dataset.`);
+  }
+  return {
+    ok: true,
+    kind: 'missed',
+    label: KINDS.missed.label,
+    id: String(procedure.id).toUpperCase(),
+    runway: served,
+    segments,
+    points: segments.flat(),
+    complete,
+    skipped,
+    notes: [],
     source: String(payload.source || ''),
     cycle: String(payload.cycle || ''),
     airport: String(payload.airport || ''),

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {
   KINDS, airportCode, endpointsFor, runwayIds, runwayThreshold, procedureList,
   transitionList, pathFor, pathNote, describe, kindNote, planSelection, procedureLabels,
-  approachTitle,
+  approachTitle, missedPathFor,
 } from '../app/js/lib/procdeck.js';
 import handler from '../api/procedures.js';
 
@@ -78,6 +78,10 @@ const approachPayload = {
           { id: 'HONIE', lat: 33.3, lon: -84.5, terminator: 'TF' },
         ] },
       ],
+      missed: { runway: '26L', complete: true, skipped: 0, points: [
+        { id: 'MISS1', lat: 33.7, lon: -84.3, terminator: 'TF' },
+        { id: 'MISS2', lat: 33.8, lon: -84.2, terminator: 'HM' },
+      ] },
     }, {
       id: 'H26LZ',
       transitions: [
@@ -177,6 +181,22 @@ test('procdeck: an approach joins its entry branch to the final segment and stop
   assert.equal(final.ok, true);
   assert.deepEqual(final.points.map(p => p.id), ['HONIE', 'RW26L']);
   assert.equal(final.segments.length, 1);
+});
+
+test('procdeck: the missed approach is drawn as its own published path', () => {
+  const missed = missedPathFor(approachPayload, { ident: 'I26L', runway: '26L' });
+  assert.equal(missed.ok, true);
+  assert.equal(missed.kind, 'missed');
+  assert.deepEqual(missed.points.map(p => p.id), ['MISS1', 'MISS2']);
+  assert.deepEqual(missed.segments.map(s => s.map(p => p.id)), [['MISS1', 'MISS2']]);
+  assert.equal(missed.runway, '26L');
+  assert.equal(missed.complete, true);
+
+  const none = missedPathFor(approachPayload, { ident: 'H26LZ', runway: '26L' });
+  assert.equal(none.ok, false);
+  assert.equal(none.reason, 'no-missed');
+  assert.equal(missedPathFor(approachPayload, { ident: 'NOPE' }).ok, false);
+  assert.equal(missedPathFor(null, { ident: 'I26L' }).reason, 'unavailable');
 });
 
 test('procdeck: missing data is named, and approaches are never invented', () => {

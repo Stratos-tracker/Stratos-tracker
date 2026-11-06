@@ -271,17 +271,34 @@ def build_airport(airport, rows, runways, waypoints, enroute, navaids, airports,
         procedures = []
         for name in sorted(grouped.get(kind, {})):
             transitions = []
+            missed = None
             for transition in sorted(grouped[kind][name]):
                 ordered = sorted(grouped[kind][name][transition], key=lambda r: r["sequence"])
                 points = []
                 skipped = 0
                 seen = set()
                 reach_runway = False
+                missed_points = []
+                missed_skipped = 0
+                missed_seen = set()
                 for row in ordered:
                     # An approach's published path ends at its runway leg; the
-                    # legs after it are the missed approach, a separate path.
+                    # legs after it are the missed approach, kept as a separate
+                    # path so the approach itself still lands on the runway.
                     if kind == "approach" and reach_runway:
-                        break
+                        if not row["fix"]:
+                            continue
+                        point = resolve_fix(row, airport, runways, waypoints, enroute, navaids, airports)
+                        if not point:
+                            missed_skipped += 1
+                            continue
+                        key = (row["fix"], round(point["lat"], 5), round(point["lon"], 5))
+                        if key in missed_seen:
+                            continue
+                        missed_seen.add(key)
+                        missed_points.append({"id": row["fix"], "lat": point["lat"],
+                                              "lon": point["lon"], "terminator": row["terminator"]})
+                        continue
                     if not row["fix"]:
                         # A heading or course leg has no fix; it is not turned
                         # into a point, and the runway threshold supplies the
@@ -325,8 +342,20 @@ def build_airport(airport, rows, runways, waypoints, enroute, navaids, airports,
                     "skipped": skipped,
                     "complete": skipped == 0,
                 })
+                if kind == "approach" and not transition and missed_points:
+                    # The missed approach belongs to the final segment, whose
+                    # transition id is empty; its runway is the one just served.
+                    missed = {
+                        "runway": runway,
+                        "points": missed_points,
+                        "skipped": missed_skipped,
+                        "complete": missed_skipped == 0,
+                    }
             if transitions:
-                procedures.append({"id": name, "transitions": transitions})
+                entry = {"id": name, "transitions": transitions}
+                if missed:
+                    entry["missed"] = missed
+                procedures.append(entry)
         if procedures:
             kinds[kind] = procedures
     if not kinds:

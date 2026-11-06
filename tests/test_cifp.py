@@ -237,6 +237,12 @@ class ShippedDatasetTests(unittest.TestCase):
         self.assertEqual(idents[-1], "RW16C", "the approach path ends on its runway")
         self.assertNotIn("MILLT", idents, "the missed approach is a separate path")
         self.assertEqual(final["runway"], "16C")
+        missed = approaches["I16C"].get("missed")
+        self.assertIsNotNone(missed, "the missed approach is published as its own path")
+        missed_ids = [point["id"] for point in missed["points"]]
+        self.assertTrue(missed_ids, "the missed legs have real coordinates")
+        self.assertNotEqual(missed_ids[0], "RW16C", "the runway is not repeated in the missed path")
+        self.assertIn("MILLT", missed_ids, "the published missed fixes are carried")
 
 
 if __name__ == "__main__":

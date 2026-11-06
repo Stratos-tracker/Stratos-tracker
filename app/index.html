@@ -420,7 +420,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 <div id="online" class="box"><b id="olPlace">–</b><span id="olCount">–</span></div>
 <div id="fab"><button id="bTheme" class="fab" title="Theme">Day</button>
 <button id="bLay" class="fab" title="Layers and tools">&#9776;</button><button id="bFol" class="fab" title="Follow aircraft">&#9992;</button><button id="bZi" class="fab" title="Zoom in">+</button><button id="bZo" class="fab" title="Zoom out">−</button>
-</div><div id="lay"><b>Map layers</b><button data-l="apt" class="on">Airports</button><button data-l="nav" class="on">Navaids</button><button data-l="trf" class="on">Traffic</button><button data-l="trl">All trails</button><button data-l="rte" class="on">Route</button><b>Procedures</b><div id="dklay"><button data-dk-layer="sid" class="on">SID</button><button data-dk-layer="star" class="on">STAR</button><button data-dk-layer="approach" class="on">Approach</button></div><b>Chart</b><button data-l="grid">Grid</button><b>Traffic source</b><select id="trs" aria-label="Traffic source"><option value="vatsim">VATSIM — live pilots</option><option value="adsb">ADS-B — community feeds</option></select><div class="m" id="trsnote" style="max-width:220px;margin-top:2px">Both sources are keyless and free.</div><b>Map style</b><div id="ms"></div><b>Projection</b><div id="pj"></div><div id="gwrap" hidden><b>Globe surface</b><div id="gs"></div><div class="m" id="gn"></div><div class="row"><button type="button" id="gReset" title="Centre the globe on the route again">Reset view</button><button type="button" id="gRead" title="Read terrain elevations around the centre">Read terrain</button></div></div><b>Workspaces</b><div id="mwtools"><button id="bLive" type="button">Live tracking</button><button id="bCh" type="button">Charts</button><button id="bWx" type="button">Weather</button><button id="bData" type="button">Data</button><button id="bEfb" type="button" title="Electronic flight bag">Stratos EFB</button></div></div>
+</div><div id="lay"><b>Map layers</b><button data-l="apt" class="on">Airports</button><button data-l="nav" class="on">Navaids</button><button data-l="trf" class="on">Traffic</button><button data-l="trl">All trails</button><button data-l="rte" class="on">Route</button><b>Procedures</b><div id="dklay"><button data-dk-layer="sid" class="on">SID</button><button data-dk-layer="star" class="on">STAR</button><button data-dk-layer="approach" class="on">Approach</button><button data-dk-layer="missed">Missed</button></div><b>Chart</b><button data-l="grid">Grid</button><b>Traffic source</b><select id="trs" aria-label="Traffic source"><option value="vatsim">VATSIM — live pilots</option><option value="adsb">ADS-B — community feeds</option></select><div class="m" id="trsnote" style="max-width:220px;margin-top:2px">Both sources are keyless and free.</div><b>Map style</b><div id="ms"></div><b>Projection</b><div id="pj"></div><div id="gwrap" hidden><b>Globe surface</b><div id="gs"></div><div class="m" id="gn"></div><div class="row"><button type="button" id="gReset" title="Centre the globe on the route again">Reset view</button><button type="button" id="gRead" title="Read terrain elevations around the centre">Read terrain</button></div></div><b>Workspaces</b><div id="mwtools"><button id="bLive" type="button">Live tracking</button><button id="bCh" type="button">Charts</button><button id="bWx" type="button">Weather</button><button id="bData" type="button">Data</button><button id="bEfb" type="button" title="Electronic flight bag">Stratos EFB</button></div></div>
 
 <div id="cv"><div class="cvh"><button id="cvx" aria-label="Back">&#8592;</button><div class="cvt"><b id="cvi"></b><span id="cvn"></span><span id="cvm"></span></div><button id="cvf">Fit</button></div><div class="seg" id="cvs"></div></div><div id="ci"></div>
 <div id="chart"></div>
@@ -656,7 +656,7 @@ const RL={KSFO:[11870,8650],KOAK:[10520],KSJC:[11000],KSAC:[8600],KRNO:[11002],K
 function pairs(a){const o=[];a.rw.forEach(n=>{if(!o.some(p=>p[0]==n||p[1]==n))o.push([n,(n+17)%36+1])});return o}
 function liveOk(){return live.on&&live.d&&live.d.lat!=null&&live.d.age<3&&performance.now()-live.at<3000}
 const cv=$('#map'),cx=cv.getContext('2d');let W,H,dpr,C={};
-const V={lon:-119.5,lat:38.8,z:6,fol:false,mode:'plane',gz:1,gs:'vector'},L={apt:1,nav:1,trf:1,grid:0,rte:1,procSid:1,procStar:1,procApproach:1,style:(function(){try{return localStorage.getItem('dl.style')||'sat'}catch(e){return'sat'}})()};
+const V={lon:-119.5,lat:38.8,z:6,fol:false,mode:'plane',gz:1,gs:'vector'},L={apt:1,nav:1,trf:1,grid:0,rte:1,procSid:1,procStar:1,procApproach:1,procMissed:0,style:(function(){try{return localStorage.getItem('dl.style')||'sat'}catch(e){return'sat'}})()};
 let plan=false,panel=null,sel=null,route=[],trav=0,own={lat:0,lon:0,hdg:0,alt:0,vs:0};
 const byId=id=>A.find(a=>a.id==id)||N.find(a=>a.id==id);
 const wp=o=>({id:o.id,name:o.name,lat:o.lat,lon:o.lon,k:o.k||'fix',elev:o.elev||0,ss:o.ss||'',aw:o.aw||''});
@@ -1416,16 +1416,18 @@ function strokeProcedureSegment(segment){
 function drawProcedurePaths(){
   const layers=Array.isArray(window.PROCLAYERS)?window.PROCLAYERS:[];
   if(!layers.length||CH.on||!L.rte)return;
-  const shown={sid:L.procSid,star:L.procStar,approach:L.procApproach};
+  const shown={sid:L.procSid,star:L.procStar,approach:L.procApproach,missed:L.procMissed};
   cx.save();cx.lineCap='round';cx.lineJoin='round';
   for(const layer of layers){
     if(!layer||!layer.ok||!shown[layer.kind])continue;
     const color=layer.color||'#f472b6';
     cx.strokeStyle=color;cx.globalAlpha=.32;cx.lineWidth=11;
+    cx.setLineDash(layer.kind==='missed'?[9,7]:[]);
     for(const segment of layer.segments)strokeProcedureSegment(segment);
     cx.globalAlpha=.95;cx.lineWidth=2.2;
 
     for(const segment of layer.segments)strokeProcedureSegment(segment);
+    cx.setLineDash([]);
   }
   cx.restore();
   for(const layer of layers){

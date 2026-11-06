@@ -16,7 +16,7 @@
  */
 import {
   KINDS, KIND_ORDER, endpointsFor, pathFor, pathNote, describe, kindNote,
-  planSelection, procedureList, transitionList, runwayIds, airportCode,
+  planSelection, procedureList, transitionList, runwayIds, airportCode, missedPathFor,
 } from './lib/procdeck.js';
 
 const KEY = 'stratos.procdeck';
@@ -149,7 +149,13 @@ async function compute() {
     const next = [];
     if (state.sid) next.push({ ...pathFor(depPayload, { kind: 'sid', ident: state.sid, runway: state.depRwy, transition: state.sidTrans }), airport: state.dep });
     if (state.star) next.push({ ...pathFor(arrPayload, { kind: 'star', ident: state.star, runway: state.arrRwy, transition: state.starTrans }), airport: state.arr });
-    if (state.approach) next.push({ ...pathFor(arrPayload, { kind: 'approach', ident: state.approach, runway: state.approachRwy || state.arrRwy, transition: state.approachTrans }), airport: state.arr });
+    if (state.approach) {
+      next.push({ ...pathFor(arrPayload, { kind: 'approach', ident: state.approach, runway: state.approachRwy || state.arrRwy, transition: state.approachTrans }), airport: state.arr });
+      // The go-around path is published for the same approach but is a
+      // separate layer; it is drawn only when the map's MISSED toggle is on.
+      const missed = missedPathFor(arrPayload, { ident: state.approach, runway: state.approachRwy || state.arrRwy });
+      if (missed.ok) next.push({ ...missed, airport: state.arr });
+    }
     layers = next
       .filter(layer => layer && (layer.ok || layer.error))
       .map(layer => ({ ...layer, color: (KINDS[layer.kind] || {}).color || '#f472b6' }));
