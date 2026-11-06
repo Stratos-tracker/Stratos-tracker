@@ -21,6 +21,7 @@ import {
   COUNTRIES, REGIONS, countriesForRegion, licenceFor, registryStats, sourcesForCountry,
 } from '../lib/chartdir.js';
 import { chartCoverage, coverageStatus } from '../lib/chartproviders.js';
+import { accessFor } from '../lib/chartdir.js';
 import {
   chartCacheKey, isPdfBytes, officialChartUrl, readChartCache,
   validityState, validityText, writeChartCache,
@@ -99,10 +100,15 @@ export function flightAirports(plan) {
 
 function documentUrls(chart) {
   const urls = [];
+  // Each provider keeps its own proxy parameters; the page never builds a
+  // document URL from a name the provider did not publish.
+  const query = chart.source === 'austrocontrol-eaip'
+    ? `source=austrocontrol&icao=${encodeURIComponent(chart.icao || '')}&cycle=${encodeURIComponent(chart.cycle || '')}&pdf=${encodeURIComponent(chart.pdf)}`
+    : `cycle=${encodeURIComponent(chart.cycle || '')}&file=${encodeURIComponent(chart.pdf)}`;
   if (!isHostedPage()) {
-    urls.push(`${defaultBridgeBase().replace(/\/+$/, '')}/chart?cycle=${encodeURIComponent(chart.cycle || '')}&file=${encodeURIComponent(chart.pdf)}`);
+    urls.push(`${defaultBridgeBase().replace(/\/+$/, '')}/chart?${query}`);
   }
-  urls.push(`/api/chart?cycle=${encodeURIComponent(chart.cycle || '')}&file=${encodeURIComponent(chart.pdf)}`);
+  urls.push(`/api/chart?${query}`);
   return urls;
 }
 
@@ -265,12 +271,21 @@ export async function mount(root, ctx) {
         <div class="ch-sources-note">These publishers hold the documents for this airport.</div>
       </div>
       <div class="ch-source-list">${sources.map(source => {
+        // What the publisher allows is the useful fact on this row. The licence
+        // category speaks only for a source whose access position is unknown, so
+        // a verified "permission required" never reads as "terms unverified".
         const licence = licenceFor(source.licenceCategory || source.licence);
+        const access = source.accessLabel
+          ? { label: source.accessLabel, tone: source.accessTone || '' }
+          : accessFor(source);
+        const checked = source.checked
+          ? ` · checked ${esc(source.checked)}`
+          : (access.key === 'UNKNOWN' ? ' · terms not yet verified' : '');
         return `<a class="ch-source" href="${esc(source.url || source.terms || '')}" target="_blank" rel="noopener">
           <div class="ch-source-main"><b>${esc(source.name || source.label || 'Publisher')}</b>
             <span>${esc(source.note || source.licence || 'Official aeronautical documents')}</span>
-            <span class="e-small e-faint">${esc(licence.label)}${source.checked ? ` · checked ${esc(source.checked)}` : ' · terms not yet verified'}</span></div>
-          <span class="e-badge ${licence.tone}">Open ↗</span>
+            <span class="e-small e-faint">${esc(access.label || licence.label)}${checked}</span></div>
+          <span class="e-badge ${access.tone || licence.tone}">Open ↗</span>
         </a>`;
       }).join('')}</div>
       <div class="e-small e-faint">Stratos will not copy, frame or proxy a publisher that has not licensed its documents.</div>
@@ -351,12 +366,23 @@ export async function mount(root, ctx) {
   function renderViewer() {
     if (!viewerCard) return;
     if (!selected) {
-      const external = !catalogue && sourceLinks.length > 0;
+      // An integrated publisher with nothing loaded is a load failure to report,
+      // not an external provider: the two must never be shown as the same thing.
+      const external = !catalogue && sourceLinks.length > 0 && coverage && !coverage.integrated;
       viewerCard.classList.toggle('is-centred', external);
       if (external) {
+        const access = coverage.access || 'UNKNOWN';
+        const titles = {
+          FREE_PUBLIC_ACCESS: 'These charts are free to view at the publisher',
+          FREE_WITH_REGISTRATION: 'These charts need a publisher account',
+          PERMISSION_REQUIRED: 'This publisher does not allow in-app display',
+          PAID: 'These charts are sold by the publisher',
+          UNKNOWN: 'This publisher’s terms are not verified',
+          UNAVAILABLE: 'No chart source is registered for this airport',
+        };
         viewerCard.innerHTML = `<div class="ch-viewer-head">
             <div class="e-label">Charts · ${esc(icao)}</div>
-            <div class="ch-viewer-title">No embeddable chart for this airport</div>
+            <div class="ch-viewer-title">${esc(titles[access] || titles.UNKNOWN)}</div>
             <p class="ch-viewer-text">${esc((coverage && coverage.message) || 'The charts for this airport are published by an external provider.')}</p>
           </div>${sourcesPanel(sourceLinks)}`;
         return;
@@ -368,12 +394,15 @@ export async function mount(root, ctx) {
       return;
     }
     viewerCard.classList.remove('is-centred');
-    const official = selected.pdf && selected.cycle ? officialChartUrl(selected.cycle, selected.pdf) : null;
+    // The provider's own document address wins: a national AIP does not live on
+    // the FAA server, so its address is never rebuilt from the FAA pattern.
+    const official = selected.url
+      || (selected.pdf && selected.cycle ? officialChartUrl(selected.cycle, selected.pdf) : null);
     viewerCard.innerHTML = `
       <div class="e-row" style="margin-bottom:8px">
         <div style="min-width:0">
           <div class="e-value" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(selected.title || selected.pdf)}</div>
-          <div class="e-small e-faint">${esc(summaryLine(selected))}</div>
+          <div class="e-small e-faint">${esc(summaryLine(selected))}${selected.categoryLabel ? ` · ${esc(selected.categoryLabel)}` : ''}${selected.cycle ? ` · ${esc(selected.source === 'austrocontrol-eaip' ? `AIRAC ${selected.cycle}` : `cycle ${selected.cycle}`)}` : ''}</div>
         </div>
         <span class="e-spacer"></span>
         <div class="chart-toolbar">
@@ -390,7 +419,7 @@ export async function mount(root, ctx) {
       </div>
       <div class="chart-host" id="chart-host"></div>
       <div class="e-small ${validityState(selected) === 'expired' ? 'e-faint' : 'e-muted'}" style="margin-top:8px" id="chart-validity">
-        ${esc(validityText(selected))}
+        ${esc(validityText(selected))}${selected.attribution ? ` · ${esc(selected.attribution)}` : ''}
       </div>`;
 
     const host = viewerCard.querySelector('#chart-host');

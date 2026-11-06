@@ -11,10 +11,11 @@
  */
 
 import {
-  CHART_SOURCES, COUNTRIES, LICENCES, REGIONAL_SOURCES, REGIONS, SOURCE_BY_ID, licenceFor,
+  ACCESS, CHART_SOURCES, COUNTRIES, LICENCES, REGIONAL_SOURCES, REGIONS, SOURCE_BY_ID,
+  accessFor, accessKeyFor, establishedFor, licenceFor,
 } from '../data/chart-sources.js';
 
-export { COUNTRIES, LICENCES, REGIONS, licenceFor };
+export { ACCESS, COUNTRIES, LICENCES, REGIONS, accessFor, accessKeyFor, establishedFor, licenceFor };
 
 /** Every registered publisher, national and regional, for documentation. */
 export const LISTED_PUBLISHERS = [...CHART_SOURCES, ...REGIONAL_SOURCES];

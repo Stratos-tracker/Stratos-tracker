@@ -236,7 +236,11 @@ export function chartId(chart) {
  * meaning; a field the source did not supply stays null and the UI says so.
  */
 export function toChart(record, context = {}) {
-  const category = classifyChart(record.code);
+  // An eAIP provider classifies its own map series; the FAA classification is
+  // only the fallback, so a category is never guessed from a foreign code.
+  const category = record.category && CATEGORY_LABELS[record.category]
+    ? { key: record.category, label: CATEGORY_LABELS[record.category] }
+    : classifyChart(record.code);
   const icao = normalizeIcao(context.icao) || '';
   const title = String(record.title || '').trim();
   const cycle = String(context.cycle || '');
@@ -250,7 +254,7 @@ export function toChart(record, context = {}) {
     procedure: record.procedure || null,
     approach: category.key === 'approach' ? approachType(title) : null,
     runways: runwaysInTitle(title),
-    pdf: String(record.pdf || '').trim().toUpperCase(),
+    pdf: pdfName(record.pdf, context.source),
     source: context.source || FAA_SOURCE.id,
     sourceName: context.sourceName || FAA_SOURCE.name,
     provider: context.provider || context.source || FAA_SOURCE.id,
@@ -261,10 +265,26 @@ export function toChart(record, context = {}) {
     expires: Number.isFinite(context.expires) ? context.expires : null,
     amended: record.amended ? parseFaaDate(record.amended) : null,
     checkedAt: Number.isFinite(context.checkedAt) ? context.checkedAt : null,
-    url: cycle && record.pdf ? officialChartUrl(cycle, record.pdf) : null,
+    attribution: context.attribution || null,
+    // The provider supplies the publisher's own document address when it has
+    // one; the FAA address is built only for the FAA cycle shape.
+    url: record.url || (cycle && record.pdf ? officialChartUrl(cycle, record.pdf) : null),
   };
   chart.id = chartId(chart);
   return chart;
+}
+
+/**
+ * A document's file name in the case its publisher serves.
+ *
+ * The FAA d-TPP publishes upper-case names. An eAIP publisher's server is
+ * case-sensitive and answers 404 for any other spelling of a published chart
+ * (AIP Austria serves "LO_AD_2_LOWW_1-1_en.pdf"), so a foreign name is kept
+ * exactly as the authority wrote it.
+ */
+export function pdfName(value, source) {
+  const name = String(value || '').trim();
+  return !source || /^faa/i.test(String(source)) ? name.toUpperCase() : name;
 }
 
 export function officialChartUrl(cycle, pdf) {
@@ -286,6 +306,7 @@ export function normaliseCatalogue(payload, icao) {
     source: data.source,
     provider: data.provider,
     retrieval: data.retrieval,
+    attribution: data.attribution || data.license || null,
   };
   return charts
     .map(record => toChart(record, context))
@@ -339,7 +360,9 @@ export function isPdfBytes(buffer) {
 
 /** Cache key for a downloaded chart document. */
 export function chartCacheKey(chart) {
-  return `faa:${chart.cycle || 'unknown'}:${chart.pdf}`;
+  // The source is part of the key: two publishers can publish documents with
+  // the same name in the same cycle, and they must not share a cache entry.
+  return `${chart.source || 'faa'}:${chart.cycle || 'unknown'}:${chart.pdf}`;
 }
 
 /* ── local document cache ────────────────────────────────────────────────

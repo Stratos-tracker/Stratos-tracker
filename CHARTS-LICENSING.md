@@ -8,28 +8,46 @@ registry, then regenerate, rather than editing this file.
 ## The rule
 
 A public web page is not a redistribution licence. Stratos embeds a document only
-when the publisher's terms allow third-party display (today: the U.S. FAA, whose
-terminal procedures are a U.S. Government work in the public domain). For every
-other publisher the EFB shows the airport's coverage status and a link to the
-authority's own portal. Nothing is scraped, framed, proxied or re-hosted.
+when the publisher's terms allow third-party display: today the U.S. FAA, whose
+terminal procedures are a U.S. Government work in the public domain, and AIP
+Austria, whose charts Austro Control publishes under CC BY 4.0. For every other
+publisher the EFB shows the airport's coverage status and a link to the
+authority's own portal. Nothing is scraped, framed or re-hosted, and the proxy in
+`api/chart.js` only fetches a document name the authority itself publishes.
 
 ## Categories
 
 | Category | Meaning | Publishers |
 | --- | --- | --- |
-| FREE_REUSE | Explicit terms allow third-party display and redistribution. | 1 |
+| FREE_REUSE | Explicit terms allow third-party display and redistribution. | 2 |
 | FREE_PUBLIC | Free public access. Reuse terms still need to be established. | 13 |
 | FREE_PERSONAL_ONLY | Free for personal use; not authorised for a Stratos integration. | 0 |
 | PAID | Requires a purchase or a commercial licence. | 1 |
-| PERMISSION_REQUIRED | The authority must be asked before the documents can be reused. | 7 |
+| PERMISSION_REQUIRED | The authority must be asked before the documents can be reused. | 6 |
 | UNKNOWN | The licence position has not been established. | 62 |
 
 **84 national publishers and 2 regional indexes across 84 countries.**
+
+## Access statuses
+
+Every airport resolves to exactly one of these. Only `AVAILABLE_IN_APP` documents
+open inside the EFB; every other status keeps the publisher link and says why.
+
+| Status | Meaning | Publishers |
+| --- | --- | --- |
+| AVAILABLE_IN_APP | The publisher’s terms allow Stratos to display these documents inside the app. | 2 |
+| FREE_PUBLIC_ACCESS | Publicly accessible at the publisher, but in-app display has not been established. | 13 |
+| FREE_WITH_REGISTRATION | Free, but the publisher requires an account before the documents open. | 5 |
+| PERMISSION_REQUIRED | The publisher’s terms require written approval before another app may display the documents. | 5 |
+| PAID | A purchase or commercial licence is required from the publisher. | 1 |
+| UNKNOWN | The publisher’s reuse position has not been established. | 58 |
+| UNAVAILABLE | No usable published source was found for this country. | 0 |
 
 ## Embedded today
 
 | Country | Authority | Publisher | Charts | Terms | Last checked |
 | --- | --- | --- | --- | --- | --- |
+| Austria | Austro Control | [AIP Austria](https://eaip.austrocontrol.at/) | diagram, sid, star, approach, minimums, hotspot | Explicit terms allow third-party display and redistribution. | 2026-11-06 |
 | United States | Federal Aviation Administration | [FAA Digital Terminal Procedures](https://www.faa.gov/air_traffic/flight_info/aeronav/digital_products/) | diagram, sid, star, approach, minimums, hotspot, enroute, area, vfr, obstacle, visual, parking | Explicit terms allow third-party display and redistribution. | 2026-11-06 |
 
 ## Link-only, free to view
@@ -60,7 +78,6 @@ so a pilot always sees who owns the documents and where to ask.
 
 | Country | Authority | Publisher | Licence | Reason |
 | --- | --- | --- | --- | --- |
-| Austria | Austro Control | [Austro Control — AIP Austria](https://eaip.austrocontrol.at/) | PERMISSION_REQUIRED | Copyright Austro Control; commercial reproduction needs written consent. |
 | Canada | NAV CANADA | [NAV CANADA — AIP Canada](https://www.navcanada.ca/en/aeronautical-information/aip-canada.aspx) | PAID | CAP and IFR charts are licensed by NAV CANADA; Stratos does not mirror them. |
 | Germany | DFS Deutsche Flugsicherung | [DFS AIS — AIP Germany](https://ais.dfs.de/pilotservice/briefing/aip_online/aip_online.jsp) | PERMISSION_REQUIRED | Free AIP access. The charts are copyright DFS and reuse needs written approval. |
 | Italy | ENAV | [ENAV — AIP Italy](https://www.enav.it/en/login-required) | PERMISSION_REQUIRED | Registration required for the online service. |
@@ -205,4 +222,11 @@ Embedding is a separate step and needs terms that permit it. Add a descriptor wi
 keep the proxy narrow: a fixed host, a fixed path shape and a document-name pattern,
 as `api/chart.js` does for the FAA. AIRAC cycles are recorded per catalogue, and a
 document whose cycle has expired is labelled expired, never current.
+
+An eAIP authority that serves a per-airport chart index is added the same way: a
+descriptor in `app/js/lib/eaip.js` (cycle index, airport page, document-name
+pattern) plus one branch each in `api/charts.js` and `api/chart.js`. AIP Austria is
+the worked example. After any provider change run
+`node scripts/check-charts-live.mjs`: it opens a real document for each integrated
+publisher and prints the status the other test airports resolve to.
 

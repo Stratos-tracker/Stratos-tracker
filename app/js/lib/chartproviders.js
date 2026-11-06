@@ -1,23 +1,23 @@
 /* Chart providers.
  *
- * One provider is integrated: the FAA d-TPP publication, a U.S. Government
- * work whose terms allow Stratos to fetch and render the documents itself.
- * Every other registered publisher is *link-only*: Stratos holds no reuse
- * licence, so the catalogue and the viewer point at the publisher instead of
- * copying its charts. Coverage therefore answers three questions honestly —
- * which publisher owns the charts, what its licence allows, and whether
- * Stratos can embed the documents.
+ * Two publishers are integrated because their own terms allow it:
+ *   - FAA d-TPP (U.S. Government work, public domain).
+ *   - AIP Austria (CC BY 4.0, AIP Austria GEN 3.2 §3.1.2).
+ * Every other registered publisher is link-only for a stated reason, taken from
+ * its own terms rather than assumed: DFS forbids third-party display, Airservices
+ * permits personal on-screen viewing only, NAV CANADA sells its charts.
  *
- * Adding an embedded provider later means one descriptor with
- * `status: 'integrated'` plus a fetch adapter; the catalogue and the viewer do
- * not change.
+ * Coverage therefore answers four questions honestly — which publisher owns the
+ * charts, what its access category is, why Stratos can or cannot display the
+ * documents, and where the pilot can open them.
  */
 
 import { FAA_SOURCE, categoryLabel } from './charts.js';
+import { EAIP_LIST, eaipForIcao } from './eaip.js';
 import {
-  countryForIcao, coverageText, licenceFor, LISTED_PUBLISHERS, officialSourcesFor, publisherFor,
+  ACCESS, accessKeyFor, countryForIcao, coverageText, establishedFor, licenceFor,
+  LISTED_PUBLISHERS, officialSourcesFor, publisherFor,
 } from './chartdir.js';
-import { REGIONAL_SOURCES } from '../data/chart-sources.js';
 
 const ALL_CATEGORIES = ['diagram', 'sid', 'star', 'approach', 'odp', 'minimums', 'hotspot', 'supplement', 'enroute', 'vfr'];
 
@@ -36,17 +36,55 @@ export const FAA_PROVIDER = {
   attribution: FAA_SOURCE.license,
   licence: FAA_SOURCE.license,
   licenceCategory: 'FREE_REUSE',
+  access: 'AVAILABLE_IN_APP',
+  accessLabel: ACCESS.AVAILABLE_IN_APP.label,
   terms: FAA_SOURCE.terms,
   redistributable: true,
+  checked: '2026-11-06',
+  note: 'U.S. Government work in the public domain.',
 };
 
+/** Descriptor for an eAIP publisher Stratos is allowed to render. */
+function eaipDescriptor(source) {
+  return {
+    id: source.id,
+    name: source.name,
+    publisher: source.publisher,
+    status: 'integrated',
+    country: source.country,
+    iso2: source.iso2,
+    regions: [source.region],
+    categories: ALL_CATEGORIES,
+    format: 'PDF',
+    update: 'AIRAC / AIP amendment cycle',
+    retrieval: 'eaip-cycle',
+    attribution: source.attribution,
+    licence: `${source.licenceLabel} — reuse granted`,
+    licenceCategory: source.licenceCategory,
+    licenceLabel: source.licenceLabel,
+    licenceTone: 'good',
+    access: 'AVAILABLE_IN_APP',
+    accessLabel: ACCESS.AVAILABLE_IN_APP.label,
+    accessTone: 'good',
+    terms: source.terms,
+    url: source.cycleIndexUrl,
+    redistributable: true,
+    checked: source.checked,
+    note: source.note,
+  };
+}
+
+/** Descriptor for a registered publisher Strom cannot display documents for. */
 function descriptor(entry) {
   const licence = licenceFor(entry.licence);
+  const accessKey = accessKeyFor(entry);
+  const access = ACCESS[accessKey] || ACCESS.UNKNOWN;
+  const established = establishedFor(entry) || {};
   return {
     id: entry.id,
     name: entry.name,
     publisher: entry.authority,
-    status: 'link-only',
+    status: accessKey === 'AVAILABLE_IN_APP' ? 'integrated' : 'link-only',
     country: entry.country,
     iso2: entry.iso2,
     regions: [entry.region],
@@ -54,21 +92,38 @@ function descriptor(entry) {
     format: entry.format || 'PDF',
     update: entry.update,
     retrieval: 'publisher-portal',
-    attribution: `${entry.authority} · licence ${licence.label}`,
+    attribution: `${entry.authority} · ${access.label}`,
     licence: licence.detail,
     licenceCategory: licence.key,
     licenceLabel: licence.label,
     licenceTone: licence.tone,
+    access: accessKey,
+    accessLabel: access.label,
+    accessTone: access.tone,
+    accessDetail: access.detail,
     checked: entry.checked || null,
-    note: entry.note || '',
-    terms: entry.url,
+    note: entry.note || established.note || '',
+    terms: entry.terms || established.terms || entry.url,
     url: entry.url,
-    redistributable: entry.licence === 'FREE_REUSE',
+    redistributable: accessKey === 'AVAILABLE_IN_APP',
   };
 }
 
-/** Every provider Stratos knows about, integrated or not. */
-export const CHART_PROVIDERS = [FAA_PROVIDER, ...LISTED_PUBLISHERS.map(descriptor)];
+const EAIP_PROVIDERS = EAIP_LIST.map(eaipDescriptor);
+const EAIP_ISO = new Set(EAIP_LIST.map(source => source.iso2));
+
+/* A registry entry for a country that already has an integrated eAIP provider is
+   not repeated: the provider is the one row the interface should show, and a
+   duplicate would make the same country look separately integrated. */
+const LISTED_ONLY = LISTED_PUBLISHERS.filter(entry => (
+  entry.id !== FAA_PROVIDER.id
+  && !EAIP_ISO.has(entry.iso2)
+  && !EAIP_LIST.some(source => source.id === entry.id)
+  && accessKeyFor(entry) !== 'AVAILABLE_IN_APP'
+));
+
+/** Every provider Stratos knows about, integrated or not, without duplicates. */
+export const CHART_PROVIDERS = [FAA_PROVIDER, ...EAIP_PROVIDERS, ...LISTED_ONLY.map(descriptor)];
 
 /** True when the FAA d-TPP publishes terminal procedures for this airport. */
 export function isFaaIcao(icao) {
@@ -77,10 +132,10 @@ export function isFaaIcao(icao) {
 }
 
 /**
- * What is available for one airport. `integrated` means Stratos can list and
- * open the documents itself; `linkOnly` means the publisher is known and its
- * licence does not permit embedding; `unavailable` means no publisher is
- * registered, and the interface says exactly that.
+ * What is available for one airport.
+ *   integrated: Stratos can fetch and display the documents itself.
+ *   link-only:  the publisher is known and its terms do not permit that here.
+ *   unavailable: no publisher is registered, and the interface says exactly that.
  */
 export function chartCoverage(icao) {
   const code = String(icao || '').trim().toUpperCase();
@@ -98,6 +153,32 @@ export function chartCoverage(icao) {
       sources: [FAA_PROVIDER],
       categories: FAA_PROVIDER.categories,
       licenceCategory: 'FREE_REUSE',
+      access: 'AVAILABLE_IN_APP',
+      accessLabel: ACCESS.AVAILABLE_IN_APP.label,
+      accessTone: 'good',
+      message: '',
+    };
+  }
+
+  const eaip = eaipForIcao(code);
+  if (eaip) {
+    const provider = eaipDescriptor(eaip);
+    return {
+      icao: code,
+      integrated: true,
+      linkOnly: false,
+      available: true,
+      status: 'integrated',
+      country: provider.country,
+      iso2: provider.iso2,
+      region: provider.regions[0],
+      provider,
+      sources: [provider],
+      categories: provider.categories,
+      licenceCategory: provider.licenceCategory,
+      access: 'AVAILABLE_IN_APP',
+      accessLabel: provider.accessLabel,
+      accessTone: 'good',
       message: '',
     };
   }
@@ -110,28 +191,29 @@ export function chartCoverage(icao) {
   ));
 
   if (primary) {
-    const licence = licenceFor(primary.licenceCategory);
-    // A paid or permission-gated publisher is a coverage gap the pilot can act on.
-    const blocked = ['PAID', 'PERMISSION_REQUIRED', 'FREE_PERSONAL_ONLY'].includes(primary.licenceCategory);
+    const access = ACCESS[primary.access] || ACCESS.UNKNOWN;
     return {
       icao: code,
-      integrated: false,
-      linkOnly: true,
-      available: false,
-      status: blocked ? 'restricted' : 'link-only',
+      integrated: primary.status === 'integrated',
+      linkOnly: primary.status !== 'integrated',
+      available: primary.status === 'integrated',
+      status: primary.access === 'PAID' || primary.access === 'PERMISSION_REQUIRED' ? 'restricted' : 'link-only',
       country: country ? country.name : primary.country,
       iso2: primary.iso2,
       region: country ? country.region : (primary.regions || [])[0] || null,
       provider: primary,
       sources,
       categories: primary.categories,
-      licenceCategory: licence.key,
-      message: `${primary.name} publishes the charts for ${country ? country.name : primary.country}. ${licence.detail} `
-        + 'Stratos does not hold a redistribution licence for these documents, so it links to the publisher instead.',
+      licenceCategory: primary.licenceCategory,
+      access: primary.access,
+      accessLabel: access.label,
+      accessTone: access.tone,
+      message: `${primary.name} publishes the charts for ${country ? country.name : primary.country}. ${access.detail}`
+        + (primary.note ? ` ${primary.note}` : '')
+        + ' Open the official source to use the chart there.',
     };
   }
 
-  // No national entry: a European airport still has the regional index.
   if (sources.length) {
     const regional = sources[0];
     return {
@@ -147,7 +229,11 @@ export function chartCoverage(icao) {
       sources,
       categories: regional.categories,
       licenceCategory: regional.licenceCategory,
-      message: `${regional.name} indexes the charts for this state, but Stratos does not hold a redistribution licence for them, so it links to the publisher instead.`,
+      access: regional.access || 'FREE_PUBLIC_ACCESS',
+      accessLabel: regional.accessLabel || ACCESS.FREE_PUBLIC_ACCESS.label,
+      accessTone: regional.accessTone || '',
+      message: `${regional.name} indexes the charts for this state: ${(ACCESS[regional.access] || ACCESS.FREE_PUBLIC_ACCESS).detail} `
+        + 'Open the official source to use the charts there.',
     };
   }
 
@@ -164,6 +250,9 @@ export function chartCoverage(icao) {
     sources: [],
     categories: [],
     licenceCategory: null,
+    access: 'UNAVAILABLE',
+    accessLabel: ACCESS.UNAVAILABLE.label,
+    accessTone: 'bad',
     message: coverageText(code),
   };
 }
@@ -180,17 +269,23 @@ export function providerCategories(provider) {
 
 /** Short coverage sentence for the page header; never claims worldwide cover. */
 export function coverageSummary() {
-  return 'Integrated charts: United States and territories (FAA d-TPP). 60+ other publishers are registered with official links; their charts open at the source until a reuse licence is agreed.';
+  const integrated = availableProviders();
+  const names = integrated.map(provider => provider.country).filter(Boolean);
+  const listed = CHART_PROVIDERS.length - integrated.length;
+  return `Integrated charts: ${names.join(', ') || 'none'}. `
+    + `${listed} further publishers are registered with official links and a stated access position.`;
 }
 
 /** Display status for a coverage record: one word the interface can style. */
 export function coverageStatus(coverage) {
-  if (!coverage) return { key: 'unavailable', label: 'Unavailable', tone: 'bad' };
-  if (coverage.integrated) return { key: 'integrated', label: 'Charts available', tone: 'good' };
-  if (coverage.status === 'restricted') return { key: 'restricted', label: 'Publisher only', tone: 'warn' };
-  if (coverage.status === 'link-only') return { key: 'link-only', label: 'Link only', tone: '' };
-  return { key: 'unavailable', label: 'No source', tone: 'bad' };
+  if (!coverage) return { key: 'unavailable', label: ACCESS.UNAVAILABLE.label, tone: 'bad', access: 'UNAVAILABLE' };
+  const access = ACCESS[coverage.access] || ACCESS.UNKNOWN;
+  if (coverage.integrated) return { key: 'integrated', label: ACCESS.AVAILABLE_IN_APP.label, tone: 'good', access: 'AVAILABLE_IN_APP' };
+  return { key: coverage.access || 'UNKNOWN', label: access.label, tone: access.tone, access: coverage.access || 'UNKNOWN' };
 }
 
+/** Access categories, for the interface and the licensing report. */
+export { ACCESS };
+
 /** Regional indexes, exposed for the interface's country picker. */
-export { REGIONAL_SOURCES };
+export { REGIONAL_SOURCES } from '../data/chart-sources.js';

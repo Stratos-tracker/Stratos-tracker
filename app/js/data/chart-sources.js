@@ -55,6 +55,130 @@ export const LICENCES = {
   },
 };
 
+/* Chart access: what Stratos may actually do with a publisher's documents.
+ *   The licence categories above say what the terms allow in principle; these
+ *   say what has been established for this integration. A free PDF is not an
+ *   in-app right, and a publisher is never pushed to PERMISSION_REQUIRED without
+ *   its own terms being read first. */
+export const ACCESS = {
+  AVAILABLE_IN_APP: {
+    key: 'AVAILABLE_IN_APP',
+    label: 'Available in Stratos',
+    tone: 'good',
+    detail: 'The publisher’s terms allow Stratos to display these documents inside the app.',
+  },
+  FREE_PUBLIC_ACCESS: {
+    key: 'FREE_PUBLIC_ACCESS',
+    label: 'Free to view',
+    tone: '',
+    detail: 'Publicly accessible at the publisher, but in-app display has not been established.',
+  },
+  FREE_WITH_REGISTRATION: {
+    key: 'FREE_WITH_REGISTRATION',
+    label: 'Account required',
+    tone: 'warn',
+    detail: 'Free, but the publisher requires an account before the documents open.',
+  },
+  PERMISSION_REQUIRED: {
+    key: 'PERMISSION_REQUIRED',
+    label: 'Permission required',
+    tone: 'warn',
+    detail: 'The publisher’s terms require written approval before another app may display the documents.',
+  },
+  PAID: {
+    key: 'PAID',
+    label: 'Paid',
+    tone: 'bad',
+    detail: 'A purchase or commercial licence is required from the publisher.',
+  },
+  UNKNOWN: {
+    key: 'UNKNOWN',
+    label: 'Terms unverified',
+    tone: '',
+    detail: 'The publisher’s reuse position has not been established.',
+  },
+  UNAVAILABLE: {
+    key: 'UNAVAILABLE',
+    label: 'No source',
+    tone: 'bad',
+    detail: 'No usable published source was found for this country.',
+  },
+};
+
+/* Access established by reading the publisher's own terms, by country. These
+   override the licence default so the interface can state the real position
+   instead of guessing from a category. */
+export const ACCESS_BY_ISO = {
+  AT: { access: 'AVAILABLE_IN_APP', note: 'AIP Austria GEN 3.2 §3.1.2 publishes the AIP charts under CC BY 4.0.' },
+  US: { access: 'AVAILABLE_IN_APP', note: 'FAA d-TPP is a U.S. Government work in the public domain.' },
+  DE: {
+    access: 'PERMISSION_REQUIRED',
+    terms: 'https://ais.dfs.de/pilotservice/service/information/disclaimer/disclaimer.jsp',
+    note: 'DFS AIS terms §8: chart material is copyright, and use on third-party websites needs DFS written approval.',
+  },
+  AU: {
+    access: 'PERMISSION_REQUIRED',
+    terms: 'https://www.airservicesaustralia.com/aip/aip.asp',
+    note: 'Airservices allows personal on-screen viewing only and forbids caching, transmission or redistribution.',
+  },
+  FR: {
+    access: 'FREE_PUBLIC_ACCESS',
+    terms: 'https://www.sia.aviation-civile.gouv.fr/produits-numeriques-en-libre-disposition.html',
+    note: 'SIA publishes its free digital products under Licence Ouverte; chart-specific in-app display is not stated.',
+  },
+  GB: { access: 'FREE_PUBLIC_ACCESS', note: 'Free to view on NATS AIS; no third-party display grant was found.' },
+  CA: { access: 'PAID', note: 'NAV CANADA licenses the CAP and IFR charts; Stratos does not mirror them.' },
+  NL: { access: 'PERMISSION_REQUIRED', note: 'LVNL requires written permission to reproduce its eAIP charts.' },
+  NO: { access: 'PERMISSION_REQUIRED', note: 'AIP Norway is copyright Avinor; use outside copyright law needs permission.' },
+  CH: { access: 'FREE_WITH_REGISTRATION', note: 'Skyguide publishes the charts behind a registration.' },
+  IT: { access: 'FREE_WITH_REGISTRATION', note: 'ENAV’s online AIP requires a login.' },
+  ES: { access: 'FREE_PUBLIC_ACCESS', note: 'ENAIRE publishes the AIP free to view; reuse terms are not stated.' },
+  PT: { access: 'FREE_PUBLIC_ACCESS' },
+  SE: { access: 'FREE_PUBLIC_ACCESS', note: 'AIP Sweden is published free through LFV AROWeb.' },
+  FI: { access: 'FREE_PUBLIC_ACCESS', note: 'AIP Finland is published free by Fintraffic ANS.' },
+  IE: { access: 'FREE_PUBLIC_ACCESS' },
+  PL: { access: 'PERMISSION_REQUIRED', note: 'PANSA requires written permission for reproduction.' },
+  JP: { access: 'FREE_PUBLIC_ACCESS', note: 'AIS Japan publishes the AIP free; reproduction terms are not stated as a reuse grant.' },
+  SG: { access: 'FREE_WITH_REGISTRATION', note: 'AIP Singapore is published through CAAS with an account.' },
+  KR: { access: 'FREE_WITH_REGISTRATION', note: 'KOCA publishes the eAIP behind a login.' },
+  IN: { access: 'FREE_WITH_REGISTRATION', note: 'AAI publishes the eAIP behind a registration.' },
+  BR: { access: 'FREE_PUBLIC_ACCESS', note: 'DECEA publishes the AIP free to view.' },
+  ZA: { access: 'FREE_PUBLIC_ACCESS', note: 'The SACAA publishes the AIP free to view.' },
+  AE: { access: 'FREE_PUBLIC_ACCESS', note: 'The GCAA publishes the AIP free to view.' },
+  NZ: { access: 'FREE_PUBLIC_ACCESS', note: 'Airways publishes AIP New Zealand free to view.' },
+  MX: { access: 'UNKNOWN' },
+  QA: { access: 'UNKNOWN' },
+};
+
+const LICENCE_ACCESS = {
+  FREE_REUSE: 'AVAILABLE_IN_APP',
+  FREE_PUBLIC: 'FREE_PUBLIC_ACCESS',
+  FREE_PERSONAL_ONLY: 'PERMISSION_REQUIRED',
+  PAID: 'PAID',
+  PERMISSION_REQUIRED: 'PERMISSION_REQUIRED',
+  UNKNOWN: 'UNKNOWN',
+};
+
+/** Access key for a registry entry: explicit, then established, then licence. */
+export function accessKeyFor(entry) {
+  if (!entry) return 'UNAVAILABLE';
+  const established = ACCESS_BY_ISO[String(entry.iso2 || '').toUpperCase()];
+  return entry.access
+    || (established && established.access)
+    || LICENCE_ACCESS[entry.licence]
+    || 'UNKNOWN';
+}
+
+/** Access descriptor for a registry entry; never null. */
+export function accessFor(entry) {
+  return ACCESS[accessKeyFor(entry)] || ACCESS.UNKNOWN;
+}
+
+/** Established note/terms for a country, when the registry entry has none. */
+export function establishedFor(entry) {
+  return ACCESS_BY_ISO[String((entry && entry.iso2) || '').toUpperCase()] || null;
+}
+
 export const REGIONS = ['North America', 'Europe', 'Asia', 'Middle East', 'Oceania', 'Africa', 'South America'];
 
 // Terminal-procedure families most authorities publish. individual records
@@ -275,10 +399,13 @@ export const CHART_SOURCES = [
     region: 'Europe',
     icao: ['LO'],
     authority: 'Austro Control',
-    name: 'Austro Control — AIP Austria',
+    name: 'AIP Austria',
     url: 'https://eaip.austrocontrol.at/',
-    licence: 'PERMISSION_REQUIRED',
-    note: 'Copyright Austro Control; commercial reproduction needs written consent.',
+    licence: 'FREE_REUSE',
+    access: 'AVAILABLE_IN_APP',
+    terms: 'https://eaip.austrocontrol.at/lo/261002/PART_1/LO_GEN_3_2_en.pdf',
+    checked: '2026-11-06',
+    note: 'AIP Austria GEN 3.2 §3.1.2 publishes every AIP chart under CC BY 4.0, so Stratos displays them with attribution.',
   }),
   source({
     id: 'pansa',

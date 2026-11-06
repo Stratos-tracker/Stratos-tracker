@@ -17,7 +17,7 @@ const root = path.resolve(import.meta.dirname, '..');
 const check = process.argv.includes('--check');
 
 const {
-  CHART_SOURCES, COUNTRIES, LICENCES, REGIONAL_SOURCES, REGIONS, licenceFor,
+  ACCESS, CHART_SOURCES, COUNTRIES, LICENCES, REGIONAL_SOURCES, REGIONS, accessKeyFor, licenceFor,
 } = await import('../app/js/data/chart-sources.js');
 
 const TARGET = path.join(root, 'CHARTS-LICENSING.md');
@@ -42,10 +42,12 @@ lines.push('');
 lines.push('## The rule');
 lines.push('');
 lines.push('A public web page is not a redistribution licence. Stratos embeds a document only');
-lines.push('when the publisher\'s terms allow third-party display (today: the U.S. FAA, whose');
-lines.push('terminal procedures are a U.S. Government work in the public domain). For every');
-lines.push('other publisher the EFB shows the airport\'s coverage status and a link to the');
-lines.push('authority\'s own portal. Nothing is scraped, framed, proxied or re-hosted.');
+lines.push('when the publisher\'s terms allow third-party display: today the U.S. FAA, whose');
+lines.push('terminal procedures are a U.S. Government work in the public domain, and AIP');
+lines.push('Austria, whose charts Austro Control publishes under CC BY 4.0. For every other');
+lines.push('publisher the EFB shows the airport\'s coverage status and a link to the');
+lines.push('authority\'s own portal. Nothing is scraped, framed or re-hosted, and the proxy in');
+lines.push('`api/chart.js` only fetches a document name the authority itself publishes.');
 lines.push('');
 lines.push('## Categories');
 lines.push('');
@@ -56,6 +58,18 @@ for (const [key, licence] of Object.entries(LICENCES)) {
 }
 lines.push('');
 lines.push(`**${CHART_SOURCES.length} national publishers and ${REGIONAL_SOURCES.length} regional indexes across ${COUNTRIES.length} countries.**`);
+lines.push('');
+lines.push('## Access statuses');
+lines.push('');
+lines.push('Every airport resolves to exactly one of these. Only `AVAILABLE_IN_APP` documents');
+lines.push('open inside the EFB; every other status keeps the publisher link and says why.');
+lines.push('');
+lines.push('| Status | Meaning | Publishers |');
+lines.push('| --- | --- | --- |');
+for (const [key, access] of Object.entries(ACCESS)) {
+  const count = CHART_SOURCES.filter(entry => accessKeyFor(entry) === key).length;
+  lines.push(`| ${key} | ${esc(access.detail)} | ${count} |`);
+}
 lines.push('');
 lines.push('## Embedded today');
 lines.push('');
@@ -167,6 +181,13 @@ lines.push('`status: \'integrated\'` in `app/js/lib/chartproviders.js` plus a fe
 lines.push('keep the proxy narrow: a fixed host, a fixed path shape and a document-name pattern,');
 lines.push('as `api/chart.js` does for the FAA. AIRAC cycles are recorded per catalogue, and a');
 lines.push('document whose cycle has expired is labelled expired, never current.');
+lines.push('');
+lines.push('An eAIP authority that serves a per-airport chart index is added the same way: a');
+lines.push('descriptor in `app/js/lib/eaip.js` (cycle index, airport page, document-name');
+lines.push('pattern) plus one branch each in `api/charts.js` and `api/chart.js`. AIP Austria is');
+lines.push('the worked example. After any provider change run');
+lines.push('`node scripts/check-charts-live.mjs`: it opens a real document for each integrated');
+lines.push('publisher and prints the status the other test airports resolve to.');
 lines.push('');
 
 const output = `${lines.join('\n')}\n`;

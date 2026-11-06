@@ -210,7 +210,12 @@ test('every registered country resolves to its own publisher, never a copy', asy
   }
   const stats = registryStats();
   assert.ok(stats.countries >= 60, `the registry covers ${stats.countries} countries`);
-  assert.equal(stats.byLicence.FREE_REUSE, 1, 'exactly one publisher has terms that permit embedding');
+  const { CHART_SOURCES } = await import('../app/js/data/chart-sources.js');
+  assert.deepEqual(
+    CHART_SOURCES.filter(entry => entry.licence === 'FREE_REUSE').map(entry => entry.iso2).sort(),
+    ['AT', 'US'],
+    'only the FAA and AIP Austria have terms that permit embedding',
+  );
 
   // The resolver holds no document URL: a chart can only come from a catalogue.
   const source = read('app/js/lib/chartdir.js');
@@ -218,7 +223,7 @@ test('every registered country resolves to its own publisher, never a copy', asy
   assert.doesNotMatch(source, /\.pdf/i);
 });
 
-test('providers declare what they publish and only the FAA is integrated', async () => {
+test('providers declare what they publish and only verified terms are integrated', async () => {
   const { CHART_PROVIDERS, availableProviders, chartCoverage, coverageSummary, coverageStatus, isFaaIcao } =
     await import('../app/js/lib/chartproviders.js');
 
@@ -239,7 +244,9 @@ test('providers declare what they publish and only the FAA is integrated', async
     assert.equal(coverage.country, country);
     assert.equal(coverage.provider.id, publisher);
     assert.ok(coverage.sources.some(source => source.id === publisher));
-    assert.match(coverage.message, /redistribution licence/);
+    assert.equal(coverage.integrated, false, `${icao} stays at the publisher`);
+    assert.ok(coverage.accessLabel, `${icao} states an access position`);
+    assert.match(coverage.message, /official source|written approval|established/i);
   }
 
   const belgium = chartCoverage('EBBR');
@@ -255,14 +262,15 @@ test('providers declare what they publish and only the FAA is integrated', async
   assert.equal(brazil.country, 'Brazil');
   assert.equal(brazil.provider.id, 'decea-br');
   assert.equal(brazil.licenceCategory, 'FREE_PUBLIC');
-  assert.match(brazil.message, /redistribution licence/);
-  assert.equal(coverageStatus(brazil).label, 'Link only');
+  assert.equal(brazil.access, 'FREE_PUBLIC_ACCESS');
+  assert.match(brazil.message, /in-app display has not been established/);
+  assert.equal(coverageStatus(brazil).label, 'Free to view');
 
   // A paid or permisson-gated publisher is a different status again.
   const canada = chartCoverage('CYYZ');
   assert.equal(canada.status, 'restricted');
   assert.equal(canada.licenceCategory, 'PAID');
-  assert.equal(coverageStatus(canada).label, 'Publisher only');
+  assert.equal(coverageStatus(canada).label, 'Paid');
 
   // Nothing registered: an honest gap, with no invented source.
   const unknown = chartCoverage('ZZZZ');
@@ -276,7 +284,13 @@ test('providers declare what they publish and only the FAA is integrated', async
   assert.equal(isFaaIcao('PHNL'), true);
   assert.equal(isFaaIcao('EGLL'), false);
 
-  assert.deepEqual(availableProviders().map(provider => provider.id), ['faa-dtpp']);
+  const austria = chartCoverage('LOWW');
+  assert.equal(austria.integrated, true);
+  assert.equal(austria.access, 'AVAILABLE_IN_APP');
+  assert.equal(austria.provider.id, 'austrocontrol-eaip');
+  assert.match(austria.provider.licence, /CC BY 4.0/);
+
+  assert.deepEqual(availableProviders().map(provider => provider.id), ['faa-dtpp', 'austrocontrol-eaip']);
   for (const provider of CHART_PROVIDERS) {
     assert.ok(provider.id && provider.name && provider.status, 'identity and status are declared');
     assert.ok(provider.regions.length, `${provider.id} names its regions`);
@@ -316,7 +330,7 @@ test('an airport outside FAA coverage points at its publisher instead of inventi
   assert.match(names[0], /NATS AIS/);
   assert.match(names[1], /EAD Basic/);
   assert.ok(root.querySelector('#chart-open-file'), 'the viewer offers a local PDF');
-  assert.match(root.textContent, /does not hold a redistribution licence/);
+  assert.match(root.textContent, /in-app display has not been established/);
   assert.match(root.textContent, /no integrated charts/);
   instance.destroy();
 });

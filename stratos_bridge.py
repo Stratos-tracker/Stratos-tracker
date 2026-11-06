@@ -2407,8 +2407,9 @@ class Handler(BaseHTTPRequestHandler):
         }
         if not charts:
             payload["unsupported"] = True
-            payload["message"] = ("No FAA d-TPP charts are published for %s. Current coverage is the FAA "
-                                  "publication (United States and territories); other authorities are not mirrored." % icao)
+            payload["message"] = ("No FAA d-TPP charts are published for %s. Stratos shows a national "
+                                  "authority's charts only where its terms allow in-app display; every other "
+                                  "publisher is linked from its official site." % icao)
             self.send_json(payload, 404)
             return
         self.send_json(payload)
