@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-06",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.35/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.35/Stratos-Setup.exe",
+      "sha256": "6601a4550d6652e930ac6339369b9ca894fcabc8101bb0a373d4b2a688fa048b",
+      "size": 109264815
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.35/Stratos-2.1.35-mac-arm64.dmg",
+      "sha256": "55e4c0f66a91480bf01796253072280ca43a750cfbca2cc7c7f3119f90f4e2d0",
+      "size": 125093903
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.35/Stratos-2.1.35-mac-x64.dmg",
+      "sha256": "fcbc69009c7db5c6f048e2513cb1754d8bf8f1558658eb79006e75814facd723",
+      "size": 130515343
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.35/Stratos-2.1.35-linux-x64.AppImage",
+      "sha256": "fcdabef73824254cb31c9b277134cf66629d7c5533efb98772a709d9f0f6d50a",
+      "size": 146133150
+    }
+  },
   "summary": "The update notice comes from version.json, opens the right installer, and the release page keeps four files.",
   "reason": "",
   "releaseNotes": [
