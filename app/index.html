@@ -1421,12 +1421,11 @@ function drawProcedurePaths(){
   for(const layer of layers){
     if(!layer||!layer.ok||!shown[layer.kind])continue;
     const color=layer.color||'#f472b6';
-    cx.strokeStyle=color;cx.globalAlpha=.32;cx.lineWidth=layer.kind==='approach'?9:11;
+    cx.strokeStyle=color;cx.globalAlpha=.32;cx.lineWidth=11;
     for(const segment of layer.segments)strokeProcedureSegment(segment);
     cx.globalAlpha=.95;cx.lineWidth=2.2;
-    if(layer.kind==='approach')cx.setLineDash([7,5]);
+
     for(const segment of layer.segments)strokeProcedureSegment(segment);
-    cx.setLineDash([]);
   }
   cx.restore();
   for(const layer of layers){

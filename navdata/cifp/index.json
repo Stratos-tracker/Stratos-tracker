@@ -1,9 +1,11 @@
 {
  "airports": {
   "05C": {
+   "approach": 2,
    "star": 2
   },
   "05U": {
+   "approach": 1,
    "sid": 1
   },
   "06FA": {
@@ -13,124 +15,160 @@
    "star": 8
   },
   "10U": {
+   "approach": 1,
    "sid": 1
   },
   "1B9": {
+   "approach": 2,
    "star": 1
   },
   "1G3": {
+   "approach": 4,
    "star": 3
   },
   "1K4": {
+   "approach": 1,
    "star": 1
   },
   "1L7": {
+   "approach": 1,
    "sid": 1
   },
   "1M5": {
+   "approach": 2,
    "star": 6
   },
   "1O2": {
+   "approach": 1,
    "sid": 1
   },
   "1U7": {
+   "approach": 2,
    "sid": 2
   },
   "21D": {
+   "approach": 2,
    "star": 1
   },
   "2P2": {
+   "approach": 1,
    "sid": 1
   },
   "2S8": {
+   "approach": 1,
    "sid": 1
   },
   "2W2": {
+   "approach": 1,
    "star": 1
   },
   "2W5": {
+   "approach": 1,
    "star": 1
   },
   "33N": {
+   "approach": 2,
    "star": 1
   },
   "33V": {
+   "approach": 2,
    "sid": 1
   },
   "39N": {
+   "approach": 2,
    "star": 1
   },
   "3HO": {
    "star": 2
   },
   "3M7": {
+   "approach": 2,
    "star": 6
   },
   "3R9": {
+   "approach": 1,
    "sid": 6,
    "star": 4
   },
   "3W7": {
+   "approach": 2,
    "sid": 1
   },
   "40U": {
+   "approach": 1,
    "sid": 1
   },
   "41U": {
+   "approach": 1,
    "sid": 2
   },
   "47N": {
+   "approach": 2,
    "sid": 1,
    "star": 2
   },
   "4S1": {
+   "approach": 1,
    "sid": 1
   },
   "4V0": {
+   "approach": 2,
    "sid": 1
   },
   "4V1": {
+   "approach": 2,
    "sid": 1
   },
   "50F": {
+   "approach": 2,
    "sid": 6,
    "star": 6
   },
   "54T": {
+   "approach": 1,
    "sid": 11,
    "star": 7
   },
   "57C": {
+   "approach": 3,
    "sid": 2,
    "star": 1
   },
   "5C1": {
+   "approach": 2,
    "sid": 5,
    "star": 4
   },
   "65S": {
+   "approach": 1,
    "sid": 1
   },
   "6A2": {
+   "approach": 2,
    "star": 2
   },
   "6R3": {
+   "approach": 1,
    "sid": 11,
    "star": 5
   },
   "77S": {
+   "approach": 1,
    "sid": 1
   },
   "7FL6": {
    "star": 1
   },
   "7S0": {
+   "approach": 2,
    "sid": 2
   },
   "8S1": {
+   "approach": 2,
    "sid": 1
   },
   "C80": {
+   "approach": 1,
    "sid": 1
   },
   "CA35": {
@@ -146,19 +184,24 @@
    "star": 1
   },
   "D73": {
+   "approach": 1,
    "star": 4
   },
   "E38": {
+   "approach": 2,
    "sid": 1
   },
   "F41": {
+   "approach": 2,
    "sid": 5,
    "star": 6
   },
   "F45": {
+   "approach": 5,
    "star": 4
   },
   "F46": {
+   "approach": 2,
    "sid": 6,
    "star": 9
   },
@@ -166,22 +209,28 @@
    "star": 2
   },
   "I69": {
+   "approach": 2,
    "star": 5
   },
   "KAAT": {
+   "approach": 1,
    "sid": 2
   },
   "KABQ": {
+   "approach": 13,
    "sid": 10,
    "star": 9
   },
   "KACK": {
+   "approach": 8,
    "star": 2
   },
   "KACV": {
+   "approach": 5,
    "sid": 1
   },
   "KADS": {
+   "approach": 6,
    "sid": 9,
    "star": 10
   },
@@ -189,155 +238,199 @@
    "star": 6
   },
   "KAEG": {
+   "approach": 4,
    "star": 4
   },
   "KAEJ": {
+   "approach": 1,
    "sid": 1
   },
   "KAFO": {
+   "approach": 2,
    "sid": 2
   },
   "KAFP": {
+   "approach": 4,
    "star": 4
   },
   "KAFW": {
+   "approach": 7,
    "sid": 9,
    "star": 7
   },
   "KAGS": {
+   "approach": 9,
    "sid": 6,
    "star": 2
   },
   "KAIB": {
+   "approach": 1,
    "sid": 1
   },
   "KAIK": {
+   "approach": 4,
    "sid": 6
   },
   "KAJO": {
+   "approach": 2,
    "star": 2
   },
   "KAKH": {
+   "approach": 2,
    "sid": 12,
    "star": 4
   },
   "KAKQ": {
+   "approach": 1,
    "star": 1
   },
   "KAKR": {
+   "approach": 2,
    "star": 3
   },
   "KALM": {
+   "approach": 1,
    "sid": 1
   },
   "KALN": {
+   "approach": 6,
    "sid": 4,
    "star": 2
   },
   "KANE": {
+   "approach": 5,
    "sid": 8,
    "star": 4
   },
   "KANK": {
+   "approach": 1,
    "sid": 1
   },
   "KAOC": {
+   "approach": 1,
    "sid": 1
   },
   "KAPA": {
+   "approach": 6,
    "sid": 8,
    "star": 11
   },
   "KAPC": {
+   "approach": 8,
    "sid": 3,
    "star": 2
   },
   "KAPF": {
+   "approach": 6,
    "sid": 1,
    "star": 3
   },
   "KAPV": {
+   "approach": 1,
    "sid": 1
   },
   "KARB": {
+   "approach": 2,
    "sid": 13,
    "star": 4
   },
   "KARM": {
+   "approach": 2,
    "sid": 7,
    "star": 2
   },
   "KARR": {
+   "approach": 7,
    "sid": 6
   },
   "KASE": {
+   "approach": 1,
    "sid": 4,
    "star": 3
   },
   "KATL": {
+   "approach": 34,
    "sid": 17,
    "star": 8
   },
   "KAUN": {
+   "approach": 1,
    "sid": 1
   },
   "KAUS": {
+   "approach": 16,
    "sid": 9,
    "star": 6
   },
   "KAXH": {
+   "approach": 3,
    "sid": 17,
    "star": 7
   },
   "KAXX": {
+   "approach": 1,
    "sid": 1
   },
   "KAZC": {
+   "approach": 2,
    "sid": 1
   },
   "KBAF": {
+   "approach": 3,
    "sid": 1,
    "star": 2
   },
   "KBAZ": {
+   "approach": 4,
    "sid": 5,
    "star": 4
   },
   "KBCB": {
+   "approach": 3,
    "sid": 2
   },
   "KBCE": {
+   "approach": 2,
    "sid": 1
   },
   "KBCT": {
+   "approach": 3,
    "sid": 2,
    "star": 8
   },
   "KBDL": {
+   "approach": 12,
    "sid": 1,
    "star": 2
   },
   "KBDN": {
+   "approach": 4,
    "sid": 1
   },
   "KBDR": {
+   "approach": 5,
    "star": 2
   },
   "KBED": {
+   "approach": 7,
    "star": 2
   },
   "KBFI": {
+   "approach": 8,
    "sid": 3,
    "star": 3
   },
   "KBFL": {
+   "approach": 6,
    "sid": 2,
    "star": 1
   },
   "KBIL": {
+   "approach": 10,
    "star": 4
   },
   "KBJC": {
+   "approach": 7,
    "sid": 8,
    "star": 10
   },
@@ -346,75 +439,95 @@
    "star": 7
   },
   "KBKL": {
+   "approach": 3,
    "sid": 1,
    "star": 4
   },
   "KBKT": {
+   "approach": 3,
    "sid": 1
   },
   "KBLF": {
+   "approach": 4,
    "sid": 1
   },
   "KBLI": {
+   "approach": 6,
    "sid": 2,
    "star": 1
   },
   "KBLM": {
+   "approach": 5,
    "star": 1
   },
   "KBLV": {
+   "approach": 16,
    "sid": 4,
    "star": 5
   },
   "KBMC": {
+   "approach": 1,
    "sid": 1
   },
   "KBNA": {
+   "approach": 26,
    "sid": 9,
    "star": 4
   },
   "KBOI": {
+   "approach": 16,
    "sid": 2,
    "star": 5
   },
   "KBOS": {
+   "approach": 19,
    "sid": 9,
    "star": 4
   },
   "KBUR": {
+   "approach": 7,
    "sid": 5,
    "star": 6
   },
   "KBUU": {
+   "approach": 2,
    "sid": 2,
    "star": 1
   },
   "KBVY": {
+   "approach": 4,
    "star": 2
   },
   "KBWI": {
+   "approach": 23,
    "sid": 6,
    "star": 5
   },
   "KBYY": {
+   "approach": 3,
    "sid": 7,
    "star": 2
   },
   "KBZN": {
+   "approach": 9,
    "sid": 5,
    "star": 5
   },
   "KCAK": {
+   "approach": 14,
    "star": 3
   },
   "KCCO": {
+   "approach": 2,
    "star": 2
   },
   "KCCR": {
+   "approach": 3,
    "sid": 1,
    "star": 1
   },
   "KCDW": {
+   "approach": 4,
    "star": 3
   },
   "KCEF": {
@@ -422,126 +535,162 @@
    "star": 2
   },
   "KCEZ": {
+   "approach": 3,
    "sid": 2
   },
   "KCFE": {
+   "approach": 2,
    "star": 1
   },
   "KCFO": {
+   "approach": 9,
    "sid": 8,
    "star": 9
   },
   "KCFT": {
+   "approach": 1,
    "sid": 1
   },
   "KCGF": {
+   "approach": 4,
    "sid": 5,
    "star": 4
   },
   "KCHD": {
+   "approach": 2,
    "sid": 9,
    "star": 5
   },
   "KCHK": {
+   "approach": 3,
    "star": 1
   },
   "KCHS": {
+   "approach": 15,
    "sid": 5,
    "star": 3
   },
   "KCJR": {
+   "approach": 3,
    "star": 5
   },
   "KCLE": {
+   "approach": 20,
    "sid": 5,
    "star": 4
   },
   "KCLM": {
+   "approach": 4,
    "sid": 1
   },
   "KCLT": {
+   "approach": 20,
    "sid": 12,
    "star": 12
   },
   "KCLW": {
+   "approach": 1,
    "star": 4
   },
   "KCMA": {
+   "approach": 4,
    "star": 1
   },
   "KCMH": {
+   "approach": 16,
    "star": 5
   },
   "KCNI": {
+   "approach": 2,
    "star": 2
   },
   "KCNO": {
+   "approach": 3,
    "star": 2
   },
   "KCOD": {
+   "approach": 5,
    "sid": 1
   },
   "KCOE": {
+   "approach": 4,
    "sid": 1
   },
   "KCOF": {
    "star": 1
   },
   "KCOI": {
+   "approach": 1,
    "star": 3
   },
   "KCOS": {
+   "approach": 17,
    "star": 2
   },
   "KCPK": {
+   "approach": 4,
    "star": 2
   },
   "KCPR": {
+   "approach": 7,
    "sid": 1
   },
   "KCPS": {
+   "approach": 5,
    "sid": 4,
    "star": 4
   },
   "KCPT": {
+   "approach": 3,
    "sid": 6,
    "star": 6
   },
   "KCRE": {
+   "approach": 4,
    "star": 2
   },
   "KCRG": {
+   "approach": 4,
    "star": 6
   },
   "KCRQ": {
+   "approach": 6,
    "sid": 2,
    "star": 1
   },
   "KCTB": {
+   "approach": 5,
    "sid": 1
   },
   "KCTJ": {
+   "approach": 2,
    "star": 1
   },
   "KCVB": {
+   "approach": 2,
    "sid": 5,
    "star": 4
   },
   "KCVC": {
+   "approach": 2,
    "star": 3
   },
   "KCVG": {
+   "approach": 32,
    "sid": 9,
    "star": 5
   },
   "KCVO": {
+   "approach": 5,
    "sid": 1
   },
   "KCXO": {
+   "approach": 7,
    "sid": 19,
    "star": 6
   },
   "KCXP": {
+   "approach": 3,
    "sid": 1
   },
   "KDAA": {
@@ -549,455 +698,582 @@
    "star": 4
   },
   "KDAB": {
+   "approach": 8,
    "sid": 1,
    "star": 1
   },
   "KDAG": {
+   "approach": 3,
    "sid": 1
   },
   "KDAL": {
+   "approach": 20,
    "sid": 21,
    "star": 12
   },
   "KDAY": {
+   "approach": 16,
    "star": 1
   },
   "KDCA": {
+   "approach": 6,
    "sid": 9,
    "star": 9
   },
   "KDCM": {
+   "approach": 2,
    "star": 4
   },
   "KDED": {
+   "approach": 4,
    "star": 1
   },
   "KDEN": {
+   "approach": 46,
    "sid": 20,
    "star": 15
   },
   "KDET": {
+   "approach": 6,
    "sid": 13,
    "star": 4
   },
   "KDFW": {
+   "approach": 41,
    "sid": 26,
    "star": 20
   },
   "KDIJ": {
+   "approach": 2,
    "sid": 1
   },
   "KDJT": {
+   "approach": 13,
    "sid": 5,
    "star": 8
   },
   "KDLS": {
+   "approach": 1,
    "sid": 1
   },
   "KDMW": {
+   "approach": 2,
    "sid": 4,
    "star": 1
   },
   "KDNL": {
+   "approach": 3,
    "sid": 5
   },
   "KDOV": {
    "star": 1
   },
   "KDPA": {
+   "approach": 7,
    "sid": 6
   },
   "KDTA": {
+   "approach": 4,
    "sid": 1
   },
   "KDTO": {
+   "approach": 6,
    "sid": 9,
    "star": 8
   },
   "KDTW": {
+   "approach": 40,
    "sid": 13,
    "star": 16
   },
   "KDUB": {
+   "approach": 1,
    "sid": 1
   },
   "KDVO": {
+   "approach": 1,
    "star": 2
   },
   "KDVT": {
+   "approach": 3,
    "sid": 10,
    "star": 4
   },
   "KDWH": {
+   "approach": 3,
    "sid": 19,
    "star": 5
   },
   "KDWX": {
+   "approach": 1,
    "sid": 2
   },
   "KDXR": {
+   "approach": 5,
    "star": 3
   },
   "KEAN": {
+   "approach": 1,
    "sid": 1
   },
   "KEAT": {
+   "approach": 6,
    "sid": 2
   },
   "KEDC": {
+   "approach": 2,
    "sid": 6,
    "star": 3
   },
   "KEFD": {
+   "approach": 10,
    "sid": 17,
    "star": 8
   },
   "KEGE": {
+   "approach": 5,
    "sid": 3,
    "star": 2
   },
   "KEHO": {
+   "approach": 2,
    "star": 4
   },
   "KEKN": {
+   "approach": 3,
    "sid": 1
   },
   "KEKS": {
+   "approach": 2,
    "sid": 1
   },
   "KELP": {
+   "approach": 14,
    "sid": 5,
    "star": 5
   },
   "KELY": {
+   "approach": 2,
    "sid": 1
   },
   "KEMM": {
+   "approach": 2,
    "sid": 1
   },
   "KEMT": {
+   "approach": 2,
    "star": 2
   },
   "KENV": {
+   "approach": 6,
    "sid": 1
   },
   "KENW": {
+   "approach": 6,
    "sid": 2,
    "star": 1
   },
   "KEQY": {
+   "approach": 4,
    "sid": 12,
    "star": 4
   },
   "KESN": {
+   "approach": 6,
    "sid": 4
   },
   "KETB": {
+   "approach": 4,
    "sid": 2,
    "star": 1
   },
   "KEVB": {
+   "approach": 4,
    "star": 1
   },
   "KEVW": {
+   "approach": 4,
    "sid": 1
   },
   "KEWB": {
+   "approach": 7,
    "star": 1
   },
   "KEWR": {
+   "approach": 22,
    "sid": 1,
    "star": 6
   },
   "KEYE": {
+   "approach": 2,
    "sid": 5,
    "star": 2
   },
   "KEYW": {
+   "approach": 2,
    "sid": 1,
    "star": 2
   },
   "KEZF": {
+   "approach": 1,
    "star": 4
   },
   "KFAF": {
    "star": 1
   },
   "KFAT": {
+   "approach": 7,
    "sid": 1,
    "star": 1
   },
   "KFBL": {
+   "approach": 3,
    "star": 1
   },
   "KFCM": {
+   "approach": 8,
    "sid": 8,
    "star": 4
   },
   "KFDK": {
+   "approach": 5,
    "sid": 4,
    "star": 1
   },
   "KFFC": {
+   "approach": 2,
    "star": 2
   },
   "KFFO": {
    "star": 1
   },
   "KFFZ": {
+   "approach": 3,
    "sid": 2,
    "star": 5
   },
   "KFHB": {
+   "approach": 3,
    "star": 3
   },
   "KFLG": {
+   "approach": 4,
    "sid": 1
   },
   "KFLL": {
+   "approach": 14,
    "sid": 11,
    "star": 10
   },
   "KFLV": {
+   "approach": 3,
    "sid": 6,
    "star": 3
   },
   "KFLY": {
+   "approach": 2,
    "sid": 1
   },
   "KFMN": {
+   "approach": 9,
    "sid": 2
   },
   "KFMY": {
+   "approach": 6,
    "sid": 1,
    "star": 3
   },
   "KFNL": {
+   "approach": 5,
    "sid": 8,
    "star": 9
   },
   "KFOK": {
+   "approach": 6,
    "star": 2
   },
   "KFRG": {
+   "approach": 5,
    "sid": 1,
    "star": 4
   },
   "KFRR": {
+   "approach": 1,
    "star": 4
   },
   "KFTW": {
+   "approach": 4,
    "sid": 9,
    "star": 7
   },
   "KFTY": {
+   "approach": 5,
    "star": 5
   },
   "KFUL": {
+   "approach": 2,
    "sid": 2,
    "star": 2
   },
   "KFWS": {
+   "approach": 4,
    "sid": 9,
    "star": 7
   },
   "KFXE": {
+   "approach": 4,
    "sid": 8,
    "star": 10
   },
   "KGAI": {
+   "approach": 2,
    "sid": 4,
    "star": 1
   },
   "KGCN": {
+   "approach": 3,
    "sid": 2
   },
   "KGED": {
+   "approach": 2,
    "sid": 1
   },
   "KGEG": {
+   "approach": 14,
    "star": 2
   },
   "KGEU": {
+   "approach": 2,
    "sid": 11,
    "star": 2
   },
   "KGEY": {
+   "approach": 2,
    "sid": 1
   },
   "KGEZ": {
+   "approach": 2,
    "sid": 5,
    "star": 1
   },
   "KGGE": {
+   "approach": 2,
    "star": 2
   },
   "KGHG": {
+   "approach": 2,
    "star": 1
   },
   "KGHM": {
+   "approach": 2,
    "star": 4
   },
   "KGIC": {
+   "approach": 2,
    "sid": 1
   },
   "KGJT": {
+   "approach": 6,
    "sid": 4
   },
   "KGKY": {
+   "approach": 4,
    "sid": 9,
    "star": 7
   },
   "KGLS": {
+   "approach": 7,
    "sid": 17,
    "star": 8
   },
   "KGMU": {
+   "approach": 6,
    "sid": 2,
    "star": 4
   },
   "KGNB": {
+   "approach": 1,
    "sid": 1
   },
   "KGOK": {
+   "approach": 2,
    "star": 1
   },
   "KGON": {
+   "approach": 5,
    "star": 1
   },
   "KGPH": {
+   "approach": 4,
    "sid": 6,
    "star": 3
   },
   "KGPI": {
+   "approach": 7,
    "sid": 1
   },
   "KGPM": {
+   "approach": 2,
    "sid": 9,
    "star": 7
   },
   "KGRK": {
+   "approach": 8,
    "sid": 2
   },
   "KGSO": {
+   "approach": 15,
    "sid": 4,
    "star": 3
   },
   "KGSP": {
+   "approach": 6,
    "sid": 2,
    "star": 4
   },
   "KGTU": {
+   "approach": 4,
    "sid": 6,
    "star": 2
   },
   "KGUC": {
+   "approach": 6,
    "sid": 3
   },
   "KGVL": {
+   "approach": 4,
    "star": 1
   },
   "KGXY": {
+   "approach": 7,
    "sid": 8,
    "star": 9
   },
   "KGYH": {
+   "approach": 2,
    "sid": 2,
    "star": 4
   },
   "KGYL": {
+   "approach": 2,
    "star": 1
   },
   "KGYR": {
+   "approach": 1,
    "sid": 10,
    "star": 2
   },
   "KGYY": {
+   "approach": 8,
    "sid": 5,
    "star": 2
   },
   "KHAF": {
+   "approach": 2,
    "sid": 1
   },
   "KHAO": {
+   "approach": 4,
    "star": 5
   },
   "KHBG": {
+   "approach": 2,
    "sid": 1
   },
   "KHCR": {
+   "approach": 1,
    "sid": 1
   },
   "KHDN": {
+   "approach": 6,
    "star": 1
   },
   "KHEF": {
+   "approach": 6,
    "sid": 3,
    "star": 7
   },
   "KHEG": {
+   "approach": 1,
    "star": 1
   },
   "KHEQ": {
+   "approach": 2,
    "sid": 1
   },
   "KHES": {
    "star": 2
   },
   "KHFD": {
+   "approach": 2,
    "sid": 1,
    "star": 1
   },
   "KHFY": {
+   "approach": 3,
    "sid": 5,
    "star": 2
   },
   "KHGR": {
+   "approach": 6,
    "star": 1
   },
   "KHHR": {
+   "approach": 4,
    "sid": 1,
    "star": 3
   },
   "KHIO": {
+   "approach": 5,
    "sid": 5,
    "star": 2
   },
   "KHLN": {
+   "approach": 10,
    "sid": 4
   },
   "KHMP": {
+   "approach": 2,
    "star": 2
   },
   "KHND": {
+   "approach": 2,
    "sid": 2,
    "star": 4
   },
   "KHOU": {
+   "approach": 11,
    "sid": 17,
    "star": 11
   },
   "KHPN": {
+   "approach": 8,
    "star": 4
   },
   "KHPY": {
+   "approach": 2,
    "sid": 11,
    "star": 7
   },
   "KHQU": {
+   "approach": 3,
    "sid": 5
   },
   "KHQZ": {
+   "approach": 2,
    "sid": 9,
    "star": 9
   },
   "KHRF": {
+   "approach": 2,
    "sid": 1
   },
   "KHSD": {
+   "approach": 3,
    "star": 1
   },
   "KHSR": {
+   "approach": 2,
    "sid": 2
   },
   "KHST": {
@@ -1005,213 +1281,272 @@
    "star": 9
   },
   "KHVN": {
+   "approach": 4,
    "star": 2
   },
   "KHWD": {
+   "approach": 2,
    "star": 3
   },
   "KHWO": {
+   "approach": 2,
    "star": 5
   },
   "KHWV": {
+   "approach": 7,
    "star": 1
   },
   "KHWY": {
+   "approach": 3,
    "star": 5
   },
   "KHXF": {
+   "approach": 2,
    "sid": 2,
    "star": 1
   },
   "KHYI": {
+   "approach": 6,
    "sid": 6,
    "star": 4
   },
   "KIAD": {
+   "approach": 29,
    "sid": 10,
    "star": 10
   },
   "KIAH": {
+   "approach": 30,
    "sid": 21,
    "star": 19
   },
   "KIDA": {
+   "approach": 7,
    "sid": 2
   },
   "KIGQ": {
+   "approach": 5,
    "star": 2
   },
   "KILE": {
+   "approach": 3,
    "sid": 2
   },
   "KILG": {
+   "approach": 6,
    "star": 3
   },
   "KIND": {
+   "approach": 24,
    "sid": 3,
    "star": 6
   },
   "KINT": {
+   "approach": 4,
    "sid": 4,
    "star": 3
   },
   "KIPJ": {
+   "approach": 6,
    "sid": 12,
    "star": 4
   },
   "KISM": {
+   "approach": 5,
    "star": 11
   },
   "KISP": {
+   "approach": 8,
    "star": 3
   },
   "KIWA": {
+   "approach": 8,
    "sid": 10,
    "star": 5
   },
   "KIWS": {
+   "approach": 2,
    "sid": 17,
    "star": 7
   },
   "KIXD": {
+   "approach": 6,
    "sid": 6,
    "star": 3
   },
   "KIYK": {
+   "approach": 1,
    "sid": 2
   },
   "KJAC": {
+   "approach": 11,
    "sid": 4
   },
   "KJAX": {
+   "approach": 15,
    "sid": 5,
    "star": 8
   },
   "KJFK": {
+   "approach": 24,
    "sid": 2,
    "star": 4
   },
   "KJGG": {
+   "approach": 2,
    "star": 1
   },
   "KJPX": {
+   "approach": 2,
    "star": 1
   },
   "KJQF": {
+   "approach": 4,
    "sid": 12,
    "star": 3
   },
   "KJST": {
+   "approach": 6,
    "sid": 2
   },
   "KJVY": {
+   "approach": 4,
    "star": 3
   },
   "KJWN": {
+   "approach": 4,
    "star": 6
   },
   "KJWY": {
+   "approach": 2,
    "sid": 6,
    "star": 9
   },
   "KJYO": {
+   "approach": 3,
    "sid": 4,
    "star": 6
   },
   "KJZI": {
+   "approach": 3,
    "sid": 2,
    "star": 3
   },
   "KKLS": {
+   "approach": 1,
    "sid": 1
   },
   "KKNB": {
+   "approach": 1,
    "sid": 1
   },
   "KLAL": {
+   "approach": 8,
    "sid": 2,
    "star": 3
   },
   "KLAR": {
+   "approach": 5,
    "sid": 1
   },
   "KLAS": {
+   "approach": 20,
    "sid": 10,
    "star": 11
   },
   "KLAX": {
+   "approach": 32,
    "sid": 23,
    "star": 24
   },
   "KLBX": {
+   "approach": 2,
    "sid": 17,
    "star": 8
   },
   "KLCK": {
+   "approach": 8,
    "star": 5
   },
   "KLDJ": {
    "star": 3
   },
   "KLEE": {
+   "approach": 3,
    "star": 7
   },
   "KLFI": {
    "star": 2
   },
   "KLGA": {
+   "approach": 15,
    "sid": 5,
    "star": 5
   },
   "KLGB": {
+   "approach": 7,
    "sid": 5,
    "star": 7
   },
   "KLGD": {
+   "approach": 2,
    "sid": 1
   },
   "KLGU": {
+   "approach": 4,
    "sid": 1
   },
   "KLKR": {
+   "approach": 2,
    "sid": 12,
    "star": 4
   },
   "KLLJ": {
+   "approach": 1,
    "sid": 1
   },
   "KLLR": {
+   "approach": 1,
    "sid": 1
   },
   "KLMO": {
+   "approach": 3,
    "sid": 4,
    "star": 2
   },
   "KLMT": {
+   "approach": 8,
    "sid": 1
   },
   "KLNA": {
+   "approach": 3,
    "star": 3
   },
   "KLNC": {
+   "approach": 1,
    "sid": 9,
    "star": 9
   },
   "KLNN": {
+   "approach": 4,
    "sid": 5,
    "star": 4
   },
   "KLOT": {
+   "approach": 5,
    "sid": 6
   },
   "KLOU": {
+   "approach": 2,
    "star": 3
   },
   "KLPR": {
+   "approach": 3,
    "sid": 5,
    "star": 3
   },
   "KLUD": {
+   "approach": 2,
    "sid": 6,
    "star": 7
   },
@@ -1219,155 +1554,199 @@
    "star": 1
   },
   "KLUG": {
+   "approach": 2,
    "star": 3
   },
   "KLUK": {
+   "approach": 5,
    "star": 5
   },
   "KLVJ": {
+   "approach": 1,
    "sid": 11,
    "star": 7
   },
   "KLVK": {
+   "approach": 3,
    "sid": 1
   },
   "KLVN": {
+   "approach": 5,
    "star": 4
   },
   "KLWM": {
+   "approach": 6,
    "star": 2
   },
   "KLWS": {
+   "approach": 8,
    "sid": 1
   },
   "KLXT": {
+   "approach": 5,
    "sid": 6,
    "star": 3
   },
   "KLXV": {
+   "approach": 1,
    "sid": 2
   },
   "KLYH": {
+   "approach": 6,
    "sid": 2
   },
   "KLZU": {
+   "approach": 2,
    "star": 5
   },
   "KMAN": {
+   "approach": 2,
    "sid": 2
   },
   "KMBT": {
+   "approach": 2,
    "star": 6
   },
   "KMCF": {
    "star": 4
   },
   "KMCI": {
+   "approach": 24,
    "sid": 6,
    "star": 7
   },
   "KMCO": {
+   "approach": 26,
    "sid": 7,
    "star": 13
   },
   "KMDW": {
+   "approach": 16,
    "star": 3
   },
   "KMEM": {
+   "approach": 29,
    "sid": 19,
    "star": 9
   },
   "KMEV": {
+   "approach": 2,
    "sid": 1
   },
   "KMFR": {
+   "approach": 10,
    "sid": 3
   },
   "KMGE": {
    "star": 5
   },
   "KMGG": {
+   "approach": 1,
    "star": 1
   },
   "KMGY": {
+   "approach": 3,
    "star": 1
   },
   "KMHK": {
+   "approach": 4,
    "sid": 1
   },
   "KMHR": {
+   "approach": 5,
    "star": 1
   },
   "KMHT": {
+   "approach": 12,
    "sid": 1,
    "star": 1
   },
   "KMHV": {
+   "approach": 3,
    "sid": 2
   },
   "KMIA": {
+   "approach": 28,
    "sid": 12,
    "star": 9
   },
   "KMIC": {
+   "approach": 2,
    "star": 4
   },
   "KMIV": {
+   "approach": 6,
    "sid": 1
   },
   "KMJX": {
+   "approach": 4,
    "star": 1
   },
   "KMKC": {
+   "approach": 9,
    "sid": 6,
    "star": 3
   },
   "KMKE": {
+   "approach": 19,
    "sid": 2,
    "star": 1
   },
   "KMKY": {
+   "approach": 2,
    "sid": 1,
    "star": 3
   },
   "KMLB": {
+   "approach": 7,
    "sid": 1,
    "star": 3
   },
   "KMMH": {
+   "approach": 1,
    "sid": 3
   },
   "KMMU": {
+   "approach": 8,
    "star": 3
   },
   "KMQJ": {
+   "approach": 7,
    "sid": 5,
    "star": 2
   },
   "KMQS": {
+   "approach": 4,
    "star": 3
   },
   "KMQY": {
+   "approach": 6,
    "star": 6
   },
   "KMRB": {
+   "approach": 5,
    "sid": 4,
    "star": 5
   },
   "KMRC": {
+   "approach": 2,
    "star": 3
   },
   "KMRY": {
+   "approach": 5,
    "sid": 1
   },
   "KMSO": {
+   "approach": 8,
    "sid": 4
   },
   "KMSP": {
+   "approach": 26,
    "sid": 9,
    "star": 8
   },
   "KMSY": {
+   "approach": 15,
    "star": 4
   },
   "KMTC": {
@@ -1375,29 +1754,37 @@
    "star": 3
   },
   "KMTJ": {
+   "approach": 5,
    "sid": 3
   },
   "KMTN": {
+   "approach": 5,
    "sid": 4,
    "star": 5
   },
   "KMTP": {
+   "approach": 2,
    "star": 1
   },
   "KMWC": {
+   "approach": 3,
    "sid": 2,
    "star": 1
   },
   "KMWO": {
+   "approach": 2,
    "star": 1
   },
   "KMYF": {
+   "approach": 3,
    "sid": 2
   },
   "KMYL": {
+   "approach": 2,
    "sid": 1
   },
   "KMYR": {
+   "approach": 8,
    "star": 2
   },
   "KNBG": {
@@ -1407,6 +1794,7 @@
    "star": 1
   },
   "KNEW": {
+   "approach": 5,
    "star": 4
   },
   "KNFG": {
@@ -1435,6 +1823,7 @@
    "star": 2
   },
   "KNUQ": {
+   "approach": 7,
    "sid": 2,
    "star": 2
   },
@@ -1445,241 +1834,309 @@
    "star": 2
   },
   "KOAK": {
+   "approach": 17,
    "sid": 9,
    "star": 6
   },
   "KOEO": {
+   "approach": 2,
    "star": 2
   },
   "KOFF": {
    "star": 5
   },
   "KOGD": {
+   "approach": 4,
    "sid": 1,
    "star": 1
   },
   "KOJC": {
+   "approach": 4,
    "sid": 6,
    "star": 3
   },
   "KOKC": {
+   "approach": 18,
    "sid": 11,
    "star": 7
   },
   "KOKV": {
+   "approach": 5,
    "sid": 3,
    "star": 4
   },
   "KOLS": {
+   "approach": 2,
    "sid": 1
   },
   "KOMA": {
+   "approach": 24,
    "star": 5
   },
   "KOMK": {
+   "approach": 1,
    "sid": 1
   },
   "KOMN": {
+   "approach": 3,
    "star": 1
   },
   "KONP": {
+   "approach": 4,
    "sid": 1
   },
   "KONT": {
+   "approach": 14,
    "sid": 3,
    "star": 5
   },
   "KONZ": {
+   "approach": 3,
    "sid": 12,
    "star": 4
   },
   "KOPF": {
+   "approach": 10,
    "sid": 10,
    "star": 11
   },
   "KOQU": {
+   "approach": 6,
    "star": 1
   },
   "KORD": {
+   "approach": 50,
    "star": 11
   },
   "KORF": {
+   "approach": 8,
    "sid": 3,
    "star": 2
   },
   "KORH": {
+   "approach": 7,
    "star": 1
   },
   "KORL": {
+   "approach": 6,
    "sid": 2,
    "star": 10
   },
   "KORS": {
+   "approach": 3,
    "sid": 2
   },
   "KOSU": {
+   "approach": 4,
    "star": 5
   },
   "KOTH": {
+   "approach": 7,
    "sid": 1
   },
   "KOUN": {
+   "approach": 6,
    "sid": 11,
    "star": 7
   },
   "KOWD": {
+   "approach": 2,
    "star": 1
   },
   "KOXC": {
+   "approach": 4,
    "star": 2
   },
   "KOXR": {
+   "approach": 5,
    "sid": 2,
    "star": 1
   },
   "KOZW": {
+   "approach": 4,
    "sid": 12,
    "star": 4
   },
   "KPAE": {
+   "approach": 8,
    "star": 3
   },
   "KPAO": {
+   "approach": 1,
    "star": 1
   },
   "KPDK": {
+   "approach": 6,
    "star": 5
   },
   "KPDX": {
+   "approach": 20,
    "sid": 5,
    "star": 5
   },
   "KPEZ": {
+   "approach": 1,
    "sid": 5,
    "star": 4
   },
   "KPGD": {
+   "approach": 6,
    "star": 2
   },
   "KPHF": {
+   "approach": 9,
    "star": 2
   },
   "KPHL": {
+   "approach": 23,
    "star": 6
   },
   "KPHX": {
+   "approach": 16,
    "sid": 15,
    "star": 11
   },
   "KPIE": {
+   "approach": 8,
    "sid": 3,
    "star": 4
   },
   "KPIH": {
+   "approach": 5,
    "sid": 1
   },
   "KPIT": {
+   "approach": 24,
    "star": 4
   },
   "KPMP": {
+   "approach": 5,
    "sid": 8,
    "star": 10
   },
   "KPNE": {
+   "approach": 6,
    "star": 3
   },
   "KPOC": {
+   "approach": 4,
    "star": 2
   },
   "KPOU": {
+   "approach": 5,
    "star": 1
   },
   "KPRB": {
+   "approach": 3,
    "sid": 3
   },
   "KPRC": {
+   "approach": 7,
    "sid": 1
   },
   "KPSP": {
+   "approach": 4,
    "sid": 7,
    "star": 4
   },
   "KPTK": {
+   "approach": 4,
    "sid": 13,
    "star": 4
   },
   "KPUJ": {
+   "approach": 4,
    "star": 5
   },
   "KPVD": {
+   "approach": 11,
    "star": 2
   },
   "KPVG": {
+   "approach": 4,
    "star": 2
   },
   "KPVU": {
+   "approach": 3,
    "sid": 2,
    "star": 1
   },
   "KPWA": {
+   "approach": 9,
    "sid": 11,
    "star": 7
   },
   "KPWK": {
+   "approach": 2,
    "sid": 2,
    "star": 1
   },
   "KPWM": {
+   "approach": 9,
    "sid": 2,
    "star": 2
   },
   "KPYM": {
+   "approach": 6,
    "star": 1
   },
   "KRAC": {
+   "approach": 5,
    "sid": 2,
    "star": 1
   },
   "KRAL": {
+   "approach": 5,
    "sid": 1,
    "star": 2
   },
   "KRBD": {
+   "approach": 8,
    "sid": 9,
    "star": 9
   },
   "KRCE": {
+   "approach": 2,
    "star": 1
   },
   "KRCV": {
+   "approach": 1,
    "sid": 1
   },
   "KRDD": {
+   "approach": 5,
    "sid": 2
   },
   "KRDM": {
+   "approach": 10,
    "sid": 1
   },
   "KRDU": {
+   "approach": 17,
    "sid": 9,
    "star": 6
   },
   "KRFD": {
+   "approach": 9,
    "sid": 1,
    "star": 4
   },
   "KRHV": {
+   "approach": 3,
    "sid": 2,
    "star": 1
   },
   "KRIC": {
+   "approach": 14,
    "sid": 4,
    "star": 3
   },
   "KRIF": {
+   "approach": 1,
    "sid": 2
   },
   "KRIL": {
+   "approach": 9,
    "sid": 3,
    "star": 3
   },
@@ -1687,6 +2144,7 @@
    "star": 2
   },
   "KRMN": {
+   "approach": 4,
    "star": 4
   },
   "KRND": {
@@ -1694,138 +2152,178 @@
    "star": 8
   },
   "KRNH": {
+   "approach": 2,
    "star": 2
   },
   "KRNM": {
+   "approach": 2,
    "sid": 2
   },
   "KRNO": {
+   "approach": 23,
    "sid": 6,
    "star": 10
   },
   "KRNT": {
+   "approach": 3,
    "star": 3
   },
   "KROA": {
+   "approach": 7,
    "sid": 4
   },
   "KRQO": {
+   "approach": 2,
    "star": 1
   },
   "KRSW": {
+   "approach": 6,
    "sid": 1,
    "star": 3
   },
   "KRTS": {
+   "approach": 1,
    "sid": 1
   },
   "KRUQ": {
+   "approach": 5,
    "sid": 12,
    "star": 3
   },
   "KRVF": {
+   "approach": 2,
    "sid": 2
   },
   "KRVS": {
+   "approach": 5,
    "star": 1
   },
   "KRYN": {
+   "approach": 1,
    "sid": 1
   },
   "KRYW": {
+   "approach": 1,
    "sid": 6,
    "star": 4
   },
   "KRYY": {
+   "approach": 5,
    "star": 5
   },
   "KSAA": {
+   "approach": 2,
    "sid": 1
   },
   "KSAD": {
+   "approach": 2,
    "sid": 1
   },
   "KSAF": {
+   "approach": 7,
    "sid": 3
   },
   "KSAN": {
+   "approach": 8,
    "sid": 10,
    "star": 7
   },
   "KSAT": {
+   "approach": 15,
    "sid": 8,
    "star": 8
   },
   "KSBA": {
+   "approach": 3,
    "sid": 5,
    "star": 1
   },
   "KSBD": {
+   "approach": 7,
    "sid": 1,
    "star": 2
   },
   "KSBP": {
+   "approach": 4,
    "sid": 2
   },
   "KSDF": {
+   "approach": 19,
    "sid": 7,
    "star": 4
   },
   "KSDL": {
+   "approach": 6,
    "sid": 12,
    "star": 4
   },
   "KSDM": {
+   "approach": 2,
    "sid": 2,
    "star": 1
   },
   "KSEA": {
+   "approach": 24,
    "sid": 8,
    "star": 5
   },
   "KSEE": {
+   "approach": 3,
    "sid": 2
   },
   "KSEZ": {
+   "approach": 1,
    "sid": 1
   },
   "KSFB": {
+   "approach": 11,
    "star": 8
   },
   "KSFF": {
+   "approach": 4,
    "sid": 1,
    "star": 2
   },
   "KSFO": {
+   "approach": 15,
    "sid": 11,
    "star": 13
   },
   "KSFQ": {
+   "approach": 3,
    "star": 2
   },
   "KSFZ": {
+   "approach": 4,
    "star": 1
   },
   "KSGH": {
+   "approach": 4,
    "star": 1
   },
   "KSGJ": {
+   "approach": 4,
    "star": 1
   },
   "KSGR": {
+   "approach": 4,
    "sid": 17,
    "star": 7
   },
   "KSGS": {
+   "approach": 2,
    "star": 1
   },
   "KSGU": {
+   "approach": 3,
    "sid": 2
   },
   "KSHD": {
+   "approach": 4,
    "sid": 1
   },
   "KSJC": {
+   "approach": 12,
    "sid": 7,
    "star": 8
   },
@@ -1837,6 +2335,7 @@
    "star": 8
   },
   "KSLC": {
+   "approach": 22,
    "sid": 7,
    "star": 11
   },
@@ -1845,84 +2344,107 @@
    "star": 3
   },
   "KSMF": {
+   "approach": 14,
    "sid": 3,
    "star": 4
   },
   "KSMN": {
+   "approach": 3,
    "sid": 2
   },
   "KSMO": {
+   "approach": 4,
    "sid": 4,
    "star": 6
   },
   "KSMQ": {
+   "approach": 2,
    "star": 3
   },
   "KSMX": {
+   "approach": 5,
    "sid": 1
   },
   "KSNA": {
+   "approach": 8,
    "sid": 11,
    "star": 7
   },
   "KSNC": {
+   "approach": 2,
    "star": 1
   },
   "KSNL": {
+   "approach": 2,
    "star": 1
   },
   "KSNS": {
+   "approach": 7,
    "sid": 1
   },
   "KSPA": {
+   "approach": 4,
    "sid": 2,
    "star": 4
   },
   "KSPF": {
+   "approach": 2,
    "sid": 1
   },
   "KSPG": {
+   "approach": 3,
    "star": 4
   },
   "KSPK": {
+   "approach": 2,
    "sid": 1
   },
   "KSQL": {
+   "approach": 2,
    "star": 1
   },
   "KSRQ": {
+   "approach": 8,
    "sid": 1,
    "star": 3
   },
   "KSSF": {
+   "approach": 2,
    "sid": 8,
    "star": 8
   },
   "KSTJ": {
+   "approach": 8,
    "sid": 6,
    "star": 3
   },
   "KSTL": {
+   "approach": 29,
    "sid": 17,
    "star": 5
   },
   "KSTP": {
+   "approach": 6,
    "sid": 8,
    "star": 4
   },
   "KSTS": {
+   "approach": 5,
    "sid": 3,
    "star": 2
   },
   "KSUA": {
+   "approach": 2,
    "sid": 1,
    "star": 2
   },
   "KSUN": {
+   "approach": 2,
    "sid": 1,
    "star": 1
   },
   "KSUS": {
+   "approach": 8,
    "sid": 4,
    "star": 5
   },
@@ -1930,24 +2452,31 @@
    "star": 7
   },
   "KSVC": {
+   "approach": 3,
    "sid": 1
   },
   "KSVH": {
+   "approach": 4,
    "star": 1
   },
   "KSVR": {
+   "approach": 1,
    "sid": 1
   },
   "KSWF": {
+   "approach": 8,
    "star": 1
   },
   "KSYI": {
+   "approach": 5,
    "star": 6
   },
   "KTAD": {
+   "approach": 2,
    "sid": 1
   },
   "KTAN": {
+   "approach": 2,
    "star": 1
   },
   "KTCM": {
@@ -1955,9 +2484,11 @@
    "star": 4
   },
   "KTDO": {
+   "approach": 2,
    "sid": 1
   },
   "KTEB": {
+   "approach": 13,
    "sid": 1,
    "star": 3
   },
@@ -1965,144 +2496,185 @@
    "star": 7
   },
   "KTIX": {
+   "approach": 6,
    "star": 3
   },
   "KTKI": {
+   "approach": 5,
    "sid": 9,
    "star": 9
   },
   "KTMB": {
+   "approach": 6,
    "sid": 9,
    "star": 9
   },
   "KTME": {
+   "approach": 2,
    "sid": 17,
    "star": 6
   },
   "KTMK": {
+   "approach": 1,
    "sid": 1
   },
   "KTOA": {
+   "approach": 5,
    "sid": 1,
    "star": 2
   },
   "KTPA": {
+   "approach": 15,
    "sid": 6,
    "star": 4
   },
   "KTPF": {
+   "approach": 2,
    "star": 2
   },
   "KTRK": {
+   "approach": 3,
    "sid": 2
   },
   "KTRM": {
+   "approach": 3,
    "sid": 1,
    "star": 4
   },
   "KTTD": {
+   "approach": 1,
    "star": 2
   },
   "KTTF": {
+   "approach": 2,
    "sid": 12,
    "star": 4
   },
   "KTTN": {
+   "approach": 8,
    "star": 3
   },
   "KTTS": {
+   "approach": 2,
    "star": 1
   },
   "KTUL": {
+   "approach": 14,
    "star": 1
   },
   "KTUS": {
+   "approach": 10,
    "sid": 3,
    "star": 2
   },
   "KTVL": {
+   "approach": 2,
    "sid": 2
   },
   "KTVY": {
+   "approach": 3,
    "sid": 1
   },
   "KTWF": {
+   "approach": 4,
    "sid": 1
   },
   "KTYL": {
+   "approach": 1,
    "sid": 1
   },
   "KTYQ": {
+   "approach": 5,
    "sid": 5,
    "star": 2
   },
   "KTZR": {
+   "approach": 2,
    "star": 4
   },
   "KUAO": {
+   "approach": 3,
    "sid": 3,
    "star": 1
   },
   "KUDD": {
+   "approach": 3,
    "star": 4
   },
   "KUES": {
+   "approach": 5,
    "sid": 2,
    "star": 1
   },
   "KUGN": {
+   "approach": 4,
    "sid": 2,
    "star": 1
   },
   "KUKI": {
+   "approach": 3,
    "sid": 2
   },
   "KUMP": {
+   "approach": 3,
    "sid": 5,
    "star": 2
   },
   "KUUU": {
+   "approach": 1,
    "star": 1
   },
   "KUZA": {
+   "approach": 4,
    "sid": 12,
    "star": 4
   },
   "KVAY": {
+   "approach": 2,
    "star": 1
   },
   "KVCB": {
+   "approach": 2,
    "sid": 1
   },
   "KVDF": {
+   "approach": 5,
    "star": 3
   },
   "KVGT": {
+   "approach": 3,
    "sid": 2,
    "star": 3
   },
   "KVKX": {
+   "approach": 1,
    "star": 1
   },
   "KVLL": {
+   "approach": 1,
    "sid": 12,
    "star": 4
   },
   "KVNC": {
+   "approach": 4,
    "sid": 1,
    "star": 3
   },
   "KVNY": {
+   "approach": 5,
    "sid": 7,
    "star": 6
   },
   "KVPC": {
+   "approach": 2,
    "star": 5
   },
   "KVQQ": {
+   "approach": 6,
    "star": 4
   },
   "KVUJ": {
+   "approach": 2,
    "sid": 12,
    "star": 3
   },
@@ -2111,383 +2683,497 @@
    "star": 6
   },
   "KWJF": {
+   "approach": 3,
    "sid": 1
   },
   "KWMC": {
+   "approach": 2,
    "sid": 1
   },
   "KWRI": {
    "star": 2
   },
   "KWST": {
+   "approach": 1,
    "star": 1
   },
   "KWVI": {
+   "approach": 3,
    "sid": 2
   },
   "KXMR": {
    "star": 1
   },
   "KXNX": {
+   "approach": 3,
    "star": 6
   },
   "KXWA": {
+   "approach": 6,
    "sid": 1
   },
   "KYIP": {
+   "approach": 8,
    "sid": 13,
    "star": 4
   },
   "KYKM": {
+   "approach": 9,
    "sid": 3
   },
   "L08": {
+   "approach": 1,
    "sid": 2
   },
   "L35": {
+   "approach": 1,
    "sid": 1
   },
   "L45": {
+   "approach": 2,
    "sid": 1
   },
   "L71": {
+   "approach": 2,
    "sid": 1
   },
   "M02": {
+   "approach": 1,
    "star": 6
   },
   "M46": {
+   "approach": 1,
    "sid": 2
   },
   "M54": {
+   "approach": 2,
    "star": 6
   },
   "M91": {
+   "approach": 3,
    "star": 6
   },
   "N07": {
+   "approach": 2,
    "star": 1
   },
   "N14": {
+   "approach": 2,
    "star": 1
   },
   "N51": {
+   "approach": 2,
    "star": 1
   },
   "N52": {
+   "approach": 2,
    "star": 4
   },
   "N87": {
+   "approach": 2,
    "star": 1
   },
   "O05": {
+   "approach": 1,
    "sid": 1
   },
   "O22": {
+   "approach": 1,
    "sid": 1
   },
   "O28": {
+   "approach": 2,
    "sid": 2
   },
   "O43": {
+   "approach": 1,
    "sid": 1
   },
   "O46": {
+   "approach": 1,
    "sid": 1
   },
   "O69": {
+   "approach": 2,
    "star": 2
   },
   "O85": {
+   "approach": 2,
    "sid": 1
   },
   "P13": {
+   "approach": 1,
    "sid": 1
   },
   "P19": {
+   "approach": 1,
    "sid": 1,
    "star": 3
   },
   "P33": {
+   "approach": 2,
    "sid": 1
   },
   "P34": {
+   "approach": 1,
    "sid": 1
   },
   "P52": {
+   "approach": 1,
    "sid": 1
   },
   "PAAK": {
+   "approach": 1,
    "sid": 1
   },
   "PAAQ": {
+   "approach": 2,
    "sid": 1
   },
   "PACD": {
+   "approach": 7,
    "sid": 2
   },
   "PACE": {
+   "approach": 2,
    "sid": 1
   },
   "PACH": {
+   "approach": 2,
    "sid": 1
   },
   "PACJ": {
+   "approach": 1,
    "sid": 1
   },
   "PACV": {
+   "approach": 4,
    "sid": 1
   },
   "PACX": {
+   "approach": 2,
    "sid": 1
   },
   "PADK": {
+   "approach": 5,
    "sid": 2
   },
   "PADM": {
+   "approach": 2,
    "sid": 1
   },
   "PAED": {
    "star": 2
   },
   "PAFA": {
+   "approach": 10,
    "sid": 5,
    "star": 2
   },
   "PAFE": {
+   "approach": 1,
    "sid": 1
   },
   "PAGH": {
+   "approach": 2,
    "sid": 1
   },
   "PAHU": {
+   "approach": 2,
    "sid": 1
   },
   "PAHV": {
+   "approach": 2,
    "sid": 1
   },
   "PAIK": {
+   "approach": 2,
    "sid": 1
   },
   "PAJN": {
+   "approach": 2,
    "sid": 1
   },
   "PAKH": {
+   "approach": 1,
    "sid": 1
   },
   "PAKP": {
+   "approach": 1,
    "sid": 1
   },
   "PAKT": {
+   "approach": 8,
    "sid": 2
   },
   "PAKW": {
+   "approach": 2,
    "sid": 2
   },
   "PAKX": {
+   "approach": 1,
    "sid": 1
   },
   "PAMH": {
+   "approach": 2,
    "sid": 1
   },
   "PANC": {
+   "approach": 10,
    "sid": 3,
    "star": 8
   },
   "PANO": {
+   "approach": 1,
    "sid": 1
   },
   "PAOR": {
+   "approach": 3,
    "sid": 1
   },
   "PAOU": {
+   "approach": 2,
    "sid": 1
   },
   "PAPE": {
+   "approach": 1,
    "sid": 1
   },
   "PAPG": {
+   "approach": 2,
    "sid": 1
   },
   "PAPH": {
+   "approach": 2,
    "sid": 1
   },
   "PAPN": {
+   "approach": 2,
    "sid": 1
   },
   "PARC": {
+   "approach": 2,
    "sid": 1
   },
   "PASD": {
+   "approach": 3,
    "sid": 2
   },
   "PASI": {
+   "approach": 3,
    "sid": 2
   },
   "PASL": {
+   "approach": 1,
    "sid": 1
   },
   "PATE": {
+   "approach": 2,
    "sid": 1
   },
   "PAUO": {
+   "approach": 2,
    "sid": 1
   },
   "PAUT": {
+   "approach": 3,
    "sid": 1
   },
   "PAVC": {
+   "approach": 1,
    "sid": 1
   },
   "PAVD": {
+   "approach": 1,
    "sid": 2
   },
   "PAVE": {
+   "approach": 2,
    "sid": 1
   },
   "PAWD": {
+   "approach": 1,
    "sid": 1
   },
   "PAWG": {
+   "approach": 3,
    "sid": 1
   },
   "PAYA": {
+   "approach": 7,
    "sid": 1,
    "star": 1
   },
   "PFAK": {
+   "approach": 2,
    "sid": 1
   },
   "PFEL": {
+   "approach": 2,
    "sid": 1
   },
   "PFKT": {
+   "approach": 2,
    "sid": 1
   },
   "PFKU": {
+   "approach": 2,
    "sid": 1
   },
   "PFKW": {
+   "approach": 2,
    "sid": 1
   },
   "PFTO": {
+   "approach": 2,
    "sid": 2
   },
   "PFZK": {
+   "approach": 1,
    "sid": 1
   },
   "PHHN": {
+   "approach": 2,
    "sid": 1
   },
   "PHKO": {
+   "approach": 7,
    "sid": 3,
    "star": 2
   },
   "PHLI": {
+   "approach": 7,
    "sid": 3
   },
   "PHLU": {
+   "approach": 2,
    "sid": 1
   },
   "PHMK": {
+   "approach": 2,
    "sid": 4
   },
   "PHNL": {
+   "approach": 16,
    "sid": 8,
    "star": 11
   },
   "PHOG": {
+   "approach": 9,
    "sid": 7,
    "star": 3
   },
   "PHTO": {
+   "approach": 4,
    "sid": 2,
    "star": 1
   },
   "POKA": {
+   "approach": 2,
    "sid": 1
   },
   "S39": {
+   "approach": 2,
    "sid": 1
   },
   "S50": {
+   "approach": 1,
    "sid": 1
   },
   "S59": {
+   "approach": 1,
    "sid": 1
   },
   "S69": {
    "sid": 1
   },
   "T00": {
+   "approach": 1,
    "sid": 11,
    "star": 7
   },
   "T41": {
+   "approach": 1,
    "sid": 17,
    "star": 7
   },
   "T74": {
+   "approach": 2,
    "sid": 6,
    "star": 4
   },
   "T78": {
+   "approach": 1,
    "sid": 11,
    "star": 5
   },
   "T89": {
+   "approach": 3,
    "sid": 1
   },
   "TISX": {
+   "approach": 2,
    "sid": 2
   },
   "TJPS": {
+   "approach": 2,
    "sid": 1
   },
   "TJSJ": {
+   "approach": 10,
    "sid": 8,
    "star": 5
   },
   "TJVQ": {
+   "approach": 1,
    "sid": 1
   },
   "U02": {
+   "approach": 3,
    "sid": 2
   },
   "U14": {
+   "approach": 2,
    "sid": 1
   },
   "U34": {
+   "approach": 2,
    "sid": 1
   },
   "U76": {
+   "approach": 2,
    "sid": 1
   },
   "W00": {
+   "approach": 2,
    "star": 1
   },
   "W43": {
+   "approach": 2,
    "sid": 1
   },
   "W50": {
    "star": 1
   },
   "X04": {
+   "approach": 2,
    "star": 1
   },
   "X50": {
+   "approach": 2,
    "star": 1
   },
   "X51": {
+   "approach": 2,
    "sid": 9,
    "star": 8
   }
  },
- "coverage": "United States airports that publish SID and STAR procedures",
- "cycle": "2611",
- "effective": "2026-10-29",
+ "coverage": "United States airports that publish SID, STAR and approach procedures",
+ "cycle": "2612",
+ "effective": "2026-11-26",
  "format": 1,
- "generated": "2026-10-23",
+ "generated": "2026-11-05",
  "runwaySource": "OurAirports runways.csv (CC0)",
  "source": "FAA CIFP (FAACIFP18, United States)"
 }

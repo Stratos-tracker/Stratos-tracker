@@ -218,7 +218,7 @@ class ShippedDatasetTests(unittest.TestCase):
             self.assertEqual(payload["airport"], airport)
             self.assertTrue(payload["cycle"])
             self.assertTrue(payload["procedures"])
-            for kind in ("sid", "star"):
+            for kind in ("sid", "star", "approach"):
                 for procedure in payload["procedures"].get(kind, []):
                     self.assertTrue(procedure["transitions"], procedure["id"])
                     for transition in procedure["transitions"]:
@@ -226,6 +226,17 @@ class ShippedDatasetTests(unittest.TestCase):
                         for point in transition["points"]:
                             self.assertTrue(-90 <= point["lat"] <= 90)
                             self.assertTrue(-180 <= point["lon"] <= 180)
+
+    def test_an_approach_keeps_its_published_final_segment_and_stops_at_the_runway(self):
+        payload = json.loads((Path(cifp.DATASET_DIR) / "KSEA.json").read_text(encoding="utf-8"))
+        approaches = {procedure["id"]: procedure for procedure in payload["procedures"].get("approach", [])}
+        self.assertTrue(approaches, "the dataset carries approach geometry")
+        final = [transition for transition in approaches["I16C"]["transitions"] if not transition["id"]][0]
+        idents = [point["id"] for point in final["points"]]
+        self.assertGreater(len(idents), 1, "the final segment keeps the fixes before the runway")
+        self.assertEqual(idents[-1], "RW16C", "the approach path ends on its runway")
+        self.assertNotIn("MILLT", idents, "the missed approach is a separate path")
+        self.assertEqual(final["runway"], "16C")
 
 
 if __name__ == "__main__":

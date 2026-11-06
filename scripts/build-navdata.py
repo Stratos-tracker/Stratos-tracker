@@ -73,7 +73,7 @@ WAYPOINT_REGION = (19, 21)
 LAT = (32, 41)
 LON = (41, 51)
 
-KINDS = {"D": "sid", "E": "star"}
+KINDS = {"D": "sid", "E": "star", "F": "approach"}
 
 
 def field(line, span):
@@ -202,8 +202,10 @@ def scan(lines):
                 if not row["procedure"]:
                     continue
                 # A continuation record repeats a leg with extra fields; the
-                # primary record already carries the leg itself.
-                if row["continuation"] not in ("0", " ", ""):
+                # primary record already carries the leg itself. RNAV (RNP)
+                # approaches store their final-segment legs as continuation
+                # records, so those are kept and duplicates collapse below.
+                if row["kind"] != "approach" and row["continuation"] not in ("0", " ", ""):
                     continue
                 procedures.setdefault(airport, []).append(row)
         elif section in ("E", "D"):
@@ -265,7 +267,7 @@ def build_airport(airport, rows, runways, waypoints, enroute, navaids, airports,
     for row in rows:
         grouped.setdefault(row["kind"], {}).setdefault(row["procedure"], {}).setdefault(row["transition"], []).append(row)
     kinds = {}
-    for kind in ("sid", "star"):
+    for kind in ("sid", "star", "approach"):
         procedures = []
         for name in sorted(grouped.get(kind, {})):
             transitions = []
@@ -274,7 +276,12 @@ def build_airport(airport, rows, runways, waypoints, enroute, navaids, airports,
                 points = []
                 skipped = 0
                 seen = set()
+                reach_runway = False
                 for row in ordered:
+                    # An approach's published path ends at its runway leg; the
+                    # legs after it are the missed approach, a separate path.
+                    if kind == "approach" and reach_runway:
+                        break
                     if not row["fix"]:
                         # A heading or course leg has no fix; it is not turned
                         # into a point, and the runway threshold supplies the
@@ -287,6 +294,8 @@ def build_airport(airport, rows, runways, waypoints, enroute, navaids, airports,
                     entry = {"id": row["fix"], "lat": point["lat"], "lon": point["lon"]}
                     if row["fix"].startswith("RW"):
                         entry["runway"] = True
+                        if kind == "approach":
+                            reach_runway = True
                     entry["terminator"] = row["terminator"]
                     key = (row["fix"], round(point["lat"], 5), round(point["lon"], 5))
                     if key in seen:
@@ -301,6 +310,13 @@ def build_airport(airport, rows, runways, waypoints, enroute, navaids, airports,
                 number = re.fullmatch(r"RW(\d{2})([LRCB]?)", transition)
                 if number:
                     runway = number.group(1) + ("" if number.group(2) == "B" else number.group(2))
+                elif kind == "approach":
+                    # An approach's transitions are named after the fix they
+                    # enter from; the runway it serves is the leg its final
+                    # segment lands on.
+                    served = next((p["id"] for p in reversed(points) if p["id"].startswith("RW")), "")
+                    landed = re.fullmatch(r"RW(\d{2}[LRCB]?)", served)
+                    runway = landed.group(1) if landed else ""
                 transitions.append({
                     "id": transition,
                     "runway": runway,
@@ -348,7 +364,7 @@ def main(argv=None):
     waypoints, enroute, navaids, airports, procedures = scan(lines)
     print("airports", len(airports), "terminal waypoints", len(waypoints),
           "en-route waypoints", len(enroute), "navaids", len(navaids),
-          "airports with SID/STAR rows", len(procedures))
+          "airports with procedure rows", len(procedures))
 
     wanted = {code.strip().upper() for code in args.airports.split(",") if code.strip()}
     os.makedirs(args.out, exist_ok=True)
@@ -374,7 +390,7 @@ def main(argv=None):
         "cycle": air_cycle,
         "effective": effective,
         "generated": dt.date.today().isoformat(),
-        "coverage": "United States airports that publish SID and STAR procedures",
+        "coverage": "United States airports that publish SID, STAR and approach procedures",
         "runwaySource": "OurAirports runways.csv (CC0)",
         "airports": index,
     }

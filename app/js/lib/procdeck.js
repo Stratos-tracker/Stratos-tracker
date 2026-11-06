@@ -24,6 +24,26 @@ export const KINDS = {
 const up = value => String(value == null ? '' : value).trim().toUpperCase();
 const num = value => (Number.isFinite(Number(value)) ? Number(value) : null);
 
+/* The ARINC 424 approach identifier carries its type in its first letter and
+   the runway in the rest: I16C is the ILS to 16C, H16CZ is the RNAV (RNP) Z
+   to 16C. Only the letters whose meaning the format fixes are named; anything
+   else keeps its identifier rather than guessing a title. */
+const APPROACH_TYPES = {
+  I: 'ILS', L: 'LOC', R: 'RNAV', V: 'VOR', N: 'NDB', D: 'VOR/DME',
+  G: 'IGS', H: 'RNAV (RNP)', B: 'LOC BC', F: 'FMS',
+};
+
+/** A readable approach title from its CIFP ident, or '' when it cannot be read. */
+export function approachTitle(ident) {
+  const code = up(ident);
+  const match = code.match(/^([A-Z])(\d{2})([LRCB]?)([A-Z]?)$/);
+  if (!match) return '';
+  const type = APPROACH_TYPES[match[1]] || '';
+  const runway = match[2] + (match[3] || '');
+  const variant = match[4] ? ` ${match[4]}` : '';
+  return type ? `${type}${variant} RWY ${runway}` : `${code} RWY ${runway}`;
+}
+
 /** A four-character airport ident, or ''. */
 export function airportCode(value) {
   const code = up(value).replace(/\s+/g, '');
@@ -73,13 +93,27 @@ export function procedureList(payload, kind) {
     .filter(proc => proc && proc.id)
     .map(proc => {
       const transitions = Array.isArray(proc.transitions) ? proc.transitions : [];
-      const runways = transitions
+      // Runway transitions name the runway in their id; an approach names its
+      // entry fixes instead, so its runways come from the runway legs it draws.
+      let runways = transitions
         .filter(t => up(t.id).startsWith('RW'))
         .map(t => String(t.runway || up(t.id).slice(2, 4)).replace(/[A-Z]$/, ''))
         .filter((id, i, all) => /^\d{2}[LRC]?$/.test(id) && all.indexOf(id) === i);
-      const branches = transitions.filter(t => !up(t.id).startsWith('RW')).map(t => String(t.id || '') || 'ALL');
+      const approach = String(kind || '').toLowerCase() === 'approach';
+      if (approach && !runways.length) {
+        runways = transitions
+          .flatMap(t => (Array.isArray(t.points) ? t.points : []).map(p => up(p.id)))
+          .map(id => id.match(/^RW(\d{2}[LRCB]?)$/))
+          .filter(Boolean)
+          .map(m => m[1])
+          .filter((id, i, all) => all.indexOf(id) === i);
+      }
+      const branches = transitions
+        .filter(t => !up(t.id).startsWith('RW') && !(approach && !up(t.id)))
+        .map(t => String(t.id || '') || 'ALL');
       return {
         id: String(proc.id).toUpperCase(),
+        title: approach ? approachTitle(proc.id) : '',
         transitions: transitions.map(t => String(t.id || '')),
         runways,
         branches: branches.filter((id, i, all) => all.indexOf(id) === i),
@@ -93,19 +127,22 @@ export function transitionList(payload, { kind = 'sid', ident } = {}) {
   const proc = procedureList(payload, kind).find(p => p.id === up(ident));
   if (!proc) return [];
   const list = ((payload.procedures[String(kind).toLowerCase()] || []).find(p => up(p.id) === proc.id) || {}).transitions || [];
+  const approach = String(kind || '').toLowerCase() === 'approach';
+  const rank = item => (item.kind === 'runway' ? 0 : item.kind === 'final' ? 1 : 2);
   return list.map(t => {
     const id = String(t.id || '');
     const runway = up(t.runway) || (up(id).startsWith('RW') ? up(id).slice(2, 4) : '');
+    const final = approach && !id;
     return {
       id,
       runway,
-      kind: up(id).startsWith('RW') ? 'runway' : 'branch',
+      kind: up(id).startsWith('RW') ? 'runway' : final ? 'final' : 'branch',
       points: Array.isArray(t.points) ? t.points.length : 0,
       complete: t.complete !== false,
       skipped: Number(t.skipped) || 0,
-      label: up(id).startsWith('RW') ? `Runway ${runway}` : (id ? `via ${id}` : 'Common legs'),
+      label: up(id).startsWith('RW') ? `Runway ${runway}` : final ? 'Final approach' : (id ? `via ${id}` : 'Common legs'),
     };
-  }).sort((a, b) => (a.kind === b.kind ? a.id.localeCompare(b.id) : a.kind === 'runway' ? -1 : 1));
+  }).sort((a, b) => (rank(a) === rank(b) ? a.id.localeCompare(b.id) : rank(a) - rank(b)));
 }
 
 function cleanPoints(points) {
@@ -168,8 +205,18 @@ export function pathFor(payload, { kind = 'sid', ident = '', runway = '', transi
   const isRunway = item => Boolean(item) && up(item.id).startsWith('RW');
   const notes = [];
 
+  // An approach is published as entry branches plus one final segment, which
+  // carries an empty transition id and ends on the runway leg.
+  const finalSegment = key === 'approach'
+    ? (transitions.find(item => up(item.id) === '') || transitions.find(item => (Array.isArray(item.points) ? item.points : []).some(p => up(p.id).startsWith('RW'))) || null)
+    : null;
+
   let pieces;
-  if (chosen && chosen === runwayTransition) {
+  if (key === 'approach') {
+    if (chosen && chosen !== finalSegment) pieces = finalSegment ? [chosen, finalSegment] : [chosen];
+    else if (finalSegment) pieces = [finalSegment];
+    else pieces = chosen ? [chosen] : [];
+  } else if (chosen && chosen === runwayTransition) {
     pieces = [chosen];
   } else if (chosen) {
     pieces = isRunway(chosen) ? [chosen] : (runwayTransition ? [runwayTransition, chosen] : [chosen]);
@@ -217,17 +264,32 @@ export function pathFor(payload, { kind = 'sid', ident = '', runway = '', transi
     return failure('empty', `${procedure.id} publishes no usable fixes in this dataset.`);
   }
 
-  const threshold = runwayThreshold(payload, rwy);
+  let served = rwy;
+  if (key === 'approach') {
+    // The legs published after the runway are the missed approach, a separate
+    // path; the drawn approach stops on the runway it lands on.
+    for (const segment of segments) {
+      const at = segment.findIndex(point => up(point.id).startsWith('RW'));
+      if (at >= 0) {
+        segment.length = at + 1;
+        if (!served) {
+          const match = up(segment[at].id).match(/^RW(\d{2}[LRCB]?)$/);
+          if (match) served = match[1];
+        }
+      }
+    }
+  }
+
+  const threshold = runwayThreshold(payload, served);
   if (threshold) {
     const first = segments[0][0];
     const last = segments[segments.length - 1][segments[segments.length - 1].length - 1];
     const atAirport = up(last.id) === up(payload.airport);
-    if (key === 'star' || key === 'approach') {
+    if (key === 'star') {
       // A STAR's terminal leg often ends at the airport itself: the runway
       // threshold replaces that point instead of drawing into the field centre.
       const tail = segments[segments.length - 1];
       if (atAirport) tail[tail.length - 1] = { ...tail[tail.length - 1], ...threshold, id: threshold.id };
-      else if (!up(last.id).startsWith('RW') && key === 'approach') tail.push({ ...threshold, terminator: 'TF' });
     } else if (!up(first.id).startsWith('RW') && !first.terminator) {
       // A SID's first leg that carries no terminator is a direct-to from the
       // runway, which ARINC 424 spells as the runway threshold itself.
@@ -237,7 +299,7 @@ export function pathFor(payload, { kind = 'sid', ident = '', runway = '', transi
 
   for (const segment of segments) {
     for (const point of segment) {
-      if (!point.id) point.id = point.terminator === 'DF' ? 'RW' + rwy : '';
+      if (!point.id) point.id = point.terminator === 'DF' ? 'RW' + served : '';
     }
   }
 
@@ -248,7 +310,7 @@ export function pathFor(payload, { kind = 'sid', ident = '', runway = '', transi
     kind: key,
     label: meta.label,
     id: String(procedure.id).toUpperCase(),
-    runway: rwy,
+    runway: served,
     transition: chosen ? String(chosen.id) : String((runwayTransition && runwayTransition.id) || ''),
     segments,
     points: segments.flat(),
@@ -270,7 +332,9 @@ export function pathNote(result) {
   const pieces = result.segments.length > 1 ? ` · drawn as ${result.segments.length} published sections` : '';
   const missing = result.complete ? '' : ` · ${result.skipped} leg${result.skipped === 1 ? '' : 's'} not resolvable`;
   const extras = result.notes && result.notes.length ? ' · ' + result.notes.join(' · ') : '';
-  return `${result.label} ${result.id}${result.runway ? ' · runway ' + result.runway : ''} from ${cycle}${pieces}${missing}${extras}`;
+  const title = result.kind === 'approach' ? approachTitle(result.id) : '';
+  const named = title ? `${title} (${result.id})` : `${result.label} ${result.id}`;
+  return `${named}${result.runway ? ' · runway ' + result.runway : ''} from ${cycle}${pieces}${missing}${extras}`;
 }
 
 /** What the dataset carries for an airport, in the panel's words. */
@@ -296,7 +360,7 @@ export function kindNote(payload, kind) {
   if (!payload || payload.ok !== true) return 'No procedure data for this airport.';
   if (info.counts[key] > 0) return '';
   if (key === 'approach') {
-    return 'No approach leg geometry in this dataset — open the approach chart instead of drawing a path.';
+    return 'No approach leg geometry for this airport in this dataset — open the approach chart instead.';
   }
   return `This dataset publishes no ${key.toUpperCase()} legs for ${info.airport || 'this airport'}.`;
 }

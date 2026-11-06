@@ -28,7 +28,7 @@ const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c =>
 
 const state = {
   dep: '', arr: '', sid: '', sidTrans: '', depRwy: '', star: '', starTrans: '', arrRwy: '',
-  approach: '', approachRwy: '', planOpen: true, procOpen: true,
+  approach: '', approachTrans: '', approachRwy: '', planOpen: true, procOpen: true,
 };
 
 const CACHE = new Map();
@@ -87,7 +87,7 @@ function adoptPlan() {
     state.dep = nextDep;
   }
   if (nextArr && nextArr !== state.arr) {
-    if (hadPlan) { state.star = ''; state.starTrans = ''; state.arrRwy = ''; state.approach = ''; }
+    if (hadPlan) { state.star = ''; state.starTrans = ''; state.arrRwy = ''; state.approach = ''; state.approachTrans = ''; }
     state.arr = nextArr;
   }
   // A newly loaded plan names its own procedures; those win over a stale choice.
@@ -96,7 +96,7 @@ function adoptPlan() {
     if (selection.star) { state.star = selection.star; state.starTrans = selection.starTrans; }
     if (selection.depRwy) state.depRwy = selection.depRwy;
     if (selection.arrRwy) state.arrRwy = selection.arrRwy;
-    if (selection.approach) state.approach = selection.approach;
+    if (selection.approach) { state.approach = selection.approach; state.approachTrans = ''; }
     if (selection.approachRwy) state.approachRwy = selection.approachRwy;
   }
   return true;
@@ -145,10 +145,11 @@ async function compute() {
     const known = (payload, kind, ident) => !ident || procedureList(payload, kind).some(proc => proc.id === ident);
     if (!known(depPayload, 'sid', state.sid)) { state.sid = ''; state.sidTrans = ''; }
     if (!known(arrPayload, 'star', state.star)) { state.star = ''; state.starTrans = ''; }
+    if (!known(arrPayload, 'approach', state.approach)) { state.approach = ''; state.approachTrans = ''; }
     const next = [];
     if (state.sid) next.push({ ...pathFor(depPayload, { kind: 'sid', ident: state.sid, runway: state.depRwy, transition: state.sidTrans }), airport: state.dep });
     if (state.star) next.push({ ...pathFor(arrPayload, { kind: 'star', ident: state.star, runway: state.arrRwy, transition: state.starTrans }), airport: state.arr });
-    if (state.approach) next.push({ ...pathFor(arrPayload, { kind: 'approach', ident: state.approach, runway: state.approachRwy || state.arrRwy }), airport: state.arr });
+    if (state.approach) next.push({ ...pathFor(arrPayload, { kind: 'approach', ident: state.approach, runway: state.approachRwy || state.arrRwy, transition: state.approachTrans }), airport: state.arr });
     layers = next
       .filter(layer => layer && (layer.ok || layer.error))
       .map(layer => ({ ...layer, color: (KINDS[layer.kind] || {}).color || '#f472b6' }));
@@ -169,9 +170,14 @@ function runwayOptions(payload, selected) {
     `<option value="${esc(id)}"${id === selected ? ' selected' : ''}>${esc(id)}</option>`)].join('');
 }
 
-function procedureOptions(payload, kind, selected) {
-  const list = procedureList(payload, kind);
+function procedureOptions(payload, kind, selected, runway) {
+  let list = procedureList(payload, kind);
   const note = kindNote(payload, kind);
+  // With a runway chosen, offer only the approaches that land on it.
+  if (kind === 'approach' && runway) {
+    const landed = list.filter(proc => proc.runways.includes(runway));
+    if (landed.length) list = landed;
+  }
   if (!list.length) {
     return `<option value="">${esc(note || 'None published')}</option>`;
   }
@@ -182,7 +188,8 @@ function procedureOptions(payload, kind, selected) {
 function transitionOptions(payload, kind, ident, selected) {
   const list = transitionList(payload, { kind, ident });
   if (!list.length) return '<option value="">No transition data</option>';
-  return ['<option value="">Runway transition only</option>', ...list.map(item =>
+  const none = kind === 'approach' ? 'Final segment only' : 'Runway transition only';
+  return [`<option value="">${none}</option>`, ...list.map(item =>
     `<option value="${esc(item.id)}"${item.id === selected ? ' selected' : ''}>${esc(item.label)}${item.complete ? '' : ' (partial)'}</option>`)].join('');
 }
 
@@ -209,7 +216,7 @@ function groupHtml(side, payload) {
   <label class="dk-f"><span>Airport</span><input data-dk="${side}" data-field="airport" value="${esc(airport)}" maxlength="4" spellcheck="false" placeholder="ICAO"></label>
   <div class="dk-pair">
     <label class="dk-f"><span>Runway</span><select data-dk="${side}" data-field="runway"${payload && payload.ok ? '' : ' disabled'}>${runwayOptions(payload, runway)}</select></label>
-    <label class="dk-f"><span>${KINDS[kind].label}</span><select data-dk="${side}" data-field="procedure"${payload && payload.ok ? '' : ' disabled'}>${procedureOptions(payload, kind, procedure)}</select></label>
+    <label class="dk-f"><span>${KINDS[kind].label}</span><select data-dk="${side}" data-field="procedure"${payload && payload.ok ? '' : ' disabled'}>${procedureOptions(payload, kind, procedure, runway)}</select></label>
   </div>
   <label class="dk-f"><span>Transition</span><select data-dk="${side}" data-field="transition"${procedure ? '' : ' disabled'}>${transitionOptions(payload, kind, procedure, transition)}</select></label>
   <div class="dk-status${note ? ' warn' : ''}">${esc(status)}</div>
@@ -218,13 +225,30 @@ function groupHtml(side, payload) {
 }
 
 function approachHtml(payload) {
-  const note = kindNote(payload, 'approach');
   const info = describe(payload);
+  const note = kindNote(payload, 'approach');
+  const available = Boolean(payload && payload.ok === true && info.counts.approach);
+  const layer = layers.find(item => item.kind === 'approach');
+  const runway = state.approachRwy || state.arrRwy;
+  const status = !state.arr
+    ? 'No arrival airport chosen'
+    : !payload || payload.ok !== true
+      ? (payload && payload.error) || 'Procedure data unavailable'
+      : available
+        ? `${info.counts.approach} approach${info.counts.approach === 1 ? '' : 'es'} · ${info.runways.length} runway${info.runways.length === 1 ? '' : 's'}${info.cycle ? ' · AIRAC ' + info.cycle : ''}`
+        : note || `No approach leg geometry for ${state.arr} in this dataset`;
+  const drawn = layer && layer.ok
+    ? `<div class="dk-drawn"><i style="background:${KINDS.approach.color}"></i>${esc(pathNote(layer))}</div>`
+    : '';
   return `<section class="dk-group" data-side="app">
   <header><span class="dk-kind" style="--dk-c:${KINDS.approach.color}">APP</span><b>Approach</b></header>
-  <label class="dk-f"><span>Runway</span><select data-dk="app" data-field="runway" disabled><option>${esc(state.arrRwy || 'Any runway')}</option></select></label>
-  <label class="dk-f"><span>Approach</span><select disabled><option>${esc(info.counts.approach ? 'Choose in the chart list' : 'Not in this dataset')}</option></select></label>
-  <div class="dk-status warn">${esc(note || 'Approach geometry is available for this airport.')}</div>
+  <div class="dk-pair">
+    <label class="dk-f"><span>Runway</span><select data-dk="app" data-field="runway"${available ? '' : ' disabled'}>${runwayOptions(payload, runway)}</select></label>
+    <label class="dk-f"><span>Approach</span><select data-dk="app" data-field="procedure"${available ? '' : ' disabled'}>${procedureOptions(payload, 'approach', state.approach, runway)}</select></label>
+  </div>
+  <label class="dk-f"><span>Transition</span><select data-dk="app" data-field="transition"${state.approach ? '' : ' disabled'}>${transitionOptions(payload, 'approach', state.approach, state.approachTrans)}</select></label>
+  <div class="dk-status${available && layer && layer.ok ? '' : ' warn'}">${esc(status)}</div>
+  ${drawn}
   <div class="dk-actions"><button type="button" data-dk-chart="${esc(state.arr)}"${state.arr ? '' : ' disabled'}>Open ${esc(state.arr || 'airport')} charts</button></div>
 </section>`;
 }
@@ -280,7 +304,7 @@ function coverageHtml() {
   const arr = describe(CACHE.get(state.arr));
   const cycle = dep.cycle || arr.cycle || '';
   const source = /FAA/i.test(dep.source || arr.source) ? 'FAA CIFP · United States' : (dep.source || arr.source || 'No procedure dataset');
-  return `<div class="dk-cov"><b>${esc(source)}</b><span>${cycle ? 'AIRAC ' + esc(cycle) : 'cycle unknown'} · SID, STAR and runway thresholds. Approaches and airways are not in this dataset.</span></div>`;
+  return `<div class="dk-cov"><b>${esc(source)}</b><span>${cycle ? 'AIRAC ' + esc(cycle) : 'cycle unknown'} · SID, STAR and approach leg geometry with runway thresholds. Airways are not in this dataset.</span></div>`;
 }
 
 function render() {
@@ -385,7 +409,24 @@ function onPaneChange(event) {
       if (side === 'dep') state.sidTrans = value.toUpperCase(); else state.starTrans = value.toUpperCase();
     }
   }
-  if (side === 'app' && field === 'runway') state.approachRwy = value.toUpperCase();
+  if (side === 'app') {
+    if (field === 'runway') {
+      state.approachRwy = value.toUpperCase();
+      // Keep the approach and its runway together.
+      if (state.approach && state.approachRwy) {
+        const proc = procedureList(CACHE.get(state.arr), 'approach').find(item => item.id === state.approach);
+        if (proc && proc.runways.length && !proc.runways.includes(state.approachRwy)) {
+          state.approach = '';
+          state.approachTrans = '';
+        }
+      }
+    } else if (field === 'procedure') {
+      state.approach = value.toUpperCase();
+      state.approachTrans = '';
+    } else if (field === 'transition') {
+      state.approachTrans = value.toUpperCase();
+    }
+  }
   saveState();
   compute();
 }

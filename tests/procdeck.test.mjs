@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
   KINDS, airportCode, endpointsFor, runwayIds, runwayThreshold, procedureList,
   transitionList, pathFor, pathNote, describe, kindNote, planSelection, procedureLabels,
+  approachTitle,
 } from '../app/js/lib/procdeck.js';
 import handler from '../api/procedures.js';
 
@@ -53,6 +54,35 @@ const payload = {
         { id: 'FST', runway: '', combined: false, complete: true, skipped: 0, points: [
           { id: 'FST', lat: 30.9, lon: -85.0, terminator: 'IF' },
           { id: 'HONIE', lat: 33.3, lon: -84.5, terminator: 'TF' },
+        ] },
+      ],
+    }],
+  },
+};
+
+const approachPayload = {
+  ...payload,
+  procedures: {
+    ...payload.procedures,
+    approach: [{
+      id: 'I26L',
+      transitions: [
+        { id: '', runway: '26L', combined: false, complete: true, skipped: 0, points: [
+          { id: 'HONIE', lat: 33.3, lon: -84.5, terminator: 'IF' },
+          { id: 'RW26L', lat: 33.646801, lon: -84.405502, terminator: 'TF' },
+          { id: 'MISS1', lat: 33.7, lon: -84.3, terminator: 'TF' },
+          { id: 'MISS2', lat: 33.8, lon: -84.2, terminator: 'HM' },
+        ] },
+        { id: 'BANNG', runway: '', combined: false, complete: true, skipped: 0, points: [
+          { id: 'BANNG', lat: 32.961247, lon: -84.421383, terminator: 'IF' },
+          { id: 'HONIE', lat: 33.3, lon: -84.5, terminator: 'TF' },
+        ] },
+      ],
+    }, {
+      id: 'H26LZ',
+      transitions: [
+        { id: '', runway: '26L', combined: false, complete: true, skipped: 0, points: [
+          { id: 'RW26L', lat: 33.646801, lon: -84.405502, terminator: 'TF' },
         ] },
       ],
     }],
@@ -115,6 +145,38 @@ test('procdeck: a STAR ends at the runway threshold instead of the field centre'
   const threshold = path.points[path.points.length - 1];
   assert.equal(threshold.lat, 33.646801);
   assert.equal(threshold.lon, -84.405502);
+});
+
+test('procdeck: an approach lists its runways, entry branches and final segment', () => {
+  const approaches = procedureList(approachPayload, 'approach');
+  assert.deepEqual(approaches.map(p => p.id), ['H26LZ', 'I26L']);
+  assert.deepEqual(approaches[1].runways, ['26L'], 'the runway leg names the runway');
+  assert.deepEqual(approaches[1].branches, ['BANNG'], 'the final segment is not an entry branch');
+  assert.equal(approaches[1].title, 'ILS RWY 26L');
+  assert.equal(approachTitle('H26LZ'), 'RNAV (RNP) Z RWY 26L');
+  assert.equal(approachTitle('XX'), '', 'an unreadable ident gets no invented title');
+
+  const transitions = transitionList(approachPayload, { kind: 'approach', ident: 'i26l' });
+  assert.deepEqual(transitions.map(t => t.id), ['', 'BANNG']);
+  assert.equal(transitions[0].label, 'Final approach');
+  assert.equal(transitions[0].kind, 'final');
+  assert.equal(transitions[1].label, 'via BANNG');
+  assert.equal(kindNote(approachPayload, 'approach'), '');
+});
+
+test('procdeck: an approach joins its entry branch to the final segment and stops on the runway', () => {
+  const path = pathFor(approachPayload, { kind: 'approach', ident: 'I26L', runway: '26L', transition: 'BANNG' });
+  assert.equal(path.ok, true);
+  assert.equal(path.segments.length, 1, 'the branch meets the final segment at HONIE');
+  assert.deepEqual(path.points.map(p => p.id), ['BANNG', 'HONIE', 'RW26L'], 'the missed approach is not drawn as the approach');
+  assert.equal(path.runway, '26L');
+  assert.equal(path.complete, true);
+  assert.match(pathNote(path), /ILS RWY 26L \(I26L\) · runway 26L/);
+
+  const final = pathFor(approachPayload, { kind: 'approach', ident: 'I26L' });
+  assert.equal(final.ok, true);
+  assert.deepEqual(final.points.map(p => p.id), ['HONIE', 'RW26L']);
+  assert.equal(final.segments.length, 1);
 });
 
 test('procdeck: missing data is named, and approaches are never invented', () => {

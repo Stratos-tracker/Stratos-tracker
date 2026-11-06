@@ -1304,7 +1304,7 @@ test('published SID and STAR layers come from real data, under the route line', 
   assert.match(page, /function drawProcedurePaths\(\)/, 'the geometry has its own drawing pass');
   assert.match(page, /const layers=Array\.isArray\(window\.PROCLAYERS\)/, 'it draws only what the deck resolved');
   assert.match(page, /for\(const segment of layer\.segments\)/, 'every published section is its own stroke');
-  assert.match(page, /cx\.lineWidth=layer\.kind==='approach'\?9:11/, 'procedures are a step thinner than the 12 px route line');
+  assert.match(page, /cx\.strokeStyle=color;cx\.globalAlpha=\.32;cx\.lineWidth=11/, 'every procedure path shares the route band width');
   assert.ok(page.indexOf('drawProcedurePaths();') < page.indexOf('cx.globalAlpha=.35;cx.strokeStyle=C.route;cx.lineWidth=12'), 'procedure paths sit under the route line');
   const start = page.indexOf('function strokeProcedureSegment(');
   const stop = page.indexOf('function mkPlanLabel(');
