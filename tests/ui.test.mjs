@@ -1294,25 +1294,26 @@ test('a plan keeps its procedures and markers when it moves between pages', asyn
   assert.match(page, /k:routeKindName\(p\.kind\|\|p\.k\)/, 'a stored route is normalised on load');
 });
 
-test('SID and STAR runway paths come from the simulator data, under the route line', async () => {
+test('published SID and STAR layers come from real data, under the route line', async () => {
   const fs = await import('node:fs');
   const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
   assert.match(page, /import \* as PROC from '\.\/js\/lib\/procedures\.js'/, 'the page loads the procedure helpers');
-  assert.match(page, /window\.PROC = PROC/, 'the classic script can reach them');
-  assert.match(page, /function procTick\(\)/, 'the plan is checked once per key, not per frame');
-  assert.match(page, /PROC\.procedureEndpoint\(airport,kind,ident\)/, 'one request per airport, kind and procedure');
-  assert.match(page, /PROC\.procedurePath\(payload,\{kind,ident,runway:rwy,routeIds\}\)/, 'the plan runway picks the transition and the plan its en-route branch');
-  assert.match(page, /PROC\.connectorFor\(kind,path\.points,routeIds\)/, 'only the part the plan does not draw is painted');
+  assert.match(page, /import \{ initProcDeck \} from '\.\/js\/procdeck-ui\.js'/, 'and the procedure deck');
+  assert.match(page, /window\.DECK=\{/, 'the deck reads the plan through one narrow bridge');
+  assert.match(page, /window\.PROCLAYERS/, 'the deck publishes the resolved layers to the chart');
   assert.match(page, /function drawProcedurePaths\(\)/, 'the geometry has its own drawing pass');
-  assert.match(page, /cx\.lineWidth=9/, 'it is a step thinner than the 12 px waypoint line');
-  // It is painted before the route line, so the waypoints still read on top and
-  // the line between them is never redrawn or repainted by this layer.
+  assert.match(page, /const layers=Array\.isArray\(window\.PROCLAYERS\)/, 'it draws only what the deck resolved');
+  assert.match(page, /for\(const segment of layer\.segments\)/, 'every published section is its own stroke');
+  assert.match(page, /cx\.lineWidth=layer\.kind==='approach'\?9:11/, 'procedures are a step thinner than the 12 px route line');
   assert.ok(page.indexOf('drawProcedurePaths();') < page.indexOf('cx.globalAlpha=.35;cx.strokeStyle=C.route;cx.lineWidth=12'), 'procedure paths sit under the route line');
-  const start = page.indexOf('/* ── Published procedure geometry');
+  const start = page.indexOf('function strokeProcedureSegment(');
   const stop = page.indexOf('function mkPlanLabel(');
   const block = page.slice(start, stop);
-  assert.ok(start > 0 && stop > start, 'the procedure layer exists as its own block');
+  assert.ok(start > 0 && stop > start, 'the procedure layers exist as their own block');
   assert.doesNotMatch(block, /route\s*=|route\.(push|splice|sort|unshift)\(/, 'it never edits the route');
+  assert.match(page, /data-dk-layer="sid"/, 'a SID is a layer the pilot can switch');
+  assert.match(page, /data-dk-layer="star"/, 'so is a STAR');
+  assert.match(page, /data-dk-layer="approach"/, 'and an approach');
   assert.match(page, /fcProcHtml\(o\)/, 'the card reports the procedure source');
   assert.match(page, /PROCG\.notes\.join\(' · '\)/, 'and any limitation the source reported');
 });

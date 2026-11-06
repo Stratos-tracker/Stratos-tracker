@@ -22,6 +22,7 @@ import winds from '../api/winds.js';
 import charts from '../api/charts.js';
 import chart from '../api/chart.js';
 import ourairports from '../api/ourairports.js';
+import procedures from '../api/procedures.js';
 
 const ROOT = path.resolve(import.meta.dirname, '..', 'app');
 const PORT = Number(process.env.PORT) || 8123;
@@ -87,6 +88,7 @@ const ROUTES = {
   '/api/charts': adapt(charts),
   '/api/chart': adapt(chart),
   '/api/ourairports': adapt(ourairports),
+  '/api/procedures': adapt(procedures),
 };
 
 /** A path inside app/, or null when it escapes the root. */

@@ -342,7 +342,67 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 <meta property="og:url" content="https://stratos-tracker-5rh6.vercel.app/app/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Stratos">
-</head><body><div class="app-shell">
+<style>/* ── The chart deck: flight plan and procedures ────────────────────────
+   Two collapsible panels around the chart, in the shell's own surface: the
+   plan on the left, the procedure deck on the right. They are chrome over the
+   map, never a second page, and they collapse to their header so the chart
+   keeps the screen. */
+.dkpane{position:absolute;top:64px;width:292px;max-height:calc(100% - 150px);display:flex;flex-direction:column;background:color-mix(in srgb,var(--ui) 94%,transparent);border:1px solid var(--ui2);border-radius:16px;box-shadow:0 18px 40px rgba(0,0,0,.35);color:var(--txt);z-index:6;overflow:hidden;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.dk-left{left:12px}.dk-right{right:12px;width:308px}
+.dk-head{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--ui2);color:var(--mut)}
+.dk-head b{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--txt)}
+.dk-fold{background:none;border:0;color:var(--mut);font-size:17px;line-height:1;padding:2px 6px;cursor:pointer;border-radius:6px}
+.dk-fold:hover,.dk-fold.on{color:var(--txt);background:var(--ui2)}
+.dk-body{padding:12px;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:12px;scrollbar-width:thin}
+.dkpane.closed{width:auto;max-height:none}
+.dkpane.closed .dk-body{display:none}
+#app.chartmode .dkpane{display:none}
+.dk-group{display:flex;flex-direction:column;gap:7px;border:1px solid color-mix(in srgb,var(--ui2) 80%,transparent);border-radius:12px;padding:10px;background:color-mix(in srgb,var(--bg) 22%,transparent)}
+.dk-group header{display:flex;align-items:center;gap:8px;font-size:12px}
+.dk-kind{font-size:9.5px;font-weight:800;letter-spacing:.1em;background:color-mix(in srgb,var(--dk-c) 20%,transparent);color:var(--dk-c);padding:3px 6px;border-radius:6px}
+.dk-f{display:flex;flex-direction:column;gap:3px;font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut)}
+.dk-f select,.dk-f input{width:100%;box-sizing:border-box;background:var(--ui2);border:1px solid transparent;border-radius:8px;color:var(--txt);padding:7px 8px;font:600 13px/1.2 inherit;letter-spacing:0}
+.dk-f input{text-transform:uppercase}
+.dk-f select:focus,.dk-f input:focus{outline:none;border-color:var(--acc)}
+.dk-f select:disabled,.dk-f input:disabled{opacity:.55}
+.dk-pair{display:grid;grid-template-columns:1fr 1.35fr;gap:7px}
+.dk-status{font-size:11px;color:var(--mut);line-height:1.35}
+.dk-status.warn{color:#f0b64a}
+.dk-drawn{font-size:10.5px;color:var(--txt);display:flex;gap:6px;align-items:flex-start;line-height:1.35}
+.dk-drawn i{width:8px;height:8px;border-radius:2px;flex:0 0 8px;margin-top:3px}
+.dk-actions button{border:1px solid var(--ui2);background:var(--ui2);color:var(--txt);border-radius:8px;padding:7px 9px;font:600 11.5px inherit;cursor:pointer;width:100%}
+.dk-actions button:hover{border-color:var(--acc)}
+.dk-actions button:disabled{opacity:.5;cursor:default}
+.dk-cov{font-size:10px;color:var(--mut);line-height:1.4;border-top:1px solid var(--ui2);padding-top:9px;display:flex;flex-direction:column;gap:3px}
+.dk-cov b{color:var(--txt);font-size:10.5px}
+.dk-route{display:flex;align-items:center;gap:8px}
+.dk-end{display:flex;flex-direction:column;line-height:1.15;min-width:0;flex:1}
+.dk-end span{font-size:9px;letter-spacing:.1em;color:var(--mut)}
+.dk-end b{font-size:19px;letter-spacing:.02em}
+.dk-end em{font-size:10px;color:var(--mut);font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dk-arrow{color:var(--acc);font-size:15px}
+.dk-chips{display:flex;flex-wrap:wrap;gap:5px}
+.dk-chips span{font-size:10px;padding:4px 7px;border-radius:6px;background:var(--ui2);color:var(--txt);border-left:3px solid var(--dk-c,var(--ui2))}
+.dk-prog{display:flex;flex-direction:column;gap:4px}
+.dk-bar{height:5px;background:var(--ui2);border-radius:99px;overflow:hidden}
+.dk-bar i{display:block;height:100%;background:var(--acc);transition:width .4s ease}
+.dk-progt{display:flex;justify-content:space-between;font-size:10px;color:var(--mut)}
+.dk-wps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;overflow-y:auto;max-height:34vh;scrollbar-width:thin}
+.dk-wp button{display:grid;grid-template-columns:18px 1fr auto auto auto;gap:6px;align-items:center;width:100%;background:none;border:0;padding:5px 4px;border-radius:7px;color:var(--txt);font:600 12px inherit;text-align:left;cursor:pointer}
+.dk-wp button:hover{background:var(--ui2)}
+.dk-wp.past{opacity:.55}
+.dk-wp .dk-i{font-size:9.5px;color:var(--mut);text-align:right}
+.dk-wp .dk-b,.dk-wp .dk-d{font-size:10px;color:var(--mut);font-weight:500}
+.dk-wp em{font-size:8.5px;font-style:normal;letter-spacing:.08em;color:var(--acc)}
+.dk-empty{padding:12px 4px;display:flex;flex-direction:column;gap:6px}
+.dk-empty p{margin:0;font-size:11.5px;line-height:1.5;color:var(--mut)}
+#dklay{display:flex;gap:6px;flex-wrap:wrap}#dklay button{flex:1}
+.dk-tools{display:flex;gap:2px}
+/* The aircraft and flight-plan cards keep their place on the chart, moved
+   clear of the plan panel rather than drawn underneath it. */
+@media(min-width:901px){#app.dk-plan-open #fc,#app.dk-plan-open #fp{left:322px}}
+@media(max-width:900px){.dkpane{top:auto;bottom:76px;left:8px;right:8px;width:auto;max-height:44vh}.dk-left{left:8px}.dk-right{right:8px;width:auto}.dk-wps{max-height:26vh}}
+</style></head><body><div class="app-shell">
 <header id="appbar" class="tb" data-title="Flight Deck" data-context="Live Map"></header>
 <nav id="tabs" aria-label="Sections"><button class="tab act" id="bMap" data-group="Fly" data-label="Flight Deck"><b>&#8982;</b><span>Flight Deck</span></button><button class="tab" id="bRoute" data-group="Fly" data-label="Flight Planning"><b>&#8599;</b><span>Flight Planning</span></button><a class="tab" href="logbook.html" data-group="Fly" data-label="Logbook"><b>&#9776;</b><span>Logbook</span></a><a class="tab" href="discover.html" data-group="Explore" data-label="Explore"><b>&#10022;</b><span>Explore</span></a><a class="tab" href="pilot.html#settings" data-group="Account" data-label="Profile &amp; Settings"><b>&#9881;</b><span>Profile</span></a><a class="rail-product" href="efb.html" title="Stratos EFB — electronic flight bag" aria-label="Open Stratos EFB"><b>&#9635;</b><span>Stratos EFB<small>Briefing · charts</small></span></a><button class="tab rail-toggle" data-rail-toggle type="button" title="Collapse sidebar" aria-label="Collapse sidebar"><b>&#8249;</b><span>Collapse</span></button></nav>
 <div class="app-main">
@@ -360,7 +420,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 <div id="online" class="box"><b id="olPlace">–</b><span id="olCount">–</span></div>
 <div id="fab"><button id="bTheme" class="fab" title="Theme">Day</button>
 <button id="bLay" class="fab" title="Layers and tools">&#9776;</button><button id="bFol" class="fab" title="Follow aircraft">&#9992;</button><button id="bZi" class="fab" title="Zoom in">+</button><button id="bZo" class="fab" title="Zoom out">−</button>
-</div><div id="lay"><b>Map layers</b><button data-l="apt" class="on">Airports</button><button data-l="nav" class="on">Navaids</button><button data-l="trf" class="on">Traffic</button><button data-l="trl">All trails</button><button data-l="rte" class="on">Route</button><button data-l="grid">Grid</button><b>Traffic source</b><select id="trs" aria-label="Traffic source"><option value="vatsim">VATSIM — live pilots</option><option value="adsb">ADS-B — community feeds</option></select><div class="m" id="trsnote" style="max-width:220px;margin-top:2px">Both sources are keyless and free.</div><b>Map style</b><div id="ms"></div><b>Projection</b><div id="pj"></div><div id="gwrap" hidden><b>Globe surface</b><div id="gs"></div><div class="m" id="gn"></div><div class="row"><button type="button" id="gReset" title="Centre the globe on the route again">Reset view</button><button type="button" id="gRead" title="Read terrain elevations around the centre">Read terrain</button></div></div><b>Workspaces</b><div id="mwtools"><button id="bLive" type="button">Live tracking</button><button id="bCh" type="button">Charts</button><button id="bWx" type="button">Weather</button><button id="bData" type="button">Data</button><button id="bEfb" type="button" title="Electronic flight bag">Stratos EFB</button></div></div>
+</div><div id="lay"><b>Map layers</b><button data-l="apt" class="on">Airports</button><button data-l="nav" class="on">Navaids</button><button data-l="trf" class="on">Traffic</button><button data-l="trl">All trails</button><button data-l="rte" class="on">Route</button><b>Procedures</b><div id="dklay"><button data-dk-layer="sid" class="on">SID</button><button data-dk-layer="star" class="on">STAR</button><button data-dk-layer="approach" class="on">Approach</button></div><b>Chart</b><button data-l="grid">Grid</button><b>Traffic source</b><select id="trs" aria-label="Traffic source"><option value="vatsim">VATSIM — live pilots</option><option value="adsb">ADS-B — community feeds</option></select><div class="m" id="trsnote" style="max-width:220px;margin-top:2px">Both sources are keyless and free.</div><b>Map style</b><div id="ms"></div><b>Projection</b><div id="pj"></div><div id="gwrap" hidden><b>Globe surface</b><div id="gs"></div><div class="m" id="gn"></div><div class="row"><button type="button" id="gReset" title="Centre the globe on the route again">Reset view</button><button type="button" id="gRead" title="Read terrain elevations around the centre">Read terrain</button></div></div><b>Workspaces</b><div id="mwtools"><button id="bLive" type="button">Live tracking</button><button id="bCh" type="button">Charts</button><button id="bWx" type="button">Weather</button><button id="bData" type="button">Data</button><button id="bEfb" type="button" title="Electronic flight bag">Stratos EFB</button></div></div>
 
 <div id="cv"><div class="cvh"><button id="cvx" aria-label="Back">&#8592;</button><div class="cvt"><b id="cvi"></b><span id="cvn"></span><span id="cvm"></span></div><button id="cvf">Fit</button></div><div class="seg" id="cvs"></div></div><div id="ci"></div>
 <div id="chart"></div>
@@ -596,7 +656,7 @@ const RL={KSFO:[11870,8650],KOAK:[10520],KSJC:[11000],KSAC:[8600],KRNO:[11002],K
 function pairs(a){const o=[];a.rw.forEach(n=>{if(!o.some(p=>p[0]==n||p[1]==n))o.push([n,(n+17)%36+1])});return o}
 function liveOk(){return live.on&&live.d&&live.d.lat!=null&&live.d.age<3&&performance.now()-live.at<3000}
 const cv=$('#map'),cx=cv.getContext('2d');let W,H,dpr,C={};
-const V={lon:-119.5,lat:38.8,z:6,fol:false,mode:'plane',gz:1,gs:'vector'},L={apt:1,nav:1,trf:1,grid:0,rte:1,style:(function(){try{return localStorage.getItem('dl.style')||'sat'}catch(e){return'sat'}})()};
+const V={lon:-119.5,lat:38.8,z:6,fol:false,mode:'plane',gz:1,gs:'vector'},L={apt:1,nav:1,trf:1,grid:0,rte:1,procSid:1,procStar:1,procApproach:1,style:(function(){try{return localStorage.getItem('dl.style')||'sat'}catch(e){return'sat'}})()};
 let plan=false,panel=null,sel=null,route=[],trav=0,own={lat:0,lon:0,hdg:0,alt:0,vs:0};
 const byId=id=>A.find(a=>a.id==id)||N.find(a=>a.id==id);
 const wp=o=>({id:o.id,name:o.name,lat:o.lat,lon:o.lon,k:o.k||'fix',elev:o.elev||0,ss:o.ss||'',aw:o.aw||''});
@@ -1319,19 +1379,73 @@ async function procSync(){
   fCard()
 }
 function procTick(){
-  if(!window.PROC){PROCG.key='';return}
-  const key=procKey();
-  if(key===PROCG.key)return;
-  PROCG.key=key;PROCG.sid=null;PROCG.star=null;PROCG.notes=[];
-  if(key)procSync()
+  /* The procedure deck (js/procdeck-ui.js) now owns the selection, the fetch
+     and the notes: it can draw a SID and a STAR for airports the plan never
+     named, and lets the pilot change either. This old plan-driven path stays
+     only so the flight card keeps a notes field. */
+}
+/* ── The procedure deck's bridge ───────────────────────────────────────
+   js/procdeck-ui.js owns the selection and resolves the published legs; this
+   page owns the chart. The deck reads the plan and the route through
+   `window.DECK` and publishes its layers on `window.PROCLAYERS`, which the
+   renderer below draws in the plan's own z-order. Nothing here decides which
+   procedure is flown: it draws what the deck resolved, or nothing. */
+window.DECK={
+  route:()=>route.map(p=>({id:String(p.id||''),name:p.name||'',lat:Number(p.lat),lon:Number(p.lon),k:p.k||'fix',elev:Number(p.elev)||0,ss:p.ss||''})),
+  plan:()=>fcPlanInfo(),
+  airport:id=>{const a=A.find(x=>String(x.id).toUpperCase()===String(id||'').toUpperCase());return a?{id:a.id,name:a.name,lat:a.lat,lon:a.lon}:null},
+  cumulative:()=>{const out=[0];for(let i=1;i<route.length;i++)out.push(out[i-1]+dist(route[i-1],route[i]));return out},
+  flown:()=>{try{return routeProg()}catch(_){return 0}},
+  focus:(lat,lon,z)=>{setFol(false);V.lon=Number(lon);V.lat=Number(lat);V.tz=null;V.anchor=null;focusAtLeast(z||9);render()},
+  fit:()=>{if(route.length>1){setFol(false);fitRoute()}},
+  charts:code=>{const a=A.find(x=>String(x.id).toUpperCase()===String(code||'').toUpperCase());if(a)openCharts(a)},
+  redraw:()=>{fCard()},
+  notes:list=>{PROCG.notes=Array.isArray(list)?list.slice(0,3):[]},
+};
+document.querySelectorAll('[data-dk-layer]').forEach(b=>{b.onclick=()=>{const k='proc'+b.dataset.dkLayer[0].toUpperCase()+b.dataset.dkLayer.slice(1);L[k]=L[k]?0:1;b.classList.toggle('on',!!L[k])}});
+/* The published procedure layers: magenta SID, violet STAR, amber approach,
+   drawn as a soft band with a crisp centre line under the filed route's own
+   cyan, so the plan still reads first. Every point is a point the dataset
+   states; a section that does not meet the next one is its own stroke, never
+   joined by a straight line. */
+function strokeProcedureSegment(segment){
+  cx.beginPath();let pen=false;
+  for(const p of segment){const q=vis(p.lon,p.lat);if(!q){pen=false;continue}if(pen)cx.lineTo(q[0],q[1]);else cx.moveTo(q[0],q[1]);pen=true}
+  cx.stroke()
 }
 function drawProcedurePaths(){
-  if(!L.rte||CH.on)return;
-  const list=[PROCG.sid,PROCG.star].filter(item=>item&&item.points&&item.points.length>1);
-  if(!list.length)return;
-  cx.save();cx.globalAlpha=.8;cx.strokeStyle=C.route;cx.lineWidth=9;cx.lineCap='round';cx.lineJoin='round';
-  list.forEach(item=>{cx.beginPath();let pen=false;item.points.forEach(p=>{const q=vis(p.lon,p.lat);if(!q){pen=false;return}if(pen)cx.lineTo(q[0],q[1]);else cx.moveTo(q[0],q[1]);pen=true});cx.stroke()});
-  cx.restore()
+  const layers=Array.isArray(window.PROCLAYERS)?window.PROCLAYERS:[];
+  if(!layers.length||CH.on||!L.rte)return;
+  const shown={sid:L.procSid,star:L.procStar,approach:L.procApproach};
+  cx.save();cx.lineCap='round';cx.lineJoin='round';
+  for(const layer of layers){
+    if(!layer||!layer.ok||!shown[layer.kind])continue;
+    const color=layer.color||'#f472b6';
+    cx.strokeStyle=color;cx.globalAlpha=.32;cx.lineWidth=layer.kind==='approach'?9:11;
+    for(const segment of layer.segments)strokeProcedureSegment(segment);
+    cx.globalAlpha=.95;cx.lineWidth=2.2;
+    if(layer.kind==='approach')cx.setLineDash([7,5]);
+    for(const segment of layer.segments)strokeProcedureSegment(segment);
+    cx.setLineDash([]);
+  }
+  cx.restore();
+  for(const layer of layers){
+    if(!layer||!layer.ok||!shown[layer.kind])continue;
+    const color=layer.color||'#f472b6',last=layer.segments.length-1;
+    layer.segments.forEach((segment,si)=>{
+      segment.forEach((p,pi)=>{
+        const q=vis(p.lon,p.lat);if(!q)return;const[x,y]=q;
+        if(x<-20||x>W+20||y<-20||y>H+20)return;
+        const end=si===last&&pi===segment.length-1;
+        if(String(p.id||'').startsWith('RW')){mkDot(x,y,color,3.2);return}
+        mkDot(x,y,color,1.9);
+        if(lblZ()>=8||end)mkText(String(p.id||'').toUpperCase(),x+6,y-6,color,10.5,end);
+      });
+      const head=segment[0];if(!head)return;
+      const q=vis(head.lon,head.lat);if(!q)return;
+      if(lblZ()>=7.5&&si===0)mkText(layer.id+' '+layer.label,q[0]+6,q[1]+16,color,10.5,true);
+    });
+  }
 }
 function mkPlanLabel(kind,x,y,r,alt,source){
   const c=mkColor(kind),mark=kind=='toc'?'TOC':'TOD';
@@ -1455,6 +1569,9 @@ async function importSB(){
     save();trav=0;panel=null;fpExp=true;try{localStorage.setItem('stratos.fpExpanded','1')}catch(_){}
     render();
     if(route.length){V.lon=route[0].lon;V.lat=route[0].lat;V.tz=null;setFol(false)}
+    // Land on the whole plan, so the departure and arrival procedures are on
+    // the chart at once instead of the aircraft's first fix at the old zoom.
+    if(route.length>1)fitRoute();
     const procs=plan?[plan.origin&&plan.origin.sid?'SID '+plan.origin.sid:'',plan.destination&&plan.destination.star?'STAR '+plan.destination.star:''].filter(Boolean).join(' · '):'';
     alert('SimBrief plan loaded: '+(imported.origin||'')+' → '+(imported.destination||'')+' ('+route.length+' waypoints)'+(procs?' · '+procs:''));
   }catch(e){
@@ -2964,6 +3081,7 @@ try{if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').t
   import * as PHOTO from './js/lib/aircraftphoto.js';
   import * as REG from './js/lib/aircraftreg.js';
   import * as AL from './js/lib/airlines.js';
+  import { initProcDeck } from './js/procdeck-ui.js';
   import * as PROFILE from './js/lib/profile.js';
   import * as PROC from './js/lib/procedures.js';
   import * as TRAILC from './js/lib/trailcolor.js';
@@ -2979,5 +3097,8 @@ try{if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').t
   window.PHOTO = PHOTO;
   window.REG = REG;
   window.AL = AL;
+  // The procedure deck reads the plan and the route through window.DECK,
+  // which the map script above has already defined.
+  initProcDeck();
 </script>
 </body></html>
