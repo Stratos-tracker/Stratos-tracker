@@ -143,8 +143,11 @@ async function compute() {
     // A remembered choice belongs to the airport it was made for. When the
     // airport changed under it, drop it rather than quietly draw nothing.
     const known = (payload, kind, ident) => !ident || procedureList(payload, kind).some(proc => proc.id === ident);
-    if (!known(depPayload, 'sid', state.sid)) { state.sid = ''; state.sidTrans = ''; }
-    if (!known(arrPayload, 'star', state.star)) { state.star = ''; state.starTrans = ''; }
+    // Only an airport the dataset actually answered may disown a remembered
+    // procedure. An airport outside coverage keeps the pilot's choice so the
+    // panel and the map say the geometry is missing instead of forgetting it.
+    if (depPayload && depPayload.ok === true && !known(depPayload, 'sid', state.sid)) { state.sid = ''; state.sidTrans = ''; }
+    if (arrPayload && arrPayload.ok === true && !known(arrPayload, 'star', state.star)) { state.star = ''; state.starTrans = ''; }
     if (!known(arrPayload, 'approach', state.approach)) { state.approach = ''; state.approachTrans = ''; }
     const next = [];
     if (state.sid) next.push({ ...pathFor(depPayload, { kind: 'sid', ident: state.sid, runway: state.depRwy, transition: state.sidTrans }), airport: state.dep });
@@ -160,6 +163,20 @@ async function compute() {
       .filter(layer => layer && (layer.ok || layer.error))
       .map(layer => ({ ...layer, color: (KINDS[layer.kind] || {}).color || '#f472b6' }));
     if (typeof window !== 'undefined') window.PROCLAYERS = layers.filter(layer => layer.ok);
+    // Say why a drawn line is missing, on the map's own layer panel: the deck
+    // already carries the reason, but a pilot looking at the chart should not
+    // have to guess whether a procedure is selected, unavailable or out of area.
+    const tip = typeof document !== 'undefined' ? document.getElementById('dkproctip') : null;
+    if (tip) {
+      const cycle = describe(arrPayload).cycle || describe(depPayload).cycle;
+      const missing = [];
+      if (state.sid && !next.some(layer => layer.kind === 'sid' && layer.ok)) missing.push(`SID ${state.sid} (${state.dep})`);
+      if (state.star && !next.some(layer => layer.kind === 'star' && layer.ok)) missing.push(`STAR ${state.star} (${state.arr})`);
+      if (state.approach && !next.some(layer => layer.kind === 'approach' && layer.ok)) missing.push(`approach ${state.approach}`);
+      tip.textContent = `Procedures: FAA CIFP · US airports${cycle ? ` · AIRAC ${cycle}` : ''}`
+        + (missing.length ? ` · no geometry for ${missing.join(', ')}` : '')
+        + (state.approach ? '' : ' · missed approach needs an approach selection');
+    }
     const notes = layers.filter(layer => !layer.ok || !layer.complete).map(layer => pathNote(layer));
     if (deck.notes) deck.notes(notes);
     if (deck.redraw) deck.redraw();

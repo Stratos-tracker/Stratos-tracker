@@ -1096,6 +1096,15 @@ test('the aircraft photo is the link to its spotter page and falls back to Mode 
   assert.match(page, /kind=='hex'\?'Mode S '\+ref\.value/, 'a hex photo is labelled by its address, not a guessed tail');
 });
 
+test('a selected aircraft can be followed and shows its filed airport pair', async () => {
+  const fs = await import('node:fs');
+  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+  assert.match(page, /data-fc-act="follow"/, 'the card offers a follow control');
+  assert.match(page, /\(tk\|\|V\.fol\)&&sel&&sel\.k=='trf'/, 'following keeps the selected aircraft centred');
+  assert.match(page, /function drawSelectedAircraftRoute\(\)/, 'its filed airports are drawn as a reference line');
+  assert.match(page, /FILED '\+dep/, 'the reference line is labelled as the filed airport pair');
+});
+
 test('the aircraft card offers a labelled backup of the same airline and type', async () => {
   const fs = await import('node:fs');
   const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
@@ -1106,7 +1115,8 @@ test('the aircraft card offers a labelled backup of the same airline and type', 
   assert.match(page, /representativeCandidates\(payload\.ac,ref\)/, 'the live type feed can supply the backup');
   assert.match(page, /if\(!payload\)\{REPS\.set\(ref\.key,\{state:'unavailable'\}\)/, 'an unreachable feed is not reported as an empty sky');
   assert.match(page, /Math\.random\(\)\*list\.length/, 'any matching aircraft of the operator and type is acceptable');
-  assert.ok(page.includes('<span class="fcph-rep">BACKUP</span>'), 'the photo is visibly a backup');
+  assert.ok(!page.includes('fcph-rep') && !page.includes('>BACKUP<'), 'the orange backup badge is gone');
+  assert.match(page, /REPS\.has\(ref\.key\)/, 'the backup photo itself is still offered');
   assert.match(page, /not the tracked aircraft/, 'the alternative is not presented as the selected airframe');
 });
 
