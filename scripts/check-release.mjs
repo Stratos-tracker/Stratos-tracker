@@ -103,12 +103,13 @@ if (draftMode) pass(release.draft ? 'release is a draft awaiting publication' : 
 else release.draft ? fail('release is still a draft') : pass('release is published');
 
 const byName = new Map((release.assets || []).map(asset => [asset.name, asset]));
+// Only installers and update feeds belong on the release page. Blockmaps,
+// checksum sidecars and copies of the notes or the manifest are deliberately
+// absent: the manifest is served from main and GitHub publishes the digests.
 const required = new Set([
   ...PLATFORMS.map(platform => platform.installer),
   ...Object.values(FEEDS).flatMap(feed => feed.files),
   ...Object.keys(FEEDS),
-  'Stratos-Setup.exe.sha256',
-  'releases.json',
 ]);
 
 let attached = 0;
@@ -126,26 +127,20 @@ for (const name of required) {
 }
 if (attached === required.size) pass(`all ${required.size} expected assets are attached and uploaded`);
 
-// The checksum file is the human-facing proof for the Windows installer.
 const winAsset = byName.get('Stratos-Setup.exe');
-const checksumAsset = byName.get('Stratos-Setup.exe.sha256');
-if (winAsset && checksumAsset) {
-  const text = (await downloadAsset(checksumAsset)).toString('utf8');
-  const match = text.trim().match(/^([a-f0-9]{64})\s+\*?Stratos-Setup\.exe$/i);
-  if (!match) fail(`checksum file is not in "<sha256>  Stratos-Setup.exe" form: ${JSON.stringify(text.slice(0, 80))}`);
-  else if (digestOf(winAsset) !== match[1].toLowerCase()) fail(`published checksum does not match the installer (${match[1]} vs ${digestOf(winAsset)})`);
-  else pass(`Windows checksum describes the installer (${match[1].slice(0, 12)}…)`);
-}
 
-// The manifest is what the app reads for version, notes and downloads. A download
-// that points anywhere but this tag's installer would offer one the user cannot run.
+// The manifest is what the app reads for version, notes and downloads. It is not
+// attached to the release (it is served from main), so the copy the publish job
+// generated for this version is read from the build output, and the release is
+// then checked against it. A download that points anywhere but this tag's
+// installer would offer one the user cannot run.
 let latest = null;
-const manifestAsset = byName.get('releases.json');
-if (manifestAsset) {
+const localManifest = path.join(root, 'dist', 'releases.json');
+if (fs.existsSync(localManifest)) {
   const { validateManifest } = await import('../app/js/lib/updates.js');
   let raw = null;
   try {
-    raw = JSON.parse((await downloadAsset(manifestAsset)).toString('utf8'));
+    raw = JSON.parse(fs.readFileSync(localManifest, 'utf8'));
   } catch (error) {
     fail(`release manifest could not be read: ${error.message}`);
   }
@@ -156,7 +151,7 @@ if (manifestAsset) {
   }
 }
 if (!latest) {
-  if (manifestAsset) fail('release manifest has no latest release');
+  console.log('  skip release manifest is not in the build output (checked from main instead)');
 } else {
   latest.version === version ? pass(`manifest latest is ${latest.version}`) : fail(`manifest latest is ${latest.version}, expected ${version}`);
   for (const platform of PLATFORMS) {

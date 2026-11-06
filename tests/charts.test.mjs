@@ -151,8 +151,11 @@ test('no chart is gated: the paid access rule is gone', async () => {
   assert.doesNotMatch(read('app/js/pilot/charts.js'), /Premium/);
 });
 
-test('official sources are offered for Canada and Europe, never copied', async () => {
-  const { officialSourcesFor, isListedRegion } = await import('../app/js/lib/chartdir.js');
+test('every registered country resolves to its own publisher, never a copy', async () => {
+  const {
+    officialSourcesFor, isListedRegion, countryForIcao, registryStats, LICENCES, LISTED_PUBLISHERS,
+  } = await import('../app/js/lib/chartdir.js');
+
   const canada = officialSourcesFor('CYYZ');
   assert.equal(canada.length, 1, 'NAV CANADA is the only listed source for Canada');
   assert.equal(canada[0].id, 'navcanada');
@@ -163,21 +166,60 @@ test('official sources are offered for Canada and Europe, never copied', async (
   assert.equal(officialSourcesFor('EDDF')[0].id, 'dfs');
   assert.equal(officialSourcesFor('LFPO')[0].id, 'sia');
   assert.equal(officialSourcesFor('LIRF')[0].id, 'enav');
-  assert.equal(officialSourcesFor('EBBR')[0].id, 'ead-basic', 'an unlisted European state falls back to EUROCONTROL');
+  assert.equal(officialSourcesFor('EBBR')[0].id, 'skeyes', 'a registered national publisher wins over the regional index');
+  assert.deepEqual(officialSourcesFor('LYBE').map(source => source.id), ['ead-basic', 'ais-online'], 'a European state with no national entry falls back to EUROCONTROL');
   assert.deepEqual(officialSourcesFor('YSSY').map(source => source.id), ['airservices-au']);
-  assert.deepEqual(officialSourcesFor('SBGR'), [], 'no source is invented outside the listed regions');
-  assert.equal(isListedRegion('CYYZ'), true);
-  assert.equal(isListedRegion('YSSY'), true);
-  assert.equal(isListedRegion('KSFO'), false);
 
-  // Links, not documents: nothing here may fetch or point at a chart file.
+  // Worldwide: every region in the registry resolves to its own authority.
+  const WORLDWIDE = [
+    ['SBGR', 'decea-br', 'Brazil'], ['SAEZ', 'anac-ar', 'Argentina'], ['SCEL', 'dgac-cl', 'Chile'],
+    ['SKBO', 'aerocivil-co', 'Colombia'], ['SPJC', 'corpac-pe', 'Peru'], ['SEQM', 'dgac-ec', 'Ecuador'],
+    ['SUAA', 'dinacia-uy', 'Uruguay'], ['SGAS', 'dinac-py', 'Paraguay'], ['SLLP', 'dgac-bo', 'Bolivia'],
+    ['SVMI', 'inac-ve', 'Venezuela'], ['MMMX', 'afac-mx', 'Mexico'],
+    ['FAOR', 'sacaa-za', 'South Africa'], ['HKJK', 'kcaa-ke', 'Kenya'], ['HECA', 'caa-eg', 'Egypt'],
+    ['GMMN', 'onda-ma', 'Morocco'], ['DNMM', 'ncaa-ng', 'Nigeria'], ['DGAA', 'gcaa-gh', 'Ghana'],
+    ['HAAB', 'ecaa-et', 'Ethiopia'], ['HTDA', 'tcaa-tz', 'Tanzania'], ['HUEN', 'ucaa-ug', 'Uganda'],
+    ['FYWH', 'ncaa-na', 'Namibia'], ['FIMP', 'dca-mu', 'Mauritius'], ['FVHA', 'caaz-zw', 'Zimbabwe'],
+    ['RJTT', 'ais-japan', 'Japan'], ['RKSI', 'koca', 'South Korea'], ['ZBAA', 'caac', 'China'],
+    ['VHHH', 'cad-hk', 'Hong Kong'], ['RCTP', 'caa-tw', 'Taiwan'], ['WSSS', 'caas-sg', 'Singapore'],
+    ['WMKK', 'caam-my', 'Malaysia'], ['VTBS', 'caat-th', 'Thailand'], ['WIII', 'dephub-id', 'Indonesia'],
+    ['RPLL', 'caap-ph', 'Philippines'], ['VIDP', 'aai-in', 'India'], ['OPKC', 'caa-pk', 'Pakistan'],
+    ['VVTS', 'caav-vn', 'Vietnam'], ['VNKT', 'caan-np', 'Nepal'], ['VCBI', 'caa-lk', 'Sri Lanka'],
+    ['VGHS', 'caab-bd', 'Bangladesh'], ['OMDB', 'gcaa-ae', 'United Arab Emirates'], ['OTHH', 'caa-qa', 'Qatar'],
+    ['OEJN', 'gaca-sa', 'Saudi Arabia'], ['OOMS', 'caa-om', 'Oman'], ['OBBI', 'mtt-bh', 'Bahrain'],
+    ['OKBK', 'dgca-kw', 'Kuwait'], ['OJAI', 'carc-jo', 'Jordan'], ['LLBG', 'iaa-il', 'Israel'],
+    ['OLBA', 'dgca-lb', 'Lebanon'], ['NZAA', 'airways-nz', 'New Zealand'], ['NFFN', 'caaf-fj', 'Fiji'],
+    ['AYPY', 'casa-pg', 'Papua New Guinea'],
+  ];
+  for (const [icao, id, country] of WORLDWIDE) {
+    assert.equal(officialSourcesFor(icao)[0].id, id, `${icao} resolves to ${country}'s publisher`);
+    assert.equal(countryForIcao(icao).name, country, `${icao} belongs to ${country}`);
+    assert.equal(isListedRegion(icao), true, `${icao} is link-only, not embedded`);
+  }
+
+  assert.deepEqual(officialSourcesFor('ZZZZ'), [], 'an airport with no registered publisher says so');
+  assert.equal(isListedRegion('KSFO'), false, 'the FAA is embedded, not link-only');
+
+  // A registry record is a portal, never a document and never a guess.
+  for (const entry of LISTED_PUBLISHERS) {
+    assert.match(entry.url, /^https:\/\//, `${entry.id} links over https`);
+    assert.doesNotMatch(entry.url, /\.pdf$/i, `${entry.id} links to a portal, not a file`);
+    assert.ok(LICENCES[entry.licence], `${entry.id} uses a listed licence category`);
+    assert.ok(entry.authority && entry.country && entry.name && entry.region, `${entry.id} names its authority, country, publisher and region`);
+    assert.ok(Array.isArray(entry.categories) && entry.categories.length, `${entry.id} names the chart types it publishes`);
+  }
+  const stats = registryStats();
+  assert.ok(stats.countries >= 60, `the registry covers ${stats.countries} countries`);
+  assert.equal(stats.byLicence.FREE_REUSE, 1, 'exactly one publisher has terms that permit embedding');
+
+  // The resolver holds no document URL: a chart can only come from a catalogue.
   const source = read('app/js/lib/chartdir.js');
   assert.doesNotMatch(source, /aeronav/i);
   assert.doesNotMatch(source, /\.pdf/i);
 });
 
 test('providers declare what they publish and only the FAA is integrated', async () => {
-  const { CHART_PROVIDERS, availableProviders, chartCoverage, coverageSummary, isFaaIcao } =
+  const { CHART_PROVIDERS, availableProviders, chartCoverage, coverageSummary, coverageStatus, isFaaIcao } =
     await import('../app/js/lib/chartproviders.js');
 
   const us = chartCoverage('KJFK');
@@ -202,14 +244,33 @@ test('providers declare what they publish and only the FAA is integrated', async
 
   const belgium = chartCoverage('EBBR');
   assert.equal(belgium.integrated, false);
-  assert.equal(belgium.country, 'Europe');
-  assert.equal(belgium.provider.id, 'ead-basic');
-  assert.deepEqual(belgium.sources.map(source => source.id), ['ead-basic', 'ais-online']);
+  assert.equal(belgium.country, 'Belgium');
+  assert.equal(belgium.provider.id, 'skeyes');
+  assert.ok(belgium.sources.some(source => source.id === 'skeyes'));
 
-  const unknown = chartCoverage('SBGR');
+  // A free-to-view publisher is link-only: the EFB says so and never embeds it.
+  const brazil = chartCoverage('SBGR');
+  assert.equal(brazil.integrated, false);
+  assert.equal(brazil.linkOnly, true);
+  assert.equal(brazil.country, 'Brazil');
+  assert.equal(brazil.provider.id, 'decea-br');
+  assert.equal(brazil.licenceCategory, 'FREE_PUBLIC');
+  assert.match(brazil.message, /redistribution licence/);
+  assert.equal(coverageStatus(brazil).label, 'Link only');
+
+  // A paid or permisson-gated publisher is a different status again.
+  const canada = chartCoverage('CYYZ');
+  assert.equal(canada.status, 'restricted');
+  assert.equal(canada.licenceCategory, 'PAID');
+  assert.equal(coverageStatus(canada).label, 'Publisher only');
+
+  // Nothing registered: an honest gap, with no invented source.
+  const unknown = chartCoverage('ZZZZ');
   assert.equal(unknown.integrated, false);
+  assert.equal(unknown.status, 'unavailable');
   assert.equal(unknown.provider, null);
   assert.deepEqual(unknown.sources, []);
+  assert.equal(coverageStatus(unknown).label, 'No source');
   assert.match(coverageSummary(), /United States/);
   assert.doesNotMatch(coverageSummary(), /worldwide/i);
   assert.equal(isFaaIcao('PHNL'), true);

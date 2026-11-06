@@ -230,7 +230,6 @@ jobs:
           path: |
             dist/Stratos-Setup.exe
             dist/latest.yml
-            dist/*.blockmap
           retention-days: 7
 
   build-mac:
@@ -297,7 +296,6 @@ jobs:
           path: |
             dist/*.dmg
             dist/*.zip
-            dist/*.blockmap
             dist/latest-mac-${{ matrix.arch }}.yml
           retention-days: 7
 
@@ -354,7 +352,6 @@ jobs:
           path: |
             dist/*.AppImage
             dist/latest-linux.yml
-            dist/*.blockmap
           retention-days: 7
 
   publish:
@@ -436,7 +433,6 @@ jobs:
           for name in Stratos-Setup.exe "Stratos-${VERSION}-mac-arm64.dmg" "Stratos-${VERSION}-mac-x64.dmg" "Stratos-${VERSION}-linux-x64.AppImage"; do
             test -s "dist/$name" || { echo "::error::$name is missing from the build output"; exit 1; }
           done
-          (cd dist && sha256sum Stratos-Setup.exe > Stratos-Setup.exe.sha256)
           BASE="${MIRROR_BASE:-https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}}"
           add() {
             jq -n --arg key "$1" \
@@ -480,11 +476,14 @@ jobs:
             fi
             gh release delete "$TAG" --yes
           fi
+          # Only what a person installs and what the updater reads is attached.
+          # Blockmaps, checksum sidecars and duplicate copies of the notes and the
+          # manifest were noise on the release page; the manifest is served from
+          # main, and GitHub reports the digests itself.
           gh release create "$TAG" --draft --target "$GITHUB_SHA" --title "Stratos $VERSION" --notes-file dist/release-notes.md \
-            dist/Stratos-Setup.exe dist/Stratos-Setup.exe.sha256 \
+            dist/Stratos-Setup.exe \
             dist/latest.yml dist/latest-mac.yml dist/latest-linux.yml \
-            dist/releases.json dist/release-notes.md \
-            dist/*.dmg dist/*.zip dist/*.AppImage dist/*.blockmap
+            dist/*.dmg dist/*.zip dist/*.AppImage
 
       - name: Check the draft against every platform
         env:

@@ -1,4 +1,19 @@
 {
+  "2.1.34": {
+    "summary": "A worldwide chart library: every country resolves to its official publisher, with the FAA still embedded.",
+    "changelog": {
+      "features": [
+        "The EFB Charts page resolves an airport anywhere in the world to the authority that publishes its charts and states the coverage: embedded, link only, publisher only or no source.",
+        "A registry of 84 national chart publishers and 2 regional indexes — licence category, official portal and published chart types — drives the interface and the licensing report.",
+        "The chart header shows the country flag, elevation, publisher, AIRAC cycle and licence, with one-tap saving."
+      ],
+      "improvements": [
+        "Flight charts now include the plan alternates beside departure and arrival, and saved airports are pinned with the recent ones.",
+        "Region and country pickers in the chart sidebar replace a bare airport box.",
+        "Release pages now carry only the installers and the three update feeds: blockmaps, checksum sidecars and duplicate notes and manifests are gone."
+      ]
+    }
+  },
   "2.1.33": {
     "summary": "Every chart is free: the paywall is gone from the tracker and the EFB.",
     "changelog": {

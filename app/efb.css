@@ -1094,10 +1094,26 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--efb-accent); }
 .ch-hint span { font-size: 11px; color: var(--efb-faint); line-height: 1.5; }
 
 .ch-main { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
-.ch-main > #chart-notice { flex: 0 0 auto; }
+.ch-main > #chart-notice,
+.ch-main > #chart-header { flex: 0 0 auto; }
 .ch-main > .chart-frame { flex: 1; min-height: 0; }
 .ch-main > .chart-frame.is-centred { justify-content: center; }
 .ch-main > .chart-frame.is-centred .ch-sources { margin-bottom: 4px; }
+
+/* Airport header: identity, coverage status and the source of the charts. */
+.ch-airport { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; flex: 0 0 auto; }
+.ch-airport-top { display: flex; align-items: flex-start; gap: 10px; }
+.ch-airport-id { display: flex; gap: 9px; align-items: center; min-width: 0; }
+.ch-flag { font-size: 19px; line-height: 1; }
+.ch-airport-codes { display: flex; align-items: baseline; gap: 6px; }
+.ch-airport-codes b { font-size: 14px; letter-spacing: .05em; }
+.ch-airport-codes span { font-size: 10px; color: var(--efb-faint); }
+.ch-airport-name { font-size: 11.5px; color: var(--efb-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ch-airport-actions { margin-left: auto; display: flex; gap: 6px; align-items: center; flex: 0 0 auto; }
+.ch-airport-meta { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.ch-airport-meta span { display: flex; flex-direction: column; gap: 1px; font-size: 11px; color: var(--efb-text); }
+.ch-airport-meta i { font-style: normal; font-size: 9px; text-transform: uppercase; letter-spacing: .08em; color: var(--efb-faint); }
+.ch-side-top select.e-input { min-width: 0; flex: 1 1 0; }
 
 .ch-viewer-empty {
   flex: 1;

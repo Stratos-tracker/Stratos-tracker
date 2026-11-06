@@ -136,10 +136,11 @@ test('a packaged build can update itself from the GitHub releases', () => {
 
   const workflow = read('.github/workflows/release.yml');
   assert.match(workflow, /dist\/latest\.yml/, 'the release ships the updater manifest');
-  assert.match(workflow, /blockmap/, 'differential update blocks are published too');
+  assert.doesNotMatch(workflow, /blockmap/, 'blockmaps are not attached: the release page carries installers and feeds only');
   assert.match(workflow, /did not produce latest\.yml/, 'a release without the manifest fails instead of shipping');
   assert.match(workflow, /release-notes\.mjs --version|release-notes\.mjs \"\$\{ARGS/, 'the release generates its own notes and manifest');
-  assert.match(workflow, /dist\/releases\.json/, 'the release manifest is attached to the release');
+  assert.match(workflow, /cp dist\/releases\.json app\/releases\.json/, 'the manifest is recorded on main, where the site serves it');
+  assert.doesNotMatch(workflow, /dist\/releases\.json dist\/release-notes\.md/, 'the release does not carry a duplicate of its own notes and manifest');
   assert.match(workflow, /check-release\.mjs "\$VERSION" --draft/, 'the draft is verified against every platform before it goes live');
   assert.match(workflow, /--draft --target/, 'the release is created as a draft and only published after checks');
   assert.match(workflow, /gh release edit "\$TAG" --draft=false/, 'the draft is published only after the draft check passes');

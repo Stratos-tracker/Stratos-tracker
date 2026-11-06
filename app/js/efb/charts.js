@@ -1,16 +1,26 @@
 /* EFB · Charts.
  *
- * The FAA's public d-TPP catalogue, read through the same bridge/API endpoints
- * and rendered by the same pdf.js viewer as the tracker's Charts page. A chart
- * is only opened from a publisher Stratos has integrated; everything else shows
- * the publisher's own links instead of a scraped copy. Validity is never assumed:
- * each document carries the cycle window the source published, or says it could
- * not be verified.
+ * A worldwide chart library: the registry in data/chart-sources.js names the
+ * publisher for every country Stratos knows about, and this page resolves an
+ * airport to its publisher, its licence category and its coverage status.
+ *
+ * One publisher is integrated — the FAA d-TPP, whose terms allow Stratos to
+ * fetch and render the documents. For every other country the page states what
+ * the licence allows and links to the authority instead of copying its charts:
+ * a public web page is not a redistribution licence. Nothing here invents a
+ * chart, and an airport with no registered publisher says exactly that.
+ *
+ * The viewer is the same PDF implementation the tracker uses, so there is one
+ * set of gestures and one renderer inside Stratos.
  */
 
 import {
-  esc, fmtAge, searchAirports, loadChartCatalogue, filterCharts, chartSourcesFor,
+  esc, searchAirports, loadChartCatalogue, filterCharts, chartSourcesFor,
 } from './common.js';
+import {
+  COUNTRIES, REGIONS, countriesForRegion, licenceFor, registryStats, sourcesForCountry,
+} from '../lib/chartdir.js';
+import { chartCoverage, coverageStatus } from '../lib/chartproviders.js';
 import {
   chartCacheKey, isPdfBytes, officialChartUrl, readChartCache,
   validityState, validityText, writeChartCache,
@@ -19,25 +29,72 @@ import { defaultBridgeBase, isHostedPage } from '../bridge.js';
 import { ChartViewer } from '../pilot/charts.js';
 
 const RECENT_KEY = 'stratos.efb.charts.recent';
+const SAVED_KEY = 'stratos.efb.charts.saved';
 const CATEGORY_FILTERS = [
   { key: 'all', label: 'All' },
-  { key: 'airport', label: 'Airport' },
+  { key: 'diagram', label: 'Diagram' },
   { key: 'sid', label: 'SID' },
   { key: 'star', label: 'STAR' },
   { key: 'approach', label: 'Approach' },
+  { key: 'other', label: 'Other' },
 ];
 
-function recentAirports() {
+const APPROACH_FAMILIES = ['ils', 'loc', 'rnav', 'vor', 'ndb', 'approach', 'visual'];
+
+function readList(key, limit) {
   try {
-    const raw = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
-    return Array.isArray(raw) ? raw.filter(item => item && /^[A-Z0-9]{3,5}$/.test(item.icao)).slice(0, 6) : [];
+    const raw = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(raw)
+      ? raw.filter(item => item && /^[A-Z0-9]{3,5}$/.test(String(item.icao || '').toUpperCase())).slice(0, limit)
+      : [];
   } catch (_) { return []; }
 }
+
+function writeList(key, list) {
+  try { localStorage.setItem(key, JSON.stringify(list)); } catch (_) { /* private mode */ }
+}
+
+function recentAirports() { return readList(RECENT_KEY, 6); }
+function savedAirports() { return readList(SAVED_KEY, 12); }
 
 function rememberAirport(icao, name) {
   const list = recentAirports().filter(item => item.icao !== icao);
   list.unshift({ icao, name: name || '' });
-  try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 6))); } catch (_) { /* private mode */ }
+  writeList(RECENT_KEY, list.slice(0, 6));
+}
+
+function toggleSaved(icao, name) {
+  const list = savedAirports();
+  const existing = list.findIndex(item => item.icao === icao);
+  if (existing === -1) list.unshift({ icao, name: name || '' });
+  else list.splice(existing, 1);
+  writeList(SAVED_KEY, list.slice(0, 12));
+  return existing === -1;
+}
+
+/** Flag emoji from an ISO 3166-1 alpha-2 code, or '' when there is none. */
+export function flagFor(iso2) {
+  const code = String(iso2 || '').toUpperCase();
+  if (!/^[A-Z]{2}$/.test(code)) return '';
+  return String.fromCodePoint(...[...code].map(letter => 0x1F1E6 + letter.charCodeAt(0) - 65));
+}
+
+/** ICAO codes a plan actually names, with the role each one plays. */
+export function flightAirports(plan) {
+  const ofp = (plan && plan.ofp) || {};
+  const rows = [];
+  const push = (code, role) => {
+    const icao = String(code || '').trim().toUpperCase();
+    if (!/^[A-Z]{3,5}$/.test(icao) || rows.some(row => row.icao === icao)) return;
+    rows.push({ icao, role });
+  };
+  push(ofp.origin && ofp.origin.icao, 'DEP');
+  push(plan && plan.origin && plan.origin.id, 'DEP');
+  push(ofp.destination && ofp.destination.icao, 'ARR');
+  push(plan && plan.destination && plan.destination.id, 'ARR');
+  const alternates = [ofp.alternate, ofp.alternates, plan && plan.alternate].flat().filter(Boolean);
+  for (const alternate of alternates) push(alternate.icao || alternate.id || alternate, 'ALT');
+  return rows.slice(0, 5);
 }
 
 function documentUrls(chart) {
@@ -51,30 +108,38 @@ function documentUrls(chart) {
 
 export async function mount(root, ctx) {
   const plan = ctx.plan();
-  const ofp = plan && plan.ofp;
-  const planned = [ofp && ofp.origin && ofp.origin.icao, ofp && ofp.destination && ofp.destination.icao]
-    .filter(Boolean)
-    .map(code => String(code).toUpperCase());
+  const flight = flightAirports(plan);
+  const planned = flight.map(row => row.icao);
 
   let icao = String(ctx.params.get('icao') || recentAirports()[0]?.icao || planned[0] || '').toUpperCase();
   let catalogue = null;
-  let groups = [];
   let coverage = null;
   let sourceLinks = [];
-  let error = '';
   let loading = false;
   let query = '';
   let category = 'all';
   let selected = null;
   let documentState = { status: 'idle' };
   let viewer = null;
-  
+  let airport = null;
+  let regionName = '';
+  let countryIso = '';
   let destroyed = false;
 
   root.innerHTML = `
     <div class="ch-workspace">
       <aside class="ch-side" aria-label="Chart library">
         <div class="ch-side-top">
+          <div class="e-row" style="gap:5px">
+            <select class="e-input small" id="chart-region" aria-label="Chart region">
+              <option value="">All regions</option>
+              ${REGIONS.map(region => `<option value="${esc(region)}">${esc(region)}</option>`).join('')}
+            </select>
+            <select class="e-input small" id="chart-country" aria-label="Chart country">
+              <option value="">All countries</option>
+              ${COUNTRIES.map(country => `<option value="${esc(country.iso2)}">${esc(country.name)}</option>`).join('')}
+            </select>
+          </div>
           <div class="e-search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.8" cy="10.8" r="5.6"/><path d="m15 15 4.4 4.4"/></svg>
             <input class="e-input" id="chart-icao" placeholder="Airport ICAO or name" value="${esc(icao)}" autocomplete="off" spellcheck="false" aria-label="Search charts by airport">
@@ -95,6 +160,7 @@ export async function mount(root, ctx) {
       </aside>
       <section class="ch-main">
         <div id="chart-notice"></div>
+        <div id="chart-header"></div>
         <div class="e-card chart-frame" id="chart-viewer-card"></div>
       </section>
     </div>`;
@@ -102,17 +168,30 @@ export async function mount(root, ctx) {
   const listEl = root.querySelector('#chart-list');
   const countEl = root.querySelector('#chart-count');
   const noticeEl = root.querySelector('#chart-notice');
+  const headerEl = root.querySelector('#chart-header');
   const viewerCard = root.querySelector('#chart-viewer-card');
+  const regionSelect = root.querySelector('#chart-region');
+  const countrySelect = root.querySelector('#chart-country');
+
+  function renderCountries() {
+    const list = regionName ? countriesForRegion(regionName) : COUNTRIES;
+    if (countryIso && !list.some(country => country.iso2 === countryIso)) countryIso = '';
+    countrySelect.innerHTML = `<option value="">${regionName ? `All in ${esc(regionName)}` : 'All countries'}</option>`
+      + list.map(country => `<option value="${esc(country.iso2)}"${country.iso2 === countryIso ? ' selected' : ''}>${esc(country.name)}</option>`).join('');
+  }
 
   function renderQuick() {
     const host = root.querySelector('#chart-quick');
-    const recent = recentAirports();
-    const items = [];
-    for (const code of planned) items.push({ icao: code, label: `Plan · ${code}` });
-    for (const item of recent) if (!items.some(entry => entry.icao === item.icao)) items.push({ icao: item.icao, label: item.name || item.icao });
+    const saved = savedAirports();
+    const items = flight.map(row => ({ icao: row.icao, label: `${row.role} · ${row.icao}` }));
+    for (const item of saved) if (!items.some(entry => entry.icao === item.icao)) items.push({ icao: item.icao, label: `★ ${item.name || item.icao}` });
+    for (const item of recentAirports()) {
+      if (items.length >= 10) break;
+      if (!items.some(entry => entry.icao === item.icao)) items.push({ icao: item.icao, label: item.name || item.icao });
+    }
     host.innerHTML = items.length
       ? items.map(item => `<button class="e-btn small ${item.icao === icao ? 'primary' : 'ghost'}" type="button" data-quick="${esc(item.icao)}">${esc(item.label)}</button>`).join('')
-      : '<span class="e-small e-faint">Recently opened airports appear here.</span>';
+      : '<span class="e-small e-faint">Open a flight plan, or save an airport, to pin charts here.</span>';
     host.querySelectorAll('[data-quick]').forEach(button => {
       button.addEventListener('click', () => {
         icao = button.dataset.quick;
@@ -127,7 +206,8 @@ export async function mount(root, ctx) {
     const byCategory = category === 'all'
       ? catalogue.charts
       : catalogue.charts.filter(chart => {
-        if (category === 'approach') return ['ils', 'loc', 'rnav', 'vor', 'ndb', 'approach'].includes(chart.category);
+        if (category === 'approach') return APPROACH_FAMILIES.includes(chart.category) || Boolean(chart.approach);
+        if (category === 'other') return !['diagram', 'sid', 'star', 'approach'].includes(chart.category);
         return chart.category === category;
       });
     return filterCharts(byCategory, query);
@@ -143,7 +223,7 @@ export async function mount(root, ctx) {
     if (!catalogue) {
       listEl.innerHTML = `<div class="ch-hint">
         <b>No charts loaded</b>
-        <span>Search for an airport above, or open one of the airports on this flight.</span>
+        <span>Search for any airport in the world. Where the publisher's terms allow it, the charts open here; otherwise Stratos shows the official source.</span>
       </div>`;
       countEl.textContent = '';
       return;
@@ -177,19 +257,95 @@ export async function mount(root, ctx) {
       .filter(Boolean).join(' · ');
   }
 
-  function sourcesPanel() {
-    if (!sourceLinks.length) return '';
+  function sourcesPanel(sources) {
+    if (!sources.length) return '';
     return `<div class="ch-sources">
       <div class="ch-sources-head">
         <div class="e-label">Official sources</div>
         <div class="ch-sources-note">These publishers hold the documents for this airport.</div>
       </div>
-      <div class="ch-source-list">${sourceLinks.map(source => `<a class="ch-source" href="${esc(source.url)}" target="_blank" rel="noopener">
-        <div class="ch-source-main"><b>${esc(source.name || source.label || 'Publisher')}</b><span>${esc(source.note || 'Official aeronautical documents')}</span></div>
-        <span class="e-badge">Open ↗</span>
-      </a>`).join('')}</div>
-      <div class="e-small e-faint">Stratos will not copy or scrape a publisher that has not licensed its documents.</div>
+      <div class="ch-source-list">${sources.map(source => {
+        const licence = licenceFor(source.licenceCategory || source.licence);
+        return `<a class="ch-source" href="${esc(source.url || source.terms || '')}" target="_blank" rel="noopener">
+          <div class="ch-source-main"><b>${esc(source.name || source.label || 'Publisher')}</b>
+            <span>${esc(source.note || source.licence || 'Official aeronautical documents')}</span>
+            <span class="e-small e-faint">${esc(licence.label)}${source.checked ? ` · checked ${esc(source.checked)}` : ' · terms not yet verified'}</span></div>
+          <span class="e-badge ${licence.tone}">Open ↗</span>
+        </a>`;
+      }).join('')}</div>
+      <div class="e-small e-faint">Stratos will not copy, frame or proxy a publisher that has not licensed its documents.</div>
     </div>`;
+  }
+
+  function renderHeader() {
+    if (!headerEl) return;
+    if (!coverage) { headerEl.innerHTML = ''; return; }
+    const status = coverageStatus(coverage);
+    const licence = coverage.licenceCategory ? licenceFor(coverage.licenceCategory) : null;
+    const flag = flagFor(coverage.iso2);
+    const saved = savedAirports().some(item => item.icao === icao);
+    const name = (airport && airport.name) || (coverage.country ? `Airport · ${coverage.country}` : 'Airport');
+    const elevation = airport && Number.isFinite(Number(airport.elev)) ? `${Math.round(Number(airport.elev))} ft` : null;
+    const iata = airport && airport.iata ? airport.iata : null;
+    const cycle = catalogue && catalogue.cycle ? `AIRAC ${catalogue.cycle}` : null;
+    headerEl.innerHTML = `<div class="e-card ch-airport">
+      <div class="ch-airport-top">
+        <div class="ch-airport-id">
+          <span class="ch-flag" aria-hidden="true">${esc(flag)}</span>
+          <div>
+            <div class="ch-airport-codes"><b>${esc(icao)}</b>${iata ? `<span>${esc(iata)}</span>` : ''}</div>
+            <div class="ch-airport-name">${esc(name)}</div>
+          </div>
+        </div>
+        <div class="ch-airport-actions">
+          <span class="e-badge ${status.tone}">${esc(status.label)}</span>
+          <button class="e-btn small ${saved ? 'primary' : 'ghost'}" type="button" id="chart-save" aria-pressed="${saved ? 'true' : 'false'}" title="Save this airport">${saved ? '★ Saved' : '☆ Save'}</button>
+        </div>
+      </div>
+      <div class="ch-airport-meta">
+        <span><i>Country</i>${esc(coverage.country || 'Not registered')}</span>
+        ${elevation ? `<span><i>Elevation</i>${esc(elevation)}</span>` : ''}
+        <span><i>Publisher</i>${esc((coverage.provider && coverage.provider.name) || 'No registered source')}</span>
+        ${cycle ? `<span><i>Cycle</i>${esc(cycle)}</span>` : ''}
+        ${licence ? `<span><i>Licence</i>${esc(licence.label)}</span>` : ''}
+      </div>
+    </div>`;
+    const save = headerEl.querySelector('#chart-save');
+    if (save) {
+      save.addEventListener('click', () => {
+        toggleSaved(icao, (airport && airport.name) || '');
+        renderQuick();
+        renderHeader();
+      });
+    }
+  }
+
+  function renderCountry() {
+    if (!countryIso && !regionName) return false;
+    const country = COUNTRIES.find(entry => entry.iso2 === countryIso) || null;
+    const publishers = country ? coverageSources(country.iso2) : [];
+    const stats = registryStats();
+    viewerCard.classList.remove('is-centred');
+    viewerCard.innerHTML = `<div class="ch-viewer-head">
+        <div class="e-label">Charts · ${esc(country ? country.name : regionName)}</div>
+        <div class="ch-viewer-title">${country ? `${country.name} — ${publishers.length} registered publisher${publishers.length === 1 ? '' : 's'}` : `${esc(regionName)}`}</div>
+        <p class="ch-viewer-text">${country
+          ? 'These are the authorities that publish this country’s aeronautical charts. Where the licence allows it, Stratos embeds the documents; otherwise this page links to the publisher.'
+          : `${stats.countries} countries are registered across ${REGIONS.length} regions. Choose a country to see its publisher and licence.`}</p>
+      </div>${sourcesPanel(publishers)}`;
+    return true;
+  }
+
+  /** Registry publishers for a country, shaped like the source panel rows. */
+  function coverageSources(iso2) {
+    return sourcesForCountry(iso2).map(entry => ({
+      id: entry.id,
+      name: entry.name,
+      url: entry.url,
+      note: entry.note,
+      licenceCategory: entry.licence,
+      checked: entry.checked,
+    }));
   }
 
   function renderViewer() {
@@ -199,16 +355,15 @@ export async function mount(root, ctx) {
       viewerCard.classList.toggle('is-centred', external);
       if (external) {
         viewerCard.innerHTML = `<div class="ch-viewer-head">
-            <div class="e-label">Charts · ${esc(icao)}
-            </div>
-            <div class="ch-viewer-title">No licensed chart to display</div>
-            <p class="ch-viewer-text">${esc((coverage && coverage.message) || 'The charts for this airport are published by an external provider.')} Stratos links to the publisher instead of embedding a copy.</p>
-          </div>${sourcesPanel()}`;
+            <div class="e-label">Charts · ${esc(icao)}</div>
+            <div class="ch-viewer-title">No embeddable chart for this airport</div>
+            <p class="ch-viewer-text">${esc((coverage && coverage.message) || 'The charts for this airport are published by an external provider.')}</p>
+          </div>${sourcesPanel(sourceLinks)}`;
         return;
       }
       viewerCard.innerHTML = `<div class="ch-viewer-empty">
         <b>No chart open</b>
-        <p>Search for an airport, then choose a document from the list. Charts open in the same viewer the tracker uses: wheel or pinch to zoom, drag to pan, Page Up/Down for pages.</p>
+        <p>Search for an airport anywhere in the world, then choose a document. Charts open in the same viewer the tracker uses: wheel or pinch to zoom, drag to pan, Page Up/Down for pages.</p>
       </div>`;
       return;
     }
@@ -235,7 +390,7 @@ export async function mount(root, ctx) {
       </div>
       <div class="chart-host" id="chart-host"></div>
       <div class="e-small ${validityState(selected) === 'expired' ? 'e-faint' : 'e-muted'}" style="margin-top:8px" id="chart-validity">
-        ${selected.local ? 'Local file — not from a verified source.' : esc(validityText(selected))}
+        ${esc(validityText(selected))}
       </div>`;
 
     const host = viewerCard.querySelector('#chart-host');
@@ -290,8 +445,6 @@ export async function mount(root, ctx) {
     documentState = { status: 'loading' };
     renderList();
     renderViewer();
-    const url = selected.url || null;
-    void url;
     try {
       const key = chartCacheKey(selected);
       const cached = await readChartCache(key);
@@ -344,35 +497,36 @@ export async function mount(root, ctx) {
     destroyViewer();
     selected = null;
     catalogue = null;
-    groups = [];
     loading = true;
-    error = '';
     sourceLinks = [];
-    docShow();
+    noticeEl.innerHTML = '';
+    coverage = chartCoverage(icao);
+    headerEl.innerHTML = '';
     renderList();
     renderViewer();
+
+    const info = await searchAirports(icao, 6).catch(() => []);
+    if (destroyed) return;
+    airport = (info || []).find(row => String(row.id).toUpperCase() === icao) || null;
+
     const result = await loadChartCatalogue(icao);
     if (destroyed) return;
     loading = false;
-    coverage = result.coverage;
-    sourceLinks = result.sources || chartSourcesFor(icao);
+    coverage = result.coverage || coverage;
+    sourceLinks = result.sources && result.sources.length ? result.sources : chartSourcesFor(icao);
     if (!result.ok) {
-      error = result.error || '';
-      if (result.unsupported) {
-        // The viewer pane explains the coverage gap and lists the publishers, so
-        // a second banner would only repeat it.
-        noticeEl.innerHTML = '';
-      } else {
-        noticeEl.innerHTML = `<div class="e-notice bad"><div><b>No charts loaded for ${esc(icao)}.</b><br>${esc(error)}</div></div>`;
+      if (!result.unsupported) {
+        noticeEl.innerHTML = `<div class="e-notice bad"><div><b>No charts loaded for ${esc(icao)}.</b><br>${esc(result.error || '')}</div></div>`;
       }
+      renderHeader();
       renderList();
       renderViewer();
       return;
     }
     catalogue = result.catalogue;
-    groups = result.groups;
-    noticeEl.innerHTML = `<div class="e-notice"><div><b>${esc(icao)}</b> · ${catalogue.charts.length} documents · ${esc(result.source || 'FAA d-TPP')}${catalogue.cycle ? ` · cycle ${esc(catalogue.cycle)}` : ''}${result.coverage && result.coverage.message ? `<br>${esc(result.coverage.message)}` : ''}</div></div>`;
-    rememberAirport(icao, (result.coverage && result.coverage.name) || '');
+    noticeEl.innerHTML = `<div class="e-notice"><div><b>${esc(icao)}</b> · ${catalogue.charts.length} documents · ${esc(result.source || 'FAA d-TPP')}${catalogue.cycle ? ` · cycle ${esc(catalogue.cycle)}` : ''}</div></div>`;
+    rememberAirport(icao, (airport && airport.name) || '');
+    renderHeader();
     renderList();
     if (catalogue.charts.length) {
       const first = visibleCharts()[0] || catalogue.charts[0];
@@ -380,10 +534,6 @@ export async function mount(root, ctx) {
     } else {
       renderViewer();
     }
-  }
-
-  function docShow() {
-    noticeEl.innerHTML = '';
   }
 
   /* airport search */
@@ -399,7 +549,10 @@ export async function mount(root, ctx) {
       if (destroyed) return;
       results.hidden = false;
       results.innerHTML = rows.length
-        ? rows.map(row => `<button type="button" data-pick="${esc(row.id)}"><b>${esc(row.id)}</b><span>${esc(row.name || '')}</span></button>`).join('')
+        ? rows.map(row => {
+          const country = chartCoverage(String(row.id).toUpperCase()).country;
+          return `<button type="button" data-pick="${esc(row.id)}"><b>${esc(row.id)}</b><span>${esc(row.name || '')}${country ? ` · ${esc(country)}` : ''}</span></button>`;
+        }).join('')
         : '<div class="e-empty-small">No airports match.</div>';
       results.querySelectorAll('[data-pick]').forEach(button => {
         button.addEventListener('click', () => {
@@ -439,12 +592,36 @@ export async function mount(root, ctx) {
     });
   });
 
-  if (destroyed) return {};
+  regionSelect.addEventListener('change', () => {
+    regionName = regionSelect.value;
+    countryIso = '';
+    renderCountries();
+    if (regionName) {
+      coverage = null;
+      catalogue = null;
+      sourceLinks = [];
+      headerEl.innerHTML = '';
+      renderList();
+      renderCountry();
+    }
+  });
 
+  countrySelect.addEventListener('change', () => {
+    countryIso = countrySelect.value;
+    if (!countryIso) { renderViewer(); return; }
+    coverage = null;
+    catalogue = null;
+    sourceLinks = [];
+    headerEl.innerHTML = '';
+    renderList();
+    renderCountry();
+  });
+
+  renderCountries();
   renderQuick();
   if (icao) load();
   else {
-    noticeEl.innerHTML = `<div class="e-notice"><div>${planned.length ? `Charts for this flight: ${esc(planned.join(' → '))}.` : 'Search for an airport to see its published charts.'}</div></div>`;
+    noticeEl.innerHTML = `<div class="e-notice"><div>${planned.length ? `Charts for this flight: ${esc(planned.join(' → '))}.` : 'Search for any airport, or pick a country to see its chart publisher.'}</div></div>`;
     renderViewer();
   }
 
