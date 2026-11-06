@@ -492,7 +492,9 @@ export function initProcDeck() {
     host.addEventListener('click', onPaneClick);
     host.addEventListener('change', onPaneChange);
   }
-  for (const button of $$('[data-dk-layer]')) button.classList.add('on');
+  // The layer buttons keep the map's own defaults: the missed approach layer
+  // starts off, and marking every button "on" here made it look switched on
+  // while the renderer still skipped it.
   adoptPlan();
   compute();
   if (syncTimer) clearInterval(syncTimer);
