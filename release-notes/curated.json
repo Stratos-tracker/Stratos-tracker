@@ -1,4 +1,19 @@
 {
+  "2.1.32": {
+    "summary": "Worldwide SID, STAR, approach and missed-approach geometry on the map, from the pilot's own simulator.",
+    "changelog": {
+      "features": [
+        "The Flight Deck draws the published SID, STAR, approach and missed-approach paths for the planned route.",
+        "Procedure geometry now comes from the pilot's own simulator (X-Plane 12 CIFP, worldwide) when the bridge can read it, not only the bundled FAA dataset.",
+        "A planned procedure the data cycle does not publish is named, with the ones it does publish."
+      ],
+      "fixes": [
+        "A procedure published as a single runway leg draws without a runway being chosen first.",
+        "The Missed layer starts off, matching what the map actually draws.",
+        "The aircraft photo backup stays, without the orange BACKUP badge."
+      ]
+    }
+  },
   "2.1.29": {
     "summary": "Aircraft photos now resolve when only a Mode S address is reported and fall back to a labelled photo of another live aircraft of the same airline and type, while the Performance page is rebuilt around a bundled, versioned aircraft database.",
     "changelog": {

@@ -3,26 +3,52 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.1.31",
-    "releasedAt": "2026-11-05",
+    "version": "2.1.32",
+    "releasedAt": "2026-11-06",
     "severity": "normal",
-    "summary": "2 new features.",
+    "summary": "Worldwide SID, STAR, approach and missed-approach geometry on the map, from the pilot's own simulator.",
     "changelog": {
       "features": [
-        "Add the 2.1.30 release entry to the update manifest.",
-        "Track flight position over the existing X-Plane link and ship the cabin audio."
+        "The Flight Deck draws the published SID, STAR, approach and missed-approach paths for the planned route.",
+        "Procedure geometry now comes from the pilot's own simulator (X-Plane 12 CIFP, worldwide) when the bridge can read it, not only the bundled FAA dataset.",
+        "A planned procedure the data cycle does not publish is named, with the ones it does publish."
       ],
       "improvements": [],
-      "fixes": [],
+      "fixes": [
+        "A procedure published as a single runway leg draws without a runway being chosen first.",
+        "The Missed layer starts off, matching what the map actually draws.",
+        "The aircraft photo backup stays, without the orange BACKUP badge."
+      ],
       "performance": [],
       "ui": [],
       "compatibility": [],
-      "other": [
-        "Publish the 2.1.29 download table."
-      ]
+      "other": []
     }
   },
   "releases": [
+    {
+      "version": "2.1.32",
+      "releasedAt": "2026-11-06",
+      "severity": "normal",
+      "summary": "Worldwide SID, STAR, approach and missed-approach geometry on the map, from the pilot's own simulator.",
+      "changelog": {
+        "features": [
+          "The Flight Deck draws the published SID, STAR, approach and missed-approach paths for the planned route.",
+          "Procedure geometry now comes from the pilot's own simulator (X-Plane 12 CIFP, worldwide) when the bridge can read it, not only the bundled FAA dataset.",
+          "A planned procedure the data cycle does not publish is named, with the ones it does publish."
+        ],
+        "improvements": [],
+        "fixes": [
+          "A procedure published as a single runway leg draws without a runway being chosen first.",
+          "The Missed layer starts off, matching what the map actually draws.",
+          "The aircraft photo backup stays, without the orange BACKUP badge."
+        ],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.1.31",
       "releasedAt": "2026-11-05",
