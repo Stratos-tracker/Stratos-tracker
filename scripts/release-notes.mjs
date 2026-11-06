@@ -34,6 +34,35 @@ export const SEVERITIES = ['normal', 'important', 'critical'];
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const MANIFEST = path.join(ROOT, 'app', 'releases.json');
+
+/**
+ * The single-release manifest the app checks on startup.
+ *
+ * `releases.json` carries the history the update centre lists; `version.json`
+ * carries only what a client needs to decide whether to prompt. It is written
+ * beside the manifest, so publishing a release never means editing two files by
+ * hand: change the version, the notes and the download table, and both are
+ * generated. Every field is derived from the release that was just written.
+ */
+export function versionManifest(manifest) {
+  const latest = manifest && manifest.latest ? manifest.latest : null;
+  if (!latest) throw new Error('a version manifest needs a latest release');
+  const notes = latest.changelog || {};
+  const flat = CATEGORIES.flatMap(key => (notes[key] || []).map(item => ({ key, item })));
+  return {
+    schemaVersion: 1,
+    latestVersion: latest.version,
+    minimumSupportedVersion: latest.minimumSupported || '',
+    mandatory: latest.severity === 'critical',
+    releaseDate: latest.releasedAt || '',
+    downloadUrl: (latest.downloads && (latest.downloads.windows || {}).url) || '',
+    downloads: latest.downloads || {},
+    summary: latest.summary || '',
+    reason: latest.reason || '',
+    releaseNotes: flat.map(entry => entry.item),
+    notes: Object.fromEntries(CATEGORIES.map(key => [key, notes[key] || []])),
+  };
+}
 const CURATED = path.join(ROOT, 'release-notes', 'curated.json');
 const MAX_RELEASES = 30;
 const MAX_SUMMARY = 400;
@@ -392,6 +421,31 @@ function main() {
   if (has('check')) {
     const file = arg('manifest', MANIFEST);
     const problems = validateManifest(readManifest(file));
+    // When a version manifest sits beside the release manifest it must describe
+    // the same release, or a client checking version.json would be offered
+    // something the release page does not carry.
+    const versionFile = path.join(path.dirname(path.resolve(file)), 'version.json');
+    if (fs.existsSync(versionFile)) {
+      try {
+        const published = JSON.parse(fs.readFileSync(versionFile, 'utf8'));
+        const latest = readManifest(file).latest || {};
+        if (published.latestVersion !== latest.version) {
+          problems.push(`version.json says ${published.latestVersion}, releases.json says ${latest.version}`);
+        }
+        // The publish job fills the download table from the installers it just
+        // built; before that run the local manifest legitimately has none, so the
+        // URL is only required once a download is recorded.
+        const hasDownloads = latest.downloads && Object.keys(latest.downloads).length;
+        if (hasDownloads && !/^https:\/\//.test(String(published.downloadUrl || ''))) {
+          problems.push('version.json needs an https downloadUrl once a release has installers');
+        }
+        if (!Array.isArray(published.releaseNotes) || !published.releaseNotes.length) {
+          problems.push('version.json needs release notes');
+        }
+      } catch (error) {
+        problems.push(`version.json could not be read: ${error.message}`);
+      }
+    }
     const curatedProblems = validateCuratedFile(arg('curated', CURATED));
     if (problems.length || curatedProblems.length) {
       const all = [...problems, ...curatedProblems];
@@ -492,6 +546,9 @@ function main() {
   const out = arg('manifest', MANIFEST);
   fs.mkdirSync(path.dirname(out), { recursive: true });
   fs.writeFileSync(out, `${JSON.stringify(manifest, null, 2)}\n`);
+  const versionFile = path.join(path.dirname(out), 'version.json');
+  fs.writeFileSync(versionFile, `${JSON.stringify(versionManifest(manifest), null, 2)}\n`);
+  console.log(`wrote ${path.relative(ROOT, versionFile)} for ${manifest.latest.version}`);
   console.log(`wrote ${path.relative(ROOT, out)} with ${manifest.releases.length} releases; latest ${manifest.latest.version}`);
   console.log(`summary: ${release.summary}`);
 

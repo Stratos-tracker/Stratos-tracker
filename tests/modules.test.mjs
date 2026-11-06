@@ -125,7 +125,7 @@ test('a packaged build can update itself from the GitHub releases', () => {
   const centre = read('app/js/update-ui.js');
   assert.match(centre, /desktop\?\.checkForUpdates/, 'the update centre drives the desktop updater');
   assert.match(centre, /desktop\.installUpdate/, 'a ready update can be installed from the centre');
-  assert.match(centre, /A new Stratos update is available\./, 'the announcement is the polished dialog');
+  assert.match(centre, /A new version of Stratos is available/, 'the announcement is the polished dialog');
   const lib = read('app/js/lib/updates.js');
   assert.match(lib, /releases\.json/, 'the app reads the published release manifest');
   assert.match(lib, /compareVersions/, 'versions are compared semantically');
@@ -135,9 +135,12 @@ test('a packaged build can update itself from the GitHub releases', () => {
   assert.match(config, /repo: 'Stratos-tracker'/, 'the update provider names this repository');
 
   const workflow = read('.github/workflows/release.yml');
-  assert.match(workflow, /dist\/latest\.yml/, 'the release ships the updater manifest');
-  assert.doesNotMatch(workflow, /blockmap/, 'blockmaps are not attached: the release page carries installers and feeds only');
-  assert.match(workflow, /did not produce latest\.yml/, 'a release without the manifest fails instead of shipping');
+  // Updates are announced from version.json and installed by running the
+  // published installer, so the release page carries installers only.
+  assert.doesNotMatch(workflow, /dist\/latest\.yml/, 'updater feeds are no longer attached');
+  assert.doesNotMatch(workflow, /dist\/\*\.(blockmap|sha256)/, 'no blockmaps or checksum sidecars are attached');
+  assert.match(workflow, /gh release create "\$TAG" --draft[\s\S]{0,400}dist\/Stratos-Setup\.exe dist\/\*\.dmg dist\/\*\.AppImage/, 'the release attaches one installer per platform');
+  assert.match(workflow, /cp dist\/version\.json app\/version\.json/, 'version.json is published on main for the startup check');
   assert.match(workflow, /release-notes\.mjs --version|release-notes\.mjs \"\$\{ARGS/, 'the release generates its own notes and manifest');
   assert.match(workflow, /cp dist\/releases\.json app\/releases\.json/, 'the manifest is recorded on main, where the site serves it');
   assert.doesNotMatch(workflow, /dist\/releases\.json dist\/release-notes\.md/, 'the release does not carry a duplicate of its own notes and manifest');

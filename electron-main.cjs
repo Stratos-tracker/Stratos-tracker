@@ -8,6 +8,12 @@ const { spawn, spawnSync } = require('node:child_process');
 // Optional at runtime: a build that somehow shipped without the dependency still
 // opens, it just cannot update itself.
 let autoUpdater = null;
+// The release no longer publishes electron-updater feeds (latest.yml and the
+// macOS ZIPs): updates are announced in the app from version.json and installed
+// by running the published installer. The native updater stays compiled in but
+// is only used when STRATOS_NATIVE_UPDATER=1, so a build without feeds never
+// spends a launch failing to fetch a manifest that is not there.
+const NATIVE_UPDATER = process.env.STRATOS_NATIVE_UPDATER === '1';
 try {
   ({ autoUpdater } = require('electron-updater'));
 } catch (_) { /* updates stay unavailable */ }
@@ -411,6 +417,10 @@ function broadcastUpdate(payload) {
 
 function startAutoUpdate() {
   if (!app.isPackaged || !autoUpdater) return;
+  if (!NATIVE_UPDATER) {
+    note('Updates are announced in the app from version.json; the native updater is off.');
+    return;
+  }
   if (smokeMode) {
     autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = false;
@@ -706,6 +716,12 @@ async function premiumStatus() {
 ipcMain.handle('premium:status', () => premiumStatus());
 ipcMain.handle('updater:status', () => updateStatus());
 ipcMain.handle('updater:check', async () => {
+  // Without published feeds there is nothing for electron-updater to read. The
+  // renderer checks version.json itself and opens the installer, so this answers
+  // honestly instead of failing on a missing file.
+  if (!NATIVE_UPDATER) {
+    return { ...updateStatus(), available: false, supported: false, mode: 'installer' };
+  }
   if (!app.isPackaged || !autoUpdater) return { ...updateStatus(), available: false, supported: false };
   if (updateState.downloadedVersion) return { ...updateStatus(), available: true };
   updateState.error = '';
@@ -729,6 +745,24 @@ ipcMain.handle('updater:check', async () => {
     return { ...updateStatus(), available: false, error: message };
   }
 });
+// Open the published installer for an update. Only the two hosts Stratos
+// publishes on are accepted, so a tampered version.json cannot turn this into a
+// general-purpose "open any URL" channel.
+ipcMain.handle('updates:open-download', async (_event, url) => {
+  const value = String(url || '');
+  let parsed = null;
+  try { parsed = new URL(value); } catch (_) { return { ok: false, message: 'That update link is not a URL.' }; }
+  const allowed = /(^|\.)github\.com$/i.test(parsed.hostname)
+    || /(^|\.)stratos-tracker\.com$/i.test(parsed.hostname);
+  if (parsed.protocol !== 'https:' || !allowed) {
+    note(`Refused an update download from ${parsed.hostname}: not a Stratos host.`);
+    return { ok: false, message: 'That update link does not point at a Stratos download host.' };
+  }
+  await shell.openExternal(parsed.toString());
+  note(`Opened the update download: ${parsed.toString()}`);
+  return { ok: true };
+});
+
 ipcMain.handle('updater:install', () => {
   if (!app.isPackaged || !autoUpdater || !updateState.downloadedVersion) {
     return { ok: false, message: 'No downloaded update is ready to install yet.' };
@@ -755,8 +789,8 @@ if (!gotLock) {
     // A smoke run is headless: no bridge, no window, just the updater and its
     // receipt. It must never start a second bridge on a developer machine.
     if (smokeMode) {
-      if (!autoUpdater) {
-        writeSmokeReceipt({ error: 'electron-updater is not available in this build.' }, 1);
+      if (!autoUpdater || !NATIVE_UPDATER) {
+        writeSmokeReceipt({ error: 'The native updater is disabled in this build; updates come from version.json.' }, 1);
         return;
       }
       startAutoUpdate();

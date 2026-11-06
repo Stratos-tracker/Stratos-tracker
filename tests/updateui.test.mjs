@@ -51,12 +51,17 @@ test('the announcement names both versions, the release date and real notes', as
     onApply: async () => {},
   });
   const text = dialog.element.textContent;
-  assert.match(text, /A new Stratos update is available\./);
+  assert.match(text, /A new version of Stratos is available/);
+  assert.match(text, /Update Stratos to get the latest improvements, features, and bug fixes\./);
   assert.match(text, /v2\.1\.14/);
   assert.match(text, /v2\.1\.15/);
   assert.match(text, /Add a replay scrubber\./);
   assert.match(text, /Keep landing rates signed\./);
-  assert.match(text, /published on .*2026/, 'the release date is shown');
+  assert.match(text, /2026/, 'the release date is shown');
+  assert.match(text, /Installed/);
+  assert.match(text, /Available/);
+  assert.match(text, /Update Now/);
+  assert.match(text, /Remind me later/);
   assert.equal(dialog.element.querySelectorAll('[data-apply]').length, 1);
   assert.equal(dialog.element.querySelectorAll('[data-later]').length, 1, 'an optional update can be postponed');
   dialog.close();

@@ -221,7 +221,6 @@ jobs:
         run: |
           set -euo pipefail
           test -s dist/Stratos-Setup.exe || { echo "::error::electron-builder did not produce Stratos-Setup.exe"; exit 1; }
-          test -s dist/latest.yml || { echo "::error::electron-builder did not produce latest.yml; automatic updates would be broken"; exit 1; }
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
@@ -229,7 +228,6 @@ jobs:
           name: release-windows
           path: |
             dist/Stratos-Setup.exe
-            dist/latest.yml
           retention-days: 7
 
   build-mac:
@@ -295,8 +293,6 @@ jobs:
           name: release-mac-${{ matrix.arch }}
           path: |
             dist/*.dmg
-            dist/*.zip
-            dist/latest-mac-${{ matrix.arch }}.yml
           retention-days: 7
 
   build-linux:
@@ -351,7 +347,6 @@ jobs:
           name: release-linux
           path: |
             dist/*.AppImage
-            dist/latest-linux.yml
           retention-days: 7
 
   publish:
@@ -391,11 +386,6 @@ jobs:
           pattern: release-*
           path: dist
           merge-multiple: true
-
-      # electron-updater reads one latest-mac.yml. Both architectures must be in
-      # it, or one group of Macs would never be offered the update.
-      - name: Merge the macOS update feeds
-        run: node scripts/merge-update-feeds.mjs dist/latest-mac.yml dist/latest-mac-arm64.yml dist/latest-mac-x64.yml
 
       # The installers also go to our own download host, so the manifest the site
       # serves names a URL we control instead of a third-party file host. The
@@ -476,14 +466,12 @@ jobs:
             fi
             gh release delete "$TAG" --yes
           fi
-          # Only what a person installs and what the updater reads is attached.
-          # Blockmaps, checksum sidecars and duplicate copies of the notes and the
-          # manifest were noise on the release page; the manifest is served from
-          # main, and GitHub reports the digests itself.
+          # One installer per platform, and nothing else. Updates are announced
+          # from version.json and installed by running the published installer,
+          # so updater feeds, update ZIPs, blockmaps, checksum sidecars and copies
+          # of the notes or the manifest are no longer attached.
           gh release create "$TAG" --draft --target "$GITHUB_SHA" --title "Stratos $VERSION" --notes-file dist/release-notes.md \
-            dist/Stratos-Setup.exe \
-            dist/latest.yml dist/latest-mac.yml dist/latest-linux.yml \
-            dist/*.dmg dist/*.zip dist/*.AppImage
+            dist/Stratos-Setup.exe dist/*.dmg dist/*.AppImage
 
       - name: Check the draft against every platform
         env:
@@ -510,15 +498,19 @@ jobs:
             git fetch --quiet origin main
             git checkout -B main origin/main
             cp dist/releases.json app/releases.json
-            if git diff --quiet -- app/releases.json; then
-              echo "app/releases.json already carries $TAG's download table"
+            # version.json is what the app checks on startup; it is served from
+            # the same origin as the site, so it belongs on main beside the full
+            # manifest, not only inside the build.
+            cp dist/version.json app/version.json
+            if git diff --quiet -- app/releases.json app/version.json; then
+              echo "app/releases.json and app/version.json already carry $TAG"
               exit 0
             fi
-            git add app/releases.json
+            git add app/releases.json app/version.json
             git commit --quiet -m "Publish the $VERSION download table" \
               -m "The site serves this manifest from its own origin, so the installer URLs, hashes and sizes written for the release belong on main, not only on the release."
             if git push --quiet origin main; then
-              echo "app/releases.json on main now lists $TAG's downloads"
+              echo "app/releases.json and app/version.json on main now describe $TAG"
               exit 0
             fi
             echo "main moved while $TAG was being published; retrying from its new head"

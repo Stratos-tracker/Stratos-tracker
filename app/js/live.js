@@ -1057,3 +1057,10 @@ window.addEventListener('offline', () => setStatus('offline'));
   }
   pairingScreen();
 })();
+
+// The update prompt belongs to every surface, not just the cockpit shell: a
+// phone on the EFB, the live page and the airport pages should hear about a new
+// release too. The check is background work and never blocks the first frame.
+import('./update-ui.js')
+  .then(({ initAppUpdates }) => initAppUpdates({ desktop: window.stratosDesktop || null }))
+  .catch(() => { /* the Settings update centre still works on demand */ });
