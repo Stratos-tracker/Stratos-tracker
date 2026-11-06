@@ -1,9 +1,10 @@
 // Stratos API: the terminal chart catalogue for one airport.
 // Query: /api/charts?icao=KJFK
 //
-// Two publishers are integrated, both because their own terms allow it:
+// Three publishers are integrated, each because its own terms allow it:
 //   - FAA d-TPP (U.S. Government work, public domain): one metafile per cycle.
 //   - AIP Austria (CC BY 4.0): the authority's chart index per aerodrome.
+//   - AIP France (Licence Ouverte): the SIA's aerodrome chart per aerodrome.
 // Every other authority is a link in data/chart-sources.js, not a catalogue:
 // a publicly readable AIP is not a redistribution licence.
 //
@@ -12,7 +13,8 @@
 
 import { FAA_BASE, faaCycle, parseFaaAirport, parseMetafileHeader } from '../app/js/lib/charts.js';
 import {
-  eaipAirportPage, eaipForIcao, eaipPdfUrl, parseEaipCharts, parseEaipCycleIndex, parseEaipValidity,
+  eaipAirportPage, eaipForIcao, eaipPdfUrl, francePdfUrl, parseEaipCharts, parseEaipCycleIndex,
+  parseEaipValidity, parseFranceEdition,
 } from '../app/js/lib/eaip.js';
 
 const CACHE_MS = 6 * 60 * 60 * 1000;
@@ -58,44 +60,104 @@ async function faaCatalogue() {
   return faaPending;
 }
 
-/* ── AIP Austria ──────────────────────────────────────────────────────── */
+/* ── eAIP publishers ──────────────────────────────────────────────────── */
 
-const eaipCache = new Map(); // key: `${source.id}:${icao}:${cycle}`
-let eaipCycle = null; // { cycle, at }
+const eaipCache = new Map(); // key: `${source.id}:${icao}:${edition}`
+const editionCache = new Map(); // key: source.id → { edition, at }
 
-/** Current Austrian cycle, read from the publisher's own landing page. */
-async function austrianCycle() {
-  if (eaipCycle && Date.now() - eaipCycle.at < 60 * 60 * 1000) return eaipCycle.cycle;
-  const html = await download('https://eaip.austrocontrol.at/', 'text/html');
+/**
+ * Current publication of one eAIP, read from the publisher's own index. The
+ * edition is never computed here: a guessed folder would either 404 or, worse,
+ * serve the previous cycle's charts as if they were current.
+ */
+async function eaipEdition(source) {
+  const hit = editionCache.get(source.id);
+  if (hit && Date.now() - hit.at < 60 * 60 * 1000) return hit.edition;
+  const html = await download(source.cycleIndexUrl, 'text/html');
+  if (source.kind === 'france-atlas') {
+    const edition = parseFranceEdition(html);
+    if (!edition) throw new Error(`${source.name}: the publication edition could not be read.`);
+    editionCache.set(source.id, { edition, at: Date.now() });
+    return edition;
+  }
   const cycle = parseEaipCycleIndex(html);
-  if (!cycle) throw new Error('The AIP Austria publication cycle could not be read.');
-  eaipCycle = { cycle, at: Date.now() };
-  return cycle;
+  if (!cycle) throw new Error(`${source.name}: the publication cycle could not be read.`);
+  const edition = { folder: cycle, cycle, effective: null, expires: null };
+  editionCache.set(source.id, { edition, at: Date.now() });
+  return edition;
+}
+
+/** True when the publisher actually serves this document, without pulling it all. */
+async function documentExists(url) {
+  const headers = {
+    Accept: 'application/pdf',
+    'User-Agent': 'Stratos/2 (flight simulation companion; charts from the publishing authority)',
+  };
+  const attempt = async (method, extra) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+    try {
+      return await fetch(url, { method, headers: { ...headers, ...extra }, signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+  try {
+    let response = await attempt('HEAD');
+    // Some publishers answer HEAD with 405; a one-byte range proves it instead.
+    if (response.status === 405 || response.status === 501) {
+      response = await attempt('GET', { Range: 'bytes=0-4' });
+    }
+    return response.ok && String(response.headers.get('content-type') || '').includes('pdf');
+  } catch (_) {
+    return false;
+  }
 }
 
 async function eaipCatalogue(source, icao) {
-  const cycle = await austrianCycle();
-  const key = `${source.id}:${icao}:${cycle}`;
+  const edition = await eaipEdition(source);
+  const key = `${source.id}:${icao}:${edition.folder}`;
   const hit = eaipCache.get(key);
   if (hit && Date.now() - hit.at < CACHE_MS) return hit;
 
-  const pageUrl = eaipAirportPage(source, cycle, icao);
-  const html = await download(pageUrl, 'text/html');
-  if (!html) return null;
-  const charts = parseEaipCharts(html, { icao, cycle }).map(chart => ({
-    ...chart,
-    url: eaipPdfUrl(source, cycle, icao, chart.pdf),
-  }));
-  if (!charts.length) return null;
-  const validity = parseEaipValidity(html);
+  let charts;
+  let effective = edition.effective;
+  let expires = edition.expires;
+  if (source.kind === 'france-atlas') {
+    const url = francePdfUrl(source, edition.folder, icao);
+    if (!url || !(await documentExists(url))) return null;
+    charts = [{
+      code: 'VAC',
+      title: 'Aerodrome chart — VAC',
+      caption: 'Visual approach chart',
+      pdf: `AD-2.${String(icao).toUpperCase()}.pdf`,
+      category: 'diagram',
+      cycle: edition.cycle,
+      edition: edition.folder,
+      icao: String(icao).toUpperCase(),
+      url,
+    }];
+  } else {
+    const html = await download(eaipAirportPage(source, edition.folder, icao), 'text/html');
+    if (!html) return null;
+    charts = parseEaipCharts(html, { icao, cycle: edition.folder }).map(chart => ({
+      ...chart,
+      url: eaipPdfUrl(source, edition.folder, icao, chart.pdf),
+    }));
+    if (!charts.length) return null;
+    const validity = parseEaipValidity(html);
+    effective = validity.effective;
+    expires = validity.expires;
+  }
+
   const entry = {
     source: source.id,
     sourceName: `${source.name} (${source.licenceLabel})`,
     license: source.attribution,
     attribution: source.attribution,
-    cycle,
-    effective: validity.effective,
-    expires: validity.expires,
+    cycle: edition.cycle,
+    effective,
+    expires,
     checkedAt: Date.now(),
     at: Date.now(),
     icao,
@@ -153,6 +215,7 @@ export default async function handler(req, res) {
         pdf: chart.pdf,
         url: chart.url,
         category: chart.category,
+        edition: chart.edition || null,
       })),
     });
     return;

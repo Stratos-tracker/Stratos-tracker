@@ -1,11 +1,13 @@
-/* eAIP providers: national AIPs published as structured HTML with PDF charts.
+/* eAIP providers: national AIPs whose charts Stratos may display itself.
  *
- * One provider is integrated here — AIP Austria, published by Austro Control.
- * AIP Austria GEN 3.2 §3.1.2 states that every chart published in the AIP is
- * subject to Creative Commons Attribution 4.0 International: it may be used,
- * shared and modified free of charge with credit. That is a real reuse grant
- * from the rights holder, so Stratos may fetch and display those documents
- * itself, with the attribution shown beside the chart.
+ * Two publishers are integrated here, each on its own written terms:
+ *   - AIP Austria (Austro Control). GEN 3.2 §3.1.2 puts every chart in the AIP
+ *     under CC BY 4.0: use, sharing and modification free of charge with credit.
+ *   - AIP France (SIA). The eAIP and its charts are published under the Licence
+ *     Ouverte, which explicitly permits redistribution and inclusion in another
+ *     application, with attribution.
+ * Both are real reuse grants from the rights holder, so Stratos fetches and
+ * displays those documents itself, with the attribution shown beside the chart.
  *
  * Nothing here invents a document. The chart list is read from the authority's
  * own chart index page for an AIRAC cycle, and a PDF name must match the
@@ -19,6 +21,7 @@
 export const EAIP_SOURCES = {
   'austrocontrol-eaip': {
     id: 'austrocontrol-eaip',
+    kind: 'eaip-html',
     name: 'AIP Austria',
     publisher: 'Austro Control GmbH',
     country: 'Austria',
@@ -36,6 +39,29 @@ export const EAIP_SOURCES = {
     terms: 'https://eaip.austrocontrol.at/lo/261002/PART_1/LO_GEN_3_2_en.pdf',
     checked: '2026-11-06',
     note: 'AIP Austria GEN 3.2 §3.1.2 publishes the AIP charts under CC BY 4.0, so Stratos may display them with attribution.',
+  },
+  'sia-france': {
+    id: 'sia-france',
+    kind: 'france-atlas',
+    name: 'AIP France',
+    publisher: 'Service de l’information aéronautique (SIA)',
+    country: 'France',
+    iso2: 'FR',
+    region: 'Europe',
+    prefixes: ['LF'],
+    base: 'https://www.sia.aviation-civile.gouv.fr/media/dvd',
+    // The SIA lists the edition in force ("en vigueur du 29/10/2026 au
+    // 25/11/2026") and serves it under a folder named after the effective date.
+    cycleIndexUrl: 'https://www.sia.aviation-civile.gouv.fr/produits-numeriques-en-libre-disposition/eaip.html',
+    licenceCategory: 'FREE_REUSE',
+    licenceLabel: 'Licence Ouverte',
+    attribution: '© SIA — AIP France, Licence Ouverte',
+    terms: 'https://www.sia.aviation-civile.gouv.fr/produits-numeriques-en-libre-disposition.html',
+    checked: '2026-11-06',
+    // The SIA exposes the aerodrome (VAC) chart as a direct PDF; the procedure
+    // charts are inside the eAIP package, so no other category is claimed.
+    categories: ['diagram'],
+    note: 'The SIA publishes the eAIP and its charts under the Licence Ouverte, which permits redistribution and inclusion in another application with attribution.',
   },
 };
 
@@ -57,7 +83,8 @@ export function eaipById(id) {
 /** The chart index page for one airport in one cycle. */
 export function eaipAirportPage(source, cycle, icao) {
   const code = String(icao || '').trim().toUpperCase();
-  if (!source || !/^\d{6}$/.test(String(cycle || '')) || !/^[A-Z]{4}$/.test(code)) return null;
+  if (!source || (source.kind && source.kind !== 'eaip-html')) return null;
+  if (!/^\d{6}$/.test(String(cycle || '')) || !/^[A-Z]{4}$/.test(code)) return null;
   return `${source.base}/${cycle}/ad_2_${code.toLowerCase()}.htm`;
 }
 
@@ -73,6 +100,41 @@ export function eaipPdfUrl(source, cycle, icao, pdf) {
 /** A document name this provider actually publishes. */
 export function isEaipPdfName(pdf) {
   return /^LO_AD_2_[A-Z]{4}_[A-Z0-9]+(-[A-Z0-9]+)*_en\.PDF$/i.test(String(pdf || ''));
+}
+
+/**
+ * The French eAIP edition the SIA currently publishes, read from its listing.
+ * The folder name and the AIRAC number are the publisher's, never computed.
+ */
+export function parseFranceEdition(html) {
+  const source = String(html || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
+  const span = /en vigueur du (\d{1,2})\/(\d{1,2})\/(\d{4})\s+au\s+(\d{1,2})\/(\d{1,2})\/(\d{4})/i.exec(source);
+  if (!span) return null;
+  const day = Number(span[1]);
+  const month = Number(span[2]);
+  const year = Number(span[3]);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  const airac = /AIRAC\s+(\d{2})\/(\d{2})/i.exec(source);
+  return {
+    folder: `eAIP_${String(day).padStart(2, '0')}_${MONTHS[month - 1]}_${year}`,
+    cycle: airac ? `${airac[1]}/${airac[2]}` : '',
+    effective: Date.UTC(year, month - 1, day),
+    expires: Date.UTC(Number(span[6]), Number(span[5]) - 1, Number(span[4])),
+  };
+}
+
+/** The SIA's own aerodrome chart for one French airport, or null. */
+export function francePdfUrl(source, edition, icao) {
+  const code = String(icao || '').trim().toUpperCase();
+  if (!source || source.kind !== 'france-atlas') return null;
+  if (!/^eAIP_\d{2}_[A-Z]{3}_\d{4}$/.test(String(edition || ''))) return null;
+  if (!/^LF[A-Z0-9]{2}$/.test(code)) return null;
+  return `${source.base}/${edition}/Atlas-VAC/PDF_AIPparSSection/VAC/AD/AD-2.${code}.pdf`;
+}
+
+/** The only French document Stratos asks for: the aerodrome chart. */
+export function isFrancePdfName(name) {
+  return /^AD-2\.[A-Z]{4}\.PDF$/i.test(String(name || ''));
 }
 
 /**

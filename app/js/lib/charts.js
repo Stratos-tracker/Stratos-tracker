@@ -261,6 +261,9 @@ export function toChart(record, context = {}) {
     format: 'PDF',
     retrieval: context.retrieval || 'faa-cycle',
     cycle: cycle || null,
+    // A publisher that serves an edition folder (AIP France) names it separately
+    // from the AIRAC number the pilot reads, so both are kept.
+    edition: record.edition ? String(record.edition) : null,
     effective: Number.isFinite(context.effective) ? context.effective : null,
     expires: Number.isFinite(context.expires) ? context.expires : null,
     amended: record.amended ? parseFaaDate(record.amended) : null,

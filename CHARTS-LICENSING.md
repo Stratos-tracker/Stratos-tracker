@@ -19,8 +19,8 @@ authority's own portal. Nothing is scraped, framed or re-hosted, and the proxy i
 
 | Category | Meaning | Publishers |
 | --- | --- | --- |
-| FREE_REUSE | Explicit terms allow third-party display and redistribution. | 2 |
-| FREE_PUBLIC | Free public access. Reuse terms still need to be established. | 13 |
+| FREE_REUSE | Explicit terms allow third-party display and redistribution. | 3 |
+| FREE_PUBLIC | Free public access. Reuse terms still need to be established. | 12 |
 | FREE_PERSONAL_ONLY | Free for personal use; not authorised for a Stratos integration. | 0 |
 | PAID | Requires a purchase or a commercial licence. | 1 |
 | PERMISSION_REQUIRED | The authority must be asked before the documents can be reused. | 6 |
@@ -35,10 +35,10 @@ open inside the EFB; every other status keeps the publisher link and says why.
 
 | Status | Meaning | Publishers |
 | --- | --- | --- |
-| AVAILABLE_IN_APP | The publisher’s terms allow Stratos to display these documents inside the app. | 2 |
-| FREE_PUBLIC_ACCESS | Publicly accessible at the publisher, but in-app display has not been established. | 13 |
+| AVAILABLE_IN_APP | The publisher’s terms allow Stratos to display these documents inside the app. | 3 |
+| FREE_PUBLIC_ACCESS | Publicly accessible at the publisher, but in-app display has not been established. | 10 |
 | FREE_WITH_REGISTRATION | Free, but the publisher requires an account before the documents open. | 5 |
-| PERMISSION_REQUIRED | The publisher’s terms require written approval before another app may display the documents. | 5 |
+| PERMISSION_REQUIRED | The publisher’s terms require written approval before another app may display the documents. | 7 |
 | PAID | A purchase or commercial licence is required from the publisher. | 1 |
 | UNKNOWN | The publisher’s reuse position has not been established. | 58 |
 | UNAVAILABLE | No usable published source was found for this country. | 0 |
@@ -48,6 +48,7 @@ open inside the EFB; every other status keeps the publisher link and says why.
 | Country | Authority | Publisher | Charts | Terms | Last checked |
 | --- | --- | --- | --- | --- | --- |
 | Austria | Austro Control | [AIP Austria](https://eaip.austrocontrol.at/) | diagram, sid, star, approach, minimums, hotspot | Explicit terms allow third-party display and redistribution. | 2026-11-06 |
+| France | Service de l’information aéronautique | [SIA — AIP France](https://www.sia.aviation-civile.gouv.fr/?___store=english) | diagram | Explicit terms allow third-party display and redistribution. | 2026-11-06 |
 | United States | Federal Aviation Administration | [FAA Digital Terminal Procedures](https://www.faa.gov/air_traffic/flight_info/aeronav/digital_products/) | diagram, sid, star, approach, minimums, hotspot, enroute, area, vfr, obstacle, visual, parking | Explicit terms allow third-party display and redistribution. | 2026-11-06 |
 
 ## Link-only, free to view
@@ -59,7 +60,6 @@ links to the publisher and never embeds the document.
 | --- | --- | --- | --- | --- |
 | Australia | Airservices Australia | [Airservices Australia — AIP](https://www.airservicesaustralia.com/aip/aip.asp) | FREE_PUBLIC | not recorded |
 | Brazil | DECEA | [DECEA AISWEB — AIP Brazil](https://ais.decea.mil.br/) | FREE_PUBLIC | not recorded |
-| France | Service de l’information aéronautique | [SIA — AIP France](https://www.sia.aviation-civile.gouv.fr/?___store=english) | FREE_PUBLIC | not recorded |
 | Hong Kong | Civil Aviation Department | [CAD Hong Kong — AIP](https://www.cad.gov.hk/english/publications.html) | FREE_PUBLIC | not recorded |
 | India | Airports Authority of India | [AAI — AIP India](https://www.aai.aero/) | FREE_PUBLIC | not recorded |
 | Ireland | AirNav Ireland | [AirNav Ireland — AIP Ireland](https://www.airnav.ie/air-traffic-management/aeronautical-information-management) | FREE_PUBLIC | not recorded |

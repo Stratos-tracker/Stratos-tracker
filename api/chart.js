@@ -1,15 +1,17 @@
 // Stratos API: one published chart document.
 // Query: /api/chart?cycle=2610&file=00375AD.PDF                    (FAA d-TPP)
 //        /api/chart?source=austrocontrol&icao=LOWW&cycle=261030&pdf=LO_AD_2_LOWW_1-1_en.pdf
+//        /api/chart?source=sia-france&icao=LFPG&edition=eAIP_29_OCT_2026
 //
 // A deliberately narrow pass-through. The only hosts, path shapes and document
 // names that can be requested are those the publishing authority actually
 // serves, and only where its terms allow Stratos to display the document:
 //   - FAA d-TPP: U.S. Government work, public domain.
 //   - AIP Austria: CC BY 4.0, attribution shown beside the chart.
+//   - AIP France: Licence Ouverte, attribution shown beside the chart.
 // No other URL, header or credential is forwarded.
 
-import { EAIP_SOURCES, isEaipPdfName } from '../app/js/lib/eaip.js';
+import { EAIP_SOURCES, francePdfUrl, isEaipPdfName } from '../app/js/lib/eaip.js';
 
 const ALLOWED_FILE = /^[A-Z0-9]{1,12}\.PDF$/;
 const ALLOWED_CYCLE = /^\d{4}$/;
@@ -55,6 +57,15 @@ export function documentUrl(query) {
       url: `${provider.base}/${cycle}/Charts/${icao}/${pdf}`,
       credit: provider.attribution,
     };
+  }
+  if (source === 'sia-france') {
+    const edition = String(query.edition || '').trim();
+    const icao = String(query.icao || '').trim().toUpperCase();
+    if (!ALLOWED_ICAO.test(icao)) return null;
+    // The document name is built here from the ICAO, never taken from the
+    // caller: the SIA publishes exactly one direct file, the aerodrome chart.
+    const url = francePdfUrl(EAIP_SOURCES['sia-france'], edition, icao);
+    return url ? { url, credit: EAIP_SOURCES['sia-france'].attribution } : null;
   }
   const cycle = String((query && query.cycle) || '').trim();
   const file = String((query && query.file) || '').trim().toUpperCase();

@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  eaipForIcao, eaipPdfUrl, isEaipPdfName, parseEaipCharts, parseEaipCycleIndex, parseEaipValidity,
+  eaipForIcao, eaipPdfUrl, francePdfUrl, isEaipPdfName, parseEaipCharts, parseEaipCycleIndex,
+  parseEaipValidity, parseFranceEdition,
 } from '../app/js/lib/eaip.js';
 import { chartCoverage, coverageStatus } from '../app/js/lib/chartproviders.js';
 import { normaliseCatalogue, pdfName } from '../app/js/lib/charts.js';
@@ -75,12 +76,38 @@ test('a published document name keeps the case its publisher serves', () => {
   assert.match(faa[0].url, /^https:\/\/aeronav\.faa\.gov\/d-tpp\/2610\/00410AD\.PDF$/);
 });
 
+test('the French edition and aerodrome chart come from the SIA\'s own pattern', () => {
+  // Captured from the SIA eAIP listing: the product in force is AIRAC 11/26,
+  // served under the folder named after its effective date.
+  const listing = '<li>ZIP eAIP complet AIRAC 11/26</li>'
+    + '\n<p>en vigueur du 29/10/2026 au 25/11/2026 inclus</p>';
+  const edition = parseFranceEdition(listing);
+  assert.equal(edition.folder, 'eAIP_29_OCT_2026');
+  assert.equal(edition.cycle, '11/26');
+  assert.equal(edition.effective, Date.UTC(2026, 9, 29));
+  assert.equal(edition.expires, Date.UTC(2026, 10, 25));
+  assert.equal(parseFranceEdition('no edition here'), null);
+
+  const source = eaipForIcao('LFPG');
+  assert.equal(source.id, 'sia-france');
+  assert.equal(francePdfUrl(source, edition.folder, 'LFPG'),
+    'https://www.sia.aviation-civile.gouv.fr/media/dvd/eAIP_29_OCT_2026/Atlas-VAC/PDF_AIPparSSection/VAC/AD/AD-2.LFPG.pdf');
+  // Only French airports exist on the SIA server, and only a real edition folder.
+  assert.equal(francePdfUrl(source, edition.folder, 'EDDM'), null);
+  assert.equal(francePdfUrl(source, 'latest', 'LFPG'), null);
+});
+
 test('the proxy accepts only an allowlisted publisher request', () => {
   const austrian = documentUrl({ source: 'austrocontrol', icao: 'LOWW', cycle: '261030', pdf: 'LO_AD_2_LOWW_1-1_en.pdf' });
   assert.equal(austrian.url, 'https://eaip.austrocontrol.at/lo/261030/Charts/LOWW/LO_AD_2_LOWW_1-1_en.pdf');
   // A chart cannot be requested through another aerodrome's path.
   assert.equal(documentUrl({ source: 'austrocontrol', icao: 'LOWI', cycle: '261030', pdf: 'LO_AD_2_LOWW_1-1_en.pdf' }), null);
   assert.equal(documentUrl({ source: 'austrocontrol', icao: 'LOWW', cycle: '26', pdf: 'LO_AD_2_LOWW_1-1_en.pdf' }), null);
+  const french = documentUrl({ source: 'sia-france', icao: 'LFPG', edition: 'eAIP_29_OCT_2026' });
+  assert.match(french.url, /eAIP_29_OCT_2026\/Atlas-VAC\/PDF_AIPparSSection\/VAC\/AD\/AD-2\.LFPG\.pdf$/);
+  assert.equal(documentUrl({ source: 'sia-france', icao: 'LFPG', edition: '../../etc' }), null);
+  assert.equal(documentUrl({ source: 'sia-france', icao: 'KJFK', edition: 'eAIP_29_OCT_2026' }), null,
+    'the French server only holds French aerodromes');
   const faa = documentUrl({ cycle: '2610', file: '00375AD.PDF' });
   assert.equal(faa.url, 'https://aeronav.faa.gov/d-tpp/2610/00375AD.PDF');
   assert.equal(documentUrl({ cycle: '2610', file: '..%2F..%2Fetc%2Fpasswd' }), null);
@@ -130,7 +157,10 @@ test('coverage separates what Stratos can display from what it may only link', (
   assert.equal(chartCoverage('CYUL').access, 'PAID', 'NAV CANADA sells its charts');
   assert.equal(chartCoverage('YSSY').access, 'PERMISSION_REQUIRED', 'Airservices allows personal viewing only');
   assert.equal(chartCoverage('EGLL').access, 'FREE_PUBLIC_ACCESS');
-  assert.equal(chartCoverage('LFPG').access, 'FREE_PUBLIC_ACCESS');
+  const france = chartCoverage('LFPG');
+  assert.equal(france.access, 'AVAILABLE_IN_APP', 'the SIA Licence Ouverte permits in-app display');
+  assert.equal(france.integrated, true);
+  assert.match(france.provider.name, /AIP France/);
   assert.equal(chartCoverage('WSSS').access, 'FREE_WITH_REGISTRATION');
   assert.equal(chartCoverage('RJTT').access, 'FREE_PUBLIC_ACCESS');
   assert.equal(chartCoverage('SBGR').access, 'FREE_PUBLIC_ACCESS');

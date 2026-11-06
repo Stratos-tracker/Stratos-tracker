@@ -1,8 +1,9 @@
 /* Chart providers.
  *
- * Two publishers are integrated because their own terms allow it:
+ * Three publishers are integrated because their own terms allow it:
  *   - FAA d-TPP (U.S. Government work, public domain).
  *   - AIP Austria (CC BY 4.0, AIP Austria GEN 3.2 §3.1.2).
+ *   - AIP France (Licence Ouverte).
  * Every other registered publisher is link-only for a stated reason, taken from
  * its own terms rather than assumed: DFS forbids third-party display, Airservices
  * permits personal on-screen viewing only, NAV CANADA sells its charts.
@@ -54,7 +55,8 @@ function eaipDescriptor(source) {
     country: source.country,
     iso2: source.iso2,
     regions: [source.region],
-    categories: ALL_CATEGORIES,
+    // A provider states the families it actually serves; nothing is widened.
+    categories: source.categories || ALL_CATEGORIES,
     format: 'PDF',
     update: 'AIRAC / AIP amendment cycle',
     retrieval: 'eaip-cycle',

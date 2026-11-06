@@ -29,6 +29,9 @@ import {
 import { defaultBridgeBase, isHostedPage } from '../bridge.js';
 import { ChartViewer } from '../pilot/charts.js';
 
+/** Integrated publishers whose catalogue is an AIP edition, not an FAA cycle. */
+const EAIP_CYCLE = new Set(['austrocontrol-eaip', 'sia-france']);
+
 const RECENT_KEY = 'stratos.efb.charts.recent';
 const SAVED_KEY = 'stratos.efb.charts.saved';
 const CATEGORY_FILTERS = [
@@ -102,9 +105,16 @@ function documentUrls(chart) {
   const urls = [];
   // Each provider keeps its own proxy parameters; the page never builds a
   // document URL from a name the provider did not publish.
-  const query = chart.source === 'austrocontrol-eaip'
-    ? `source=austrocontrol&icao=${encodeURIComponent(chart.icao || '')}&cycle=${encodeURIComponent(chart.cycle || '')}&pdf=${encodeURIComponent(chart.pdf)}`
-    : `cycle=${encodeURIComponent(chart.cycle || '')}&file=${encodeURIComponent(chart.pdf)}`;
+  let query;
+  if (chart.source === 'austrocontrol-eaip') {
+    query = `source=austrocontrol&icao=${encodeURIComponent(chart.icao || '')}&cycle=${encodeURIComponent(chart.cycle || '')}&pdf=${encodeURIComponent(chart.pdf)}`;
+  } else if (chart.source === 'sia-france') {
+    // The proxy builds the French document name from the ICAO: the SIA publishes
+    // one direct file per aerodrome, so no name is ever taken from the page.
+    query = `source=sia-france&icao=${encodeURIComponent(chart.icao || '')}&edition=${encodeURIComponent(chart.edition || '')}`;
+  } else {
+    query = `cycle=${encodeURIComponent(chart.cycle || '')}&file=${encodeURIComponent(chart.pdf)}`;
+  }
   if (!isHostedPage()) {
     urls.push(`${defaultBridgeBase().replace(/\/+$/, '')}/chart?${query}`);
   }
@@ -259,7 +269,9 @@ export async function mount(root, ctx) {
 
   function summaryLine(chart) {
     if (!chart) return '';
-    return [chart.sourceName || 'FAA d-TPP', chart.format || 'PDF', chart.cycle ? `cycle ${chart.cycle}` : null]
+    // An AIP edition names its AIRAC beside the chart, so it is not repeated here.
+    const cycle = chart.cycle && !EAIP_CYCLE.has(chart.source) ? `cycle ${chart.cycle}` : null;
+    return [chart.sourceName || 'FAA d-TPP', chart.format || 'PDF', cycle]
       .filter(Boolean).join(' · ');
   }
 
@@ -402,7 +414,7 @@ export async function mount(root, ctx) {
       <div class="e-row" style="margin-bottom:8px">
         <div style="min-width:0">
           <div class="e-value" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(selected.title || selected.pdf)}</div>
-          <div class="e-small e-faint">${esc(summaryLine(selected))}${selected.categoryLabel ? ` · ${esc(selected.categoryLabel)}` : ''}${selected.cycle ? ` · ${esc(selected.source === 'austrocontrol-eaip' ? `AIRAC ${selected.cycle}` : `cycle ${selected.cycle}`)}` : ''}</div>
+          <div class="e-small e-faint">${esc(summaryLine(selected))}${selected.categoryLabel ? ` · ${esc(selected.categoryLabel)}` : ''}${selected.cycle ? ` · ${esc(EAIP_CYCLE.has(selected.source) ? `AIRAC ${selected.cycle}` : `cycle ${selected.cycle}`)}` : ''}</div>
         </div>
         <span class="e-spacer"></span>
         <div class="chart-toolbar">

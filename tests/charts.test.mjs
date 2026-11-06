@@ -213,8 +213,8 @@ test('every registered country resolves to its own publisher, never a copy', asy
   const { CHART_SOURCES } = await import('../app/js/data/chart-sources.js');
   assert.deepEqual(
     CHART_SOURCES.filter(entry => entry.licence === 'FREE_REUSE').map(entry => entry.iso2).sort(),
-    ['AT', 'US'],
-    'only the FAA and AIP Austria have terms that permit embedding',
+    ['AT', 'FR', 'US'],
+    'only the FAA, AIP Austria and AIP France have terms that permit embedding',
   );
 
   // The resolver holds no document URL: a chart can only come from a catalogue.
@@ -290,7 +290,7 @@ test('providers declare what they publish and only verified terms are integrated
   assert.equal(austria.provider.id, 'austrocontrol-eaip');
   assert.match(austria.provider.licence, /CC BY 4.0/);
 
-  assert.deepEqual(availableProviders().map(provider => provider.id), ['faa-dtpp', 'austrocontrol-eaip']);
+  assert.deepEqual(availableProviders().map(provider => provider.id), ['faa-dtpp', 'austrocontrol-eaip', 'sia-france']);
   for (const provider of CHART_PROVIDERS) {
     assert.ok(provider.id && provider.name && provider.status, 'identity and status are declared');
     assert.ok(provider.regions.length, `${provider.id} names its regions`);

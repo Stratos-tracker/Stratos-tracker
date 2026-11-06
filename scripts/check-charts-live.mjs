@@ -43,9 +43,13 @@ function call(handler, query) {
 
 /** Query the document proxy for one chart of an integrated provider. */
 function documentQuery(chart) {
-  return chart.source === 'austrocontrol-eaip'
-    ? { source: 'austrocontrol', icao: chart.icao, cycle: chart.cycle, pdf: chart.pdf }
-    : { cycle: chart.cycle, file: chart.pdf };
+  if (chart.source === 'austrocontrol-eaip') {
+    return { source: 'austrocontrol', icao: chart.icao, cycle: chart.cycle, pdf: chart.pdf };
+  }
+  if (chart.source === 'sia-france') {
+    return { source: 'sia-france', icao: chart.icao, edition: chart.edition };
+  }
+  return { cycle: chart.cycle, file: chart.pdf };
 }
 
 const rows = [];
