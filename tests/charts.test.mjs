@@ -129,36 +129,26 @@ test('the metafile becomes a catalogue with real categories and dates', async ()
   assert.equal(searchCharts(charts, 'EGLL').length, 0);
 });
 
-test('ILS and LOC approaches are free and every other procedure stays Premium', async () => {
-  const { accessLevel, approachType, canOpenChart, isFreeChart, normaliseCatalogue, parseFaaAirport } =
-    await import('../app/js/lib/charts.js');
-  const charts = normaliseCatalogue({ cycle: '2610', charts: parseFaaAirport(META, 'KSFO').records }, 'KSFO');
-  assert.equal(isFreeChart(charts.find(chart => chart.pdf === '00375IL28L.PDF')), true, 'ILS OR LOC is free');
-  assert.equal(isFreeChart({ category: 'approach', approach: 'LOC', title: 'LOC RWY 10' }), true, 'LOC only is free');
-  assert.equal(isFreeChart({ category: 'approach', approach: 'LOC', title: 'LOC/DME RWY 22L' }), true, 'LOC/DME is free');
-  assert.equal(isFreeChart({ category: 'approach', approach: null, title: 'LOCALIZER RWY 04' }), true, 'a localizer title is free');
-  assert.equal(isFreeChart({ category: 'approach', approach: 'RNAV', title: 'RNAV (GPS) Y RWY 19R' }), false, 'RNAV is not free');
-  assert.equal(isFreeChart({ category: 'approach', approach: 'VOR', title: 'VOR RWY 19R' }), false, 'VOR is not free');
-  assert.equal(isFreeChart(charts.find(chart => chart.category === 'diagram')), false, 'a diagram is not an approach');
-  assert.equal(isFreeChart(charts.find(chart => chart.category === 'sid')), false, 'a SID is not free');
-  assert.equal(isFreeChart({ category: 'approach', approach: null, title: 'ILS PRM RWY 28L' }), true, 'the title is checked when the family is unknown');
-  assert.equal(isFreeChart(null), false);
-
+test('approach families are read from the published title', async () => {
+  const { approachType } = await import('../app/js/lib/charts.js');
   assert.equal(approachType('ILS OR LOC RWY 28L'), 'ILS/LOC');
   assert.equal(approachType('ILS RWY 28L'), 'ILS');
   assert.equal(approachType('LOC RWY 10'), 'LOC');
   assert.equal(approachType('VOR OR GPS RWY 13L/R'), 'VOR');
   assert.equal(approachType('NDB OR GPS RWY 04'), 'NDB');
-  assert.equal(accessLevel({ category: 'diagram', title: 'AIRPORT DIAGRAM' }), 'premium');
-  assert.equal(accessLevel({ category: 'approach', approach: 'LOC', title: 'LOC RWY 10' }), 'free');
+});
 
-  // The one access rule every surface uses: free charts need no licence, all
-  // premium charts need a verified entitlement.
-  const loc = { category: 'approach', approach: 'LOC', title: 'LOC RWY 10' };
-  const diagram = { category: 'diagram', title: 'AIRPORT DIAGRAM' };
-  assert.equal(canOpenChart(loc, false), true);
-  assert.equal(canOpenChart(diagram, false), false);
-  assert.equal(canOpenChart(diagram, true), true);
+test('no chart is gated: the paid access rule is gone', async () => {
+  const charts = await import('../app/js/lib/charts.js');
+  for (const name of ['isFreeChart', 'accessLevel', 'canOpenChart']) {
+    assert.equal(name in charts, false, `${name} must be gone: every published chart is free`);
+  }
+  for (const file of ['app/js/pilot/charts.js', 'app/js/efb/charts.js']) {
+    const source = read(file);
+    assert.doesNotMatch(source, /entitlement|canOpenChart|isPremium|premiumPanel/i, `${file} must not consult a licence`);
+  }
+  assert.doesNotMatch(read('app/pilot.css'), /premium-|chart-lock|chart-access|chart-row-lock/, 'the gate styles are gone');
+  assert.doesNotMatch(read('app/js/pilot/charts.js'), /Premium/);
 });
 
 test('official sources are offered for Canada and Europe, never copied', async () => {
@@ -359,32 +349,22 @@ function installDom() {
   return window;
 }
 
-test('a free pilot lands on an empty viewer, not an unprompted upgrade panel', async () => {
+test('the charts page lands on an empty viewer, not an unprompted upgrade panel', async () => {
   installDom();
-  const { resetEntitlementCache } = await import('../app/js/lib/entitlement.js');
-  resetEntitlementCache();
-  globalThis.stratosDesktop = {
-    getEntitlement: async () => ({ premium: false, verified: true, mode: 'none', reason: 'No licence service is configured.' }),
-  };
   const { mount } = await import('../app/js/pilot/charts.js');
   const root = document.getElementById('view');
   const instance = await mount(root, { params: new URLSearchParams(''), directory: [], bridgeBase: '', health: null });
   assert.match(root.textContent, /Charts/);
-  assert.match(root.textContent, /ILS and LOC approaches open for every pilot/);
+  assert.match(root.textContent, /Every published chart opens here/);
   assert.match(root.textContent, /Not for navigation/);
-  assert.equal(root.querySelector('.premium-panel'), null, 'the upgrade dialog needs a selected chart');
-  assert.equal(root.querySelector('.chart-page'), null, 'no document is rendered for a free pilot');
+  assert.equal(root.querySelector('.premium-panel'), null, 'no upgrade dialog exists');
+  assert.equal(root.querySelector('.chart-page'), null, 'no document is rendered until one is picked');
   instance.destroy();
   assert.equal(root.innerHTML, '');
 });
 
-test('a free pilot opens an ILS approach but is stopped at every other procedure', async () => {
+test('every chart opens with no licence, not just ILS and LOC', async () => {
   installDom();
-  const { resetEntitlementCache } = await import('../app/js/lib/entitlement.js');
-  resetEntitlementCache();
-  globalThis.stratosDesktop = {
-    getEntitlement: async () => ({ premium: false, verified: true, mode: 'none', reason: 'No licence service is configured.' }),
-  };
 
   const { parseFaaAirport } = await import('../app/js/lib/charts.js');
   const records = parseFaaAirport(META, 'KSFO').records;
@@ -417,28 +397,22 @@ test('a free pilot opens an ILS approach but is stopped at every other procedure
   const rows = [...root.querySelectorAll('.chart-row')];
   const ilsRow = rows.find(row => /ILS OR LOC/.test(row.textContent));
   const rnavRow = rows.find(row => /RNAV/.test(row.textContent));
-  assert.ok(ilsRow.textContent.includes('Free'), 'the ILS row is labelled free');
-  assert.ok(rnavRow.textContent.includes('Premium'), 'the RNAV row still carries the Premium lock');
-  assert.equal(root.querySelectorAll('.chart-row-lock').length, 6, 'the ILS approach is the only free document in this fixture');
+  assert.equal(root.querySelectorAll('.chart-access').length, 0, 'no row is labelled Free or Premium');
+  assert.equal(root.querySelectorAll('.chart-row-lock').length, 0, 'nothing in the catalogue is locked');
 
   rnavRow.click();
-  await until(() => Boolean(root.querySelector('.premium-panel')));
-  assert.match(root.textContent, /ILS and LOC approach charts are free/);
-  assert.equal(requested.some(url => url.includes('/chart?')), false, 'a locked chart downloads nothing');
+  await until(() => requested.some(url => url.includes('/chart?')));
+  assert.match(requested.find(url => url.includes('/chart?')), /00375R19R\.PDF/, 'the RNAV approach opens');
+  assert.equal(root.querySelector('.premium-panel'), null, 'no licence prompt is shown');
 
   ilsRow.click();
-  await until(() => requested.some(url => url.includes('/chart?')));
-  assert.equal(root.querySelector('.premium-panel'), null, 'the free chart is not covered by the upgrade panel');
+  await until(() => requested.filter(url => url.includes('/chart?')).length > 1);
+  assert.equal(root.querySelector('.premium-panel'), null, 'the ILS chart opens too');
   instance.destroy();
 });
 
-test('the catalogue labels every row, keeps LOC free, and restores the last chart', async () => {
+test('the catalogue opens every row and restores the last chart', async () => {
   installDom();
-  const { resetEntitlementCache } = await import('../app/js/lib/entitlement.js');
-  resetEntitlementCache();
-  globalThis.stratosDesktop = {
-    getEntitlement: async () => ({ premium: false, verified: true, mode: 'none', reason: 'No licence service is configured.' }),
-  };
 
   const { parseFaaAirport } = await import('../app/js/lib/charts.js');
   const records = [
@@ -477,14 +451,13 @@ test('the catalogue labels every row, keeps LOC free, and restores the last char
   assert.match(card.textContent, /San Francisco Intl/);
   assert.match(card.textContent, /United States/);
   assert.match(card.textContent, /Instrument approaches/);
-  assert.match(card.textContent, /2 free/);
-  assert.equal(root.querySelectorAll('.chart-access.is-free').length, 2, 'ILS and LOC are labelled Free');
-  assert.equal(root.querySelectorAll('.chart-row-lock').length, 6, 'the other six documents are locked for a free pilot');
+  assert.match(card.textContent, /8 documents/);
+  assert.equal(root.querySelectorAll('.chart-access').length, 0, 'no row is labelled Free or Premium');
+  assert.equal(root.querySelectorAll('.chart-row-lock').length, 0, 'nothing is locked');
 
   const rows = [...root.querySelectorAll('.chart-row')];
   const locRow = rows.find(row => /LOC RWY 19L/.test(row.textContent));
   assert.ok(locRow, 'the LOC row is in the catalogue');
-  assert.match(locRow.textContent, /Free/);
   locRow.click();
   await until(() => requested.some(url => url.includes('00375LOC19L.PDF')));
   assert.equal(root.querySelector('.premium-panel'), null, 'LOC opens without the upgrade dialog');
@@ -503,11 +476,8 @@ test('the catalogue labels every row, keeps LOC free, and restores the last char
   second.destroy();
 });
 
-test('a verified Premium pilot can open every category with no locks', async () => {
+test('every category opens, with no locks and no licence', async () => {
   installDom();
-  const { resetEntitlementCache } = await import('../app/js/lib/entitlement.js');
-  resetEntitlementCache();
-  globalThis.stratosDesktop = { getEntitlement: async () => ({ premium: true, verified: true, mode: 'licence', plan: 'Premium' }) };
 
   const { parseFaaAirport } = await import('../app/js/lib/charts.js');
   const records = parseFaaAirport(META, 'KSFO').records;
@@ -536,11 +506,11 @@ test('a verified Premium pilot can open every category with no locks', async () 
     params: new URLSearchParams('icao=KSFO'), directory: [], bridgeBase: 'http://127.0.0.1:8765', health: null,
   });
   await until(() => root.querySelectorAll('.chart-row').length === 7);
-  assert.equal(root.querySelectorAll('.chart-row-lock').length, 0, 'no Premium row is locked for a licensed pilot');
-  assert.equal(root.querySelectorAll('.chart-access').length, 7, 'every row carries a Free/Premium label');
+  assert.equal(root.querySelectorAll('.chart-row-lock').length, 0, 'no row is locked');
+  assert.equal(root.querySelectorAll('.chart-access').length, 0, 'no row carries a Free or Premium label');
 
-  // Open the first document in every published category. A Premium licence
-  // must never show the upgrade dialog for any of them.
+  // Open the first document in every published category: no licence is
+  // involved, so none of them may show a prompt.
   const categories = [...root.querySelectorAll('details.chart-group')].map(group => group.dataset.group);
   assert.deepEqual(categories, ['diagram', 'sid', 'star', 'approach', 'minimums', 'hotspot']);
   for (const category of categories) {
@@ -555,16 +525,14 @@ test('a verified Premium pilot can open every category with no locks', async () 
   instance.destroy();
 });
 
-test('a verified Premium pilot gets the empty viewer ready to open a chart', async () => {
+test('the empty viewer offers every chart and no upgrade prompt', async () => {
   installDom();
-  const { resetEntitlementCache } = await import('../app/js/lib/entitlement.js');
-  resetEntitlementCache();
-  globalThis.stratosDesktop = { getEntitlement: async () => ({ premium: true, verified: true, mode: 'licence', plan: 'Premium' }) };
   const { mount } = await import('../app/js/pilot/charts.js');
   const root = document.getElementById('view');
   const instance = await mount(root, { params: new URLSearchParams(''), directory: [], bridgeBase: '', health: null });
   assert.match(root.textContent, /Select a chart/);
-  assert.doesNotMatch(root.textContent, /Stratos Premium/);
+  assert.match(root.textContent, /Every published chart opens here/);
+  assert.doesNotMatch(root.textContent, /Premium|Upgrade/);
   instance.destroy();
 });
 

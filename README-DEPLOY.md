@@ -296,9 +296,9 @@ A paired phone that is not on the PC's network still gets the desktop's traffic.
 
 All of them reject invalid input with 400 and never echo secrets.
 
-### Premium entitlement (charts)
+### Charts are free
 
-ILS and LOC approach charts — including ILS OR LOC, LOC/DME and localizer-only procedures — are free for everyone. Every other category needs a verified Premium entitlement. The same rule is applied by `accessLevel()` / `canOpenChart()` in `app/js/lib/charts.js`, so the catalogue label and the viewer gate cannot drift apart. There is **no payment implementation** in this repository, and the app does not treat a browser flag as a purchase. The Electron main process decides:
+Every chart in the catalogue opens for everyone: diagrams, SIDs, STARs, every approach family, minimums, hot spots and supplements. There is no paid tier, no licence check and no daily quota, and neither chart page reads an entitlement any more. The entitlement code in `app/js/lib/entitlement.js` is kept for the rest of the app, and the Electron main process still answers `premium:status`:
 
 - Running from source (`npm start`, or `electron .`) reports a labelled development entitlement automatically, so a developer can test the gated surfaces without configuring anything.
 - A packaged build needs one of the variables below.
@@ -308,7 +308,7 @@ ILS and LOC approach charts — including ILS OR LOC, LOC/DME and localizer-only
 | `STRATOS_ENTITLEMENT_URL` | HTTPS endpoint that receives `{ token, product }` and answers `{ active, plan, expiresAt }`. Without it, no purchase can be verified. |
 | `STRATOS_DEV_PREMIUM=1` | Development override for a packaged build. The UI labels it “Development entitlement — this build has no payment step”, so it can never be mistaken for a purchase. |
 
-The token is read from `entitlement.json` in the app's user-data folder (beside `stratos.log`), so it never enters the page, the DOM or browser storage. Hosted pages have no trusted channel: they can open the free ILS/LOC approaches and nothing else until a licence service exists for them.
+The token is read from `entitlement.json` in the app's user-data folder (beside `stratos.log`), so it never enters the page, the DOM or browser storage. Hosted pages have no trusted channel, which no longer affects charts: every chart opens there too.
 
 Chart providers are declared in `app/js/lib/chartproviders.js`: regions, categories, format, update method, attribution and licence position. `faa-dtpp` is the only `integrated` provider; Canada, Europe and Australia are `link-only` until a redistribution licence exists. Add a licensed provider by adding its descriptor and fetch adapter, then flipping its status — the catalogue and viewer do not need to change.
 

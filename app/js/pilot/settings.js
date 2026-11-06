@@ -391,7 +391,7 @@ export async function mount(root, ctx) {
       <div class="section-title"><h2>About</h2></div>
       <div class="card">
         <div class="row"><strong>Stratos</strong><span class="tag">v${esc(APP_VERSION)}</span></div>
-        <p class="help" style="margin-top:8px">Independent flight-simulation companion. Map data © OpenStreetMap contributors. Airports: OurAirports (CC0). Weather: NOAA Aviation Weather Center (public domain). Charts: FAA Digital Terminal Procedures (U.S. Government work, public domain) fetched from the publishing authority. Licensed providers such as Jeppesen are never bundled, and Premium does not grant redistribution rights.</p>
+        <p class="help" style="margin-top:8px">Independent flight-simulation companion. Map data © OpenStreetMap contributors. Airports: OurAirports (CC0). Weather: NOAA Aviation Weather Center (public domain). Charts: FAA Digital Terminal Procedures (U.S. Government work, public domain) fetched from the publishing authority. Every published category opens in the viewer, and licensed providers such as Jeppesen are never bundled.</p>
         <p class="help" style="margin-top:6px">Not for real-world navigation. No analytics or personal data are collected by the app itself.</p>
       </div>
     `;

@@ -180,7 +180,7 @@ export async function mount(root, ctx) {
               <a class="btn small ghost" href="https://ourairports.com/airports/${encodeURIComponent(selected)}/" target="_blank" rel="noopener">OurAirports ↗</a>
               <a class="btn small ghost" href="https://www.airnav.com/airport/${encodeURIComponent(selected)}" target="_blank" rel="noopener">AirNav ↗</a>
             </div>
-            <p class="help" style="margin-top:10px">Official terminal procedures open in the integrated Charts viewer (Premium). Reference links above open outside Stratos; licensed providers such as Jeppesen are never bundled.</p>
+            <p class="help" style="margin-top:10px">Official terminal procedures open in the integrated Charts viewer. Reference links above open outside Stratos; licensed providers such as Jeppesen are never bundled.</p>
           </div>
 
           <div class="notice"><div><strong>Data notes.</strong><br>OurAirports is public domain (CC0). Runway headings are derived from designators unless the bridge supplies threshold coordinates. Weather is NOAA public-domain data and can be unavailable.</div></div>

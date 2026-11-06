@@ -81,7 +81,7 @@ Measured on Windows 11 x64, Node v26, Chromium (Playwright headless) at 1440x900
 
 Why this does not compete with the simulator:
 
-- pdf.js (1.9 MB with standard fonts) is dynamically imported the first time a pilot opens a chart, free or Premium. Browsing the catalogue downloads no renderer at all, and an airport whose provider is not integrated is answered from the local registry without a network request.
+- pdf.js (1.9 MB with standard fonts) is dynamically imported the first time a pilot opens a chart. Browsing the catalogue downloads no renderer at all, and an airport whose provider is not integrated is answered from the local registry without a network request.
 - The viewer owns exactly one canvas and one pdf.js document. Switching charts destroys the previous document; zooming cancels the in-flight render task before starting the next one.
 - The backing store is capped at device pixel ratio 2, and at 1.25 above 200% zoom, so a deep zoom costs a bounded amount of canvas memory instead of growing with zoom².
 - Documents are cached in their own IndexedDB database, keyed by cycle and filename, capped at 40 entries / 30 days. A repeated open does no network request.

@@ -5,17 +5,14 @@
  * days). The document is a PDF rendered by a locally bundled pdf.js build, so
  * the chart stays inside Stratos: no redirect and no third-party frame.
  *
- * ILS approaches are free for everyone. Every other document needs a verified
- * Premium entitlement; the catalogue itself is visible either way.
+ * Every published document opens for everyone: there is no paid tier, no
+ * licence check and no gate, so the catalogue and the viewer cannot drift.
  */
 
 import { esc, fmtDateTime, num, tag, toast } from '../ui.js';
 import { airportResultHtml, searchDirectory, wireSearch } from './common.js';
 import {
-  describeEntitlement, getEntitlement, isPremium, premiumSetupNotes,
-} from '../lib/entitlement.js';
-import {
-  FAA_SOURCE, accessLevel, canOpenChart, chartCacheKey, groupCharts, isPdfBytes,
+  FAA_SOURCE, chartCacheKey, groupCharts, isPdfBytes,
   normaliseCatalogue, readChartCache, searchCharts, validityState, validityText, writeChartCache,
 } from '../lib/charts.js';
 import { coverageText, officialSourcesFor } from '../lib/chartdir.js';
@@ -313,7 +310,6 @@ export async function mount(root, ctx) {
   let message = '';
   let filter = '';
   let selected = null;
-  let entitlement = null;
   let documentState = { status: 'idle' };  // idle | loading | ready | error
   let viewer = null;
   let cleanups = [];
@@ -321,8 +317,7 @@ export async function mount(root, ctx) {
   let collapsedGroups = new Set();
   let pendingChartId = saved && saved.chartId ? String(saved.chartId) : null;
 
-  // Only the airport and the chart id are kept, and only for this session. No
-  // licence state is ever written here: entitlement comes from the main process.
+  // Only the airport and the chart id are kept, and only for this session.
   function readSelection() {
     try {
       const value = globalThis.sessionStorage && globalThis.sessionStorage.getItem(SELECTION_KEY);
@@ -456,13 +451,11 @@ export async function mount(root, ctx) {
 
   function renderHeader() {
     const count = document.getElementById('chart-count');
-    const freeCount = catalogue ? catalogue.charts.filter(chart => accessLevel(chart) === 'free').length : 0;
-    if (count) count.textContent = catalogue ? `${catalogue.charts.length} documents · ${freeCount} free` : '';
+    if (count) count.textContent = catalogue ? `${catalogue.charts.length} documents` : '';
     const el = document.getElementById('charts-head');
     if (!el) return;
     const cycle = catalogue && catalogue.cycle;
     const window = catalogue ? formatWindow(catalogue.effective, catalogue.expires) : '';
-    const premium = isPremium(entitlement);
     el.innerHTML = `
       <div class="page-head">
         <div>
@@ -471,15 +464,12 @@ export async function mount(root, ctx) {
         </div>
         <span class="spacer"></span>
         ${catalogue && cycle ? `<span class="tag" title="${esc(catalogue.sourceName)} publication cycle">Cycle ${esc(String(cycle))}</span>` : ''}
-        ${premium
-          ? tag('Premium', 'good', describeEntitlement(entitlement))
-          : tag('ILS/LOC free', 'accent', 'ILS and LOC approach charts open without a licence. Every other category needs a verified Premium licence.')}
+        ${tag('All charts open', 'good', 'Every published category opens in the viewer — no licence, account or payment.')}
       </div>
       ${catalogue ? `<div class="chart-meta">
         <span><b>${esc(catalogue.sourceName)}</b></span>
         <span>${esc(catalogue.licence)}</span>
         ${window ? `<span>${esc(window)}</span>` : ''}
-        ${premium ? '' : `<span>${freeCount} ILS/LOC charts open free</span>`}
         ${catalogue.checkedAt ? `<span>Checked ${esc(fmtDateTime(catalogue.checkedAt))}</span>` : ''}
         <span class="spacer"></span>
         <a href="${esc((coverage.provider && coverage.provider.terms) || FAA_SOURCE.terms)}" target="_blank" rel="noopener">Source ↗</a>
@@ -503,8 +493,6 @@ export async function mount(root, ctx) {
     if (!catalogue) return '';
     const name = airportName(icao);
     const groups = groupCharts(catalogue.charts);
-    const free = catalogue.charts.filter(chart => accessLevel(chart) === 'free').length;
-    const premium = catalogue.charts.length - free;
     return `<div class="chart-airport">
       <div class="chart-airport-id">
         <span class="route-id">${esc(icao)}</span>
@@ -512,8 +500,6 @@ export async function mount(root, ctx) {
       </div>
       <div class="chart-airport-stats">
         <span><b>${catalogue.charts.length}</b> documents</span>
-        <span class="is-free"><b>${free}</b> free</span>
-        <span><b>${premium}</b> Premium</span>
       </div>
       <div class="chart-airport-cats">${groups.map(group => `<span class="chart-cat">${esc(group.label)} <b>${group.charts.length}</b></span>`).join('')}</div>
     </div>`;
@@ -526,7 +512,7 @@ export async function mount(root, ctx) {
     if (phase === 'idle') {
       host.innerHTML = `<div class="chart-empty">
         <strong>Search an airport to see its published charts</strong>
-        <span>Type an ICAO code or an airport name — KJFK, Kennedy, CYYZ, EGLL. ILS and LOC approaches are free; every other category is Premium.</span>
+        <span>Type an ICAO code or an airport name — KJFK, Kennedy, CYYZ, EGLL. Every published category opens in the viewer.</span>
         <span>${esc(coverageSummary())}</span>
       </div>`;
       return;
@@ -568,16 +554,13 @@ export async function mount(root, ctx) {
       host.innerHTML = `${airportCard()}<div class="chart-empty"><strong>No chart matches “${esc(filter)}”</strong><span>Clear the filter to see all ${num(catalogue.charts.length)} documents.</span></div>`;
       return;
     }
-    const premium = isPremium(entitlement);
     host.innerHTML = `${airportCard()}${groupCharts(charts).map(group => `
       <details class="chart-group" data-group="${esc(group.key)}" ${collapsedGroups.has(group.key) ? '' : 'open'}>
         <summary class="chart-group-head">
           <h3>${esc(group.label)}</h3>
-          <span class="hint">${group.charts.length} · ${group.charts.filter(chart => accessLevel(chart) === 'free').length} free</span>
+          <span class="hint">${group.charts.length}</span>
         </summary>
         ${group.charts.map(chart => {
-          const level = accessLevel(chart);
-          const open = canOpenChart(chart, premium);
           return `
           <button class="chart-row${selected && selected.id === chart.id ? ' is-active' : ''}" data-chart="${esc(chart.id)}" type="button">
             <span class="chart-row-main">
@@ -590,10 +573,7 @@ export async function mount(root, ctx) {
               </span>
             </span>
             ${validityState(chart) === 'expired' ? tag('expired', 'bad', validityText(chart)) : ''}
-            ${level === 'free'
-              ? '<span class="chart-access is-free" title="Open to every pilot">Free</span>'
-              : `<span class="chart-access is-premium${open ? '' : ' chart-row-lock'}" title="${open ? 'Included in your licence' : 'Requires a verified Premium licence'}">Premium</span>`}
-            ${open ? '<span class="chart-row-go">Open</span>' : ''}
+            <span class="chart-row-go">Open</span>
           </button>`;
         }).join('')}
       </details>`).join('')}`;
@@ -615,23 +595,13 @@ export async function mount(root, ctx) {
   function renderViewer() {
     const host = document.getElementById('chart-viewer');
     if (!host) return;
-    // An ILS or LOC approach is free, and a PDF the pilot opened from their own
-    // disk is theirs; the Premium dialog covers neither.
-    const unlocked = canOpenChart(selected, isPremium(entitlement)) || Boolean(selected && selected.local);
-
     if (!selected) {
       destroyViewer();
       host.innerHTML = `<div class="chart-empty tall">
         <strong>Select a chart</strong>
-        <span>ILS and LOC approaches open for every pilot. Zoom with the wheel, drag to pan, double-click to toggle fit, and use the toolbar for pages, reset and full screen.</span>
+        <span>Every published chart opens here. Zoom with the wheel, drag to pan, double-click to toggle fit, and use the toolbar for pages, reset and full screen.</span>
         <span class="chart-empty-hint">${esc(coverageSummary())}</span>
       </div>`;
-      return;
-    }
-    if (!unlocked) {
-      destroyViewer();
-      host.innerHTML = premiumPanel();
-      wirePremiumPanel(host);
       return;
     }
     if (documentState.status === 'error') {
@@ -786,12 +756,6 @@ export async function mount(root, ctx) {
     documentState = { status: 'loading' };
     renderList();
     renderViewer();
-    if (!canOpenChart(chart, isPremium(entitlement))) {
-      // Nothing was requested: leave no "opening" state behind for a licence
-      // check that succeeds later. The dialog is what the pilot sees.
-      documentState = { status: 'idle' };
-      return;
-    }
     saveSelection(chart);
     revealViewer();
     try {
@@ -816,61 +780,6 @@ export async function mount(root, ctx) {
       documentState = { status: 'error', error: error && error.name === 'AbortError' ? 'The download timed out.' : (error.message || String(error)) };
       renderViewer();
     }
-  }
-
-  function premiumPanel() {
-    const notes = premiumSetupNotes().map(note => `<li>${esc(note)}</li>`).join('');
-    const title = selected && (selected.title || selected.pdf);
-    return `<div class="chart-lock-panel premium-panel" role="dialog" aria-modal="true" aria-labelledby="chart-lock-title">
-      <div class="chart-lock-top">
-        <span class="premium-kicker">Stratos Premium</span>
-        <button class="chart-lock-close" data-premium-close aria-label="Close" title="Back to the catalogue">×</button>
-      </div>
-      <h2 id="chart-lock-title">This chart needs Premium</h2>
-      <p class="premium-lede"><b>ILS and LOC approach charts are free.</b> Diagrams, SIDs, STARs, RNAV/VOR/NDB approaches and the other supported categories open inside Stratos with a verified Premium licence — zoom, pan, fit, pages and full screen, with no redirect and no embedded third-party site.</p>
-      ${title ? `<div class="premium-target">Selected: <b>${esc(selected.icao)} · ${esc(title)}</b></div>` : ''}
-      <ul class="premium-list">
-        <li><b>Airport diagrams</b><span>Aerodrome and parking charts.</span></li>
-        <li><b>Departures and arrivals</b><span>SIDs, STARs and obstacle departures.</span></li>
-        <li><b>Other approaches</b><span>RNAV/RNP, VOR, NDB and additional supported procedures.</span></li>
-        <li><b>Supplements</b><span>Minimums, hot spots and supplementary documents.</span></li>
-      </ul>
-      <p class="premium-setup">Only categories the selected source actually publishes appear in the catalogue. Canada, Europe and Australia currently offer official publisher links, because Stratos has no licence to embed those charts.</p>
-      <div class="premium-status">
-        <b>${isPremium(entitlement) ? 'Premium active' : entitlement && entitlement.mode === 'unavailable' ? 'Premium unavailable here' : 'No active licence'}</b>
-        <span>${esc(describeEntitlement(entitlement))}</span>
-      </div>
-      <details class="premium-setup">
-        <summary>What still has to be configured</summary>
-        <p>Charts are gated by the app's trusted entitlement channel. This build does not process payments, and a value in browser storage is never treated as a purchase.</p>
-        <ol>${notes}</ol>
-        <p>For testing, start the desktop app with <code>STRATOS_DEV_PREMIUM=1</code>; it reports a clearly labelled development entitlement.</p>
-      </details>
-      <div class="btn-row">
-        <a class="btn" id="premium-upgrade" href="#settings" title="Open Settings to connect or refresh a licence">Upgrade</a>
-        <button class="btn ghost" data-premium-close>Back to charts</button>
-        <button class="btn ghost" id="premium-retry">Re-check licence</button>
-      </div>
-    </div>`;
-  }
-
-  function wirePremiumPanel(host) {
-    const close = () => {
-      selected = null;
-      documentState = { status: 'idle' };
-      saveSelection(null);
-      renderList();
-      renderViewer();
-    };
-    host.querySelectorAll('[data-premium-close]').forEach(button => button.addEventListener('click', close));
-    document.getElementById('premium-retry')?.addEventListener('click', async () => {
-      entitlement = await getEntitlement({ force: true });
-      renderList();
-      // If the pilot had already picked a locked chart, honour that pick now.
-      if (isPremium(entitlement) && selected) { await openChart(selected); return; }
-      renderViewer();
-      toast(isPremium(entitlement) ? 'Premium licence verified.' : 'No verified Premium licence on this device.', isPremium(entitlement) ? 'good' : '');
-    });
   }
 
   root.innerHTML = `
@@ -944,9 +853,6 @@ export async function mount(root, ctx) {
   });
   cleanups.push(() => clearTimeout(filterTimer));
 
-  // Resolve the entitlement first, so the list never opens with a lock icon
-  // that belongs to an unverified state.
-  entitlement = await getEntitlement();
   if (icao) {
     // The catalogue is a network read; showing the shell first keeps the page
     // responsive and gives the loading state somewhere to live.

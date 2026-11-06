@@ -143,37 +143,6 @@ export function approachType(title) {
   return null;
 }
 
-/**
- * Charts that need no licence: ILS and localiser approaches.
- *
- * The FAA titles them "ILS RWY 28L", "ILS OR LOC RWY 04R", "LOC/DME RWY 22L"
- * or "ILS PRM ...". A localiser-only procedure is free for the same reason an
- * ILS is: the app's product rule is that lateral-guidance approaches stay open
- * to every pilot. Diagrams, SIDs, STARs and every other approach stay Premium.
- *
- * The FAA documents are public-domain government data either way — the gate is
- * a product decision, not a licence restriction.
- */
-export function isFreeChart(chart) {
-  if (!chart || chart.category !== 'approach') return false;
-  if (chart.approach === 'ILS' || chart.approach === 'LOC' || chart.approach === 'ILS/LOC') return true;
-  // A source may omit the family; the published title is then the authority.
-  return /\bILS\b|\bLOC\b|\bLOCALIZER\b/.test(String(chart.title || '').toUpperCase());
-}
-
-/** 'free' | 'premium' — the single classification every surface should show. */
-export function accessLevel(chart) {
-  return isFreeChart(chart) ? 'free' : 'premium';
-}
-
-/**
- * Whether this entitlement may open the chart. A verified Premium licence
- * opens everything; otherwise only ILS/LOC procedures are available.
- */
-export function canOpenChart(chart, premium = false) {
-  return Boolean(premium) || isFreeChart(chart);
-}
-
 /** Runway identifiers mentioned by a procedure title ("ILS RWY 28L"). */
 export function runwaysInTitle(title) {
   const found = [];

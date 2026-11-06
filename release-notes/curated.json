@@ -1,4 +1,16 @@
 {
+  "2.1.33": {
+    "summary": "Every chart is free: the paywall is gone from the tracker and the EFB.",
+    "changelog": {
+      "features": [
+        "Every published terminal procedure now opens for everyone — diagrams, SIDs, STARs, ILS/LOC, RNAV, VOR, NDB, minimums and hot spots — with no licence, account or payment."
+      ],
+      "improvements": [
+        "The catalogue drops its Free and Premium labels and its lock dialog, and reports document counts instead.",
+        "The EFB chart viewer opens the selected document directly instead of answering it with a licence panel."
+      ]
+    }
+  },
   "2.1.32": {
     "summary": "Worldwide SID, STAR, approach and missed-approach geometry on the map, from the pilot's own simulator.",
     "changelog": {

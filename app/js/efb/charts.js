@@ -12,10 +12,9 @@ import {
   esc, fmtAge, searchAirports, loadChartCatalogue, filterCharts, chartSourcesFor,
 } from './common.js';
 import {
-  canOpenChart, chartCacheKey, isPdfBytes, officialChartUrl, readChartCache,
+  chartCacheKey, isPdfBytes, officialChartUrl, readChartCache,
   validityState, validityText, writeChartCache,
 } from '../lib/charts.js';
-import { getEntitlement, isPremium } from '../lib/entitlement.js';
 import { defaultBridgeBase, isHostedPage } from '../bridge.js';
 import { ChartViewer } from '../pilot/charts.js';
 
@@ -69,7 +68,7 @@ export async function mount(root, ctx) {
   let selected = null;
   let documentState = { status: 'idle' };
   let viewer = null;
-  let entitlement = null;
+  
   let destroyed = false;
 
   root.innerHTML = `
@@ -214,16 +213,7 @@ export async function mount(root, ctx) {
       return;
     }
     viewerCard.classList.remove('is-centred');
-    const unlocked = canOpenChart(selected, isPremium(entitlement));
     const official = selected.pdf && selected.cycle ? officialChartUrl(selected.cycle, selected.pdf) : null;
-    if (!unlocked) {
-      viewerCard.innerHTML = `<div class="e-card" style="border:0;background:none">
-        <h3>${esc(selected.title || selected.pdf)} <span class="e-spacer"></span><span class="e-badge warn">Licence required</span></h3>
-        <p class="e-small e-muted">This document is part of the integrated chart service. A verified Premium licence is required to open it inside Stratos.</p>
-        ${official ? `<a class="e-btn" href="${esc(official)}" target="_blank" rel="noopener">Open the official PDF ↗</a>` : ''}
-      </div>`;
-      return;
-    }
     viewerCard.innerHTML = `
       <div class="e-row" style="margin-bottom:8px">
         <div style="min-width:0">
@@ -449,7 +439,6 @@ export async function mount(root, ctx) {
     });
   });
 
-  entitlement = await getEntitlement().catch(() => null);
   if (destroyed) return {};
 
   renderQuick();

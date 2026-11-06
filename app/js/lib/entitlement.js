@@ -13,11 +13,6 @@
 
 const CACHE_MS = 60 * 1000;
 const FEATURES = {
-  charts: {
-    key: 'charts',
-    label: 'Integrated charts',
-    description: 'Open official terminal procedures inside Stratos with zoom, pan, pages and full screen.',
-  },
   analytics: {
     key: 'analytics',
     label: 'Advanced analytics',
