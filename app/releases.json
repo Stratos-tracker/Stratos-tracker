@@ -3,53 +3,48 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.1.35",
+    "version": "2.1.36",
     "releasedAt": "2026-11-06",
     "severity": "normal",
-    "summary": "The update notice comes from version.json, opens the right installer, and the release page keeps four files.",
+    "summary": "The Settings update centre downloads the published installer instead of reporting an updater feed that is no longer published.",
     "changelog": {
-      "features": [
-        "Stratos checks version.json on startup and every six hours, and offers an available update in the app instead of depending on an updater feed.",
-        "The dialog shows the installed and published versions, the published notes, and Update Now or Remind me later; a required update explains why and cannot be postponed.",
-        "Update Now opens the installer for the platform that is running and leaves the installation, logbook, routes and settings untouched."
-      ],
+      "features": [],
       "improvements": [
-        "Publishing a release writes version.json beside releases.json, so the version, minimum supported version, download URLs, notes and date are one generated record.",
-        "The Settings update centre, the startup dialog and the manifest smoke test all read the same release object."
+        "Checking for updates still works on a build without the native updater, and the panel says plainly that an update is installed by running the published installer.",
+        "The action is called Download installer, and it opens the installer for the platform that is running: Setup.exe, the DMG, or the AppImage."
       ],
       "fixes": [
-        "A missing or unreachable manifest no longer produces updater errors on launch; the app carries on and checks again later.",
-        "The release page carries one installer per platform and nothing else."
+        "Settings → Updates no longer asks electron-updater for latest.yml, so a release without feeds can never fail there with Cannot find latest.yml.",
+        "A failed or refused update action is reported in one sentence with its own Retry, instead of a raw updater error with headers and stack text, and it no longer hides the saved release answer."
       ],
       "performance": [],
       "ui": [],
       "compatibility": [],
       "other": []
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.35/Stratos-Setup.exe",
-        "sha256": "6601a4550d6652e930ac6339369b9ca894fcabc8101bb0a373d4b2a688fa048b",
-        "size": 109264815
-      },
-      "mac-arm64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.35/Stratos-2.1.35-mac-arm64.dmg",
-        "sha256": "55e4c0f66a91480bf01796253072280ca43a750cfbca2cc7c7f3119f90f4e2d0",
-        "size": 125093903
-      },
-      "mac-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.35/Stratos-2.1.35-mac-x64.dmg",
-        "sha256": "fcbc69009c7db5c6f048e2513cb1754d8bf8f1558658eb79006e75814facd723",
-        "size": 130515343
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.35/Stratos-2.1.35-linux-x64.AppImage",
-        "sha256": "fcdabef73824254cb31c9b277134cf66629d7c5533efb98772a709d9f0f6d50a",
-        "size": 146133150
-      }
     }
   },
   "releases": [
+    {
+      "version": "2.1.36",
+      "releasedAt": "2026-11-06",
+      "severity": "normal",
+      "summary": "The Settings update centre downloads the published installer instead of reporting an updater feed that is no longer published.",
+      "changelog": {
+        "features": [],
+        "improvements": [
+          "Checking for updates still works on a build without the native updater, and the panel says plainly that an update is installed by running the published installer.",
+          "The action is called Download installer, and it opens the installer for the platform that is running: Setup.exe, the DMG, or the AppImage."
+        ],
+        "fixes": [
+          "Settings → Updates no longer asks electron-updater for latest.yml, so a release without feeds can never fail there with Cannot find latest.yml.",
+          "A failed or refused update action is reported in one sentence with its own Retry, instead of a raw updater error with headers and stack text, and it no longer hides the saved release answer."
+        ],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.1.35",
       "releasedAt": "2026-11-06",
@@ -1095,39 +1090,6 @@
         "compatibility": [],
         "other": [
           "Give the map page a status bar and a career strip."
-        ]
-      }
-    },
-    {
-      "version": "2.1.6",
-      "releasedAt": "2026-10-18",
-      "severity": "normal",
-      "summary": "1 new feature, 2 fixes and 3 interface changes.",
-      "changelog": {
-        "features": [
-          "Add a multi-station watchlist to the Weather Center."
-        ],
-        "improvements": [],
-        "fixes": [
-          "Correct the documented bridge data path to stratos-desktop.",
-          "Stop the bridge's pairing token from reaching the repository."
-        ],
-        "performance": [],
-        "ui": [
-          "Make the dashboard customizer reorderable by dragging and harden its saved layout.",
-          "Pin tracker panel surface colours per theme instead of computing them with color-mix.",
-          "Collapse the duplicated design tokens into one system and drop per-frame backdrop blur."
-        ],
-        "compatibility": [],
-        "other": [
-          "Check a published release's installer instead of trusting the upload.",
-          "Let the release stamp accept the version already in the repository.",
-          "Embed the full Weather Center in the map's METAR tab.",
-          "Stamp the release tag into the app and bridge version.",
-          "Name the airport in the Weather Center header and share one station request per search.",
-          "Assert that a saved dashboard order and density survive a reload.",
-          "Define card, tile and table surfaces once and alias the page class names to them.",
-          "Label map route points by name, enlarge TOC/TOD, and move SimBrief import into the Route panel."
         ]
       }
     }

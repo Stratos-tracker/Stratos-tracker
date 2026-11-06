@@ -139,6 +139,16 @@ function ensureStyles(doc = document) {
   doc.head.appendChild(style);
 }
 
+/** The updater's raw errors carry headers and stack noise; show one honest line. */
+function friendlyMessage(text) {
+  const raw = String(text == null ? '' : text).trim();
+  if (!raw) return 'The update could not start.';
+  if (/latest(-\w+)?\.ya?ml|Cannot find .*in the latest release|HttpError/i.test(raw)) {
+    return 'This build looked for an updater feed that releases no longer publish. Download the installer instead.';
+  }
+  return raw.split(/\r?\n|Headers:/)[0].slice(0, 220);
+}
+
 function esc(value) {
   return String(value == null ? '' : value).replace(/[&<>"']/g, c => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
@@ -372,6 +382,9 @@ export async function mountUpdateCenter({ root, installedVersion = APP_VERSION, 
     result: null,
     desktop: null,
     error: '',
+    // Kept apart from a failed check: an action the pilot just took is reported
+    // first, and it does not hide the saved answer.
+    actionError: '',
     progress: null,
   };
   let destroyed = false;
@@ -441,9 +454,11 @@ export async function mountUpdateCenter({ root, installedVersion = APP_VERSION, 
     if (destroyed) return;
     const release = latestRelease();
     const checked = state.result?.checkedAt;
-    const supported = state.desktop ? state.desktop.supported !== false : true;
+    // A build only installs by itself when the native updater is compiled in and
+    // enabled; every published release hands off to the installer instead.
+    const nativeReady = Boolean(desktop?.checkForUpdates) && (state.desktop ? state.desktop.supported !== false : true);
     const downloaded = Boolean(state.desktop?.downloaded);
-    const statusTone = state.error ? 'is-error' : '';
+    const statusTone = state.error || state.actionError ? 'is-error' : '';
     const progress = state.progress;
     const percent = progress && Number.isFinite(Number(progress.percent)) ? Number(progress.percent) : null;
 
@@ -464,7 +479,7 @@ export async function mountUpdateCenter({ root, installedVersion = APP_VERSION, 
           </div>
           <span style="flex:1"></span>
           <button class="su-btn" data-history type="button">Read the notes</button>
-          <button class="su-btn primary" data-apply type="button">${downloaded ? 'Restart to update' : 'Update now'}</button>
+          <button class="su-btn primary" data-apply type="button">${nativeReady && downloaded ? 'Restart to update' : 'Download installer'}</button>
         </div>` : ''}
       ${progress ? `<div class="su-progress ${progress.state === 'error' ? 'is-error' : ''}">
         <div class="su-progress-row"><span>${esc(progress.label || (progress.state === 'error' ? 'Download failed' : 'Downloading the installer'))}</span>
@@ -473,12 +488,12 @@ export async function mountUpdateCenter({ root, installedVersion = APP_VERSION, 
         <p class="su-progress-note">${esc(progress.message || progress.note || (progress.state === 'downloaded' ? 'Verified against the published checksum. Restart Stratos to finish.' : ''))}</p>
       </div>` : ''}
       <div class="su-actions">
-        <button class="su-btn" data-check type="button" ${state.checking || !supported ? 'disabled' : ''}>${state.checking ? 'Checking…' : 'Check for updates'}</button>
-        ${state.error ? '<button class="su-btn" data-retry type="button">Retry</button>' : ''}
+        <button class="su-btn" data-check type="button" ${state.checking ? 'disabled' : ''}>${state.checking ? 'Checking…' : 'Check for updates'}</button>
+        ${state.error || state.actionError ? '<button class="su-btn" data-retry type="button">Retry</button>' : ''}
         <span class="su-status ${statusTone}">${statusText()}</span>
       </div>
       ${state.result?.cached && state.result.error ? `<p class="su-centre-empty">The release server could not be reached (${esc(state.result.error)}). This panel is showing the saved answer from ${esc(formatChecked(state.result.checkedAt))}; nothing was invented.</p>` : ''}
-      ${!supported ? '<p class="su-centre-empty">This build cannot download updates itself. Installed Windows copies update from the official release download.</p>' : ''}
+      ${!nativeReady && desktop ? '<p class="su-centre-empty">Updates are installed by running the published installer: download it, run it, and Stratos reopens with your logbook, routes and settings untouched.</p>' : ''}
       <div class="su-history" aria-label="Release history">
         ${(state.result?.releases || []).slice(0, 8).map(item => `
           <button class="su-release ${item.version === latestVersion() ? 'is-latest' : ''}" data-release="${esc(item.version)}" type="button">
@@ -507,6 +522,9 @@ export async function mountUpdateCenter({ root, installedVersion = APP_VERSION, 
   function statusText() {
     if (state.checking) return 'Contacting the release manifest…';
     if (state.progress?.state === 'error') return state.progress.message || 'The download failed.';
+    // A refused or failed action outranks the saved answer: it is the thing the
+    // pilot just tried and the reason it did not happen.
+    if (state.actionError) return state.actionError;
     // A cached answer is still a real answer: the release it names is available.
     // The network failure is reported beside it, not instead of it.
     if (state.result?.state === 'available') {
@@ -515,7 +533,7 @@ export async function mountUpdateCenter({ root, installedVersion = APP_VERSION, 
     if (state.result?.state === 'current') {
       return `v${installedVersion} is current.${state.result.error ? ' This is the last saved answer; the release server could not be reached.' : ''}`;
     }
-    if (state.desktop?.error) return state.desktop.error;
+    if (state.desktop?.error) return friendlyMessage(state.desktop.error);
     if (state.error) return `Update check failed: ${state.error}`;
     if (state.result?.state === 'error') return `Update check failed: ${state.result.error}`;
     return 'Not checked yet.';
@@ -529,24 +547,56 @@ export async function mountUpdateCenter({ root, installedVersion = APP_VERSION, 
 
   async function applyUpdate() {
     const release = latestRelease();
-    if (desktop?.installUpdate && state.desktop?.downloaded) {
-      await desktop.installUpdate().catch(error => { state.error = error.message; });
+    const nativeReady = Boolean(desktop?.checkForUpdates) && (state.desktop ? state.desktop.supported !== false : true);
+    if (nativeReady && desktop?.installUpdate && state.desktop?.downloaded) {
+      await desktop.installUpdate().catch(error => { state.actionError = friendlyMessage(error.message); });
       return;
     }
-    if (desktop?.checkForUpdates) {
+    if (nativeReady) {
       state.progress = { state: 'checking', label: 'Asking for the release…', percent: null };
       paint();
       const result = await desktop.checkForUpdates().catch(error => ({ error: error.message }));
-      if (result?.supported === false) {
-        state.error = 'This build cannot update itself. Install the published Windows release.';
-      } else if (result?.error) {
-        state.error = result.error;
-      } else if (result?.downloaded) {
-        await desktop.installUpdate?.();
-      } else if (result?.available) {
-        state.progress = { state: 'downloading', label: 'Downloading the installer…', percent: null, message: 'Stratos verifies the package before it runs.' };
+      if (result?.error) state.actionError = friendlyMessage(result.error);
+      else if (result?.downloaded) await desktop.installUpdate?.();
+      else if (result?.available) state.progress = { state: 'downloading', label: 'Downloading the installer…', percent: null, message: 'Stratos verifies the package before it runs.' };
+      else state.progress = null;
+      paint();
+      return;
+    }
+    // The published release ships installers, not updater feeds, so updating is a
+    // download the pilot runs. Nothing here replaces the installed files, and a
+    // failure never leaves the installation half-written.
+    if (release) {
+      const url = downloadFor(release, platformKey());
+      if (!url) {
+        state.actionError = `No installer is published for ${platformName().toLowerCase()} yet.`;
+        paint();
+        return;
+      }
+      state.actionError = '';
+      state.progress = {
+        state: 'downloading',
+        label: 'Opening the installer download…',
+        percent: null,
+        message: 'Your logbook, routes, aircraft profiles and SimBrief settings are not touched.',
+      };
+      paint();
+      let opened = { ok: true };
+      if (desktop?.openUpdateDownload) {
+        opened = await desktop.openUpdateDownload(url).catch(error => ({ ok: false, message: error.message }));
       } else {
+        window.open(url, '_blank', 'noopener');
+      }
+      if (opened && opened.ok === false) {
         state.progress = null;
+        state.actionError = friendlyMessage(opened.message);
+      } else {
+        state.progress = {
+          state: 'downloaded',
+          label: `Stratos v${release.version} is downloading`,
+          percent: 100,
+          message: 'Run the installer when it finishes: Stratos closes and reopens with your data intact. On macOS, open the DMG and drag Stratos to Applications.',
+        };
       }
       paint();
       return;

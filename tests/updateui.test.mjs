@@ -152,3 +152,60 @@ test('the changelog viewer groups the published notes and can be closed', async 
   modal.querySelector('[data-close]').click();
   assert.equal(document.querySelector('.su-backdrop'), null);
 });
+
+test('the update centre hands off to the published installer instead of an updater feed', async () => {
+  installDom();
+  const { writeCache } = await import('../app/js/lib/updates.js');
+  const { mountUpdateCenter } = await import('../app/js/update-ui.js');
+
+  const installer = 'https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.15/Stratos-Setup.exe';
+  const newer = release('2.1.15', {
+    downloads: { windows: { url: installer, sha256: 'a'.repeat(64), size: 1000 } },
+  });
+  writeCache(undefined, { schemaVersion: 1, latest: newer, releases: [newer] }, '2026-10-20T09:00:00.000Z');
+
+  const opened = [];
+  // A desktop bridge from a build whose native updater is off, which is what the
+  // published release ships: it can open a download but cannot feed-update.
+  const desktop = {
+    getUpdateStatus: async () => ({ supported: false, mode: 'installer', currentVersion: '2.1.14' }),
+    checkForUpdates: async () => ({ supported: false, mode: 'installer' }),
+    openUpdateDownload: async url => { opened.push(url); return { ok: true }; },
+  };
+
+  const root = document.getElementById('centre');
+  const handle = await mountUpdateCenter({
+    root,
+    installedVersion: '2.1.14',
+    desktop,
+    fetchImpl: async () => { throw new Error('offline'); },
+    urls: ['https://example.test/version.json'],
+  });
+  await new Promise(resolve => setTimeout(resolve, 20));
+
+  const text = root.textContent;
+  assert.doesNotMatch(text, /cannot update itself|latest\.ya?ml/, 'the old feed failure is never shown');
+  const apply = root.querySelector('[data-apply]');
+  assert.ok(apply, 'an available release offers an action');
+  assert.equal(apply.textContent.trim(), 'Download installer');
+  assert.equal(root.querySelector('[data-check]').disabled, false, 'checking for updates still works without a native updater');
+
+  apply.click();
+  await new Promise(resolve => setTimeout(resolve, 30));
+  assert.deepEqual(opened, [installer], 'the installer for this platform is opened, not a feed download');
+  assert.doesNotMatch(root.textContent, /latest\.ya?ml|HttpError/, 'no raw updater error is surfaced');
+
+  // If the bridge refuses the URL, the centre explains it in one line.
+  desktop.openUpdateDownload = async () => ({ ok: false, message: 'That update link does not point at a Stratos download host.' });
+  root.querySelector('[data-apply]').click();
+  await new Promise(resolve => setTimeout(resolve, 30));
+  assert.match(root.textContent, /does not point at a Stratos download host/);
+  handle.destroy();
+});
+
+test('a raw updater error is reduced to one useful sentence', async () => {
+  const source = await import('node:fs').then(fs => fs.readFileSync('app/js/update-ui.js', 'utf8'));
+  assert.match(source, /function friendlyMessage/, 'the centre cleans updater errors before showing them');
+  assert.match(source, /updater feed that releases no longer publish/);
+  assert.match(source, /Download the installer instead/);
+});

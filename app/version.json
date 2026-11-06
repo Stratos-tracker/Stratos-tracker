@@ -1,56 +1,28 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.1.35",
+  "latestVersion": "2.1.36",
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-06",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.35/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.35/Stratos-Setup.exe",
-      "sha256": "6601a4550d6652e930ac6339369b9ca894fcabc8101bb0a373d4b2a688fa048b",
-      "size": 109264815
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.35/Stratos-2.1.35-mac-arm64.dmg",
-      "sha256": "55e4c0f66a91480bf01796253072280ca43a750cfbca2cc7c7f3119f90f4e2d0",
-      "size": 125093903
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.35/Stratos-2.1.35-mac-x64.dmg",
-      "sha256": "fcbc69009c7db5c6f048e2513cb1754d8bf8f1558658eb79006e75814facd723",
-      "size": 130515343
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.35/Stratos-2.1.35-linux-x64.AppImage",
-      "sha256": "fcdabef73824254cb31c9b277134cf66629d7c5533efb98772a709d9f0f6d50a",
-      "size": 146133150
-    }
-  },
-  "summary": "The update notice comes from version.json, opens the right installer, and the release page keeps four files.",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "The Settings update centre downloads the published installer instead of reporting an updater feed that is no longer published.",
   "reason": "",
   "releaseNotes": [
-    "Stratos checks version.json on startup and every six hours, and offers an available update in the app instead of depending on an updater feed.",
-    "The dialog shows the installed and published versions, the published notes, and Update Now or Remind me later; a required update explains why and cannot be postponed.",
-    "Update Now opens the installer for the platform that is running and leaves the installation, logbook, routes and settings untouched.",
-    "Publishing a release writes version.json beside releases.json, so the version, minimum supported version, download URLs, notes and date are one generated record.",
-    "The Settings update centre, the startup dialog and the manifest smoke test all read the same release object.",
-    "A missing or unreachable manifest no longer produces updater errors on launch; the app carries on and checks again later.",
-    "The release page carries one installer per platform and nothing else."
+    "Checking for updates still works on a build without the native updater, and the panel says plainly that an update is installed by running the published installer.",
+    "The action is called Download installer, and it opens the installer for the platform that is running: Setup.exe, the DMG, or the AppImage.",
+    "Settings → Updates no longer asks electron-updater for latest.yml, so a release without feeds can never fail there with Cannot find latest.yml.",
+    "A failed or refused update action is reported in one sentence with its own Retry, instead of a raw updater error with headers and stack text, and it no longer hides the saved release answer."
   ],
   "notes": {
-    "features": [
-      "Stratos checks version.json on startup and every six hours, and offers an available update in the app instead of depending on an updater feed.",
-      "The dialog shows the installed and published versions, the published notes, and Update Now or Remind me later; a required update explains why and cannot be postponed.",
-      "Update Now opens the installer for the platform that is running and leaves the installation, logbook, routes and settings untouched."
-    ],
+    "features": [],
     "improvements": [
-      "Publishing a release writes version.json beside releases.json, so the version, minimum supported version, download URLs, notes and date are one generated record.",
-      "The Settings update centre, the startup dialog and the manifest smoke test all read the same release object."
+      "Checking for updates still works on a build without the native updater, and the panel says plainly that an update is installed by running the published installer.",
+      "The action is called Download installer, and it opens the installer for the platform that is running: Setup.exe, the DMG, or the AppImage."
     ],
     "fixes": [
-      "A missing or unreachable manifest no longer produces updater errors on launch; the app carries on and checks again later.",
-      "The release page carries one installer per platform and nothing else."
+      "Settings → Updates no longer asks electron-updater for latest.yml, so a release without feeds can never fail there with Cannot find latest.yml.",
+      "A failed or refused update action is reported in one sentence with its own Retry, instead of a raw updater error with headers and stack text, and it no longer hides the saved release answer."
     ],
     "performance": [],
     "ui": [],
