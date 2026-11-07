@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-07",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.38/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.38/Stratos-Setup.exe",
+      "sha256": "580342bf53bd255c5ab0c7e9a17f05c46eb9af165eb4b85f7ab7a188d1b03e5d",
+      "size": 109852716
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.38/Stratos-2.1.38-mac-arm64.dmg",
+      "sha256": "289442275de4ccd3e2aba45cd1b6144ac846df60fe74444de55b21b132fb3389",
+      "size": 125687494
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.38/Stratos-2.1.38-mac-x64.dmg",
+      "sha256": "a0528eeda1efaa67bd3bfe0af55174a3a900a2f46da38eaaca54591a89b5ac3e",
+      "size": 131161455
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.38/Stratos-2.1.38-linux-x64.AppImage",
+      "sha256": "1f5b177808da29bfba2eee9232f1585d2af982e5d1920c034860ca51b305dee2",
+      "size": 146768784
+    }
+  },
   "summary": "The Flight Deck map can now show live rain, wind and turbulence, a solar night side, a configurable own-aircraft symbol and a 3D recorded track, all moving smoothly with the map.",
   "reason": "",
   "releaseNotes": [
