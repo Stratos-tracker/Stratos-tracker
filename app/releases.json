@@ -3,52 +3,86 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.1.37",
+    "version": "2.1.38",
     "releasedAt": "2026-11-07",
     "severity": "normal",
-    "summary": "SID paths now start on the runway and follow the published initial-climb heading to its altitude-gated turn, including SLEEK2 runway 8 at KDEN.",
+    "summary": "The Flight Deck map can now show live rain, wind and turbulence, a solar night side, a configurable own-aircraft symbol and a 3D recorded track, all moving smoothly with the map.",
     "changelog": {
       "features": [
-        "A departure now begins at the runway threshold, follows the runway centreline to the departure end, and continues on the published initial-climb heading before turning to the first fix.",
-        "The bundled FAA dataset keeps a no-fix heading leg's course and altitude instead of dropping it, and carries runway-end elevation so the altitude turn can be placed."
+        "The Flight Deck map gains optional animated RainViewer radar, Open-Meteo wind streamlines and a smoothed turbulence layer, each switched on from Map settings.",
+        "The aircraft you are flying now has its own colour, size, halo and trail width, while traffic keeps its own styling.",
+        "A 3D recorded-track view shows the flight in perspective: left-drag turns it, right-drag tilts it, and the latest point carries an aircraft marker."
       ],
       "improvements": [
-        "The initial climb is carried through SimBrief import, the route builder, the EFB, the map and the stored route, so every page draws the same departure.",
-        "The procedure note says when a turn is altitude-gated and when its lateral position is drawn at 500 ft/NM, rather than presenting a planning line as a published ground distance."
+        "The map's day/night layer is a solar-elevation mask with a smooth twilight band, rebuilt as the map moves instead of lagging behind a pan.",
+        "The route ahead starts at the aircraft while the flown path stays behind it, and the 3D view uses the same recorded track as the map.",
+        "Weather requests are cached and refreshed on a timer, so radar frames and model fields stay smooth without repeated calls on every frame.",
+        "Turbulence is drawn as an interpolated amber-to-red field instead of separate blobs, and wind is drawn as moving streamlines instead of arrows."
       ],
       "fixes": [
-        "SLEEK2 runway 8 at KDEN no longer turns toward KIDNG at the threshold; it climbs on 082.5° to 5,934 ft before the right turn.",
-        "A procedure without a published heading course and altitude gets no synthetic turn point."
+        "Panning with the day/night layer on no longer leaves a diagonal night wedge, because the mask follows the current map view.",
+        "A route saved before procedure geometry was versioned now re-resolves its departure instead of keeping the old runway turn.",
+        "The 3D view no longer opens a browser context menu on right-drag or changes pitch when the pointer only pans.",
+        "Turning off the own trail or changing its width no longer affects traffic trails or traffic colours."
       ],
-      "performance": [],
-      "ui": [],
-      "compatibility": [],
-      "other": []
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.37/Stratos-Setup.exe",
-        "sha256": "9ba77f95f7ffb1af0ca84ece5ae80b6847fa04de52d694b52350f4408c0b46d7",
-        "size": 109822719
-      },
-      "mac-arm64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.37/Stratos-2.1.37-mac-arm64.dmg",
-        "sha256": "2ef25825ca2478803ee2292689629ebe2817bd4c47a88ed1f5ca1e1123338c7b",
-        "size": 125649538
-      },
-      "mac-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.37/Stratos-2.1.37-mac-x64.dmg",
-        "sha256": "39cc39f3ec89868238b048d48026bed498e25f3adb7860e50f31aec12a222cb1",
-        "size": 131100670
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.37/Stratos-2.1.37-linux-x64.AppImage",
-        "sha256": "c63dc6ec1fc9422b0b3fc35be4e463c16baa9ca453fcbea93d19a28f9f2f2e43",
-        "size": 146740037
-      }
+      "performance": [
+        "Radar, wind and turbulence are built from cached, coarse rasters that update only when the map view or refresh timer changes.",
+        "The day/night mask rebuilds in the same frame as a pan, keeping map movement at a steady frame rate."
+      ],
+      "ui": [
+        "Map settings now has an Own aircraft & trail card with a colour picker, size and trail-width sliders, halo and trail switches, and a reset action.",
+        "Map layers are grouped in the Map settings panel, with short notes on the weather sources and what they do not replace."
+      ],
+      "compatibility": [
+        "Stored routes from earlier builds are upgraded in place, so no saved flight plan needs to be re-created.",
+        "The weather layers need a network connection to RainViewer and Open-Meteo; the rest of the map works without them."
+      ],
+      "other": [
+        "Rain, wind and turbulence are planning aids, not PIREPs, SIGMETs or official weather."
+      ]
     }
   },
   "releases": [
+    {
+      "version": "2.1.38",
+      "releasedAt": "2026-11-07",
+      "severity": "normal",
+      "summary": "The Flight Deck map can now show live rain, wind and turbulence, a solar night side, a configurable own-aircraft symbol and a 3D recorded track, all moving smoothly with the map.",
+      "changelog": {
+        "features": [
+          "The Flight Deck map gains optional animated RainViewer radar, Open-Meteo wind streamlines and a smoothed turbulence layer, each switched on from Map settings.",
+          "The aircraft you are flying now has its own colour, size, halo and trail width, while traffic keeps its own styling.",
+          "A 3D recorded-track view shows the flight in perspective: left-drag turns it, right-drag tilts it, and the latest point carries an aircraft marker."
+        ],
+        "improvements": [
+          "The map's day/night layer is a solar-elevation mask with a smooth twilight band, rebuilt as the map moves instead of lagging behind a pan.",
+          "The route ahead starts at the aircraft while the flown path stays behind it, and the 3D view uses the same recorded track as the map.",
+          "Weather requests are cached and refreshed on a timer, so radar frames and model fields stay smooth without repeated calls on every frame.",
+          "Turbulence is drawn as an interpolated amber-to-red field instead of separate blobs, and wind is drawn as moving streamlines instead of arrows."
+        ],
+        "fixes": [
+          "Panning with the day/night layer on no longer leaves a diagonal night wedge, because the mask follows the current map view.",
+          "A route saved before procedure geometry was versioned now re-resolves its departure instead of keeping the old runway turn.",
+          "The 3D view no longer opens a browser context menu on right-drag or changes pitch when the pointer only pans.",
+          "Turning off the own trail or changing its width no longer affects traffic trails or traffic colours."
+        ],
+        "performance": [
+          "Radar, wind and turbulence are built from cached, coarse rasters that update only when the map view or refresh timer changes.",
+          "The day/night mask rebuilds in the same frame as a pan, keeping map movement at a steady frame rate."
+        ],
+        "ui": [
+          "Map settings now has an Own aircraft & trail card with a colour picker, size and trail-width sliders, halo and trail switches, and a reset action.",
+          "Map layers are grouped in the Map settings panel, with short notes on the weather sources and what they do not replace."
+        ],
+        "compatibility": [
+          "Stored routes from earlier builds are upgraded in place, so no saved flight plan needs to be re-created.",
+          "The weather layers need a network connection to RainViewer and Open-Meteo; the rest of the map works without them."
+        ],
+        "other": [
+          "Rain, wind and turbulence are planning aids, not PIREPs, SIGMETs or official weather."
+        ]
+      }
+    },
     {
       "version": "2.1.37",
       "releasedAt": "2026-11-07",
@@ -1118,28 +1152,6 @@
         "other": [
           "Place SimBrief TOD on a 3 degree descent path."
         ]
-      }
-    },
-    {
-      "version": "2.1.8",
-      "releasedAt": "2026-10-18",
-      "severity": "normal",
-      "summary": "1 new feature, 2 fixes and 1 interface change.",
-      "changelog": {
-        "features": [
-          "Add Route Discovery: pick a mood, get three real routes."
-        ],
-        "improvements": [],
-        "fixes": [
-          "Correct the test counts in the report.",
-          "Fix the collapsed grid and repaint the chrome in midnight navy."
-        ],
-        "performance": [],
-        "ui": [
-          "Drop the unused rail component and the dead nav hook."
-        ],
-        "compatibility": [],
-        "other": []
       }
     }
   ]

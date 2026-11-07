@@ -1133,7 +1133,7 @@ test('the map draws waypoint symbols over a route line it never rewrites', async
   // the one this test names, and it is painted before any marker. It draws the
   // plan through the sampled, date-line-aware path helper rather than joining
   // projected points, which is what made a Pacific leg sweep the whole chart.
-  const line = 'if(route.length&&!CH.on&&L.rte){cx.save();cx.globalAlpha=.35;cx.strokeStyle=C.route;cx.lineWidth=12;cx.lineCap=\'round\';cx.lineJoin=\'round\';drawPlanLine(drawnRoutePoints());if(liveOk()&&route.length>1){const pr=routeProg(),pts=[route[0]];let acc=0;for(let i=0;i<route.length-1;i++){acc+=dist(route[i],route[i+1]);if(acc<pr)pts.push(route[i+1])}pts.push(pos(pr));cx.globalAlpha=.6;drawPlanLine(pts)}cx.restore()';
+  const line = 'if(route.length&&!CH.on&&L.rte){cx.save();cx.globalAlpha=.62;cx.strokeStyle=C.route;cx.lineWidth=12;cx.lineCap=\'round\';cx.lineJoin=\'round\';drawPlanLine(routeAhead());cx.restore()';
   assert.ok(page.includes(line), 'the route line statement is unchanged');
   assert.ok(page.indexOf(line) < page.indexOf('drawRouteMarkers();}'), 'markers are painted after the line');
   // That helper is the fix for an oceanic plan: a great circle sampled along its
@@ -1193,7 +1193,7 @@ test('a selected waypoint turns purple without touching the route line', async (
   assert.match(page, /if\(act=='close'\)\{wpIdx=null;/, 'closing the card clears the selection');
   assert.match(page, /if\(e\.key=='Escape'\)\{if\(wpCard\)closeRouteCard\(\);wpIdx=null\}/, 'Escape clears it too');
   // The same statement that paints the line must still be there.
-  assert.match(page, /cx\.globalAlpha=\.35;cx\.strokeStyle=C\.route;cx\.lineWidth=12/, 'the route line is unchanged');
+  assert.match(page, /cx\.globalAlpha=\.62;cx\.strokeStyle=C\.route;cx\.lineWidth=12/, 'the route line is unchanged');
 });
 
 test('the tracking card minimizes to a SID and STAR summary', async () => {
@@ -1277,7 +1277,7 @@ test('the flown trail is a continuous line coloured by height above the ground',
   const draw = page.slice(page.indexOf('function drawTrail(a,cur,own,key)'), page.indexOf('function trails()'));
   assert.doesNotMatch(draw, /globalAlpha=\.[0-9]/, 'the drawn path is opaque');
   assert.doesNotMatch(draw, /f\*f|wmax/, 'there is no tapering width');
-  assert.match(draw, /strokeRun\(0,m-1,TRAIL_EDGE,7\)[\s\S]*strokeRun\(from,to,ink,4\)/, 'a dark casing under a 4 px coloured line');
+  assert.match(draw, /strokeRun\(0,m-1,TRAIL_EDGE,7\*tw\)[\s\S]*strokeRun\(from,to,ink,4\*tw\)/, 'a dark casing under a 4 px coloured line, scaled for the own trail');
   // Consecutive samples either side of the date line sit at opposite edges of
   // the chart; joined, that segment sweeps the whole map.
   assert.match(draw, /trailCut=\(a,b\)=>Math\.abs\(a\[0\]-b\[0\]\)>trailWorld\/2/, 'the trail breaks at the date line instead of sweeping the chart');
@@ -1324,7 +1324,7 @@ test('published SID and STAR layers come from real data, under the route line', 
   assert.match(page, /const layers=Array\.isArray\(window\.PROCLAYERS\)/, 'it draws only what the deck resolved');
   assert.match(page, /for\(const segment of layer\.segments\)/, 'every published section is its own stroke');
   assert.match(page, /cx\.strokeStyle=color;cx\.globalAlpha=\.32;cx\.lineWidth=11/, 'every procedure path shares the route band width');
-  assert.ok(page.indexOf('drawProcedurePaths();') < page.indexOf('cx.globalAlpha=.35;cx.strokeStyle=C.route;cx.lineWidth=12'), 'procedure paths sit under the route line');
+  assert.ok(page.indexOf('drawProcedurePaths();') < page.indexOf('cx.globalAlpha=.62;cx.strokeStyle=C.route;cx.lineWidth=12'), 'procedure paths sit under the route line');
   const start = page.indexOf('function strokeProcedureSegment(');
   const stop = page.indexOf('function mkPlanLabel(');
   const block = page.slice(start, stop);

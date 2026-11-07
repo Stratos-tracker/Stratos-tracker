@@ -474,5 +474,42 @@
       "compatibility": [],
       "other": []
     }
+  },
+  "2.1.38": {
+    "summary": "The Flight Deck map can now show live rain, wind and turbulence, a solar night side, a configurable own-aircraft symbol and a 3D recorded track, all moving smoothly with the map.",
+    "changelog": {
+      "features": [
+        "The Flight Deck map gains optional animated RainViewer radar, Open-Meteo wind streamlines and a smoothed turbulence layer, each switched on from Map settings.",
+        "The aircraft you are flying now has its own colour, size, halo and trail width, while traffic keeps its own styling.",
+        "A 3D recorded-track view shows the flight in perspective: left-drag turns it, right-drag tilts it, and the latest point carries an aircraft marker."
+      ],
+      "improvements": [
+        "The map's day/night layer is a solar-elevation mask with a smooth twilight band, rebuilt as the map moves instead of lagging behind a pan.",
+        "The route ahead starts at the aircraft while the flown path stays behind it, and the 3D view uses the same recorded track as the map.",
+        "Weather requests are cached and refreshed on a timer, so radar frames and model fields stay smooth without repeated calls on every frame.",
+        "Turbulence is drawn as an interpolated amber-to-red field instead of separate blobs, and wind is drawn as moving streamlines instead of arrows."
+      ],
+      "fixes": [
+        "Panning with the day/night layer on no longer leaves a diagonal night wedge, because the mask follows the current map view.",
+        "A route saved before procedure geometry was versioned now re-resolves its departure instead of keeping the old runway turn.",
+        "The 3D view no longer opens a browser context menu on right-drag or changes pitch when the pointer only pans.",
+        "Turning off the own trail or changing its width no longer affects traffic trails or traffic colours."
+      ],
+      "performance": [
+        "Radar, wind and turbulence are built from cached, coarse rasters that update only when the map view or refresh timer changes.",
+        "The day/night mask rebuilds in the same frame as a pan, keeping map movement at a steady frame rate."
+      ],
+      "ui": [
+        "Map settings now has an Own aircraft & trail card with a colour picker, size and trail-width sliders, halo and trail switches, and a reset action.",
+        "Map layers are grouped in the Map settings panel, with short notes on the weather sources and what they do not replace."
+      ],
+      "compatibility": [
+        "Stored routes from earlier builds are upgraded in place, so no saved flight plan needs to be re-created.",
+        "The weather layers need a network connection to RainViewer and Open-Meteo; the rest of the map works without them."
+      ],
+      "other": [
+        "Rain, wind and turbulence are planning aids, not PIREPs, SIGMETs or official weather."
+      ]
+    }
   }
 }
