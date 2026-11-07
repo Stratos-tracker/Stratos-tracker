@@ -483,29 +483,13 @@ body[data-airline=""] .home-logo { opacity: .22; }
 }
 body[data-airline]:not([data-airline=""]) .home-airline-logo { opacity: 1; }
 .hb-mark { display: grid; place-items: center; }
-.hb-logo {
-  width: min(86vw, 980px);
-  height: clamp(220px, 34vh, 430px);
+.hb-symbol {
+  width: clamp(220px, 38vmin, 460px);
+  aspect-ratio: 1;
   background: var(--efb-accent);
   -webkit-mask: var(--brand-logo) center / contain no-repeat;
   mask: var(--brand-logo) center / contain no-repeat;
   opacity: .24;
-}
-.hb-roundel {
-  width: clamp(240px, 42vmin, 440px);
-  height: clamp(240px, 42vmin, 440px);
-  border-radius: 50%;
-  border: 1px solid var(--efb-accent-line);
-  background: radial-gradient(circle at 50% 34%, var(--efb-airline-glow), transparent 68%);
-  opacity: .32;
-}
-.hb-code {
-  font-size: clamp(90px, 16vmin, 170px);
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: .04em;
-  text-indent: .04em;
-  color: var(--efb-accent);
 }
 
 .home-bar {

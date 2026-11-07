@@ -96,3 +96,10 @@ the operator is still identified without copying artwork that cannot be shipped.
 3. Add the source, licence and any author credit to the table above.
 4. Point the airline's entry at `images/airlines/<ICAO>.svg` in
    `app/js/lib/airlines.js`.
+
+## Symbol-only crops
+
+`marks/<ICAO>.svg` are the same bundled files with the root `viewBox` narrowed
+to the airline's symbol, used for the EFB wallpaper so the deck shows the crane
+or the leaf without the wordmark. Nothing is redrawn or substituted; if a mark
+is lettering only, it gets no crop and the wallpaper stays a plain wash.

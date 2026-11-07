@@ -534,8 +534,9 @@ test('the airline dresses the whole bag, with a preview and a manual override', 
   assert.match(css, /body\[data-airline=""\] \.home-logo/, 'and only while no airline is loaded');
   assert.ok(/id="home-airline-logo"/.test(page), 'with the airline mark on the wallpaper');
   assert.match(shell, /function renderAirlineWallpaper/, 'drawn from the resolved airline');
-  assert.match(css, /\.hb-logo \{[^}]*mask: var\(--brand-logo\)/, 'so one tone runs across every airline');
+  assert.match(css, /\.hb-symbol \{[^}]*mask: var\(--brand-logo\)/, 'the symbol alone, masked into the airline tone');
   assert.match(css, /body\[data-airline\]:not\(\[data-airline=""\]\) \.home-airline-logo/, 'shown once an airline is resolved');
+  assert.doesNotMatch(shell, /hb-code/, 'never letters or a code on the wallpaper');
   assert.match(css, /body\[data-airline\]:not\(\[data-airline=""\]\) \.home-wall::after/, 'the wallpaper picks up the airline glow');
   assert.match(css, /\.et-airline b \{[^}]*background: var\(--efb-accent\)/, 'the header pill is drawn in the accent');
 

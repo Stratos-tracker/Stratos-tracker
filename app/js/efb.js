@@ -17,6 +17,7 @@ import {
 } from './efb/common.js';
 import { displayVersion } from './lib/version.js';
 import { airlineText, applyAirline, resolveAirline } from './lib/airlines.js';
+import { airlineMark } from './data/airline-marks.js';
 
 /* The rail, the router and the page titles all read this one list. */
 export const APPS = [
@@ -227,17 +228,18 @@ function renderAirlineMark(resolved) {
 }
 
 /*
- * The resolved airline's mark, laid large across the deck. A bundled wordmark
- * is masked into the airline's accent so one tone runs across every operator;
- * an operator without a licensed file gets its own code in a roundel instead.
- * The house theme clears it, and the Stratos mark in the wallpaper takes over.
+ * The resolved airline's symbol, laid large across the deck and masked into
+ * its accent. Only the crop in data/airline-marks.js is used: the wordmark is
+ * never drawn, and an operator with lettering-only artwork leaves the deck to
+ * its accent wash rather than stamping its name on the wallpaper. The house
+ * theme clears this and the Stratos wing takes over.
  */
 function renderAirlineWallpaper(air) {
   if (!dom.airlineWallpaper) return;
-  if (!air) { dom.airlineWallpaper.innerHTML = ''; return; }
-  dom.airlineWallpaper.innerHTML = air.logo
-    ? `<span class="hb-mark hb-logo" style="--brand-logo:url('${esc(air.logo)}')"></span>`
-    : `<span class="hb-mark hb-roundel"><span class="hb-code">${esc(airlineText(air))}</span></span>`;
+  const mark = air ? airlineMark(air.icao) : null;
+  dom.airlineWallpaper.innerHTML = mark
+    ? `<span class="hb-mark hb-symbol" style="--brand-logo:url('${esc(mark)}')"></span>`
+    : '';
 }
 
 /* ── navigation ──────────────────────────────────────────────────────── */
