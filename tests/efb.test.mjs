@@ -535,8 +535,10 @@ test('the airline dresses the whole bag, with a preview and a manual override', 
   assert.ok(/id="home-airline-logo"/.test(page), 'with the airline mark on the wallpaper');
   assert.match(shell, /function renderAirlineWallpaper/, 'drawn from the resolved airline');
   assert.match(css, /\.hb-symbol \{[^}]*mask: var\(--brand-logo\)/, 'the symbol alone, masked into the airline tone');
+  assert.match(css, /\.hb-wordmark \{[^}]*mask: var\(--brand-logo\)/, 'a wordmark where no symbol stands alone');
+  assert.match(css, /\.hb-name \{[^}]*font-size/, 'or the plain name when no artwork is bundled');
   assert.match(css, /body\[data-airline\]:not\(\[data-airline=""\]\) \.home-airline-logo/, 'shown once an airline is resolved');
-  assert.doesNotMatch(shell, /hb-code/, 'never letters or a code on the wallpaper');
+  assert.doesNotMatch(shell, /hb-code/, 'never a designator code on the wallpaper');
   assert.match(css, /body\[data-airline\]:not\(\[data-airline=""\]\) \.home-wall::after/, 'the wallpaper picks up the airline glow');
   assert.match(css, /\.et-airline b \{[^}]*background: var\(--efb-accent\)/, 'the header pill is drawn in the accent');
 

@@ -228,18 +228,23 @@ function renderAirlineMark(resolved) {
 }
 
 /*
- * The resolved airline's symbol, laid large across the deck and masked into
- * its accent. Only the crop in data/airline-marks.js is used: the wordmark is
- * never drawn, and an operator with lettering-only artwork leaves the deck to
- * its accent wash rather than stamping its name on the wallpaper. The house
- * theme clears this and the Stratos wing takes over.
+ * The deck wallpaper in three steps: the airline's symbol when one can stand
+ * on its own (the crane, the leaf, the Delta widget), otherwise the bundled
+ * wordmark, otherwise the airline's plain name when no artwork is shipped.
+ * All three are masked or drawn in the airline accent. The house theme clears
+ * this and the Stratos wing takes over.
  */
 function renderAirlineWallpaper(air) {
   if (!dom.airlineWallpaper) return;
-  const mark = air ? airlineMark(air.icao) : null;
-  dom.airlineWallpaper.innerHTML = mark
-    ? `<span class="hb-mark hb-symbol" style="--brand-logo:url('${esc(mark)}')"></span>`
-    : '';
+  if (!air) { dom.airlineWallpaper.innerHTML = ''; return; }
+  const mark = airlineMark(air.icao);
+  if (mark) {
+    dom.airlineWallpaper.innerHTML = `<span class="hb-mark hb-symbol" style="--brand-logo:url('${esc(mark)}')"></span>`;
+  } else if (air.logo) {
+    dom.airlineWallpaper.innerHTML = `<span class="hb-mark hb-wordmark" style="--brand-logo:url('${esc(air.logo)}')"></span>`;
+  } else {
+    dom.airlineWallpaper.innerHTML = `<span class="hb-name">${esc(air.name)}</span>`;
+  }
 }
 
 /* ── navigation ──────────────────────────────────────────────────────── */

@@ -491,6 +491,24 @@ body[data-airline]:not([data-airline=""]) .home-airline-logo { opacity: 1; }
   mask: var(--brand-logo) center / contain no-repeat;
   opacity: .24;
 }
+.hb-wordmark {
+  width: min(82vw, 780px);
+  height: clamp(130px, 20vh, 220px);
+  background: var(--efb-accent);
+  -webkit-mask: var(--brand-logo) center / contain no-repeat;
+  mask: var(--brand-logo) center / contain no-repeat;
+  opacity: .2;
+}
+.hb-name {
+  max-width: 86vw;
+  font-size: clamp(38px, 8vmin, 92px);
+  font-weight: 750;
+  line-height: 1.1;
+  letter-spacing: .01em;
+  text-align: center;
+  color: var(--efb-accent);
+  opacity: .2;
+}
 
 .home-bar {
   position: relative;
