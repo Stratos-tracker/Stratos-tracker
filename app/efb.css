@@ -682,6 +682,10 @@ body[data-wall="graphite"] .home-wall {
 .hi-notepad .hi-tile { background: linear-gradient(180deg, #ffd60a 0 27%, #ffffff 27%); }
 .hi-logbook .hi-tile { background: linear-gradient(160deg, #ffffff, #eef1f5); }
 .hi-settings .hi-tile { background: linear-gradient(160deg, #b9bec6, #6f757f 78%); }
+/* Downloaded app artwork: the image is the tile, so no tint, gloss or border. */
+.hi-tile.is-art { background: none; border-color: transparent; box-shadow: 0 10px 20px rgba(0, 0, 0, .42); }
+.hi-tile.is-art::after { display: none; }
+.hi-tile .hi-art { width: 100%; height: 100%; object-fit: cover; display: block; }
 .hi:hover .hi-tile {
   transform: translateY(-2px);
   filter: saturate(1.12) brightness(1.06);

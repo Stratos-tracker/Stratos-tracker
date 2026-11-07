@@ -22,7 +22,7 @@ import { airlineText, applyAirline, resolveAirline } from './lib/airlines.js';
 export const APPS = [
   {
     id: 'navigator', group: 'Flight', name: 'Navigator', title: 'Navigator', subtitle: 'Moving map, planned route and live progress',
-    icon: 'navigator', module: './efb/navigator.js',
+    icon: 'navigator', art: 'images/app-icons/safari.png', module: './efb/navigator.js',
   },
   {
     id: 'flightplan', group: 'Flight', name: 'Flight Planner', title: 'Flight Plan Builder', subtitle: 'Build the route, apply procedures, plan fuel and send it to the map',
@@ -34,7 +34,7 @@ export const APPS = [
   },
   {
     id: 'weather', group: 'Flight', name: 'Weather', title: 'Weather', subtitle: 'METAR, TAF and winds aloft',
-    icon: 'weather', module: './efb/weather.js',
+    icon: 'weather', art: 'images/app-icons/weather.png', module: './efb/weather.js',
   },
   {
     id: 'charts', group: 'Flight', name: 'Charts', title: 'Charts', subtitle: 'Airport and procedure documents',
@@ -74,7 +74,7 @@ export const APPS = [
   },
   {
     id: 'settings', group: 'Records', name: 'Settings', title: 'EFB Settings', subtitle: 'Preferences and connections',
-    icon: 'settings', module: './efb/settings.js',
+    icon: 'settings', art: 'images/app-icons/settings.png', module: './efb/settings.js',
   },
 ];
 
@@ -266,8 +266,13 @@ function markActive(id) {
 /* ── home screen ─────────────────────────────────────────────────────── */
 
 function tileMarkup(app, size = 44) {
+  // Three tiles use downloaded artwork as-is: the image already is the whole
+  // icon, so it fills the tile and the deck's tint and gloss step aside.
+  const art = app.art
+    ? `<img class="hi-art" src="${esc(app.art)}" alt="" width="${size}" height="${size}" decoding="async">`
+    : appIcon(app.icon, size);
   return `<a class="hi hi-${esc(app.id)}" href="#/${esc(app.id)}" data-open="${esc(app.id)}">
-    <span class="hi-tile">${appIcon(app.icon, size)}</span>
+    <span class="hi-tile${app.art ? ' is-art' : ''}">${art}</span>
     <span class="hi-label">${esc(app.name)}</span>
   </a>`;
 }
