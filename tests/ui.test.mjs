@@ -1133,7 +1133,7 @@ test('the map draws waypoint symbols over a route line it never rewrites', async
   // the one this test names, and it is painted before any marker. It draws the
   // plan through the sampled, date-line-aware path helper rather than joining
   // projected points, which is what made a Pacific leg sweep the whole chart.
-  const line = 'if(route.length&&!CH.on&&L.rte){cx.save();cx.globalAlpha=.35;cx.strokeStyle=C.route;cx.lineWidth=12;cx.lineCap=\'round\';cx.lineJoin=\'round\';drawPlanLine(route);if(liveOk()&&route.length>1){const pr=routeProg(),pts=[route[0]];let acc=0;for(let i=0;i<route.length-1;i++){acc+=dist(route[i],route[i+1]);if(acc<pr)pts.push(route[i+1])}pts.push(pos(pr));cx.globalAlpha=.6;drawPlanLine(pts)}cx.restore()';
+  const line = 'if(route.length&&!CH.on&&L.rte){cx.save();cx.globalAlpha=.35;cx.strokeStyle=C.route;cx.lineWidth=12;cx.lineCap=\'round\';cx.lineJoin=\'round\';drawPlanLine(drawnRoutePoints());if(liveOk()&&route.length>1){const pr=routeProg(),pts=[route[0]];let acc=0;for(let i=0;i<route.length-1;i++){acc+=dist(route[i],route[i+1]);if(acc<pr)pts.push(route[i+1])}pts.push(pos(pr));cx.globalAlpha=.6;drawPlanLine(pts)}cx.restore()';
   assert.ok(page.includes(line), 'the route line statement is unchanged');
   assert.ok(page.indexOf(line) < page.indexOf('drawRouteMarkers();}'), 'markers are painted after the line');
   // That helper is the fix for an oceanic plan: a great circle sampled along its
@@ -1156,7 +1156,7 @@ test('the map draws waypoint symbols over a route line it never rewrites', async
   assert.match(markerLayer, /function routeKind\(p\)/, 'symbols come from the point type, not from its position');
 
   // One shape per aeronautical meaning, in the reference palette.
-  for (const [shape, colour] of [['mkCross', '#3b82f6'], ['mkTri', '#d946ef'], ['mkDiamond', '#a855f7'], ['mkStar4', '#2dd4bf'], ['mkRing', '#'], ['mkSquare', '#fb7185'], ['mkHex', '#94a3b8']]) {
+  for (const [shape, colour] of [['mkCross', '#3b82f6'], ['mkTri', '#c084fc'], ['mkDiamond', '#f59e0b'], ['mkStar4', '#2dd4bf'], ['mkRing', '#'], ['mkSquare', '#fb7185'], ['mkHex', '#94a3b8']]) {
     assert.ok(page.includes(`function ${shape}(`), `${shape} exists`);
     assert.ok(page.includes(colour), `${colour} is in the palette`);
   }
@@ -1173,8 +1173,8 @@ test('the map draws waypoint symbols over a route line it never rewrites', async
   assert.match(page, /registrationFromTitle|mkPlanLabel/, 'the drawing layer is wired up');
   // TOC/TOD are read from the plan: a procedure tag and an airway are only used
   // when the imported plan states them, and TOC/TOD never become route points.
-  assert.match(page, /is_sid_star/, 'a SID/STAR tag is taken from the plan');
-  assert.match(page, /via_airway/, 'an airway fix is taken from the plan');
+  assert.match(page, /ss:String\(p\.ss\|\|''\)\.toLowerCase\(\)/, 'a SID/STAR tag is taken from the plan');
+  assert.match(page, /aw:p\.aw\|\|''/, 'an airway tag is taken from the plan');
   assert.match(page, /function planTocTod\(\)/, 'TOC/TOD are derived for drawing');
   assert.doesNotMatch(markerLayer, /route\.(push|unshift)\(/, 'TOC/TOD are not inserted into the route');
 
@@ -1208,7 +1208,8 @@ test('the tracking card minimizes to a SID and STAR summary', async () => {
   assert.match(page, /s=\(fExp\?fcPhotoHtml\(sel\):''\)\+fcAircraftHtml\(sel\)/, 'the photograph is hidden when minimized');
   assert.match(page, /data-fc-act="expand">Show details/, 'the minimized card says how to reopen it');
   assert.match(page, /localStorage\.getItem\('stratos\.cardExpanded'\)/, 'the state is remembered');
-  assert.match(page, /from the SimBrief plan/, 'the card says where the procedures came from');
+  assert.match(page, /from the '\+\(p\.source\|\|'flight plan'\)/, 'the card says where the procedures came from');
+  assert.match(page, /source:flightPlan\?\(ofp\?'SimBrief plan':'EFB plan'\)/, 'the flight card follows the same SimBrief or EFB plan as the chart');
   // Data the plan does not hold is never displayed as if it did.
   assert.match(page, /runway not in plan/, 'a missing runway is honest');
   assert.match(page, /Not in the plan/, 'a missing field says so');
@@ -1333,8 +1334,21 @@ test('published SID and STAR layers come from real data, under the route line', 
   assert.match(page, /data-dk-layer="star"/, 'so is a STAR');
   assert.match(page, /data-dk-layer="approach"/, 'and an approach');
   assert.match(page, /data-dk-layer="missed"/, 'and a missed approach layer, off by default');
+  assert.match(page, /function procAt\(x,y\)/, 'procedure fixes have their own hit test');
+  assert.match(page, /openRouteCard\(pc,x,y\)/, 'a procedure fix opens the map detail card');
+  assert.match(page, /data-wc="proc-focus"/, 'the procedure card can centre the chart on its fix');
+  assert.match(page, /function procCardHtml\(\)/, 'the procedure card is its own detail surface');
+  assert.match(page, /cardRow\('Runway'/, 'the procedure card names the runway');
+  assert.match(page, /cardRow\('Transition'/, 'and the selected transition');
+  assert.match(page, /function deckProcedurePlan\(\)/, 'the map adopts an EFB plan\'s stored procedure records');
+  assert.match(page, /const sid=owned\.sid\|\|null,star=owned\.star\|\|null/, 'the EFB SID and STAR are read from the stored plan');
+  assert.match(page, /window\.PROCKINDS/, 'the map uses the deck\'s palette for any missing layer colour');
   assert.match(page, /fcProcHtml\(o\)/, 'the card reports the procedure source');
   assert.match(page, /PROCG\.notes\.join\(' · '\)/, 'and any limitation the source reported');
+  assert.match(page, /function drawProcedureRouteLine\(\)/, 'the filed route carries the procedure colours');
+  assert.match(page, /routeSegmentKind\(points\[j-1\],points\[j\]\)===kind/, 'consecutive legs of one procedure are one stroke');
+  assert.match(page, /kind=='sid'&&!L\.procSid/, 'the SID toggle hides its route segment');
+  assert.match(page, /kind=='star'&&!L\.procStar/, 'the STAR toggle hides its route segment');
 });
 
 test('a dead telemetry socket is noticed and reopened', async () => {

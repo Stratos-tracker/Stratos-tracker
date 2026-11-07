@@ -178,6 +178,29 @@ function ofpTextOf(text) {
 }
 
 /**
+ * The fix list in a SimBrief OFP. Current json=v2 responses publish `navlog` as
+ * an array; older responses wrap the same entries in `navlog.fix`, which may be
+ * one object when the plan has a single entry. A numerically keyed object is
+ * accepted too, as some XML-to-JSON shapes use that form. Nothing is invented.
+ */
+export function navlogFixes(data) {
+  const navlog = data && data.navlog;
+  if (Array.isArray(navlog)) return navlog;
+  const fix = navlog && navlog.fix;
+  if (Array.isArray(fix)) return fix;
+  if (fix && typeof fix === 'object') return [fix];
+  if (navlog && typeof navlog === 'object' && !Array.isArray(navlog)) {
+    const numeric = Object.keys(navlog)
+      .filter(key => /^\d+$/.test(key))
+      .sort((a, b) => Number(a) - Number(b))
+      .map(key => navlog[key])
+      .filter(value => value && typeof value === 'object');
+    if (numeric.length) return numeric;
+  }
+  return [];
+}
+
+/**
  * Normalise a raw SimBrief OFP (the json=v2 response) into a compact, JSON-safe
  * record. Missing fields come back null; nothing is derived to fill them.
  */
@@ -192,7 +215,7 @@ export function parseOfp(json, fetchedAt = Date.now()) {
   const weights = json.weights || {};
   const times = json.times || {};
   const params = json.params || {};
-  const navFixes = json.navlog && Array.isArray(json.navlog.fix) ? json.navlog.fix : [];
+  const navFixes = navlogFixes(json);
   const units = /lb/i.test(String(params.units || general.units || '')) ? 'lb' : 'kg';
   const airline = upper(general.icao_airline);
   const flightNumber = str(general.flight_number);
@@ -200,6 +223,12 @@ export function parseOfp(json, fetchedAt = Date.now()) {
 
   const ofp = {
     fetchedAt,
+    // The cycle the plan was calculated against. SimBrief publishes it in
+    // `params.airac`; procedure geometry is matched to it wherever the local
+    // CIFP data carries a cycle of its own.
+    airac: upper(params.airac),
+    generatedAt: firstNum(params.time_generated),
+    requestId: str(params.request_id),
     units,
     flight: {
       callsign: airline && flightNumber ? `${airline}${flightNumber}` : null,
@@ -219,6 +248,8 @@ export function parseOfp(json, fetchedAt = Date.now()) {
     origin: {
       icao: upper(origin.icao_code),
       name: str(origin.name),
+      lat: num(origin.pos_lat),
+      lon: num(origin.pos_long),
       rwy: upper(origin.plan_rwy),
       sid: upper(general.sid_ident || origin.sid_ident),
       sidTrans: upper(general.sid_trans || origin.sid_trans),
@@ -226,11 +257,14 @@ export function parseOfp(json, fetchedAt = Date.now()) {
     destination: {
       icao: upper(dest.icao_code),
       name: str(dest.name),
+      lat: num(dest.pos_lat),
+      lon: num(dest.pos_long),
       rwy: upper(dest.plan_rwy),
       star: upper(general.star_ident || dest.star_ident),
       starTrans: upper(general.star_trans || dest.star_trans),
-      approach: upper(dest.approach_ident),
-      approachRwy: upper(dest.approach_rwy),
+      approach: upper(dest.approach_ident || dest.approach),
+      approachTrans: upper(dest.approach_trans || dest.approach_transition || general.approach_trans || general.approach_transition),
+      approachRwy: upper(dest.approach_rwy || dest.approach_runway),
     },
     alternate: { icao: upper(alt.icao_code), name: str(alt.name) },
     aircraft: {
@@ -284,6 +318,12 @@ export function parseOfp(json, fetchedAt = Date.now()) {
       // published so a map can choose a symbol without inferring it from the
       // identifier.
       type: str(fix.type).toLowerCase(),
+      // These are the plan's own procedure and airway tags. The map uses them
+      // for its symbols, and the route builder replaces the procedure tags only
+      // when it has verified geometry to put in their place.
+      isSidStar: String(fix.is_sid_star || '') === '1',
+      stage: upper(fix.stage),
+      viaAirway: upper(fix.via_airway),
     })),
   };
   // The procedures are taken from the plan's own fields and route, including a
@@ -337,19 +377,41 @@ export function clearOfp(storage) {
 
 function routeIdents(route) {
   return (route || [])
-    .map(point => String((point && point.id) || '').toUpperCase())
-    .filter(id => id && !APP_POINT_IDS.has(id));
+    .filter(point => {
+      const id = String((point && point.id) || '').toUpperCase();
+      const tag = String((point && point.ss) || '').toLowerCase();
+      // The imported SID/STAR legs and its runway threshold are additions to
+      // the OFP navlog, not edits of the en-route route.
+      return id && !APP_POINT_IDS.has(id) && tag !== 'sid' && tag !== 'star' && tag !== 'app' && tag !== 'approach' && !/^RW/i.test(id);
+    })
+    .map(point => String(point.id).toUpperCase());
 }
 
 /**
  * Whether the loaded route still matches the imported OFP.
- * 'match' - same waypoint sequence; 'changed' - the route was edited after import;
- * 'unknown' - the OFP carries no navlog to compare against.
+ * 'match' - same en-route waypoint sequence; 'changed' - the route was edited
+ * after import; 'unknown' - the OFP carries no navlog to compare against.
+ *
+ * A SimBrief import adds verified SID/STAR legs and a runway threshold around
+ * the navlog. Those are not edits, so the procedure points are removed from
+ * both sides before comparing, and an origin the OFP omitted is ignored.
  */
 export function compareRouteWithOfp(route, ofp) {
   if (!ofp || !Array.isArray(ofp.fixes) || !ofp.fixes.length) return 'unknown';
-  const planned = ofp.fixes.map(fix => fix.ident).filter(id => !APP_POINT_IDS.has(id));
+  const routePoints = Array.isArray(route) ? route : [];
+  const procedureIds = new Set(routePoints
+    .filter(point => /^(sid|star|app|approach)$/i.test(String((point && point.ss) || '')))
+    .map(point => String(point.id || '').toUpperCase())
+    .filter(Boolean));
+  const planned = ofp.fixes
+    .map(fix => String((fix && fix.ident) || '').toUpperCase())
+    .filter(id => id && !APP_POINT_IDS.has(id) && !procedureIds.has(id));
   const current = routeIdents(route);
+  if (!current.length) return 'changed';
+  const first = routePoints[0];
+  const firstId = String((first && first.id) || '').toUpperCase();
+  const firstKind = String((first && (first.kind || first.k)) || '').toLowerCase();
+  if (firstKind === 'apt' && current[0] === firstId && !planned.includes(firstId)) current.shift();
   if (!current.length) return 'changed';
   return planned.length === current.length && planned.every((id, i) => id === current[i]) ? 'match' : 'changed';
 }
@@ -421,6 +483,7 @@ function waypointRows(points, totals, ofp, stale) {
 export function buildSummary(input = {}) {
   const now = input.now ?? Date.now();
   const ofp = input.ofp || null;
+  const plan = input.plan && typeof input.plan === 'object' ? input.plan : null;
   const unit = input.weightUnit === 'lb' ? 'lb' : 'kg';
   const ofpUnit = ofp ? ofp.units : unit;
   const cruiseKts = num(input.cruiseKts) ?? (ofp ? ofp.flight.cruiseTasKt : null);
@@ -443,9 +506,12 @@ export function buildSummary(input = {}) {
   const originName = useOfp ? ofp.origin.name : (points[0] ? points[0].name : null);
   const destName = useOfp ? ofp.destination.name : (points.length > 1 ? points[points.length - 1].name : null);
 
-  const departureRwy = useOfp ? ofp.origin.rwy : null;
-  const arrivalRwy = useOfp ? ofp.destination.rwy : null;
-  const approachRwy = useOfp ? (ofp.destination.approachRwy || null) : null;
+  const departureRwy = useOfp ? ofp.origin.rwy : (plan && plan.departureRwy ? plan.departureRwy : null);
+  const arrivalRwy = useOfp ? ofp.destination.rwy : (plan && plan.arrivalRwy ? plan.arrivalRwy : null);
+  const approachRwy = useOfp
+    ? (ofp.destination.approachRwy || null)
+    : (plan && plan.approach && plan.approach.runway ? plan.approach.runway : null);
+  const planApproach = plan && plan.approach ? plan.approach : null;
 
   const distanceNm = totals ? totals.distanceNm : (useOfp ? ofp.distanceNm : null);
   const eteMinutes = useOfp && ofp.times.enrouteMin != null ? ofp.times.enrouteMin : (totals ? totals.airborneMinutes : null);
@@ -464,12 +530,13 @@ export function buildSummary(input = {}) {
     row('arrTime', 'Arrival time', useOfp ? fmtUtc(ofp.times.arrUtc) : null, 'ofp'),
   ];
 
+  const planProcedure = (record, transition) => (record && record.id ? procedureText(record.id, transition || record.enrouteTransition || record.runwayTransition || '') : null);
   const procedures = [
-    row('depRwy', 'Departure runway', departureRwy, 'ofp', { rwy: departureRwy, heading: runwayHeading(departureRwy), selected: Boolean(departureRwy) }),
-    row('sid', 'SID', useOfp ? procedureText(ofp.origin.sid, ofp.origin.sidTrans) : null, 'ofp', { selected: Boolean(useOfp && ofp.origin.sid) }),
-    row('star', 'STAR', useOfp ? procedureText(ofp.destination.star, ofp.destination.starTrans) : null, 'ofp', { selected: Boolean(useOfp && ofp.destination.star) }),
-    row('approach', 'Approach', useOfp ? ofp.destination.approach : null, 'ofp', { selected: Boolean(useOfp && ofp.destination.approach) }),
-    row('arrRwy', 'Arrival runway', arrivalRwy || approachRwy, 'ofp', { rwy: arrivalRwy || approachRwy, heading: runwayHeading(arrivalRwy || approachRwy), selected: Boolean(arrivalRwy || approachRwy) }),
+    row('depRwy', 'Departure runway', departureRwy, useOfp ? 'ofp' : plan && plan.departureRwy ? 'stratos' : null, { rwy: departureRwy, heading: runwayHeading(departureRwy), selected: Boolean(departureRwy) }),
+    row('sid', 'SID', useOfp ? procedureText(ofp.origin.sid, ofp.origin.sidTrans) : planProcedure(plan && plan.sid), useOfp ? 'ofp' : plan && plan.sid ? 'stratos' : null, { selected: Boolean((useOfp && ofp.origin.sid) || (plan && plan.sid)) }),
+    row('star', 'STAR', useOfp ? procedureText(ofp.destination.star, ofp.destination.starTrans) : planProcedure(plan && plan.star), useOfp ? 'ofp' : plan && plan.star ? 'stratos' : null, { selected: Boolean((useOfp && ofp.destination.star) || (plan && plan.star)) }),
+    row('approach', 'Approach', useOfp ? ofp.destination.approach : planProcedure(planApproach), useOfp ? 'ofp' : planApproach ? 'stratos' : null, { selected: Boolean((useOfp && ofp.destination.approach) || planApproach), join: planApproach ? planApproach.join || '' : '', validation: planApproach ? planApproach.validation || null : null }),
+    row('arrRwy', 'Arrival runway', arrivalRwy || approachRwy, useOfp ? 'ofp' : plan && (arrivalRwy || approachRwy) ? 'stratos' : null, { rwy: arrivalRwy || approachRwy, heading: runwayHeading(arrivalRwy || approachRwy), selected: Boolean(arrivalRwy || approachRwy) }),
   ];
 
   const route = {

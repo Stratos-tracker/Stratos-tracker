@@ -453,5 +453,26 @@
         "The offer names the machine it opens, is dismissible for the session, and appears only on a touch screen with a small viewport."
       ]
     }
+  },
+  "2.1.37": {
+    "summary": "SID paths now start on the runway and follow the published initial-climb heading to its altitude-gated turn, including SLEEK2 runway 8 at KDEN.",
+    "changelog": {
+      "features": [
+        "A departure now begins at the runway threshold, follows the runway centreline to the departure end, and continues on the published initial-climb heading before turning to the first fix.",
+        "The bundled FAA dataset keeps a no-fix heading leg's course and altitude instead of dropping it, and carries runway-end elevation so the altitude turn can be placed."
+      ],
+      "improvements": [
+        "The initial climb is carried through SimBrief import, the route builder, the EFB, the map and the stored route, so every page draws the same departure.",
+        "The procedure note says when a turn is altitude-gated and when its lateral position is drawn at 500 ft/NM, rather than presenting a planning line as a published ground distance."
+      ],
+      "fixes": [
+        "SLEEK2 runway 8 at KDEN no longer turns toward KIDNG at the threshold; it climbs on 082.5° to 5,934 ft before the right turn.",
+        "A procedure without a published heading course and altitude gets no synthetic turn point."
+      ],
+      "performance": [],
+      "ui": [],
+      "compatibility": [],
+      "other": []
+    }
   }
 }

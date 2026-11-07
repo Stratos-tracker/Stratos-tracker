@@ -20,6 +20,7 @@
 import { bearingDeg, distanceNm, validLatLon } from './geo.js';
 import { normalizeWaypoint, routeLegs, routeTotals } from './planner.js';
 import { normalizeRunway } from './procedures.js';
+import { pathFor, initialClimbFor } from './procdeck.js';
 
 /** The workflow, in order. The page renders this list, never its own copy. */
 export const STEPS = [
@@ -88,6 +89,19 @@ export function normalizeFix(value) {
     altFt: numOrNull(value.altFt) == null ? null : Math.round(numOrNull(value.altFt)),
     ss: String(value.ss || '').slice(0, 16),
     aw: String(value.aw || '').slice(0, 16),
+    // The ARINC 424 leg terminator and any published altitude constraint are
+    // carried with the point. They are not rendered as invented values: they
+    // are what the source stated about the leg.
+    terminator: String(value.terminator || '').slice(0, 4),
+    courseDeg: numOrNull(value.courseDeg) == null ? numOrNull(value.course) : numOrNull(value.courseDeg),
+    synthetic: Boolean(value.synthetic),
+    climb: Boolean(value.climb),
+    runwayEnd: Boolean(value.runwayEnd),
+    // Set only on the first approach fix when the published approach does not
+    // share a fix with the STAR. The map breaks the line there: the join is an
+    // ATC vector, not a published leg, and must not look like one.
+    vectorJoin: Boolean(value.vectorJoin),
+    join: String(value.join || ''),
     source: String(value.source || '').slice(0, 40),
   };
 }
@@ -129,6 +143,7 @@ function sync(plan) {
     destination,
     sid: belongs(plan.sid, origin) ? plan.sid : null,
     star: belongs(plan.star, destination) ? plan.star : null,
+    approach: belongs(plan.approach, destination) ? plan.approach : null,
   };
 }
 
@@ -151,6 +166,7 @@ export function createPlan(overrides = {}) {
     arrivalRwy: '',
     sid: null,
     star: null,
+    approach: null,
     cruiseKts: 450,
     cruiseAlt: 35000,
     fuel: {
@@ -232,12 +248,13 @@ export function setArrival(plan, stop) {
   const airport = normalizeStop(stop);
   if (!airport) return { ok: false, error: 'That airport has no usable coordinates.' };
   if (plan.destination && plan.destination.id === airport.id) return { ok: true, plan };
-  const points = stripProcedure((plan.points || []).slice(), 'STAR');
+  let points = stripProcedure((plan.points || []).slice(), 'STAR');
+  points = stripProcedure(points, 'APP');
   if (plan.destination && points.length > 1) points[points.length - 1] = airport;
   else points.push(airport);
   return {
     ok: true,
-    plan: sync(keepName(plan, { ...plan, points, star: null, arrivalRwy: '', dirty: true })),
+    plan: sync(keepName(plan, { ...plan, points, star: null, approach: null, arrivalRwy: '', dirty: true })),
   };
 }
 
@@ -245,8 +262,9 @@ export function clearArrival(plan) {
   if (!plan.origin) return plan;
   return sync(keepName(plan, {
     ...plan,
-    points: stripProcedure((plan.points || []).slice(0, 1), 'STAR'),
+    points: stripProcedure(stripProcedure((plan.points || []).slice(0, 1), 'STAR'), 'APP'),
     star: null,
+    approach: null,
     arrivalRwy: '',
     dirty: true,
   }));
@@ -297,6 +315,7 @@ export function removePoint(plan, index) {
     // matches the route; keep it selected but say it is partial.
     sid: plan.sid && String(removed.ss).toUpperCase() === 'SID' ? { ...plan.sid, partial: true } : plan.sid,
     star: plan.star && String(removed.ss).toUpperCase() === 'STAR' ? { ...plan.star, partial: true } : plan.star,
+    approach: plan.approach && String(removed.ss).toUpperCase() === 'APP' ? { ...plan.approach, partial: true } : plan.approach,
     dirty: true,
   });
 }
@@ -428,6 +447,18 @@ export function validatePlan(plan) {
   if (plan.star && plan.star.complete === false) {
     warnings.push({ code: 'star-incomplete', step: 'procedures', message: `${plan.star.id} has legs the navigation data could not place; only the verified legs were added.` });
   }
+  if (plan.approach && plan.approach.partial) {
+    warnings.push({ code: 'approach-partial', step: 'procedures', message: `The route no longer carries every ${plan.approach.id} leg, so the approach is only partly in the plan.` });
+  }
+  if (plan.approach && plan.approach.complete === false) {
+    warnings.push({ code: 'approach-incomplete', step: 'procedures', message: `${plan.approach.id} has legs the navigation data could not place; only the verified legs were added.` });
+  }
+  if (plan.approach && plan.approach.join === 'vectors') {
+    warnings.push({ code: 'approach-vectors', step: 'procedures', message: `The STAR and ${plan.approach.id} do not share a published fix; the final connection requires radar vectors and is not drawn as a published leg.` });
+  }
+  if (plan.approach && plan.approach.validation && plan.approach.validation.aligned === false) {
+    warnings.push({ code: 'approach-course', step: 'procedures', message: `The final course of ${plan.approach.id} does not line up with runway ${plan.approach.runway || 'selected'}; verify the procedure before flight.` });
+  }
   if (plan.origin && plan.destination && plan.origin.id === plan.destination.id) {
     errors.push({ code: 'same-airport', step: 'arrival', message: 'The departure and the arrival are the same airport.' });
   }
@@ -465,7 +496,7 @@ export function stepState(plan, { burnPerHour = null } = {}) {
     departure: Boolean(plan.origin),
     route: Boolean(plan.origin) && hasRoute,
     arrival: Boolean(plan.destination),
-    procedures: Boolean(plan.sid || plan.star),
+    procedures: Boolean(plan.sid || plan.star || plan.approach),
     fuel: Boolean(hasRoute && (manualBasis || autoBasis)),
     review: false,
   };
@@ -556,20 +587,160 @@ function runwayTransitionFor(procedure, runway) {
 function usablePoints(transition) {
   return (Array.isArray(transition && transition.points) ? transition.points : [])
     .filter(point => Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lon)))
-    .map(point => ({ id: String(point.id || ''), lat: Number(point.lat), lon: Number(point.lon), runway: Boolean(point.runway) }));
+    .map(point => ({
+      id: String(point.id || ''),
+      lat: Number(point.lat),
+      lon: Number(point.lon),
+      runway: Boolean(point.runway),
+      altFt: numOrNull(point.altFt) == null ? numOrNull(point.altitude_ft) : numOrNull(point.altFt),
+      terminator: String(point.terminator || '').slice(0, 4),
+    }));
 }
 
-function joinParts(parts) {
+function approachRoute(payload, options) {
+  const path = pathFor(payload, {
+    kind: 'approach',
+    ident: options.ident,
+    runway: options.runway,
+    transition: options.enrouteTransition || options.transition || options.approachTransition || options.runwayTransition || '',
+  });
+  if (!path.ok) return path;
+
+  // An approach is one continuous path to the threshold. Two published pieces
+  // that do not share a fix are not silently joined: that would draw a course
+  // the database never published.
+  if (Array.isArray(path.segments) && path.segments.length > 1) {
+    return {
+      ok: false,
+      reason: 'disconnected',
+      error: `${path.id} publishes an entry transition and final segment that do not meet at a common fix, so the approach cannot be placed without inventing a connector.`,
+    };
+  }
+
+  const points = (path.points || []).map(point => ({
+    id: String(point.id || '').toUpperCase(),
+    name: String(point.name || ''),
+    lat: Number(point.lat),
+    lon: Number(point.lon),
+    altFt: numOrNull(point.altFt) == null ? numOrNull(point.altitude_ft) : numOrNull(point.altFt),
+    terminator: String(point.terminator || '').slice(0, 4),
+    courseDeg: numOrNull(point.courseDeg) == null ? numOrNull(point.course) : numOrNull(point.courseDeg),
+    distanceNm: numOrNull(point.distanceNm),
+    verticalAngle: numOrNull(point.verticalAngle),
+    synthetic: Boolean(point.synthetic),
+    climb: Boolean(point.climb),
+    runwayEnd: Boolean(point.runwayEnd),
+  }));
+  if (!points.length) {
+    return { ok: false, reason: 'empty', error: `${path.id} has no verified approach legs in this data.` };
+  }
+
+  const selectedRunway = normalizeRunway(options.runway);
+  // The final published RWxxx leg is authoritative even if the caller asked for
+  // a different runway. That is what makes a mismatch visible instead of being
+  // silently accepted because the request happened to name a valid designator.
+  const runwayLeg = [...points].reverse().find(point => /^RW\d{2}[LRCB]?$/i.test(point.id));
+  const servedRunway = normalizeRunway(runwayLeg ? runwayLeg.id.slice(2) : path.runway);
+  if (selectedRunway && servedRunway && selectedRunway !== servedRunway) {
+    return {
+      ok: false,
+      reason: 'runway-mismatch',
+      error: `${path.id} is the approach to runway ${servedRunway}, not runway ${selectedRunway}. Choose the approach that serves the selected arrival runway.`,
+    };
+  }
+  const runway = servedRunway || selectedRunway;
+  const finalCourseDeg = points.length > 1 ? bearingDeg(points[points.length - 2], points[points.length - 1]) : null;
+  const runwayCourseDeg = runway ? Number(String(runway).slice(0, 2)) * 10 : null;
+  const finalCourseDeltaDeg = finalCourseDeg != null && runwayCourseDeg != null
+    ? Math.abs(((finalCourseDeg - runwayCourseDeg + 540) % 360) - 180)
+    : null;
+  const cycle = String(payload.cycle || '');
+  const airport = String(payload.airport || '').toUpperCase();
+  const role = path.transition ? 'entry' : 'final';
+  // None of the bundled FAA CIFP extract's approach records carry a published
+  // FAF altitude or glide-slope angle. Expose that as unavailable rather than
+  // substituting a generic 3° path; a bridge payload that does carry the
+  // fields can fill them in without changing the route shape.
+  const glidePoint = points.find(point => point.verticalAngle != null);
+  const fafPoint = points.find(point => /FAF|FAF/i.test(point.terminator) && point.altFt != null)
+    || points.find(point => point.altFt != null);
+  const vertical = {
+    available: Boolean(glidePoint && glidePoint.verticalAngle != null && fafPoint && fafPoint.altFt != null),
+    glideSlopeAngle: glidePoint ? glidePoint.verticalAngle : null,
+    faf: fafPoint ? fafPoint.id : '',
+    fafAltFt: fafPoint ? fafPoint.altFt : null,
+    thresholdAltFt: numOrNull(path.runwayThreshold && path.runwayThreshold.elev),
+    reason: 'This CIFP data publishes the approach on the lateral path only; it carries no published FAF altitude or glide-slope angle, so no vertical path is invented.',
+  };
+  return {
+    ok: true,
+    kind: 'approach',
+    id: path.id,
+    label: 'APP',
+    airport,
+    runway,
+    runwayTransition: '',
+    enrouteTransition: String(path.transition || ''),
+    transitionUsed: String(path.transition || ''),
+    points,
+    roles: [{ role, id: String(path.transition || 'FINAL'), points: points.length, complete: path.complete !== false, skipped: Number(path.skipped) || 0 }],
+    complete: path.complete !== false,
+    skipped: Number(path.skipped) || 0,
+    notes: Array.isArray(path.notes) ? path.notes : [],
+    source: String(payload.source || ''),
+    cycle,
+    missingRunway: false,
+    connectorOnly: false,
+    labelText: path.id,
+    vertical,
+    validation: {
+      airport,
+      runway,
+      ident: path.id,
+      transition: String(path.transition || ''),
+      cycle,
+      finalCourseDeg,
+      runwayCourseDeg,
+      finalCourseDeltaDeg,
+      aligned: finalCourseDeltaDeg == null ? null : finalCourseDeltaDeg <= 45,
+    },
+  };
+}
+
+function joinParts(parts, allowGapAt = -1) {
   const out = [];
-  for (const part of parts) {
-    for (const point of part) {
+  for (let index = 0; index < parts.length; index += 1) {
+    const part = parts[index];
+    if (!part || !part.length) continue;
+    if (!out.length) {
+      out.push(...part);
+      continue;
+    }
+    // A terminal procedure's published pieces meet at one fix they both name.
+    // They are joined only there. Concatenating unrelated pieces would draw a
+    // straight connector the source never published, which is exactly the
+    // approximation this module refuses to make. The one declared exception is
+    // the threshold connector the result names explicitly (`connectorOnly`, or
+    // a STAR's field-to-runway join), where the source published no piece that
+    // reaches the pavement.
+    const boundary = out[out.length - 1];
+    const at = part.findIndex(point => String(point.id).toUpperCase() === String(boundary.id).toUpperCase()
+      && distanceNm(boundary, point) < 0.1);
+    if (at < 0) {
+      if (index === allowGapAt) {
+        out.push(...part);
+        continue;
+      }
+      return { ok: false };
+    }
+    for (const point of part.slice(at + 1)) {
       const previous = out[out.length - 1];
       if (previous && String(previous.id).toUpperCase() === String(point.id).toUpperCase()
         && Math.abs(previous.lat - point.lat) < 1e-5 && Math.abs(previous.lon - point.lon) < 1e-5) continue;
       out.push(point);
     }
   }
-  return out;
+  return { ok: true, points: out };
 }
 
 /**
@@ -582,7 +753,7 @@ function joinParts(parts) {
  */
 export function procedureRoute(payload, options = {}) {
   const kind = String(options.kind || '').toLowerCase();
-  if (!['sid', 'star'].includes(kind)) return { ok: false, reason: 'bad-request', error: 'A procedure is a SID or a STAR.' };
+  if (!['sid', 'star', 'approach'].includes(kind)) return { ok: false, reason: 'bad-request', error: 'A procedure is a SID, STAR or approach.' };
   if (!payload || !payload.ok) {
     return {
       ok: false,
@@ -594,6 +765,8 @@ export function procedureRoute(payload, options = {}) {
   if (!procedure) {
     return { ok: false, reason: 'not-in-data', error: `The navigation data has no ${kind.toUpperCase()} ${String(options.ident || '').toUpperCase()} at ${payload.airport || 'this airport'}.` };
   }
+
+  if (kind === 'approach') return approachRoute(payload, options);
 
   const runway = normalizeRunway(options.runway);
   const explicitRunway = options.runwayTransition == null ? null : transitionById(procedure, options.runwayTransition);
@@ -637,8 +810,22 @@ export function procedureRoute(payload, options = {}) {
   // The airport itself is the plan's own stop, so a procedure never repeats it;
   // the approach wants vectors to the field, and carrying that point here would
   // draw the route into the middle of the airport and back out again.
+  const trunkPoints = usablePoints(trunk);
+  const trunkEndsAtAirport = trunkPoints.length > 0
+    && String(trunkPoints[trunkPoints.length - 1].id).toUpperCase() === airport;
+  const connectorOnly = kind === 'sid' && !runwayTransition && Boolean(runwayPoint);
+  const starFieldJoin = kind === 'star' && Boolean(runwayTransition) && trunkEndsAtAirport;
+  const allowGapAt = connectorOnly ? 1 : starFieldJoin ? pieces.length - 1 : -1;
+  const joined = joinParts(pieces, allowGapAt);
+  if (!joined.ok) {
+    return {
+      ok: false,
+      reason: 'disconnected',
+      error: `${procedure.id} publishes transition pieces that do not meet at a common fix, so no continuous procedure path can be built without inventing one.`,
+    };
+  }
   const withoutAirport = parts => parts.filter(point => String(point.id).toUpperCase() !== airport);
-  let points = withoutAirport(joinParts(pieces));
+  let points = withoutAirport(joined.points);
   if (!points.length) {
     // Plenty of real procedures carry no common trunk at all: every leg lives
     // inside a runway or en-route transition. That is a choice still to be
@@ -656,14 +843,36 @@ export function procedureRoute(payload, options = {}) {
   const startsOnRunway = runwayPoint && String(points[0].id).toUpperCase() === runwayPoint.id;
   const endsOnRunway = runwayPoint && String(points[points.length - 1].id).toUpperCase() === runwayPoint.id;
   if (kind === 'sid') {
-    // A SID starts on the runway. When the source published no runway legs the
-    // threshold the data carries is joined to the first fix by one connector.
-    if (!chosenRunwayId && runwayPoint && !startsOnRunway) points = [runwayPoint, ...points];
+    // A SID starts on the runway. Some sources begin the runway transition at
+    // the first coded fix rather than publishing a threshold point; the data's
+    // runway threshold still anchors the path, so the line starts on the runway.
+    if (runwayPoint && !startsOnRunway) points = [runwayPoint, ...points];
   } else if (runwayPoint && !endsOnRunway) {
     // A STAR ends on the runway the plan names, not on the airport reference
     // point; the threshold is the last published coordinate of the arrival.
     points = [...points, runwayPoint];
   }
+
+  // A no-fix heading leg has no published lateral end. The map and the stored
+  // plan use the same source altitude and the same stated display gradient, so
+  // the runway centreline cannot be dropped between them.
+  const publishedClimb = runwayTransition && runwayTransition.initialClimb;
+  const climb = publishedClimb ? initialClimbFor(payload, runway, publishedClimb) : null;
+  if (kind === 'sid' && climb) {
+    const at = points.findIndex(point => String(point.id).toUpperCase() === 'RW' + runway);
+    points.splice(at >= 0 ? at + 1 : 0, 0, climb.end, climb.turn);
+  }
+  const initialClimb = climb ? {
+    terminator: String(publishedClimb.terminator || 'VA').toUpperCase(),
+    courseDeg: climb.course,
+    altFt: climb.altitude,
+    altDesc: String(publishedClimb.altDesc || ''),
+    turnNm: climb.turnNm,
+    gradientFtPerNm: climb.gradient,
+    prescribedGradient: climb.prescribed,
+    runwayEnd: climb.end,
+    turn: climb.turn,
+  } : null;
 
   const missingRunway = Boolean(runway) && !chosenRunwayId;
   const complete = roles.every(role => role.complete);
@@ -680,6 +889,7 @@ export function procedureRoute(payload, options = {}) {
     roles,
     complete,
     skipped: roles.reduce((sum, role) => sum + (role.complete ? 0 : role.skipped), 0),
+    initialClimb,
     source: String(payload.source || ''),
     cycle: String(payload.cycle || ''),
     missingRunway,
@@ -730,10 +940,12 @@ export function suggestTransitions(payload, { kind, ident, runway, routeIds = []
  * stacked on top, so re-applying a SID cannot duplicate the route.
  */
 export function applyProcedure(plan, kind, route) {
-  const tag = String(kind || '').toLowerCase() === 'star' ? 'STAR' : 'SID';
+  const key = String(kind || '').toLowerCase();
+  const tag = key === 'star' ? 'STAR' : key === 'approach' ? 'APP' : 'SID';
+  if (!['sid', 'star', 'approach'].includes(key)) return { ok: false, error: 'A procedure is a SID, STAR or approach.' };
   if (!route || !route.ok) return { ok: false, error: (route && route.error) || 'That procedure is not available.' };
   if (tag === 'SID' && !plan.origin) return { ok: false, blocked: 'no-departure', message: NO_DEPARTURE };
-  if (tag === 'STAR' && !plan.destination) return { ok: false, blocked: 'no-arrival', message: 'Select an arrival airport before adding a STAR.' };
+  if ((tag === 'STAR' || tag === 'APP') && !plan.destination) return { ok: false, blocked: 'no-arrival', message: 'Select an arrival airport before adding an arrival procedure.' };
 
   const anchor = tag === 'SID' ? plan.origin.id : plan.destination.id;
   let base = stripProcedure((plan.points || []).slice(), tag);
@@ -745,14 +957,21 @@ export function applyProcedure(plan, kind, route) {
     if (previous && previous.id === id && distanceNm(previous, point) < 0.1) continue;
     points.push({
       id,
-      name: id,
+      name: point.name || id,
       lat: Number(point.lat),
       lon: Number(point.lon),
       elev: 0,
       kind: 'fix',
-      altFt: null,
+      altFt: point.altFt == null ? null : Math.round(point.altFt),
+      courseDeg: point.courseDeg == null ? null : Number(point.courseDeg),
+      synthetic: Boolean(point.synthetic),
+      climb: Boolean(point.climb),
+      runwayEnd: Boolean(point.runwayEnd),
       ss: tag,
       aw: '',
+      terminator: point.terminator || '',
+      vectorJoin: Boolean(point.vectorJoin),
+      join: point.join || '',
       source: 'procedure',
     });
   }
@@ -761,10 +980,32 @@ export function applyProcedure(plan, kind, route) {
   }
 
   let next;
+  let join = '';
   if (tag === 'SID') {
     // After the departure, before anything the pilot added.
     const tail = base.slice(1);
     next = [base[0], ...points, ...tail.filter(point => !points.some(added => added.id === point.id && distanceNm(added, point) < 0.1))];
+  } else if (tag === 'APP') {
+    // The STAR's own runway threshold is not a connector into the approach.
+    // Remove it before placing the approach's threshold; otherwise the route
+    // would fly to the runway, back out to the IAF and in again.
+    let head = base.slice(0, -1);
+    while (head.length && /^RW/i.test(String(head[head.length - 1].id || ''))) head = head.slice(0, -1);
+    const previous = head[head.length - 1];
+    const first = points[0];
+    const sharesFix = previous && first
+      && String(previous.id).toUpperCase() === String(first.id).toUpperCase()
+      && distanceNm(previous, first) < 0.1;
+    if (sharesFix) {
+      join = 'fix';
+      points.shift();
+    } else {
+      join = 'vectors';
+      // Mark the first approach fix so every map drawing path can break the
+      // line at the ATC vector instead of painting a straight connector.
+      if (points[0]) points[0] = { ...points[0], vectorJoin: true, join: 'vectors' };
+    }
+    next = [...head, ...points, base[base.length - 1]];
   } else {
     const head = base.slice(0, -1);
     next = [...head.filter(point => !points.some(added => added.id === point.id && distanceNm(added, point) < 0.1)), ...points, base[base.length - 1]];
@@ -775,30 +1016,38 @@ export function applyProcedure(plan, kind, route) {
     runway: route.runway || '',
     runwayTransition: route.runwayTransition || '',
     enrouteTransition: route.enrouteTransition || '',
+    transitionUsed: route.transitionUsed || '',
     label: route.label || route.id,
     points: points.length,
     complete: route.complete !== false,
     connectorOnly: Boolean(route.connectorOnly),
     missingRunway: Boolean(route.missingRunway),
+    initialClimb: route.initialClimb || null,
     source: route.source || '',
     cycle: route.cycle || '',
+    validation: route.validation || null,
+    join,
     appliedAt: Date.now(),
     partial: false,
   };
   const patched = tag === 'SID'
     ? { ...plan, points: next, sid: record, departureRwy: route.runway || plan.departureRwy }
-    : { ...plan, points: next, star: record, arrivalRwy: route.runway || plan.arrivalRwy };
+    : tag === 'STAR'
+      ? { ...plan, points: next, star: record, arrivalRwy: route.runway || plan.arrivalRwy }
+      : { ...plan, points: next, approach: record, arrivalRwy: route.runway || plan.arrivalRwy };
   return { ok: true, plan: sync({ ...patched, dirty: true }) };
 }
 
 export function clearProcedure(plan, kind) {
-  const tag = String(kind || '').toLowerCase() === 'star' ? 'STAR' : 'SID';
+  const key = String(kind || '').toLowerCase();
+  const tag = key === 'star' ? 'STAR' : key === 'approach' ? 'APP' : 'SID';
   const points = stripProcedure(plan.points || [], tag);
   return sync({
     ...plan,
     points,
     sid: tag === 'SID' ? null : plan.sid,
     star: tag === 'STAR' ? null : plan.star,
+    approach: tag === 'APP' ? null : plan.approach,
     dirty: true,
   });
 }
@@ -1035,6 +1284,12 @@ export function storedRoute(plan) {
     altFt: point.altFt == null ? null : Math.round(point.altFt),
     ss: point.ss || '',
     aw: point.aw || '',
+    terminator: point.terminator || '',
+    courseDeg: point.courseDeg == null ? null : Number(point.courseDeg),
+    synthetic: Boolean(point.synthetic),
+    climb: Boolean(point.climb),
+    runwayEnd: Boolean(point.runwayEnd),
+    vectorJoin: Boolean(point.vectorJoin),
   }));
   return {
     id: plan.savedId || null,
@@ -1053,6 +1308,7 @@ export function storedRoute(plan) {
       arrivalRwy: plan.arrivalRwy || '',
       sid: plan.sid || null,
       star: plan.star || null,
+      approach: plan.approach || null,
       fuel: { ...plan.fuel, components: { ...(plan.fuel && plan.fuel.components) } },
       sources: plan.sources || [],
     },
@@ -1069,8 +1325,17 @@ export function mapRoute(plan) {
     k: point.kind,
     elev: Math.round(point.elev || 0),
     altFt: point.altFt == null ? null : Math.round(point.altFt),
-    ss: point.ss || '',
+    // The map and procedure deck read lower-case procedure tags. The plan
+    // itself keeps the builder's upper-case ones, so translate at this boundary
+    // instead of asking every map surface to compare case-insensitively.
+    ss: String(point.ss || '').toLowerCase(),
     aw: point.aw || '',
+    terminator: point.terminator || '',
+    courseDeg: point.courseDeg == null ? null : Number(point.courseDeg),
+    synthetic: Boolean(point.synthetic),
+    climb: Boolean(point.climb),
+    runwayEnd: Boolean(point.runwayEnd),
+    vectorJoin: Boolean(point.vectorJoin),
   }));
 }
 
@@ -1105,6 +1370,7 @@ export function planFromStored(raw) {
     arrivalRwy: String(saved.arrivalRwy || ''),
     sid: saved.sid || null,
     star: saved.star || null,
+    approach: saved.approach || null,
     fuel: { ...base.fuel, ...(saved.fuel || {}), components: { ...((saved.fuel && saved.fuel.components) || {}) } },
     sources: Array.isArray(saved.sources) ? saved.sources : [],
   });

@@ -816,7 +816,9 @@ function planPieces(points){
     const a=points[i],b=points[i+1];
     const steps=Math.max(1,Math.min(64,Math.ceil(dist(a,b)/60)));
     for(let s=i?1:0;s<=steps;s++){
-      const q=s===0?{lat:a.lat,lon:a.lon}:s===steps?{lat:b.lat,lon:b.lon}:gcStep(a,b,s/steps);
+      // Keep the original endpoint records: they carry the vector-join marker
+      // that tells the stroke where a published leg ends and ATC vectors begin.
+      const q=s===0?a:s===steps?b:gcStep(a,b,s/steps);
       // The first sample is taken from the copy of the world nearest the middle
       // of the view, and the rest follow it without a jump.
       let lon=prev==null?Number(V.lon)+((((q.lon-Number(V.lon))+540)%360)-180):q.lon;
@@ -824,6 +826,9 @@ function planPieces(points){
       prev=lon;
       const p=planPoint(q.lat,lon);
       if(!p){piece=null;continue}
+      // A radar-vector join is not a published leg. Breaking the piece here
+      // leaves the gap ATC fills instead of drawing a line the data never had.
+      if(q.vectorJoin)piece=null;
       if(!piece){piece=[];pieces.push(piece)}
       piece.push(p);
     }
@@ -1148,16 +1153,16 @@ const T=[],WT={n:0,src:'',busy:0,fail:0,last:'',okAt:0};
 function save(){try{localStorage.setItem('dl.route',JSON.stringify(route));mirrorRoute()}catch(e){}}
 function mirrorRoute(){try{
   const a=JSON.parse(localStorage.getItem('stratos.activeRoute')||'null')||{};
-  localStorage.setItem('stratos.activeRoute',JSON.stringify({...a,points:route.map(p=>({id:p.id,name:p.name||p.id,lat:p.lat,lon:p.lon,kind:p.k||'fix',elev:Number(p.elev)||0,altFt:Number(p.altFt)||null,ss:p.ss||'',aw:p.aw||''}))}));
+  localStorage.setItem('stratos.activeRoute',JSON.stringify({...a,points:route.map(p=>({id:p.id,name:p.name||p.id,lat:p.lat,lon:p.lon,kind:p.k||'fix',elev:Number(p.elev)||0,altFt:Number(p.altFt)||null,ss:String(p.ss||'').toLowerCase(),aw:p.aw||''}))}));
 }catch(e){}}
 function load(){
   try{const a=JSON.parse(localStorage.getItem('stratos.activeRoute')||'null');
     if(a&&Array.isArray(a.points)){
-      route=a.points.map(p=>({id:p.id,name:p.name||p.id,lat:+p.lat,lon:+p.lon,k:routeKindName(p.kind||p.k),elev:Number(p.elev)||0,ss:p.ss||'',aw:p.aw||''}));
+      route=a.points.map(p=>({id:p.id,name:p.name||p.id,lat:+p.lat,lon:+p.lon,k:routeKindName(p.kind||p.k),elev:Number(p.elev)||0,ss:String(p.ss||'').toLowerCase(),aw:p.aw||'',terminator:p.terminator||''}));
       return true;
     }
   }catch(e){}
-  try{const r=JSON.parse(localStorage.getItem('dl.route'));if(r&&r.length){route=r.map(p=>({...p,k:routeKindName(p.k)}));return true}}catch(e){}
+  try{const r=JSON.parse(localStorage.getItem('dl.route'));if(r&&r.length){route=r.map(p=>({...p,k:routeKindName(p.k),ss:String(p.ss||'').toLowerCase()}));return true}}catch(e){}
   return false
 }
 /* The planner calls its points 'airport' and 'navaid'; the map draws 'apt' and
@@ -1240,16 +1245,16 @@ if(L.apt&&clusterAirports()){}else if(L.apt)A.forEach(a=>{if(CH.on&&a!==CH.a)ret
 if(V.mode!=='globe'&&V.z>8.5)drawReal(a,x,y);else a.det=false;if(0)pairs(a).forEach(pr=>{const n=pr[0],h=n*10,p=ppn(a.lat)*1.4,dx=Math.sin(h*R)*p,dy=-Math.cos(h*R)*p;cx.strokeStyle=C.ap;cx.lineWidth=Math.max(3,p/9);cx.lineCap='butt';cx.beginPath();cx.moveTo(x-dx,y-dy);cx.lineTo(x+dx,y+dy);cx.stroke()});
 if(a.det){}else if(V.mode!=='globe'&&V.z>8.5){cx.beginPath();cx.arc(x,y,3,0,7);cx.fillStyle=C.land;cx.fill();cx.strokeStyle=C.ap;cx.lineWidth=2.2;cx.stroke()}else mkRing(x,y,mkRz()*.9,mkColor('apt'),1);
 if(lblZ()>(a.x?7:4.8)&&x>-40&&x<W+40&&y>-40&&y<H+40&&!(L.rte&&planTocTod().ids.has(String(a.id).toUpperCase())))mkText(a.id,x+Math.round(mkRz()*.62)-3,y-6,SAT()?(DKM()?'#fff':'#111'):C.txt,12.5,true)});
-drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){cx.save();cx.globalAlpha=.35;cx.strokeStyle=C.route;cx.lineWidth=12;cx.lineCap='round';cx.lineJoin='round';drawPlanLine(route);if(liveOk()&&route.length>1){const pr=routeProg(),pts=[route[0]];let acc=0;for(let i=0;i<route.length-1;i++){acc+=dist(route[i],route[i+1]);if(acc<pr)pts.push(route[i+1])}pts.push(pos(pr));cx.globalAlpha=.6;drawPlanLine(pts)}cx.restore()
-drawRouteMarkers();}
+drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){cx.save();cx.globalAlpha=.35;cx.strokeStyle=C.route;cx.lineWidth=12;cx.lineCap='round';cx.lineJoin='round';drawPlanLine(drawnRoutePoints());if(liveOk()&&route.length>1){const pr=routeProg(),pts=[route[0]];let acc=0;for(let i=0;i<route.length-1;i++){acc+=dist(route[i],route[i+1]);if(acc<pr)pts.push(route[i+1])}pts.push(pos(pr));cx.globalAlpha=.6;drawPlanLine(pts)}cx.restore()
+drawProcedureRouteLine();drawRouteMarkers();}
 trails();if(L.trf&&!CH.on)T.forEach(a=>{const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;drawAircraft(a.type,x,y,a.hdg,C.trf,32);if(lblZ()>6&&x>-40&&x<W+40&&y>-20&&y<H+20)mkText(a.id+' '+Math.round(a.alt/100),x+4,y+4,C.trf,10,false)});
 if(liveOk()){const q=vis(own.lon,own.lat);if(q){const[x,y]=q;cx.beginPath();cx.arc(x,y,19,0,7);cx.strokeStyle=C.own;cx.globalAlpha=.38;cx.lineWidth=1.5;cx.stroke();cx.globalAlpha=1;drawAircraft(live.d?.type||live.d?.aircraft||live.d?.aircraftType,x,y,own.hdg,C.own,40)}}
 if(CH.on)chartFx();if(sel&&!CH.on){const s0=sel.k=='own'?own:sel,p0=vis(s0.lon,s0.lat);if(p0){const[x,y]=p0;cx.strokeStyle=C.txt;cx.lineWidth=2;cx.beginPath();cx.arc(x,y,16+(tk?3*Math.sin(performance.now()/260):0),0,7);cx.stroke()}}}
 
 /* ── Waypoint markers ─────────────────────────────────────────────────
    One chart-style symbol per aeronautical meaning: a blue crosshair for an
-   ordinary en-route fix, a teal star for a fix on an airway, a magenta
-   triangle for a departure procedure, a violet diamond for an arrival, a
+   ordinary en-route fix, a teal star for a fix on an airway, a purple
+   triangle for a departure procedure, an amber diamond for an arrival, a
    white ring for an airport, amber for a VOR, pink for an NDB, a grey
    hexagon for a navaid the data cannot classify, and cyan/amber climb and
    descent symbols for TOC and TOD.
@@ -1262,10 +1267,10 @@ if(CH.on)chartFx();if(sel&&!CH.on){const s0=sel.k=='own'?own:sel,p0=vis(s0.lon,s
    so names give way instead of overprinting. Legs of 50 nm or more also
    carry a heading-and-distance tag at their midpoint, and all of it is set
    in the shell's condensed technical face rather than a default UI sans. */
-const MKN={wp:'#3b82f6',sid:'#d946ef',star:'#a855f7',air:'#2dd4bf',apt:'#eef4fa',vor:'#f5a524',ndb:'#fb7185',int:'#94a3b8',toc:'#22d3ee',tod:'#f59e0b'};
+const MKN={wp:'#3b82f6',sid:'#c084fc',star:'#f59e0b',app:'#22c55e',approach:'#22c55e',air:'#2dd4bf',apt:'#eef4fa',vor:'#f5a524',ndb:'#fb7185',int:'#94a3b8',toc:'#22d3ee',tod:'#f59e0b'};
 /* The same meanings, darkened for a light base map: the night palette washes
    out over beige land and pale satellite imagery. */
-const MKD={wp:'#2563eb',sid:'#c026d3',star:'#7e22ce',air:'#0f766e',apt:'#1f2937',vor:'#a16207',ndb:'#e11d48',int:'#64748b',toc:'#0e7490',tod:'#c2410c'};
+const MKD={wp:'#2563eb',sid:'#9333ea',star:'#b45309',app:'#15803d',approach:'#15803d',air:'#0f766e',apt:'#1f2937',vor:'#a16207',ndb:'#e11d48',int:'#64748b',toc:'#0e7490',tod:'#c2410c'};
 const MKL=[],MKW=new Map(),NTP=new Map();
 /* Symbols sit a clear step above the route line's 12 px band: the glyph is
    roughly one and a half times that width at every zoom, so a fix reads as a
@@ -1378,12 +1383,50 @@ function routeKind(p){
   const id=String(p.id||'').toUpperCase();
   if(id=='TOC')return 'toc';
   if(id=='TOD')return 'tod';
-  if(p.ss=='sid')return 'sid';
-  if(p.ss=='star')return 'star';
+  const ss=String(p.ss||'').toLowerCase();
+  if(ss=='sid')return 'sid';
+  if(ss=='star')return 'star';
+  if(ss=='app'||ss=='approach')return 'app';
   if(p.k=='apt')return 'apt';
   if(p.k=='nav'){const t=navType(p.id);return /NDB/.test(t)?'ndb':/VOR|TACAN|DME/.test(t)?'vor':'int'}
   return p.aw?'air':'wp'}
 function altText(alt){const v=Math.round(Number(alt)||0);return v>=1000?'FL'+Math.round(v/100):v?v+' ft':''}
+/* A filed leg carries the colour of the procedure it belongs to. A SID owns
+   the leg into each of its tagged fixes; a STAR owns the leg into and out of
+   its fixes, so the path stays amber through the runway endpoint. En-route
+   legs keep the cyan line underneath. */
+/* The airport stop is the plan's endpoint, but the flown line starts at the
+   departure runway threshold when a procedure carries one. Do not draw the
+   short airport-reference-to-runway connector as if it were part of the route. */
+function drawnRoutePoints(){
+  let start=0,end=route.length;
+  const second=route[1];
+  if(route.length>1&&route[0].k==='apt'&&second&&/^RW/i.test(String(second.id||''))&&second.ss)start=1;
+  const last=route[end-1],beforeLast=route[end-2];
+  if(end>start+1&&last&&last.k==='apt'&&beforeLast&&/^RW/i.test(String(beforeLast.id||''))&&beforeLast.ss)end-=1;
+  return route.slice(start,end)
+}
+function routeSegmentKind(a,b){
+  const prev=String(a&&a.ss||'').toLowerCase(),next=String(b&&b.ss||'').toLowerCase();
+  if(prev=='app'||next=='app'||prev=='approach'||next=='approach')return 'app';
+  if(prev=='star'||next=='star')return 'star';
+  return next=='sid'?'sid':''
+}
+function drawProcedureRouteLine(){
+  const points=drawnRoutePoints();
+  if(!points.length||CH.on||!L.rte)return;
+  cx.save();cx.lineCap='round';cx.lineJoin='round';cx.lineWidth=8;
+  for(let i=1;i<points.length;){
+    const kind=routeSegmentKind(points[i-1],points[i]);
+    if(!kind||(kind=='sid'&&!L.procSid)||(kind=='star'&&!L.procStar)||(kind=='app'&&!L.procApproach)){i+=1;continue}
+    let j=i+1;
+    while(j<points.length&&routeSegmentKind(points[j-1],points[j])===kind)j+=1;
+    cx.strokeStyle=mkColor(kind);cx.globalAlpha=.92;
+    drawPlanLine(points.slice(i-1,j));
+    i=j
+  }
+  cx.restore()
+}
 /* TOC/TOD come from the vertical profile of the route the plan already
    carries: the planned altitude at each fix is a constraint, the climb and
    descent gradients fill the gaps, and the marker is interpolated inside the
@@ -1478,8 +1521,8 @@ function procTick(){
    renderer below draws in the plan's own z-order. Nothing here decides which
    procedure is flown: it draws what the deck resolved, or nothing. */
 window.DECK={
-  route:()=>route.map(p=>({id:String(p.id||''),name:p.name||'',lat:Number(p.lat),lon:Number(p.lon),k:p.k||'fix',elev:Number(p.elev)||0,ss:p.ss||''})),
-  plan:()=>fcPlanInfo(),
+  route:()=>route.map(p=>({id:String(p.id||''),name:p.name||'',lat:Number(p.lat),lon:Number(p.lon),k:p.k||'fix',elev:Number(p.elev)||0,ss:String(p.ss||'').toLowerCase()})),
+  plan:()=>deckProcedurePlan(),
   airport:id=>{const a=A.find(x=>String(x.id).toUpperCase()===String(id||'').toUpperCase());return a?{id:a.id,name:a.name,lat:a.lat,lon:a.lon}:null},
   cumulative:()=>{const out=[0];for(let i=1;i<route.length;i++)out.push(out[i-1]+dist(route[i-1],route[i]));return out},
   flown:()=>{try{return routeProg()}catch(_){return 0}},
@@ -1490,7 +1533,7 @@ window.DECK={
   notes:list=>{PROCG.notes=Array.isArray(list)?list.slice(0,3):[]},
 };
 document.querySelectorAll('[data-dk-layer]').forEach(b=>{b.onclick=()=>{const k='proc'+b.dataset.dkLayer[0].toUpperCase()+b.dataset.dkLayer.slice(1);L[k]=L[k]?0:1;b.classList.toggle('on',!!L[k])}});
-/* The published procedure layers: magenta SID, violet STAR, amber approach,
+/* The published procedure layers: purple SID, amber STAR, pink approach,
    drawn as a soft band with a crisp centre line under the filed route's own
    cyan, so the plan still reads first. Every point is a point the dataset
    states; a section that does not meet the next one is its own stroke, never
@@ -1500,38 +1543,66 @@ function strokeProcedureSegment(segment){
   for(const p of segment){const q=vis(p.lon,p.lat);if(!q){pen=false;continue}if(pen)cx.lineTo(q[0],q[1]);else cx.moveTo(q[0],q[1]);pen=true}
   cx.stroke()
 }
+function procShown(layer){
+  const shown={sid:L.procSid,star:L.procStar,approach:L.procApproach,missed:L.procMissed};
+  // When the approach is real route geometry it is already drawn by the route
+  // pass in green. Painting the deck's overlay too would double the band and
+  // put a second, possibly different selection on top of the filed route.
+  const routeHasApproach=route.some(p=>/^(app|approach)$/i.test(String(p.ss||'')));
+  if(layer&&layer.kind==='approach'&&routeHasApproach)return false;
+  return Boolean(layer&&layer.ok&&shown[layer.kind])
+}
+function procColor(layer){
+  const kinds=window.PROCKINDS||{};
+  return (layer&&layer.color)||(kinds[layer&&layer.kind]&&kinds[layer&&layer.kind].color)||'#c084fc'
+}
+/* The selected procedure's name, runway and en-route transition, never more
+   than one badge per layer. A runway transition is already named by the
+   runway, so it is not repeated in the badge. */
+function procTag(layer){
+  const transition=String(layer&&layer.transition||'').toUpperCase();
+  return [String(layer&&layer.label||''),String(layer&&layer.id||''),layer&&layer.runway?'RWY '+layer.runway:'',transition&&!transition.startsWith('RW')?transition:''].filter(Boolean).join(' · ')
+}
 function drawProcedurePaths(){
   const layers=Array.isArray(window.PROCLAYERS)?window.PROCLAYERS:[];
   if(!layers.length||CH.on||!L.rte)return;
-  const shown={sid:L.procSid,star:L.procStar,approach:L.procApproach,missed:L.procMissed};
+  const drawn=layers.filter(procShown);
+  if(!drawn.length)return;
   cx.save();cx.lineCap='round';cx.lineJoin='round';
-  for(const layer of layers){
-    if(!layer||!layer.ok||!shown[layer.kind])continue;
-    const color=layer.color||'#f472b6';
+  for(const layer of drawn){
+    const color=procColor(layer);
     cx.strokeStyle=color;cx.globalAlpha=.32;cx.lineWidth=11;
     cx.setLineDash(layer.kind==='missed'?[9,7]:[]);
     for(const segment of layer.segments)strokeProcedureSegment(segment);
-    cx.globalAlpha=.95;cx.lineWidth=2.2;
-
+    // A dark casing separates the procedure centre from the cyan route band
+    // where the two share fixes, so neither line is lost in the other.
+    cx.strokeStyle='rgba(3,7,12,.62)';cx.globalAlpha=.9;cx.lineWidth=4.6;
+    for(const segment of layer.segments)strokeProcedureSegment(segment);
+    cx.strokeStyle=color;cx.globalAlpha=.95;cx.lineWidth=2.4;
     for(const segment of layer.segments)strokeProcedureSegment(segment);
     cx.setLineDash([]);
   }
   cx.restore();
-  for(const layer of layers){
-    if(!layer||!layer.ok||!shown[layer.kind])continue;
-    const color=layer.color||'#f472b6',last=layer.segments.length-1;
+  // Procedure name and runway badge first: it gets the free space beside the
+  // first published fix before the individual fix labels do.
+  if(lblZ()>=4.6)for(const layer of drawn){
+    const head=layer.segments[0]&&layer.segments[0][0];if(!head)continue;
+    const q=vis(head.lon,head.lat);if(!q)continue;
+    const tag=procTag(layer);if(tag)mkText(tag,q[0]+8,q[1]-13,procColor(layer),11.2,true)
+  }
+  for(const layer of drawn){
+    const color=procColor(layer),last=layer.segments.length-1;
     layer.segments.forEach((segment,si)=>{
       segment.forEach((p,pi)=>{
         const q=vis(p.lon,p.lat);if(!q)return;const[x,y]=q;
         if(x<-20||x>W+20||y<-20||y>H+20)return;
         const end=si===last&&pi===segment.length-1;
+        const selected=wpCard&&wpCard.kind=='proc'&&wpCard.proc&&wpCard.proc.layer.kind===layer.kind&&wpCard.proc.layer.id===layer.id&&wpCard.proc.segmentIndex===si&&wpCard.proc.pointIndex===pi;
+        if(selected)mkSelHalo(x,y,5.2);
         if(String(p.id||'').startsWith('RW')){mkDot(x,y,color,3.2);return}
         mkDot(x,y,color,1.9);
         if(lblZ()>=8||end)mkText(String(p.id||'').toUpperCase(),x+6,y-6,color,10.5,end);
       });
-      const head=segment[0];if(!head)return;
-      const q=vis(head.lon,head.lat);if(!q)return;
-      if(lblZ()>=7.5&&si===0)mkText(layer.id+' '+layer.label,q[0]+6,q[1]+16,color,10.5,true);
     });
   }
 }
@@ -1546,7 +1617,10 @@ function drawRouteMarkers(){
   if(wpIdx!=null&&!route[wpIdx])wpIdx=null;
   const plan=planTocTod(),n=route.length,r=mkRz();
   for(let i=0;i<n;i++){
-    const p=route[i],q=vis(p.lon,p.lat);
+    const p=route[i],ss=String(p.ss||'').toLowerCase();
+    if(p.synthetic)continue;
+    if((ss=='sid'&&!L.procSid)||(ss=='star'&&!L.procStar)||((ss=='app'||ss=='approach')&&!L.procApproach))continue;
+    const q=vis(p.lon,p.lat);
     if(!q)continue;
     const[x,y]=q;
     if(x<-30||x>W+30||y<-30||y>H+30)continue;
@@ -1613,60 +1687,94 @@ loadDescentRate();
 function placeTod(){const ti=route.findIndex(p=>p.id=='TOD');if(ti<0||route.length<2)return;const dst=route[route.length-1],drop=route[ti].elev-(dst.elev||0);if(!(drop>0))return;const want=drop/DESC_FT_PER_NM,pts=route.filter((_,i)=>i!==ti);let acc=0;for(let j=pts.length-1;j>0;j--){const seg=dist(pts[j-1],pts[j]);if(acc+seg>=want){const f=seg?(want-acc)/seg:0;const tod={...route[ti],lat:pts[j].lat+(pts[j-1].lat-pts[j].lat)*f,lon:pts[j].lon+(pts[j-1].lon-pts[j].lon)*f};route=pts.slice(0,j).concat([tod],pts.slice(j));return}acc+=seg}}
 /* The SimBrief ID is remembered (stratos.simbriefId); it is asked for only when missing. Change it with the SimBrief ID button. */
 async function changeSB(){const v=await askSimbriefId();if(v){localStorage.setItem('stratos.simbriefId',v);alert('SimBrief ID saved.')}}
-async function importSB(){
-  let id=(localStorage.getItem('stratos.simbriefId')||'').trim();
-  if(!id){id=await askSimbriefId();if(!id)return;localStorage.setItem('stratos.simbriefId',id)}
+/*
+ * One import path for both the button and the automatic uplink. SimBrief names
+ * the procedures; lib/simbriefroute.js resolves their real CIFP legs and builds
+ * one route. Only a verified procedure is inserted. A plan whose geometry is
+ * unavailable keeps the en-route route and carries the reason, never a guessed
+ * path.
+ */
+let autoSimbriefBusy=false,autoSimbriefAt=0;
+function activeSimbriefRecord(){
+  try{return window.SBROUTE?SBROUTE.activeSimbriefPlan(localStorage):null}catch(_){return null}
+}
+function simbriefMarkerMatches(record,key,choice){
+  if(!record||record.key!==key)return false;
+  const applied=record.applied||{};
+  return (!choice.sid||applied.sid===choice.sid)&&(!choice.star||applied.star===choice.star)&&(!choice.approach||applied.approach===choice.approach)
+}
+function applySimbriefPlan(result,{manual=false}={}){
+  const hadRoute=route.length>1,previousTrav=trav;
+  route=result.map.map(p=>({...p,k:routeKindName(p.k)}));
   try{
-    const q=/^\d+$/.test(id)?`userid=${encodeURIComponent(id)}`:`username=${encodeURIComponent(id)}`;
-    const r=await fetch(`https://www.simbrief.com/api/xml.fetcher.php?${q}&json=v2`);
-        if(r.status===400)throw new Error('SimBrief did not recognise that username or Pilot ID, or there is no flight plan saved for it. Check the number in SimBrief account settings and make sure you generated a plan.');
-    if(!r.ok)throw new Error('SimBrief returned HTTP '+r.status);
-    const d=await r.json();
-    let fp=d.navlog&&Array.isArray(d.navlog.fix)?d.navlog.fix:[];
-    if(!fp.length){const x=await fetch(`https://www.simbrief.com/api/xml.fetcher.php?${q}`);if(x.ok){const doc=new DOMParser().parseFromString(await x.text(),'text/xml');fp=Array.from(doc.querySelectorAll('navlog > fix')).map(f=>{const t=n=>(f.querySelector(n)?.textContent||'').trim();return{ident:t('ident'),name:t('name'),pos_lat:t('pos_lat'),pos_long:t('pos_long'),altitude_feet:t('altitude_feet'),type:t('type')}})}}
+    localStorage.setItem('stratos.activeRoute',JSON.stringify(result.active));
+    localStorage.setItem('dl.route',JSON.stringify(route));
+  }catch(_){}
+  activePlanRaw=null;
+  trav=hadRoute?Math.min(previousTrav,total()):0;
+  panel=null;fpExp=true;try{localStorage.setItem('stratos.fpExpanded','1')}catch(_){}
+  render();
+  if(!hadRoute&&route.length){V.lon=route[0].lon;V.lat=route[0].lat;V.tz=null;setFol(false)}
+  // A new plan is brought into view; a refreshed procedure set on the same
+  // flight leaves the pilot's chart and tracking where they were.
+  if((!hadRoute||manual)&&route.length>1)fitRoute();
+}
+async function importSimbrief({manual=false,force=false}={}){
+  if(autoSimbriefBusy)return null;
+  let id=(localStorage.getItem('stratos.simbriefId')||'').trim();
+  if(!id&&manual){id=await askSimbriefId();if(!id)return null;localStorage.setItem('stratos.simbriefId',id)}
+  if(!id||!window.FP||!window.SBROUTE||!window.SIMBRIEF)return null;
+  const now=Date.now();
+  if(!manual&&!force&&now-autoSimbriefAt<30000)return null;
+  autoSimbriefAt=now;autoSimbriefBusy=true;
+  try{
+    const latest=await window.SIMBRIEF.fetchSimbriefPlan(id);
+    const ofp=latest&&latest.ofp;
+    if(!ofp)throw new Error('SimBrief returned a plan without a usable OFP.');
     localStorage.setItem('stratos.simbriefId',id);
-    // The parsed plan names the SID, STAR and runways, so it is kept for the
-    // flight-plan card and the procedure lookups. A plan without navlog fixes
-    // (Detailed Navlog off) is still worth importing for those procedures.
-    let plan=null;try{if(window.FP)plan=FP.parseOfp(d)}catch(_){}
-    const known=Boolean(plan&&((plan.origin&&(plan.origin.icao||plan.origin.sid))||(plan.destination&&(plan.destination.icao||plan.destination.star))));
-    if(!fp.length&&!known){const st=d.fetch&&d.fetch.status?' SimBrief said: '+d.fetch.status+'.':'';throw new Error('No waypoints found in the SimBrief plan.'+st+' Response fields: '+(Object.keys(d).join(', ')||'none')+'.')}
-    if(plan)try{FP.saveOfp(localStorage,plan,id)}catch(_){}
-    if(!fp.length){
-      const procs=plan?[plan.origin&&plan.origin.sid?'SID '+plan.origin.sid:'',plan.destination&&plan.destination.star?'STAR '+plan.destination.star:''].filter(Boolean).join(' · '):'';
-      fpExp=true;try{localStorage.setItem('stratos.fpExpanded','1')}catch(_){}
-      panel=null;render();
-      alert('SimBrief plan saved'+(procs?' · '+procs:'')+'. This plan has no navlog fixes, so your route was left unchanged. Turn on Detailed Navlog in SimBrief to import waypoints.');
-      return;
+    try{FP.saveOfp(localStorage,ofp,id)}catch(_){}
+    const key=SBROUTE.planKey(ofp),choice=SBROUTE.procedureChoice(ofp);
+    if(!manual&&!force){
+      if(simbriefMarkerMatches(activeSimbriefRecord(),key,choice))return {unchanged:true};
+      // A newer manual EFB route and an older SimBrief plan: the pilot's own
+      // build wins. A newly generated SimBrief plan is newer and is imported.
+      const generatedMs=(Number(ofp.generatedAt)||0)*1000;
+      if(!activeSimbriefRecord()&&generatedMs&&SBROUTE.activeRouteBuiltAt(localStorage)>generatedMs)return {unchanged:true};
     }
-    const imported={origin:d.origin&&d.origin.icao_code,destination:d.destination&&d.destination.icao_code};
-    route=fp.map((w,i)=>({
-      id:w.ident||('WP'+(i+1)),
-      name:w.name||w.ident||'Waypoint',
-      lat:parseFloat(w.pos_lat),
-      lon:parseFloat(w.pos_long),
-      elev:parseFloat(w.altitude_feet||0),
-      k:w.type=='apt'?'apt':w.type=='vor'||w.type=='ndb'?'nav':'fix',
-      // A procedure tag and an airway are kept only when the plan states them:
-      // they decide the SID/STAR and airway-fix symbols, never a guess.
-      ss:w.is_sid_star=='1'?(String(w.stage||'').toUpperCase()=='DES'?'star':'sid'):'',
-      aw:w.via_airway&&!/^DCT$/i.test(w.via_airway)?String(w.via_airway).toUpperCase():''
-    })).filter(w=>!isNaN(w.lat)&&!isNaN(w.lon));
-    placeTod();
-    // Land on the map with the new flight-plan card open, not the editor: the
-    // card is the post-import surface, and Edit route is one tap away.
-    save();trav=0;panel=null;fpExp=true;try{localStorage.setItem('stratos.fpExpanded','1')}catch(_){}
-    render();
-    if(route.length){V.lon=route[0].lon;V.lat=route[0].lat;V.tz=null;setFol(false)}
-    // Land on the whole plan, so the departure and arrival procedures are on
-    // the chart at once instead of the aircraft's first fix at the old zoom.
-    if(route.length>1)fitRoute();
-    const procs=plan?[plan.origin&&plan.origin.sid?'SID '+plan.origin.sid:'',plan.destination&&plan.destination.star?'STAR '+plan.destination.star:''].filter(Boolean).join(' · '):'';
-    alert('SimBrief plan loaded: '+(imported.origin||'')+' → '+(imported.destination||'')+' ('+route.length+' waypoints)'+(procs?' · '+procs:''));
+    const built=await SBROUTE.buildFromSimbrief(ofp,fetch);
+    if(!built.ok){
+      if(manual){
+        fpExp=true;try{localStorage.setItem('stratos.fpExpanded','1')}catch(_){}
+        panel=null;render();
+        const hint=built.reason==='no-route'?' Turn on Detailed Navlog in SimBrief to import the route.':'';
+        alert('SimBrief plan saved · '+[choice.sid?'SID '+choice.sid:'',choice.star?'STAR '+choice.star:'',choice.approach?'APP '+choice.approach:''].filter(Boolean).join(' · ')+'. '+built.error+hint);
+      }
+      return built;
+    }
+    const result=SBROUTE.storageFromPlan(built.plan,ofp,id,built.warnings,built.applied);
+    result.active.dirty=false;
+    applySimbriefPlan(result,{manual});
+    if(manual){
+      const loaded=built.applied.sid||built.applied.star||built.applied.approach
+        ?[built.applied.sid?'SID '+built.applied.sid.id:'',built.applied.star?'STAR '+built.applied.star.id:'',built.applied.approach?'APP '+built.applied.approach.id:''].filter(Boolean).join(' · ')
+        :'';
+      const warning=built.warnings.length?'\n\n'+built.warnings.map(w=>w.text).join('\n'):'';
+      alert('SimBrief plan loaded: '+choice.dep+' → '+choice.arr+' ('+route.length+' points'+(loaded?' · '+loaded:'')+')'+warning);
+    }
+    return {unchanged:false,result,built};
   }catch(e){
-    alert('SimBrief import error: '+(e.message||e));
+    if(manual)alert('SimBrief import error: '+(e.message||e));
+    return null;
+  }finally{
+    autoSimbriefBusy=false;
   }
 }
+async function importSB(){return importSimbrief({manual:true,force:true})}
+window.autoImportSimbrief=()=>importSimbrief({manual:false});
+addEventListener('focus',()=>importSimbrief({manual:false}));
+addEventListener('pageshow',()=>importSimbrief({manual:false}));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)importSimbrief({manual:false})});
+setInterval(()=>{if(!document.hidden)importSimbrief({manual:false})},300000);
 $('#bRoute').onclick=()=>{panel=panel=='route'?null:'route';render()};
 document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{L[b.dataset.l]^=1;b.classList.toggle('on')});
 /* Traffic source. VATSIM publishes a keyless feed of its live pilots, and the
@@ -1706,9 +1814,38 @@ function deg(v){return v==null?'–':String(Math.round(v)%360).padStart(3,'0')+'
 function cardRow(k,v){return '<dt>'+esc(k)+'</dt><dd>'+v+'</dd>'}
 function wpAltText(p){const alt=Number(p.elev)||0;if(p.k=='apt')return alt>0?Math.round(alt).toLocaleString()+' ft (field elevation)':'Not in the plan';return alt>0?Math.round(alt).toLocaleString()+' ft (planned altitude)':'Not in the plan'}
 function wpKind(p){return p.k=='apt'?'Airport':p.k=='nav'?'Navaid':'Waypoint'}
+function procForRoutePoint(p){
+  const kind=String(p&&p.ss||'').toLowerCase();
+  if(kind!=='sid'&&kind!=='star'&&kind!=='app'&&kind!=='approach')return null;
+  const layers=Array.isArray(window.PROCLAYERS)?window.PROCLAYERS:[];
+  const id=String(p.id||'').toUpperCase();
+  return layers.find(layer=>layer&&layer.ok&&layer.kind===kind&&(layer.points||[]).some(point=>String(point.id||'').toUpperCase()===id))||null
+}
+function procCardHtml(){
+  const c=wpCard&&wpCard.kind=='proc'?wpCard.proc:null;
+  if(!c||!c.layer||!c.point)return'';
+  const layer=c.layer,point=c.point,color=procColor(layer),transition=String(layer.transition||'');
+  const title=layer.kind==='sid'?'SID · Departure':layer.kind==='star'?'STAR · Arrival':layer.kind==='approach'?'Approach':layer.kind==='missed'?'Missed approach':'Procedure';
+  const role=layer.kind==='sid'?'Departure fix':layer.kind==='star'?'Arrival fix':layer.kind==='missed'?'Missed-approach fix':'Approach fix';
+  return '<div class="wc-top"><span class="wc-count" style="color:'+color+'">'+esc(title)+'</span><button type="button" class="wc-x" data-wc="close" aria-label="Close">✕</button></div>'
+    +'<h4>'+esc(point.id||'—')+'</h4>'
+    +'<dl class="wc-rows">'
+    +cardRow('Identifier',esc(point.id||'—'))
+    +cardRow('Procedure',esc((layer.label?layer.label+' ':'')+(layer.id||'—')))
+    +cardRow('Airport',esc(layer.airport||'—'))
+    +cardRow('Runway',esc(layer.runway||'Not specified'))
+    +cardRow('Transition',esc(transition?(transition+(/^RW/i.test(transition)?' (runway)':'')):'Not selected'))
+    +cardRow('Coordinates',fmtLat(point.lat)+' '+fmtLon(point.lon))
+    +cardRow('Role',esc(role))
+    +(layer.cycle?cardRow('Data',esc('AIRAC '+layer.cycle)):'')
+    +'</dl>'
+    +(layer.source?'<div class="m">'+esc(layer.source)+'</div>':'')
+    +'<div class="wc-btns"><button type="button" data-wc="proc-focus">Centre chart</button><button type="button" data-wc="close">Close</button></div>';
+}
 function cumNm(i){let c=0;for(let j=1;j<=i;j++)c+=dist(route[j-1],route[j]);return c}
 function routeCardHtml(){
   if(!wpCard)return'';
+  if(wpCard.kind=='proc')return procCardHtml();
   if(wpCard.kind=='leg'){
     const i=wpCard.index,a=route[i],b=route[i+1];
     if(!a||!b)return'';
@@ -1727,6 +1864,7 @@ function routeCardHtml(){
   const i=wpCard.index,p=route[i];
   if(!p)return'';
   const prev=route[i-1],next=route[i+1],last=route.length-1;
+  const proc=procForRoutePoint(p);
   const legs=[];
   if(prev)legs.push('<li>From '+esc(prev.id)+' · '+dist(prev,p).toFixed(1)+' nm · '+deg(brg(prev,p))+' T</li>');
   if(next)legs.push('<li>To '+esc(next.id)+' · '+dist(p,next).toFixed(1)+' nm · '+deg(brg(p,next))+' T</li>');
@@ -1741,7 +1879,7 @@ function routeCardHtml(){
     +cardRow('Distance from previous',prev?dist(prev,p).toFixed(1)+' nm':'–')
     +cardRow('Distance to next',next?dist(p,next).toFixed(1)+' nm':'–')
     +cardRow('Type',wpKind(p))
-    +(p.ss=='sid'||p.ss=='star'?cardRow('Procedure',p.ss=='sid'?'SID fix (departure)':'STAR fix (arrival)'):'')
+    +(proc?cardRow('Procedure',esc((proc.label?proc.label+' ':'')+(proc.id||'')))+cardRow('Runway',esc(proc.runway||'Not specified'))+cardRow('Transition',esc(proc.transition||'Not selected')):(p.ss=='sid'||p.ss=='star'||p.ss=='app'||p.ss=='approach'?cardRow('Procedure',p.ss=='sid'?'SID fix (departure)':p.ss=='star'?'STAR fix (arrival)':'Instrument approach fix'):''))
     +(p.aw?cardRow('Airway',esc(p.aw)):'')
     +'</dl>'
     +(legs.length?'<div class="wc-sec">Connected legs</div><ul class="wc-legs">'+legs.join('')+'</ul>':'')
@@ -1776,7 +1914,7 @@ function paintRouteCard(){
 }
 function openRouteCard(card,x,y){
   const host=$('#app'),r=host.getBoundingClientRect();
-  const p=card.kind=='leg'?route[card.index]:route[card.index];
+  const p=card.kind=='proc'?(card.proc&&card.proc.point):route[card.index];
   if(!p)return;
   wpCard={...card,anchor:{lat:p.lat,lon:p.lon},click:{x:x-r.left,y:y-r.top}};
   paintRouteCard();
@@ -1794,6 +1932,7 @@ function closeRouteCard(){wpCard=null;paintRouteCard()}
 function routeCardAction(act){
   if(act=='close'){wpIdx=null;closeRouteCard();return}
   const c=wpCard;if(!c)return;
+  if(act=='proc-focus'){const p=c.proc&&c.proc.point;if(!p)return;setFol(false);V.lon=p.lon;V.lat=p.lat;V.tz=null;V.anchor=null;focusAtLeast(10);render();return}
   if(act=='delete'){wpIdx=null;route.splice(c.index,1);trav=Math.min(trav,total());save();closeRouteCard();if(panel=='route'||panel=='fsum')render();return}
   if(act=='up'){const i=c.index;if(i<=0)return;const t=route[i-1];route[i-1]=route[i];route[i]=t;c.index=i-1;c.anchor={lat:route[i-1].lat,lon:route[i-1].lon};wpIdx=i-1;save();paintRouteCard();if(panel=='route')render();return}
   if(act=='down'){const i=c.index;if(i>=route.length-1)return;const t=route[i+1];route[i+1]=route[i];route[i]=t;c.index=i+1;c.anchor={lat:route[i+1].lat,lon:route[i+1].lon};wpIdx=i+1;save();paintRouteCard();if(panel=='route')render();return}
@@ -1801,8 +1940,22 @@ function routeCardAction(act){
 }
 $('#app').addEventListener('click',e=>{const b=e.target.closest('[data-wc]');if(!b||!wpCard)return;routeCardAction(b.dataset.wc)});
 addEventListener('keydown',e=>{if(e.key=='Escape'){if(wpCard)closeRouteCard();wpIdx=null}});
+function procAt(x,y){
+  const r=cv.getBoundingClientRect();x-=r.left;y-=r.top;
+  let best=null,bd=Math.max(17,mkRz()+8);
+  const layers=Array.isArray(window.PROCLAYERS)?window.PROCLAYERS:[];
+  for(const layer of layers){
+    if(!procShown(layer))continue;
+    layer.segments.forEach((segment,si)=>segment.forEach((p,pi)=>{
+      const q=vis(p.lon,p.lat);if(!q)return;
+      const d=Math.hypot(q[0]-x,q[1]-y);
+      if(d<bd){bd=d;best={kind:'proc',proc:{layer,segmentIndex:si,pointIndex:pi,point:p}}}
+    }));
+  }
+  return best
+}
 function tap(x,y){if(CH.on)return;const rect=cv.getBoundingClientRect();
-if(route.length&&L.rte){const wi=wpAt(x,y);if(wi>=0){wpIdx=wi;openRouteCard({kind:'wp',index:wi},x,y);return}const li=legAt(x,y);if(li>=0){wpIdx=li;openRouteCard({kind:'leg',index:li},x,y);return}}
+if(route.length&&L.rte){const wi=wpAt(x,y);if(wi>=0){wpIdx=wi;openRouteCard({kind:'wp',index:wi},x,y);return}const pc=procAt(x,y);if(pc){wpIdx=null;openRouteCard(pc,x,y);return}const li=legAt(x,y);if(li>=0){wpIdx=li;openRouteCard({kind:'leg',index:li},x,y);return}}
 closeRouteCard();wpIdx=null;sel=null;
 x-=rect.left;y-=rect.top;let best=null,bestD=Infinity;
 const items=[...(L.trf?T.map(o=>[o,18]):[]),...(L.apt?A.filter(a=>!a.x||V.z>=6).map(o=>[o,14]):[]),...(L.nav&&V.z>=6?N.map(o=>[o,12]):[]),...(liveOk()?[[{k:'own',id:'Own-ship',...own},22]]:[])];
@@ -2869,15 +3022,45 @@ function fcPlanInfo(){
     return fcPlanCache
   }catch(_){return null}
 }
-function fcProcedures(o){
-  // A stored SimBrief plan describes your own flight only. A tracked target
-  // gets the airports its own feed reports; the PC's flight is never used for
-  // it, and no procedure is claimed without a plan that states one.
-  const own=o.k=='own',ofp=own?fcPlanInfo():null,cf=own?((live.d&&live.d.currentFlight)||{}):{};
-  const origin=(ofp&&ofp.origin)||{},dest=(ofp&&ofp.destination)||{};
+/* The procedure deck follows the route that is actually on the chart. An EFB
+   plan stores the exact SID/STAR records it applied, so its newer records win
+   over a SimBrief OFP only when they describe the same endpoints. A newer
+   SimBrief import for the same route is still the pilot's latest selection. */
+let activePlanRaw=null,activePlanCache=null;
+function activeRoutePlan(){
+  try{
+    const raw=localStorage.getItem('stratos.activeRoute');
+    if(raw===activePlanRaw)return activePlanCache;
+    activePlanRaw=raw;
+    const stored=JSON.parse(raw||'null');
+    activePlanCache=stored&&stored.plan&&typeof stored.plan==='object'?stored.plan:null;
+    return activePlanCache
+  }catch(_){activePlanRaw=null;activePlanCache=null;return null}
+}
+function deckProcedurePlan(){
+  const ofp=fcPlanInfo(),owned=activeRoutePlan(),up=value=>String(value||'').toUpperCase();
+  const dep=route.length&&route[0].k==='apt'?up(route[0].id):'';
+  const arr=route.length>1&&route[route.length-1].k==='apt'?up(route[route.length-1].id):'';
+  const ofpMatch=Boolean(ofp&&dep&&arr&&up(ofp.origin&&ofp.origin.icao)===dep&&up(ofp.destination&&ofp.destination.icao)===arr);
+  const efMatch=Boolean(owned&&dep&&arr&&up(owned.origin&&owned.origin.id)===dep&&up(owned.destination&&owned.destination.id)===arr);
+  if(!efMatch)return ofpMatch?ofp:(!dep||!arr?ofp:null);
+  if(ofpMatch&&(Number(ofp.fetchedAt)||0)>(Number(owned.builtAt)||0))return ofp;
+  const sid=owned.sid||null,star=owned.star||null,approach=owned.approach||null;
   return {
-    plan:Boolean(ofp),
-    source:ofp?'SimBrief plan':(own&&cf.id?'recorded flight':'no filed plan'),
+    airac:up(owned.simbrief&&owned.simbrief.airac)||up(ofp&&ofp.airac),
+    origin:{...(ofp&&ofp.origin||{}),icao:dep,rwy:up(owned.departureRwy),sid:up(sid&&sid.id),sidTrans:up(sid&&(sid.enrouteTransition||sid.runwayTransition))},
+    destination:{...(ofp&&ofp.destination||{}),icao:arr,rwy:up(owned.arrivalRwy),star:up(star&&star.id),starTrans:up(star&&(star.enrouteTransition||star.runwayTransition)),approach:up(approach&&approach.id),approachTrans:up(approach&&(approach.enrouteTransition||approach.transitionUsed)),approachRwy:up(approach&&approach.runway)},
+  };
+}
+function fcProcedures(o){
+  // A stored SimBrief plan or the EFB's own plan describes your own flight. A
+  // tracked target gets the airports its own feed reports; the PC's flight is
+  // never used for it, and no procedure is claimed without a plan that states one.
+  const own=o.k=='own',ofp=own?fcPlanInfo():null,flightPlan=own?deckProcedurePlan():null,cf=own?((live.d&&live.d.currentFlight)||{}):{};
+  const origin=(flightPlan&&flightPlan.origin)||{},dest=(flightPlan&&flightPlan.destination)||{};
+  return {
+    plan:Boolean(flightPlan),
+    source:flightPlan?(ofp?'SimBrief plan':'EFB plan'):(own&&cf.id?'recorded flight':'no filed plan'),
     dep:origin.icao||cf.depAirport||(!own?String(o.dep||''):'')||'',
     arr:dest.icao||cf.arrAirport||(!own?String(o.arr||''):'')||'',
     sid:origin.sid||'',sidTrans:origin.sidTrans||'',star:dest.star||'',starTrans:dest.starTrans||'',
@@ -2895,7 +3078,7 @@ function fcProcHtml(o){
     +block('SID',p.sid,p.sidTrans,p.depRwy,Boolean(p.sid&&p.depRwy),p.plan?'runway not in plan':'not in the plan')
     +block('STAR',p.star,p.starTrans,p.arrRwy,Boolean(p.star&&p.arrRwy),p.plan?'runway not in plan':'not in the plan')
     +'</div>'
-    +'<div class="fcp-hint">'+esc((p.plan?'SID and STAR from the SimBrief plan':(p.dep||p.arr?('No SimBrief plan for '+p.dep+' → '+p.arr):'No SimBrief plan loaded, so no SID or STAR is claimed'))+(o.k=='own'&&PROCG.notes.length?' · '+PROCG.notes.join(' · '):''))+'</div>';
+    +'<div class="fcp-hint">'+esc((p.plan?'SID and STAR from the '+(p.source||'flight plan'):(p.dep||p.arr?('No flight plan for '+p.dep+' → '+p.arr):'No flight plan loaded, so no SID or STAR is claimed'))+(o.k=='own'&&PROCG.notes.length?' · '+PROCG.notes.join(' · '):''))+'</div>';
 }
 function fcToggleHtml(){
   return '<button type="button" class="fci" data-fc-toggle aria-expanded="'+(fExp?'true':'false')+'" title="'+(fExp?'Minimize the card, keeping SID and STAR':'Show the full aircraft card')+'">'+(fExp?'&#9662;':'&#9652;')+'</button>';
@@ -3097,12 +3280,12 @@ function fpWind(w){if(!w)return'–';const d=w.direction==null?'VRB':String(Math
 function fpBuild(force){
   if(!window.FS)return null;
   const metars={};A.forEach(a=>{if(a.metar&&a.mt)metars[a.id]={metar:a.metar,fetchedAt:a.mt,source:'METAR'}});
-  const key=route.map(p=>p.id+':'+Number(p.lat).toFixed(3)+':'+Number(p.lon).toFixed(3)).join(',')+'|'+(localStorage.getItem('stratos.ofp')||'')+'|'+Object.keys(metars).map(k=>k+metars[k].fetchedAt).join(',');
+  const key=route.map(p=>p.id+':'+Number(p.lat).toFixed(3)+':'+Number(p.lon).toFixed(3)).join(',')+'|'+(localStorage.getItem('stratos.ofp')||'')+'|'+Object.keys(metars).map(k=>k+metars[k].fetchedAt).join(',')+'|'+JSON.stringify(activeRoutePlan()&&activeRoutePlan().approach||null);
   if(!force&&key===fpSumKey&&fpSumCache)return fpSumCache;
   /* The planned cruise level comes from the vertical profile of the route the
      plan carries, so the compact card can state it even when the imported
      SimBrief plan does not carry one itself. */
-  try{fpSumCache=FS.buildSummary({route,ofp:fpOfp(),cruiseKts:CRUISE,cruiseAltFt:(planTocTod()||{}).cruise||null,weightUnit:'kg',metars,position:liveOk()?{lat:own.lat,lon:own.lon}:null});fpSumKey=key}catch(e){fpSumCache=null;if(window.console)console.warn('Flight-plan summary:',e)}
+  try{fpSumCache=FS.buildSummary({route,plan:activeRoutePlan(),ofp:fpOfp(),cruiseKts:CRUISE,cruiseAltFt:(planTocTod()||{}).cruise||null,weightUnit:'kg',metars,position:liveOk()?{lat:own.lat,lon:own.lon}:null});fpSumKey=key}catch(e){fpSumCache=null;if(window.console)console.warn('Flight-plan summary:',e)}
   return fpSumCache;
 }
 /* Fetch the departure and arrival METARs once a plan exists, then no more than
@@ -3181,7 +3364,7 @@ function fpRender(){
     const header='<div class="fptop">'+(liveOk()?'<span class="dot"></span>':'')+'<b>'+esc(callsign||'Flight plan')+'</b><span class="sp"></span>'+(aircraft?'<span>'+esc(aircraft)+'</span>':'')+fpToggleBtn()+'</div>';
     const routeLine='<div class="fpr"><span>'+esc(depId||'—')+'</span><span class="arw"></span><span>'+esc(arrId||'—')+'</span></div>'
       +'<div class="fpsub">'+esc(depName)+' → '+esc(arrName)+'</div>';
-    const procs='<div class="fpproc">'+block('SID',sid,depRwy,plan)+block('STAR',star,arrRwy||approach,plan)+'</div>';
+    const procs='<div class="fpproc">'+block('SID',sid,depRwy,plan)+block('STAR',star,arrRwy||approach,plan)+block('APP',approach,arrRwy,plan)+'</div>';
     let extra='';
     if(fpExp){
       if(sum&&Array.isArray(sum.notes)&&sum.notes.length)extra+='<div class="fpsec"><div class="fpwx fpstale">'+sum.notes.map(n=>esc(n)).join('<br>')+'</div></div>';
@@ -3288,6 +3471,7 @@ try{if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').t
 </script>
 <script type="module">
   import * as FP from './js/flightpanel.js';
+  import * as SIMBRIEF from './js/lib/simbrief.js';
   import * as FS from './js/lib/flightsummary.js';
   import * as VATSIM from './js/lib/vatsim.js';
   import * as AC from './js/lib/aircraft.js';
@@ -3295,6 +3479,7 @@ try{if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').t
   import * as REG from './js/lib/aircraftreg.js';
   import * as AL from './js/lib/airlines.js';
   import { initProcDeck } from './js/procdeck-ui.js';
+  import * as SIMBRIEFROUTE from './js/lib/simbriefroute.js';
   import * as PROFILE from './js/lib/profile.js';
   import * as PROC from './js/lib/procedures.js';
   import * as TRAILC from './js/lib/trailcolor.js';
@@ -3306,12 +3491,19 @@ try{if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').t
   window.VATSIM = VATSIM;
   window.AC = AC;
   window.FP = FP;
+  window.SIMBRIEF = SIMBRIEF;
   window.FS = FS;
+  window.SBROUTE = SIMBRIEFROUTE;
   window.PHOTO = PHOTO;
   window.REG = REG;
   window.AL = AL;
   // The procedure deck reads the plan and the route through window.DECK,
   // which the map script above has already defined.
   initProcDeck();
+  // If a SimBrief ID is saved, the latest OFP is uplinked and its verified SID
+  // and STAR are placed on the route without asking for a procedure selection.
+  // The import is silent when there is no new plan; the manual button keeps its
+  // explicit errors.
+  if (typeof window.autoImportSimbrief === 'function') window.autoImportSimbrief();
 </script>
 </body></html>

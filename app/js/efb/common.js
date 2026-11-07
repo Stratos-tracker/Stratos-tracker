@@ -143,6 +143,7 @@ export function loadRoute() {
     altFt: Number.isFinite(Number(p.altFt)) && Number(p.altFt) > 0 ? Number(p.altFt) : null,
     ss: String(p.ss || ''),
     aw: String(p.aw || ''),
+    terminator: String(p.terminator || ''),
   });
   const usable = p => p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lon));
   try {

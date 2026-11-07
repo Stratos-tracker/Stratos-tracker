@@ -13,17 +13,26 @@
  * as unavailable with its reason.
  */
 
+import { destination } from './geo.js';
+
 export const KIND_ORDER = ['sid', 'star', 'approach'];
 
 export const KINDS = {
-  sid: { key: 'sid', label: 'SID', title: 'Departure', color: '#f472b6' },
-  star: { key: 'star', label: 'STAR', title: 'Arrival', color: '#a78bfa' },
-  approach: { key: 'approach', label: 'APP', title: 'Approach', color: '#fbbf24' },
-  missed: { key: 'missed', label: 'MISSED', title: 'Missed approach', color: '#fb7185' },
+  sid: { key: 'sid', label: 'SID', title: 'Departure', color: '#c084fc' },
+  star: { key: 'star', label: 'STAR', title: 'Arrival', color: '#f59e0b' },
+  approach: { key: 'approach', label: 'APP', title: 'Approach', color: '#22c55e' },
+  missed: { key: 'missed', label: 'MISSED', title: 'Missed approach', color: '#ef4444' },
 };
 
 const up = value => String(value == null ? '' : value).trim().toUpperCase();
 const num = value => (Number.isFinite(Number(value)) ? Number(value) : null);
+
+/* An altitude-terminated heading leg publishes where it ends vertically, not
+   where it ends laterally. For the drawn line only, this planning gradient
+   places the turn at that altitude. It is stated on the path note so the line
+   is never mistaken for a published ground distance; a source that carries its
+   own gradient wins. */
+const CLIMB_DISPLAY_GRADIENT_FT_PER_NM = 500;
 
 /* The ARINC 424 approach identifier carries its type in its first letter and
    the runway in the rest: I16C is the ILS to 16C, H16CZ is the RNAV (RNP) Z
@@ -83,6 +92,59 @@ export function runwayThreshold(payload, runway) {
   const lat = num(point.lat);
   const lon = num(point.lon);
   return lat == null || lon == null ? null : { id: 'RW' + id, lat, lon };
+}
+
+function oppositeRunway(id) {
+  const text = up(id).replace(/^RW/, '');
+  const match = text.match(/^(\d{2})([LRCB]?)$/);
+  if (!match) return '';
+  const number = ((Number(match[1]) + 17) % 36) + 1;
+  const suffix = match[2] === 'L' ? 'R' : match[2] === 'R' ? 'L' : match[2];
+  return String(number).padStart(2, '0') + suffix;
+}
+
+/* The runway's far threshold is the departure end. Its elevation is the start
+   of the initial climb; the published heading and altitude then give the turn
+   point. Without a source elevation no lateral turn is invented. */
+function climbGeometry(payload, runway, threshold, initialClimb) {
+  if (!threshold || !initialClimb) return null;
+  const course = num(initialClimb.courseDeg) ?? num(initialClimb.headingDeg);
+  const altitude = num(initialClimb.altFt) ?? num(initialClimb.altitude_ft);
+  const endData = payload && payload.runways && payload.runways[oppositeRunway(runway)];
+  const endElev = endData ? (num(endData.elevFt) ?? num(endData.elevationFt)) : null;
+  if (course == null || altitude == null || endElev == null || !endData) return null;
+  const sourceGradient = num(initialClimb.gradientFtPerNm);
+  const gradient = sourceGradient > 0 ? sourceGradient : CLIMB_DISPLAY_GRADIENT_FT_PER_NM;
+  const turnNm = Math.max(0, (altitude - endElev) / gradient);
+  const turn = destination({ lat: Number(endData.lat), lon: Number(endData.lon) }, course, turnNm);
+  if (!Number.isFinite(turn.lat) || !Number.isFinite(turn.lon)) return null;
+  return {
+    end: {
+      id: 'RW' + runway + 'E',
+      name: `Runway ${runway} departure end`,
+      lat: Number(endData.lat),
+      lon: Number(endData.lon),
+      elevFt: endElev,
+      runwayEnd: true,
+      synthetic: true,
+    },
+    turn: {
+      id: 'RW' + runway + 'C',
+      name: `${Math.round(altitude).toLocaleString('en-US')} ft`,
+      lat: turn.lat,
+      lon: turn.lon,
+      altFt: Math.round(altitude),
+      courseDeg: course,
+      terminator: up(initialClimb.terminator) || 'VA',
+      synthetic: true,
+      climb: true,
+    },
+    course,
+    altitude,
+    turnNm,
+    gradient,
+    prescribed: sourceGradient > 0,
+  };
 }
 
 /** Every procedure of one kind, with the runways and branches it publishes. */
@@ -146,6 +208,12 @@ export function transitionList(payload, { kind = 'sid', ident } = {}) {
   }).sort((a, b) => (rank(a) === rank(b) ? a.id.localeCompare(b.id) : rank(a) - rank(b)));
 }
 
+/** The runway centreline and altitude-gated turn for a published climb leg.
+ *  Exported so the route builder places the same geometry as the map deck. */
+export function initialClimbFor(payload, runway, initialClimb) {
+  return climbGeometry(payload, runway, runwayThreshold(payload, runway), initialClimb);
+}
+
 function cleanPoints(points) {
   const out = [];
   for (const point of points || []) {
@@ -154,7 +222,23 @@ function cleanPoints(points) {
     if (lat == null || lon == null) continue;
     const previous = out[out.length - 1];
     if (previous && Math.abs(previous.lat - lat) < 1e-6 && Math.abs(previous.lon - lon) < 1e-6) continue;
-    out.push({ id: up(point.id), lat, lon, terminator: up(point.terminator) });
+    out.push({
+      id: up(point.id),
+      lat,
+      lon,
+      terminator: up(point.terminator),
+      elevFt: num(point.elevFt) == null ? num(point.elevationFt) : num(point.elevFt),
+      synthetic: Boolean(point.synthetic),
+      climb: Boolean(point.climb),
+      runwayEnd: Boolean(point.runwayEnd),
+      // Vertical and course information is carried through when the source
+      // publishes it. The current FAA CIFP extract has coordinates only, so an
+      // absent value stays absent rather than being replaced by a generic leg.
+      altFt: num(point.altFt) == null ? num(point.altitude_ft) : num(point.altFt),
+      courseDeg: num(point.courseDeg) == null ? num(point.course) : num(point.courseDeg),
+      distanceNm: num(point.distanceNm),
+      verticalAngle: num(point.verticalAngle),
+    });
   }
   return out;
 }
@@ -277,14 +361,16 @@ export function pathFor(payload, { kind = 'sid', ident = '', runway = '', transi
       const at = segment.findIndex(point => up(point.id).startsWith('RW'));
       if (at >= 0) {
         segment.length = at + 1;
-        if (!served) {
-          const match = up(segment[at].id).match(/^RW(\d{2}[LRCB]?)$/);
-          if (match) served = match[1];
-        }
+        // The published runway leg is authoritative. A requested runway that
+        // does not match it must be rejected by the route builder, not treated
+        // as the approach's runway.
+        const match = up(segment[at].id).match(/^RW(\d{2}[LRCB]?)$/);
+        if (match) served = match[1];
       }
     }
   }
 
+  const publishedClimb = pieces.map(piece => piece && piece.initialClimb).find(Boolean);
   const threshold = runwayThreshold(payload, served);
   if (threshold) {
     const first = segments[0][0];
@@ -295,7 +381,11 @@ export function pathFor(payload, { kind = 'sid', ident = '', runway = '', transi
       // threshold replaces that point instead of drawing into the field centre.
       const tail = segments[segments.length - 1];
       if (atAirport) tail[tail.length - 1] = { ...tail[tail.length - 1], ...threshold, id: threshold.id };
-    } else if (!up(first.id).startsWith('RW') && !first.terminator) {
+    } else if (key === 'sid' && publishedClimb && !up(first.id).startsWith('RW')) {
+      // The departure itself is published as a no-fix heading leg. Anchor it
+      // on the threshold the data carries; the runway centreline follows.
+      segments[0].unshift({ ...threshold, terminator: 'VA' });
+    } else if (key === 'sid' && !up(first.id).startsWith('RW') && !first.terminator) {
       // A SID's first leg that carries no terminator is a direct-to from the
       // runway, which ARINC 424 spells as the runway threshold itself.
       segments[0].unshift({ ...threshold, terminator: 'DF' });
@@ -305,6 +395,28 @@ export function pathFor(payload, { kind = 'sid', ident = '', runway = '', transi
   for (const segment of segments) {
     for (const point of segment) {
       if (!point.id) point.id = point.terminator === 'DF' ? 'RW' + served : '';
+    }
+  }
+
+  let initialClimb = null;
+  if (key === 'sid' && threshold) {
+    const geometry = publishedClimb ? initialClimbFor(payload, served, publishedClimb) : null;
+    if (geometry) {
+      segments[0].splice(1, 0, geometry.end, geometry.turn);
+      initialClimb = {
+        terminator: up(publishedClimb.terminator) || 'VA',
+        courseDeg: geometry.course,
+        altFt: geometry.altitude,
+        altDesc: String(publishedClimb.altDesc || ''),
+        turnNm: geometry.turnNm,
+        gradientFtPerNm: geometry.gradient,
+        prescribedGradient: geometry.prescribed,
+        runwayEnd: geometry.end,
+        turn: geometry.turn,
+      };
+      const altitude = Math.round(geometry.altitude).toLocaleString('en-US');
+      const course = geometry.course.toFixed(1).replace(/\.0$/, '');
+      notes.push(`Initial climb ${course}° to ${altitude} ft; the turn is altitude-gated${geometry.prescribed ? '' : ` and is drawn at ${geometry.gradient} ft/NM`}.`);
     }
   }
 
@@ -322,6 +434,7 @@ export function pathFor(payload, { kind = 'sid', ident = '', runway = '', transi
     complete,
     skipped,
     notes,
+    initialClimb,
     runwayThreshold: threshold,
     source: String(payload.source || ''),
     cycle: String(payload.cycle || ''),
@@ -434,6 +547,7 @@ export function planSelection(ofp) {
   const origin = (ofp && ofp.origin) || {};
   const destination = (ofp && ofp.destination) || {};
   return {
+    airac: up(ofp && ofp.airac),
     dep: airportCode(origin.icao),
     depRwy: String(origin.rwy || '').replace(/^RW/i, '').toUpperCase(),
     sid: up(origin.sid),
@@ -443,6 +557,7 @@ export function planSelection(ofp) {
     star: up(destination.star),
     starTrans: up(destination.starTrans),
     approach: up(destination.approach),
+    approachTrans: up(destination.approachTrans),
     approachRwy: String(destination.approachRwy || '').replace(/^RW/i, '').toUpperCase(),
   };
 }

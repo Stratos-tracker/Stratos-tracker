@@ -1,4 +1,4 @@
-import { parseOfp } from './flightsummary.js';
+import { navlogFixes, parseOfp } from './flightsummary.js';
 
 const SIMBRIEF_URL = 'https://www.simbrief.com/api/xml.fetcher.php';
 
@@ -43,11 +43,6 @@ export function simbriefQuery(entered) {
   return /^\d+$/.test(id) ? `userid=${encodeURIComponent(id)}` : `username=${encodeURIComponent(id)}`;
 }
 
-function jsonFixes(data) {
-  const fixes = data && data.navlog && data.navlog.fix;
-  return Array.isArray(fixes) ? fixes : [];
-}
-
 function xmlFixes(xml) {
   const doc = new DOMParser().parseFromString(xml, 'text/xml');
   if (doc.querySelector('parsererror')) return [];
@@ -76,7 +71,7 @@ export async function fetchSimbriefPlan(entered) {
   if (!response.ok) throw new Error(`SimBrief returned HTTP ${response.status}.`);
   const data = await response.json();
 
-  let fixes = jsonFixes(data);
+  let fixes = navlogFixes(data);
   if (!fixes.length) {
     const xmlResponse = await fetch(`${SIMBRIEF_URL}?${query}`);
     if (xmlResponse.ok) fixes = xmlFixes(await xmlResponse.text());

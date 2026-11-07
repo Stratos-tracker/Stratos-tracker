@@ -3,19 +3,22 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.1.36",
-    "releasedAt": "2026-11-06",
+    "version": "2.1.37",
+    "releasedAt": "2026-11-07",
     "severity": "normal",
-    "summary": "The Settings update centre downloads the published installer instead of reporting an updater feed that is no longer published.",
+    "summary": "SID paths now start on the runway and follow the published initial-climb heading to its altitude-gated turn, including SLEEK2 runway 8 at KDEN.",
     "changelog": {
-      "features": [],
+      "features": [
+        "A departure now begins at the runway threshold, follows the runway centreline to the departure end, and continues on the published initial-climb heading before turning to the first fix.",
+        "The bundled FAA dataset keeps a no-fix heading leg's course and altitude instead of dropping it, and carries runway-end elevation so the altitude turn can be placed."
+      ],
       "improvements": [
-        "Checking for updates still works on a build without the native updater, and the panel says plainly that an update is installed by running the published installer.",
-        "The action is called Download installer, and it opens the installer for the platform that is running: Setup.exe, the DMG, or the AppImage."
+        "The initial climb is carried through SimBrief import, the route builder, the EFB, the map and the stored route, so every page draws the same departure.",
+        "The procedure note says when a turn is altitude-gated and when its lateral position is drawn at 500 ft/NM, rather than presenting a planning line as a published ground distance."
       ],
       "fixes": [
-        "Settings → Updates no longer asks electron-updater for latest.yml, so a release without feeds can never fail there with Cannot find latest.yml.",
-        "A failed or refused update action is reported in one sentence with its own Retry, instead of a raw updater error with headers and stack text, and it no longer hides the saved release answer."
+        "SLEEK2 runway 8 at KDEN no longer turns toward KIDNG at the threshold; it climbs on 082.5° to 5,934 ft before the right turn.",
+        "A procedure without a published heading course and altitude gets no synthetic turn point."
       ],
       "performance": [],
       "ui": [],
@@ -24,6 +27,30 @@
     }
   },
   "releases": [
+    {
+      "version": "2.1.37",
+      "releasedAt": "2026-11-07",
+      "severity": "normal",
+      "summary": "SID paths now start on the runway and follow the published initial-climb heading to its altitude-gated turn, including SLEEK2 runway 8 at KDEN.",
+      "changelog": {
+        "features": [
+          "A departure now begins at the runway threshold, follows the runway centreline to the departure end, and continues on the published initial-climb heading before turning to the first fix.",
+          "The bundled FAA dataset keeps a no-fix heading leg's course and altitude instead of dropping it, and carries runway-end elevation so the altitude turn can be placed."
+        ],
+        "improvements": [
+          "The initial climb is carried through SimBrief import, the route builder, the EFB, the map and the stored route, so every page draws the same departure.",
+          "The procedure note says when a turn is altitude-gated and when its lateral position is drawn at 500 ft/NM, rather than presenting a planning line as a published ground distance."
+        ],
+        "fixes": [
+          "SLEEK2 runway 8 at KDEN no longer turns toward KIDNG at the threshold; it climbs on 082.5° to 5,934 ft before the right turn.",
+          "A procedure without a published heading course and altitude gets no synthetic turn point."
+        ],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.1.36",
       "releasedAt": "2026-11-06",
@@ -1069,28 +1096,6 @@
         ],
         "compatibility": [],
         "other": []
-      }
-    },
-    {
-      "version": "2.1.7",
-      "releasedAt": "2026-10-18",
-      "severity": "normal",
-      "summary": "1 fix and 2 interface changes.",
-      "changelog": {
-        "features": [],
-        "improvements": [],
-        "fixes": [
-          "Stop the map overlays reserving space for the old bottom tab bar."
-        ],
-        "performance": [],
-        "ui": [
-          "Keep the desktop rail from doubling the top bar's border.",
-          "Move navigation into a real sidebar and unify the bar across pages."
-        ],
-        "compatibility": [],
-        "other": [
-          "Give the map page a status bar and a career strip."
-        ]
       }
     }
   ]

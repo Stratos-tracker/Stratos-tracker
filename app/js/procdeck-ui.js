@@ -27,7 +27,7 @@ const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c =>
 ));
 
 const state = {
-  dep: '', arr: '', sid: '', sidTrans: '', depRwy: '', star: '', starTrans: '', arrRwy: '',
+  dep: '', arr: '', airac: '', sid: '', sidTrans: '', depRwy: '', star: '', starTrans: '', arrRwy: '',
   approach: '', approachTrans: '', approachRwy: '', planOpen: true, procOpen: true,
 };
 
@@ -70,8 +70,8 @@ function adoptPlan() {
   const ends = route.length > 1 && route[0].k === 'apt' && route[route.length - 1].k === 'apt'
     ? { dep: airportCode(route[0].id), arr: airportCode(route[route.length - 1].id) }
     : { dep: '', arr: '' };
-  const key = [selection.dep || ends.dep, selection.arr || ends.arr, selection.sid, selection.sidTrans,
-    selection.depRwy, selection.star, selection.starTrans, selection.arrRwy, selection.approach, selection.approachRwy].join('|');
+  const key = [selection.airac, selection.dep || ends.dep, selection.arr || ends.arr, selection.sid, selection.sidTrans,
+    selection.depRwy, selection.star, selection.starTrans, selection.arrRwy, selection.approach, selection.approachTrans, selection.approachRwy].join('|');
   if (key === lastPlanKey) return false;
   const previous = lastPlanKey;
   lastPlanKey = key;
@@ -91,12 +91,13 @@ function adoptPlan() {
     state.arr = nextArr;
   }
   // A newly loaded plan names its own procedures; those win over a stale choice.
+  if (selection.airac) state.airac = selection.airac;
   if (!previous || selection.sid || selection.star) {
     if (selection.sid) { state.sid = selection.sid; state.sidTrans = selection.sidTrans; }
     if (selection.star) { state.star = selection.star; state.starTrans = selection.starTrans; }
     if (selection.depRwy) state.depRwy = selection.depRwy;
     if (selection.arrRwy) state.arrRwy = selection.arrRwy;
-    if (selection.approach) { state.approach = selection.approach; state.approachTrans = ''; }
+    if (selection.approach) { state.approach = selection.approach; state.approachTrans = selection.approachTrans; }
     if (selection.approachRwy) state.approachRwy = selection.approachRwy;
   }
   return true;
@@ -176,14 +177,16 @@ async function compute() {
     }
     layers = next
       .filter(layer => layer && (layer.ok || layer.error))
-      .map(layer => ({ ...layer, color: (KINDS[layer.kind] || {}).color || '#f472b6' }));
+      .map(layer => ({ ...layer, color: (KINDS[layer.kind] || {}).color || '#c084fc' }));
     if (typeof window !== 'undefined') window.PROCLAYERS = layers.filter(layer => layer.ok);
     // Say why a drawn line is missing, on the map's own layer panel: the deck
     // already carries the reason, but a pilot looking at the chart should not
     // have to guess whether a procedure is selected, unavailable or out of area.
+    const depInfo = describe(depPayload), arrInfo = describe(arrPayload);
+    const planCycle = state.airac;
+    const cycleMismatch = planCycle && [depInfo, arrInfo].some(info => info.cycle && info.cycle !== planCycle);
     const tip = typeof document !== 'undefined' ? document.getElementById('dkproctip') : null;
     if (tip) {
-      const depInfo = describe(depPayload), arrInfo = describe(arrPayload);
       const cycle = arrInfo.cycle || depInfo.cycle;
       // The source that actually answered, not a fixed label: the simulator's
       // own CIFP covers the world, the bundled FAA file only the United States.
@@ -192,12 +195,16 @@ async function compute() {
       if (state.sid && !next.some(layer => layer.kind === 'sid' && layer.ok)) missing.push(`SID ${state.sid} (${state.dep})`);
       if (state.star && !next.some(layer => layer.kind === 'star' && layer.ok)) missing.push(`STAR ${state.star} (${state.arr})`);
       if (state.approach && !next.some(layer => layer.kind === 'approach' && layer.ok)) missing.push(`approach ${state.approach}`);
-      tip.textContent = `Procedures: ${source}${cycle ? ` · AIRAC ${cycle}` : ''}`
+      tip.textContent = `Procedures: ${source}${cycle ? ` · AIRAC ${cycle}` : ''}${cycleMismatch ? ` · SimBrief plan is AIRAC ${planCycle}; verify the procedure` : ''}`
         + (dropped.length ? ` · ${dropped.join(' · ')}` : '')
         + (missing.length ? ` · no geometry for ${missing.join(', ')}` : '')
         + (state.approach ? '' : ' · missed approach needs an approach selection');
     }
     const notes = layers.filter(layer => !layer.ok || !layer.complete).map(layer => pathNote(layer));
+    if (state.airac && cycleMismatch) {
+      const actual = [...new Set([depInfo.cycle, arrInfo.cycle].filter(Boolean))].join('/');
+      notes.unshift(`SimBrief plan AIRAC ${state.airac}; procedure data is AIRAC ${actual}. Verify the procedure before flight.`);
+    }
     if (deck.notes) deck.notes(notes);
     if (deck.redraw) deck.redraw();
   } finally {
@@ -299,7 +306,8 @@ function approachHtml(payload) {
 function routeRow(point, index, cumulative, flown) {
   const alt = Number(point.elev) || 0;
   const level = alt >= 10000 ? 'FL' + Math.round(alt / 100) : alt ? Math.round(alt).toLocaleString() + ' ft' : '';
-  const procedure = point.ss === 'sid' ? 'SID' : point.ss === 'star' ? 'STAR' : '';
+  const tag = String(point.ss || '').toLowerCase();
+  const procedure = tag === 'sid' ? 'SID' : tag === 'star' ? 'STAR' : '';
   const passed = cumulative[index] <= flown;
   return `<li class="dk-wp${passed ? ' past' : ''}"><button type="button" data-dk-focus="${index}">
     <span class="dk-i">${index + 1}</span><b>${esc(point.id)}</b>
@@ -507,4 +515,7 @@ export function initProcDeck() {
     }
   });
   window.PROCDECK = { state, sync: syncProcDeck, layers: () => layers, busy: () => busy };
+  // The map keeps its fallback colours in step with the deck without importing
+  // a second palette. Every resolved layer still carries its own colour.
+  window.PROCKINDS = KINDS;
 }

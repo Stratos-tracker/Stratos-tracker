@@ -131,6 +131,46 @@ test('procdeck: a SID joins its runway transition to the chosen branch at the sh
   assert.match(pathNote(path), /SID BANNG3 · runway 08 from AIRAC 2611/);
 });
 
+test('procdeck: a SID starts with the runway centreline and its published altitude turn', () => {
+  const climbPayload = {
+    ...payload,
+    runways: {
+      '08': { lat: 33.646801, lon: -84.4384, elevFt: 1010 },
+      '26': { lat: 33.656801, lon: -84.405502, elevFt: 1026 },
+    },
+    procedures: {
+      ...payload.procedures,
+      sid: [{
+        id: 'SLEEK2',
+        transitions: [{
+          id: 'RW08', runway: '08', combined: false, complete: true, skipped: 0,
+          initialClimb: { terminator: 'VA', courseDeg: 82.5, altFt: 5000, altDesc: '+' },
+          points: [{ id: 'KIDNG', lat: 33.5, lon: -84.35, terminator: 'DF' }],
+        }],
+      }],
+    },
+  };
+  const path = pathFor(climbPayload, { kind: 'sid', ident: 'SLEEK2', runway: '08' });
+  assert.equal(path.ok, true);
+  assert.deepEqual(path.points.map(p => p.id), ['RW08', 'RW08E', 'RW08C', 'KIDNG']);
+  const end = path.points.find(p => p.id === 'RW08E');
+  const turn = path.points.find(p => p.id === 'RW08C');
+  assert.equal(end.lat, 33.656801, 'the departure end is the far threshold');
+  assert.equal(turn.altFt, 5000);
+  assert.equal(turn.terminator, 'VA');
+  assert.ok(path.initialClimb.turnNm > 7 && path.initialClimb.turnNm < 8, 'the turn distance follows the stated altitude and display gradient');
+  assert.match(pathNote(path), /altitude-gated/);
+  assert.match(pathNote(path), /500 ft\/NM/);
+});
+
+test('procdeck: a SID without a published climb leg gets no invented turn', () => {
+  const path = pathFor(payload, { kind: 'sid', ident: 'BANNG3', runway: '08', transition: 'LUCKK' });
+  assert.equal(path.ok, true);
+  assert.deepEqual(path.points.map(p => p.id), ['SKNNR', 'GRITZ', 'BANNG', 'LUCKK']);
+  assert.equal(path.initialClimb, null);
+  assert.ok(!path.points.some(p => p.climb || p.runwayEnd));
+});
+
 test('procdeck: halves that share no fix are drawn as two published sections', () => {
   const path = pathFor(payload, { kind: 'sid', ident: 'BANNG3', runway: '10', transition: 'DBN' });
   assert.equal(path.ok, true);
@@ -220,16 +260,18 @@ test('procdeck: missing data is named, and approaches are never invented', () =>
 
 test('procdeck: the SimBrief plan supplies the starting selection', () => {
   const selection = planSelection({
+    airac: '2610',
     origin: { icao: 'KATL', rwy: '08R', sid: 'BANNG3', sidTrans: 'LUCKK' },
     destination: { icao: 'KJFK', rwy: '04L', star: 'CAMRN5', starTrans: 'CAMRN', approach: 'ILS04L', approachRwy: '04L' },
   });
   assert.deepEqual(selection, {
+    airac: '2610',
     dep: 'KATL', depRwy: '08R', sid: 'BANNG3', sidTrans: 'LUCKK',
     arr: 'KJFK', arrRwy: '04L', star: 'CAMRN5', starTrans: 'CAMRN',
-    approach: 'ILS04L', approachRwy: '04L',
+    approach: 'ILS04L', approachTrans: '', approachRwy: '04L',
   });
   assert.deepEqual(planSelection(null), {
-    dep: '', depRwy: '', sid: '', sidTrans: '', arr: '', arrRwy: '', star: '', starTrans: '', approach: '', approachRwy: '',
+    airac: '', dep: '', depRwy: '', sid: '', sidTrans: '', arr: '', arrRwy: '', star: '', starTrans: '', approach: '', approachTrans: '', approachRwy: '',
   });
 });
 
@@ -240,6 +282,9 @@ test('procdeck: labels follow the zoom, keeping every fix end at any zoom', () =
   const near = procedureLabels([path], 10).map(l => l.id);
   assert.deepEqual(near, ['SKNNR', 'GRITZ', 'BANNG', 'LUCKK']);
   assert.ok(KINDS.sid.color !== KINDS.star.color);
+  assert.equal(KINDS.sid.color, '#c084fc', 'SID geometry is purple');
+  assert.equal(KINDS.star.color, '#f59e0b', 'STAR geometry is amber');
+  assert.equal(KINDS.approach.color, '#22c55e', 'the instrument approach is green and does not reuse the STAR amber');
 });
 
 function fakeRes() {

@@ -25,11 +25,13 @@
 
 import {
   airportDirectory, esc, fmtFl, fmtMinutes, fmtNum, loadRoute, loadRouteMeta,
-  currentPlan, ensureLive, liveStatus, onLive, searchAirports, weatherFor,
+  currentPlan, ensureLive, liveStatus, onLive, refreshPlan, searchAirports, weatherFor,
 } from './common.js';
 import { defaultBridgeBase, isHostedPage } from '../bridge.js';
 import { MiniMap } from '../minimap.js';
 import * as RP from '../lib/routeplan.js';
+import { buildFromSimbrief, storageFromPlan } from '../lib/simbriefroute.js';
+import { endpointsFor } from '../lib/procdeck.js';
 import { parseWaypointText } from '../lib/planner.js';
 import { bearingDeg, distanceNm, formatLatLon } from '../lib/geo.js';
 import { formatAltitude } from '../lib/telemetry.js';
@@ -145,10 +147,12 @@ export async function mount(root, ctx) {
   const procedures = {
     sid: { status: 'idle', payload: null, error: '' },
     star: { status: 'idle', payload: null, error: '' },
+    approach: { status: 'idle', payload: null, error: '' },
   };
   const choice = {
     sid: { ident: '', runwayTransition: '', enrouteTransition: '', showAll: false },
     star: { ident: '', runwayTransition: '', enrouteTransition: '', showAll: false },
+    approach: { ident: '', runwayTransition: '', enrouteTransition: '', showAll: false },
   };
   let weather = { status: 'idle', rows: [], error: '', fetchedAt: 0 };
   let alternates = { status: 'idle', rows: [], error: '', maxNm: 250, minRunwayFt: 6000 };
@@ -806,7 +810,9 @@ export async function mount(root, ctx) {
     weather = { status: 'idle', rows: [], error: '', fetchedAt: 0 };
     if (!keepRoute) {
       choice.star = { ident: '', runwayTransition: '', enrouteTransition: '', showAll: false };
+      choice.approach = { ident: '', runwayTransition: '', enrouteTransition: '', showAll: false };
       procedures.star = { status: 'idle', payload: null, error: '' };
+      procedures.approach = { status: 'idle', payload: null, error: '' };
       alternates = { ...alternates, status: 'idle', rows: [] };
       setNotice('The previous flight\'s route was cleared with its departure. Build the new route from this airport.', '');
     }
@@ -827,7 +833,9 @@ export async function mount(root, ctx) {
     }
     plan = result.plan;
     choice.star = { ident: '', runwayTransition: '', enrouteTransition: '', showAll: false };
+    choice.approach = { ident: '', runwayTransition: '', enrouteTransition: '', showAll: false };
     procedures.star = { status: 'idle', payload: null, error: '' };
+    procedures.approach = { status: 'idle', payload: null, error: '' };
     weather = { status: 'idle', rows: [], error: '', fetchedAt: 0 };
     afterChange();
   }
@@ -908,7 +916,7 @@ export async function mount(root, ctx) {
   function knownFixes(limit = 6) {
     const seen = new Set();
     const out = [];
-    for (const kind of ['sid', 'star']) {
+    for (const kind of ['sid', 'star', 'approach']) {
       const payload = procedures[kind].payload;
       if (!payload || !payload.ok) continue;
       for (const list of Object.values(payload.procedures || {})) {
@@ -1070,9 +1078,10 @@ export async function mount(root, ctx) {
   /* ── procedures ──────────────────────────────────────────────────────── */
 
   function procedureUrls(code) {
-    const urls = [];
-    if (!isHostedPage()) urls.push(`${defaultBridgeBase().replace(/\/+$/, '')}/procedures.json?airport=${encodeURIComponent(code)}`);
-    return urls;
+    // The bridge's own CIFP first, then the bundled/website API. They answer
+    // with the same payload shape, so local, hosted and offline previews all
+    // resolve the same published geometry.
+    return endpointsFor(code);
   }
 
   async function loadProcedures(kind) {
@@ -1206,6 +1215,9 @@ export async function mount(root, ctx) {
         : { runway: '', enroute: choice[kind].enrouteTransition };
       choice[kind] = { ...choice[kind], runwayTransition: suggestion.runway, enrouteTransition: choice[kind].enrouteTransition || suggestion.enroute };
       applyProcedureSelection(kind);
+      // An approach is tied to the arrival runway too. Re-apply it after the
+      // STAR so a runway change cannot leave the old final segment in the plan.
+      if (kind === 'star' && choice.approach.ident) applyProcedureSelection('approach');
       return;
     }
     afterChange({ fit: false });
@@ -1467,6 +1479,8 @@ export async function mount(root, ctx) {
     alternates = { ...alternates, status: 'idle', rows: [] };
     choice.sid = { ident: '', runwayTransition: '', enrouteTransition: '', showAll: false };
     choice.star = { ident: '', runwayTransition: '', enrouteTransition: '', showAll: false };
+    choice.approach = { ident: '', runwayTransition: '', enrouteTransition: '', showAll: false };
+    procedures.approach = { status: 'idle', payload: null, error: '' };
     navNear.status = 'idle';
     navNear.key = '';
     mapPick = null;
@@ -1766,7 +1780,7 @@ export async function mount(root, ctx) {
   function procedureCard(kind) {
     const airport = kind === 'sid' ? plan.origin : plan.destination;
     const state = procedures[kind];
-    const label = kind === 'sid' ? 'SID — departure' : 'STAR — arrival';
+    const label = kind === 'sid' ? 'SID — departure' : kind === 'star' ? 'STAR — arrival' : 'Approach — arrival';
     if (!airport) {
       return `<div class="e-card fp-card"><h3>${label}</h3><p class="e-small e-faint">Choose the ${kind === 'sid' ? 'departure' : 'arrival'} airport first.</p></div>`;
     }
@@ -1786,7 +1800,7 @@ export async function mount(root, ctx) {
     const payload = state.payload;
     const list = RP.procedureList(payload, kind);
     const selected = choice[kind].ident;
-    const selectedRecord = kind === 'sid' ? plan.sid : plan.star;
+    const selectedRecord = kind === 'sid' ? plan.sid : kind === 'star' ? plan.star : plan.approach;
     const runway = kind === 'sid' ? plan.departureRwy : plan.arrivalRwy;
     const source = `${payload.source || 'navigation data'}${payload.cycle ? ` · AIRAC ${payload.cycle}` : ''}`;
     if (!list.length) {
@@ -1796,7 +1810,10 @@ export async function mount(root, ctx) {
     // Published procedures are filtered by the selected runway when the data
     // names that runway; the pilot can still see everything.
     const filtered = list.filter(procedure => {
-      if (!runway || choice[kind].showAll) return true;
+      // Approaches name their entry fixes in the transition ids, not the
+      // runway. Their identifier carries the runway, so filtering by a
+      // transition id would incorrectly hide every approach.
+      if (kind === 'approach' || !runway || choice[kind].showAll) return true;
       return (procedure.transitions || []).some(transition => runwayMatches(RP.runwayFromTransitionId(transition.id), runway));
     });
     const shown = filtered.length ? filtered : list;
@@ -1815,7 +1832,7 @@ export async function mount(root, ctx) {
       : null;
     return `<div class="e-card fp-card">
       <h3>${label} <span class="e-spacer"></span><span class="e-badge">${esc(payload.airport || airport.id)}</span></h3>
-      <div class="fp-proc-list" role="listbox" aria-label="${kind === 'sid' ? 'SIDs' : 'STARs'} for ${esc(airport.id)}">
+      <div class="fp-proc-list" role="listbox" aria-label="${kind === 'sid' ? 'SIDs' : kind === 'star' ? 'STARs' : 'Approaches'} for ${esc(airport.id)}">
         ${shown.map(procedureRow => {
           const isSelected = selected === String(procedureRow.id);
           return `<button class="fp-proc${isSelected ? ' is-selected' : ''}" type="button" data-act="pick-procedure" data-kind="${kind}" data-ident="${esc(procedureRow.id)}" role="option" aria-selected="${isSelected}">
@@ -1824,8 +1841,8 @@ export async function mount(root, ctx) {
           </button>`;
         }).join('')}
       </div>
-      ${runway && !choice[kind].showAll ? `<button class="fp-link" type="button" data-act="toggle-all" data-kind="${kind}">Show every ${kind.toUpperCase()}, not only runway ${esc(runway)}</button>` : ''}
-      ${!filtered.length && runway ? `<p class="e-small e-faint">No ${kind.toUpperCase()} publishes a runway ${esc(runway)} transition; every procedure is listed instead.</p>` : ''}
+      ${kind !== 'approach' && runway && !choice[kind].showAll ? `<button class="fp-link" type="button" data-act="toggle-all" data-kind="${kind}">Show every ${kind.toUpperCase()}, not only runway ${esc(runway)}</button>` : ''}
+      ${kind !== 'approach' && !filtered.length && runway ? `<p class="e-small e-faint">No ${kind.toUpperCase()} publishes a runway ${esc(runway)} transition; every procedure is listed instead.</p>` : ''}
       ${procedure ? `
         <div class="fp-proc-detail">
           <div class="fp-summary-row">
@@ -1838,15 +1855,20 @@ export async function mount(root, ctx) {
               <option value="">Published runway legs only</option>
               ${runwayTransitions.map(entry => `<option value="${esc(entry.id)}" ${choice[kind].runwayTransition === entry.id ? 'selected' : ''}>${esc(entry.label)}${entry.combined ? ' (both runways)' : ''} · ${entry.points} legs${entry.complete ? '' : ' · partial'}</option>`).join('')}
             </select></label>` : ''}
-          ${enrouteTransitions.length ? `<label class="e-field" style="margin-top:8px"><span class="fp-search-label">En-route transition</span>
+          ${enrouteTransitions.length ? `<label class="e-field" style="margin-top:8px"><span class="fp-search-label">${kind === 'approach' ? 'Approach transition' : 'En-route transition'}</span>
             <select class="e-select" data-act="transition" data-kind="${kind}" data-field="enrouteTransition">
               <option value="">Common legs only</option>
               ${enrouteTransitions.map(entry => `<option value="${esc(entry.id)}" ${choice[kind].enrouteTransition === entry.id ? 'selected' : ''}>${esc(entry.label)} → ${esc(entry.first)}…${esc(entry.last)} · ${entry.points} legs${entry.complete ? '' : ' · partial'}</option>`).join('')}
             </select></label>` : ''}
           ${suggestion && suggestion.reason ? `<p class="e-small fp-suggest">${esc(suggestion.reason)}. A suggestion from the published geometry, not a clearance.</p>` : ''}
-          ${selectedRecord ? `<div class="e-badge accent" style="margin-top:8px">${esc(selectedRecord.label || selectedRecord.id)} · ${selectedRecord.points} legs in the plan${selectedRecord.complete ? '' : ' · partial'}</div>
+          ${selectedRecord ? `<div class="e-badge accent" style="margin-top:8px">${esc(selectedRecord.label || selectedRecord.id)} · ${selectedRecord.points} legs in the plan${selectedRecord.complete ? '' : ' · partial'}${selectedRecord.join === 'vectors' ? ' · radar-vector join' : ''}</div>
             <button class="e-btn small ghost" type="button" data-act="clear-procedure" data-kind="${kind}" style="margin-top:8px">Remove ${kind.toUpperCase()}</button>` : ''}
-          <p class="e-small e-faint" style="margin-top:8px">${esc(source)}. Legs are the published fixes. Where the source publishes no runway leg, the runway is joined to the first fix by one straight connector and the plan says so.</p>
+          ${kind === 'approach' && selectedRecord ? `<div class="e-notice ${selectedRecord.vertical && selectedRecord.vertical.available ? '' : 'warn'}" style="margin-top:8px"><div>${selectedRecord.vertical && selectedRecord.vertical.available
+            ? `Published glide slope ${esc(selectedRecord.vertical.glideSlopeAngle)}° · FAF ${esc(selectedRecord.vertical.faf || '—')} ${selectedRecord.vertical.fafAltFt != null ? `${fmtNum(selectedRecord.vertical.fafAltFt)} ft` : 'altitude not published'}${selectedRecord.vertical.thresholdAltFt != null ? ` · threshold ${fmtNum(selectedRecord.vertical.thresholdAltFt)} ft` : ''}`
+            : esc(selectedRecord.vertical ? selectedRecord.vertical.reason : 'No published FAF altitude or glide-slope angle is carried by this dataset, so the 3D vertical approach profile is unavailable.')}</div></div>` : ''}
+          <p class="e-small e-faint" style="margin-top:8px">${esc(source)}. ${kind === 'approach'
+            ? 'The final segment is inserted exactly as published, from its initial/intermediate fix through the final approach fix to the runway threshold. If it does not share a published fix with the STAR, the plan labels the join as radar vectors instead of inventing a leg.'
+            : 'Legs are the published fixes. Where the source publishes no runway leg, the runway is joined to the first fix by one straight connector and the plan says so.'}</p>
         </div>` : `<p class="e-small e-faint" style="margin-top:8px">Tap a ${kind.toUpperCase()} to place its published legs in the plan.</p>`}
     </div>`;
   }
@@ -1859,7 +1881,8 @@ export async function mount(root, ctx) {
     return `
       ${procedureCard('sid')}
       ${procedureCard('star')}
-      <div class="e-notice"><div><b>Source.</b> Procedures come from the CIFP navigation data on this PC (or the FAA CIFP dataset shipped with Stratos, which covers the United States). Coverage outside that dataset is reported as unavailable. Airways are not part of any dataset Stratos ships, so no airway can be inserted.</div></div>`;
+      ${procedureCard('approach')}
+      <div class="e-notice"><div><b>Source.</b> Procedures come from the CIFP navigation data on this PC (or the FAA CIFP dataset shipped with Stratos, which covers the United States). Coverage outside that dataset is reported as unavailable. An approach is never guessed: if the SimBrief plan does not name one, choose the published procedure here. Airways are not part of any dataset Stratos ships, so no airway can be inserted.</div></div>`;
   }
 
   function weatherRow(row) {
@@ -2042,11 +2065,12 @@ export async function mount(root, ctx) {
     const fuel = currentFuel();
     const sid = plan.sid;
     const star = plan.star;
+    const approach = plan.approach;
     const provenance = [
       ['Airports', 'OurAirports (bundled snapshot plus the bridge database)'],
       ['Navaids', navaids.status === 'ready' ? 'OurAirports navaids via the bridge' : 'Bundled OurAirports navaid snapshot'],
-      ['Procedures', sid || star
-        ? [sid ? `SID ${sid.id} from ${sid.source || 'navigation data'}${sid.cycle ? ` · AIRAC ${sid.cycle}` : ''}` : '', star ? `STAR ${star.id} from ${star.source || 'navigation data'}${star.cycle ? ` · AIRAC ${star.cycle}` : ''}` : ''].filter(Boolean).join(' · ')
+      ['Procedures', sid || star || approach
+        ? [sid ? `SID ${sid.id} from ${sid.source || 'navigation data'}${sid.cycle ? ` · AIRAC ${sid.cycle}` : ''}` : '', star ? `STAR ${star.id} from ${star.source || 'navigation data'}${star.cycle ? ` · AIRAC ${star.cycle}` : ''}` : '', approach ? `APP ${approach.id} from ${approach.source || 'navigation data'}${approach.cycle ? ` · AIRAC ${approach.cycle}` : ''}` : ''].filter(Boolean).join(' · ')
         : 'None selected'],
       ['Weather', weather.status === 'ready' ? 'NOAA Aviation Weather Center (METAR, TAF)' : 'Not fetched'],
       ['Fuel', fuel.ok ? fuel.method : 'Not calculated'],
@@ -2065,6 +2089,7 @@ export async function mount(root, ctx) {
           <dt>Estimated time</dt><dd>${summary.eteMinutes > 0 ? `${fmtMinutes(summary.eteMinutes)} <small>no wind, ${fmtNum(plan.cruiseKts)} kt, ${esc(fmtFl(plan.cruiseAlt))}</small>` : '<span class="e-faint">—</span>'}</dd>
           <dt>SID</dt><dd>${sid ? `${esc(sid.label || sid.id)} <small>${esc(sid.source || '')}${sid.cycle ? ` · AIRAC ${esc(sid.cycle)}` : ''}${sid.complete === false ? ' · partial' : ''}</small>` : '<span class="e-faint">Not selected</span>'}</dd>
           <dt>STAR</dt><dd>${star ? `${esc(star.label || star.id)} <small>${esc(star.source || '')}${star.cycle ? ` · AIRAC ${esc(star.cycle)}` : ''}${star.complete === false ? ' · partial' : ''}</small>` : '<span class="e-faint">Not selected</span>'}</dd>
+          <dt>Approach</dt><dd>${approach ? `${esc(approach.label || approach.id)} <small>${esc(approach.source || '')}${approach.cycle ? ` · AIRAC ${esc(approach.cycle)}` : ''}${approach.complete === false ? ' · partial' : ''}${approach.join === 'vectors' ? ' · vectors join' : ''}</small>` : '<span class="e-faint">Not selected</span>'}</dd>
           <dt>Runways</dt><dd>${esc([plan.departureRwy, plan.arrivalRwy].filter(Boolean).join(' / ') || 'Not selected')}</dd>
         </dl>
       </div>
@@ -2171,6 +2196,7 @@ export async function mount(root, ctx) {
     if (step === 'procedures') {
       if (plan.origin && procedures.sid.status === 'idle') loadProcedures('sid');
       if (plan.destination && procedures.star.status === 'idle') loadProcedures('star');
+      if (plan.destination && procedures.approach.status === 'idle') loadProcedures('approach');
     }
   }
 
@@ -2497,6 +2523,34 @@ export async function mount(root, ctx) {
 
   /* ── first paint ─────────────────────────────────────────────────────── */
 
+  /**
+   * The first visit with no draft or adopted route follows the same uplink as
+   * the Flight Deck: the latest SimBrief plan, its real CIFP procedures, and
+   * one stored route both pages read. A draft is never overwritten.
+   */
+  async function importLatestSimbrief() {
+    if (seeded || plan.points.length > 1) return;
+    const loaded = currentPlan();
+    if (!loaded.simbriefId) return;
+    const refreshed = await refreshPlan().catch(() => null);
+    if (destroyed || !refreshed || !refreshed.ofp) return;
+    const built = await buildFromSimbrief(refreshed.ofp, fetch).catch(() => null);
+    if (destroyed || !built || !built.ok) return;
+    plan = built.plan;
+    step = 'procedures';
+    adoptedRoute = true;
+    try {
+      const stored = storageFromPlan(built.plan, refreshed.ofp, refreshed.simbriefId, built.warnings, built.applied);
+      stored.active.dirty = false;
+      localStorage.setItem('stratos.activeRoute', JSON.stringify(stored.active));
+      localStorage.setItem('dl.route', JSON.stringify(stored.map));
+    } catch (_) { /* saving the shared copy is optional */ }
+    afterChange({ fit: true });
+    const names = [built.applied.sid ? `SID ${built.applied.sid.id}` : '', built.applied.star ? `STAR ${built.applied.star.id}` : '']
+      .filter(Boolean).join(' · ');
+    setNotice(`SimBrief plan imported${names ? ` · ${names}` : ''}${built.warnings.length ? ` · ${built.warnings[0].text}` : ''}`, built.warnings.length ? 'warn' : 'good');
+  }
+
   onResize();
   render();
   if (plan.points.length > 1) map?.fitRoute();
@@ -2506,9 +2560,11 @@ export async function mount(root, ctx) {
   ensureLive();
   onLive(() => { if (!destroyed) paintReadout(); });
   refreshNear({ force: true });
-  if (step === 'procedures' || (plan.sid || plan.star)) {
+  importLatestSimbrief().catch(() => {});
+  if (step === 'procedures' || (plan.sid || plan.star || plan.approach)) {
     if (plan.origin) loadProcedures('sid');
     if (plan.destination) loadProcedures('star');
+    if (plan.destination) loadProcedures('approach');
   }
 
   return {

@@ -204,13 +204,14 @@ const payload = {
 test('a SID is flown runway, then common legs, then the en-route transition', () => {
   const route = procedureRoute(payload, { kind: 'sid', ident: 'BANGR9', runway: '16L' });
   assert.equal(route.ok, true);
-  assert.deepEqual(route.points.map(point => point.id), ['CAVOB', 'RENBE', 'BANGR']);
+  assert.deepEqual(route.points.map(point => point.id), ['RW16L', 'CAVOB', 'RENBE', 'BANGR']);
+  assert.equal(route.points[0].id, 'RW16L', 'the SID starts at the runway threshold');
   assert.deepEqual(route.roles.map(role => role.role), ['runway', 'common']);
   assert.equal(route.cycle, '2610');
   assert.equal(route.complete, true);
 
   const partial = procedureRoute(payload, { kind: 'sid', ident: 'BANGR9', runway: '16L', enrouteTransition: 'ARRIE' });
-  assert.deepEqual(partial.points.map(point => point.id), ['CAVOB', 'RENBE', 'BANGR', 'ARRIE']);
+  assert.deepEqual(partial.points.map(point => point.id), ['RW16L', 'CAVOB', 'RENBE', 'BANGR', 'ARRIE']);
   assert.equal(partial.complete, false, 'a leg the source could not place keeps the path marked partial');
   assert.equal(partial.skipped, 1);
 
@@ -220,6 +221,44 @@ test('a SID is flown runway, then common legs, then the en-route transition', ()
   assert.deepEqual(connector.points.map(point => point.id), ['RW34R', 'RENBE', 'BANGR']);
   assert.equal(connector.connectorOnly, true);
   assert.equal(connector.missingRunway, true);
+});
+
+test('a SID with a published heading leg stores the runway end and altitude turn', () => {
+  const climbPayload = {
+    ok: true,
+    airport: 'KDEN',
+    source: 'FAA CIFP (FAACIFP18, United States)',
+    cycle: '2612',
+    runways: {
+      '08': { lat: 39.877602, lon: -104.662003, elevFt: 5351 },
+      '26': { lat: 39.877201, lon: -104.619003, elevFt: 5291 },
+    },
+    procedures: {
+      sid: [{
+        id: 'SLEEK2',
+        transitions: [{
+          id: 'RW08', runway: '08', complete: true, skipped: 0,
+          initialClimb: { terminator: 'VA', courseDeg: 82.5, altFt: 5934, altDesc: '+' },
+          points: [{ id: 'KIDNG', lat: 39.810464, lon: -104.394328, terminator: 'DF' }],
+        }],
+      }],
+      star: [], approach: [],
+    },
+  };
+  const route = procedureRoute(climbPayload, { kind: 'sid', ident: 'SLEEK2', runway: '08' });
+  assert.equal(route.ok, true);
+  assert.deepEqual(route.points.map(point => point.id), ['RW08', 'RW08E', 'RW08C', 'KIDNG']);
+  assert.equal(route.points[2].altFt, 5934);
+  assert.equal(route.points[2].terminator, 'VA');
+  assert.ok(route.initialClimb.turnNm > 1.2 && route.initialClimb.turnNm < 1.35);
+
+  let plan = setDeparture(createPlan(), { id: 'KDEN', name: 'Denver', lat: 39.8617, lon: -104.6732, elev: 5431 }).plan;
+  plan = setArrival(plan, KEWR).plan;
+  const applied = applyProcedure(plan, 'sid', route);
+  assert.equal(applied.ok, true);
+  assert.deepEqual(applied.plan.points.map(point => point.id), ['KDEN', 'RW08', 'RW08E', 'RW08C', 'KIDNG', 'KEWR']);
+  assert.equal(applied.plan.points.find(point => point.id === 'RW08C').synthetic, true);
+  assert.equal(applied.plan.points.find(point => point.id === 'RW08C').altFt, 5934);
 });
 
 test('a STAR ends on the arrival and never runs through the field', () => {
@@ -286,7 +325,7 @@ test('a procedure whose legs all live in its transitions asks for a transition',
 
   const byRunway = procedureRoute(transitOnly, { kind: 'sid', ident: 'BANGR9', runway: '16L' });
   assert.equal(byRunway.ok, true);
-  assert.deepEqual(byRunway.points.map(point => point.id), ['CAVOB']);
+  assert.deepEqual(byRunway.points.map(point => point.id), ['RW16L', 'CAVOB']);
 
   // A procedure with no legs anywhere still reports missing data.
   const hollow = {
@@ -333,11 +372,11 @@ test('applying a procedure inserts published legs once and replaces itself', () 
   const first = applyProcedure(plan, 'sid', sid);
   assert.equal(first.ok, true);
   plan = first.plan;
-  assert.deepEqual(plan.points.map(point => point.id), ['KSEA', 'CAVOB', 'RENBE', 'BANGR', 'KEWR']);
+  assert.deepEqual(plan.points.map(point => point.id), ['KSEA', 'RW16L', 'CAVOB', 'RENBE', 'BANGR', 'KEWR']);
   assert.equal(plan.sid.id, 'BANGR9');
   assert.equal(plan.sid.airport, 'KSEA');
   assert.equal(plan.departureRwy, '16L');
-  assert.ok(plan.points.slice(1, 4).every(point => point.ss === 'SID'));
+  assert.ok(plan.points.slice(1, 5).every(point => point.ss === 'SID'));
 
   const second = applyProcedure(plan, 'sid', sid);
   assert.equal(second.ok, true);
@@ -357,6 +396,81 @@ test('changing the departure drops the SID that belonged to the old airport', ()
   const moved = setDeparture(plan, CYUL).plan;
   assert.equal(moved.sid, null);
   assert.deepEqual(moved.points.map(point => point.id), ['CYUL', 'KEWR']);
+});
+
+/* ── instrument approach geometry ─────────────────────────────────────── */
+
+const approachPayload = {
+  ok: true,
+  airport: 'KDFW',
+  source: 'FAA CIFP (FAACIFP18, United States)',
+  cycle: '2612',
+  runways: { '35C': { lat: 32.9, lon: -97.0 } },
+  procedures: {
+    sid: [], star: [],
+    approach: [{
+      id: 'I35C',
+      transitions: [{
+        id: '', runway: '35C', complete: true, skipped: 0,
+        points: [
+          { id: 'RAYMA', lat: 32.5, lon: -97.0, terminator: 'IF' },
+          { id: 'TUFFO', lat: 32.7, lon: -97.0, terminator: 'TF' },
+          { id: 'JOBBS', lat: 32.8, lon: -97.0, terminator: 'TF' },
+          { id: 'RW35C', lat: 32.9, lon: -97.0, terminator: 'TF' },
+        ],
+      }],
+    }],
+  },
+};
+
+const KDFW = { id: 'KDFW', name: 'Dallas/Fort Worth', lat: 32.8968, lon: -97.038, elev: 607 };
+
+test('an approach becomes published route geometry, never a STAR-to-runway line', () => {
+  const route = procedureRoute(approachPayload, { kind: 'approach', ident: 'I35C', runway: '35C' });
+  assert.equal(route.ok, true);
+  assert.deepEqual(route.points.map(point => point.id), ['RAYMA', 'TUFFO', 'JOBBS', 'RW35C']);
+  assert.equal(route.runway, '35C');
+  assert.equal(route.validation.aligned, true);
+  assert.equal(route.vertical.available, false, 'no glide-slope angle is invented when the source has none');
+
+  let plan = setDeparture(createPlan(), CYUL).plan;
+  plan = setArrival(plan, KDFW).plan;
+  const applied = applyProcedure(plan, 'approach', route);
+  assert.equal(applied.ok, true);
+  plan = applied.plan;
+  assert.deepEqual(plan.points.map(point => point.id), ['CYUL', 'RAYMA', 'TUFFO', 'JOBBS', 'RW35C', 'KDFW']);
+  assert.equal(plan.approach.id, 'I35C');
+  assert.equal(plan.approach.join, 'vectors');
+  assert.equal(plan.points.find(point => point.id === 'RAYMA').ss, 'APP');
+  assert.equal(plan.points.find(point => point.id === 'RAYMA').vectorJoin, true);
+  assert.ok(validatePlan(plan).warnings.some(warning => warning.code === 'approach-vectors'));
+
+  const cleared = clearProcedure(plan, 'approach');
+  assert.deepEqual(cleared.points.map(point => point.id), ['CYUL', 'KDFW']);
+  assert.equal(cleared.approach, null);
+});
+
+test('a shared STAR/approach fix joins without a vector and mismatched runways are refused', () => {
+  const route = procedureRoute(approachPayload, { kind: 'approach', ident: 'I35C', runway: '35C' });
+  let plan = setDeparture(createPlan(), CYUL).plan;
+  plan = setArrival(plan, KDFW).plan;
+  plan = addPoint(plan, { id: 'RAYMA', lat: 32.5, lon: -97.0, kind: 'fix' }).plan;
+  const applied = applyProcedure(plan, 'approach', route).plan;
+  assert.deepEqual(applied.points.map(point => point.id), ['CYUL', 'RAYMA', 'TUFFO', 'JOBBS', 'RW35C', 'KDFW']);
+  assert.equal(applied.approach.join, 'fix');
+  assert.ok(!applied.points.find(point => point.id === 'RAYMA').vectorJoin);
+
+  const wrong = procedureRoute(approachPayload, { kind: 'approach', ident: 'I35C', runway: '17R' });
+  assert.equal(wrong.ok, false);
+  assert.equal(wrong.reason, 'runway-mismatch');
+
+  const missing = procedureRoute(approachPayload, { kind: 'approach', ident: 'I99Z', runway: '35C' });
+  assert.equal(missing.ok, false);
+  assert.equal(missing.reason, 'not-in-data');
+
+  const src = fs.readFileSync(new URL('../app/js/efb/flightplan.js', import.meta.url), 'utf8');
+  assert.match(src, /procedureCard\('approach'\)/, 'the EFB exposes approach selection');
+  assert.match(src, /An approach is never guessed/, 'and says that SimBrief omission is not guessed');
 });
 
 /* ── fuel ────────────────────────────────────────────────────────────── */
@@ -541,7 +655,7 @@ test('the Flight Planner is an EFB app with the chart and the real endpoints', (
   assert.match(page, /efb-flightplan\.css/, 'the page loads the planner rules');
   assert.match(fs.readFileSync(new URL('../app/sw.js', import.meta.url), 'utf8'), /'efb-flightplan\.css'/);
 
-  assert.match(src, /procedures\.json\?airport=/, 'procedures come from the bridge endpoint');
+  assert.match(src, /endpointsFor\(code\)/, 'procedures use the bridge endpoint and the bundled API fallback');
   assert.match(src, /navaids\.json/, 'navaids come from the bridge database');
   assert.match(src, /weatherFor\(/, 'weather uses the shared weather client');
   assert.match(src, /RP\.ROUTE_KEY/, 'the plan is written to the key the Navigator reads');

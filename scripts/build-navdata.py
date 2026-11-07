@@ -16,8 +16,11 @@ from ``stratos_cifp.build_airport``, so the app cannot tell which provider
 produced it, plus an ``index.json`` describing the cycle and coverage.
 
 Nothing is invented. A leg whose fix cannot be resolved is counted as
-``skipped`` and its transition is marked ``complete: false``; a leg with no fix
-at all (a heading or course leg off a runway) is simply not turned into a point.
+``skipped`` and its transition is marked ``complete: false``. A heading or
+course leg off a runway has no fix to place, but its published course and
+altitude are kept on the transition as ``initialClimb``; the app uses that
+source data to draw the runway centreline and the altitude-gated turn instead
+of guessing a distance.
 
 Usage::
 
@@ -67,6 +70,9 @@ FIX_SECTION = 36
 FIX_SUBSECTION = 37
 CONTINUATION = 38
 TERMINATOR = (47, 49)
+MAG_COURSE = (70, 74)     # degrees × 10; a heading for VA, a course for CA
+ALT_DESC = (82, 83)       # + at or above, - at or below, blank otherwise
+ALTITUDE = (84, 89)       # feet, or FLxxx
 
 WAYPOINT_IDENT = (13, 19)  # waypoint, navaid and airport records
 WAYPOINT_REGION = (19, 21)
@@ -78,6 +84,27 @@ KINDS = {"D": "sid", "E": "star", "F": "approach"}
 
 def field(line, span):
     return line[span[0]:span[1]].strip() if isinstance(span, tuple) else line[span].strip()
+
+
+def arinc_course(raw):
+    """A magnetic heading/course in degrees from its four-digit ARINC field."""
+    text = (raw or "").strip()
+    if not re.fullmatch(r"\d{4}", text):
+        return None
+    value = int(text) / 10
+    return value if 0 <= value < 360 else None
+
+
+def arinc_altitude(raw):
+    """An altitude in feet from the ARINC altitude field (05934 or FL180)."""
+    text = (raw or "").strip().upper()
+    if not text:
+        return None
+    if text.startswith("FL") and text[2:].isdigit():
+        return int(text[2:]) * 100
+    if text.isdigit():
+        return int(text)
+    return None
 
 
 def fetch(url, name):
@@ -130,7 +157,7 @@ def runways_csv(source):
 
 
 def parse_runways(text):
-    """airport ident -> {designator: {lat, lon}} from OurAirports runways.csv."""
+    """airport ident -> {designator: {lat, lon, elevFt}} from runways.csv."""
     out = {}
     for row in csv.DictReader(io.StringIO(text)):
         ident = (row.get("airport_ident") or "").strip().upper()
@@ -147,7 +174,14 @@ def parse_runways(text):
             except ValueError:
                 continue
             if -90 <= lat <= 90 and -180 <= lon <= 180 and designator not in per_airport:
-                per_airport[designator] = {"lat": round(lat, 6), "lon": round(lon, 6)}
+                point = {"lat": round(lat, 6), "lon": round(lon, 6)}
+                elevation = (row.get("%s_elevation_ft" % side) or "").strip()
+                try:
+                    if elevation:
+                        point["elevFt"] = round(float(elevation))
+                except ValueError:
+                    pass
+                per_airport[designator] = point
     return {ident: runways for ident, runways in out.items() if runways}
 
 
@@ -197,6 +231,9 @@ def scan(lines):
                     "section": line[FIX_SECTION].upper(),
                     "subsection": line[FIX_SUBSECTION].upper(),
                     "terminator": field(line, TERMINATOR).upper(),
+                    "course": field(line, MAG_COURSE),
+                    "altDesc": field(line, ALT_DESC),
+                    "altitude": field(line, ALTITUDE),
                     "continuation": line[CONTINUATION],
                 }
                 if not row["procedure"]:
@@ -277,6 +314,7 @@ def build_airport(airport, rows, runways, waypoints, enroute, navaids, airports,
                 points = []
                 skipped = 0
                 seen = set()
+                initial_climb = None
                 reach_runway = False
                 missed_points = []
                 missed_skipped = 0
@@ -300,15 +338,28 @@ def build_airport(airport, rows, runways, waypoints, enroute, navaids, airports,
                                               "lon": point["lon"], "terminator": row["terminator"]})
                         continue
                     if not row["fix"]:
-                        # A heading or course leg has no fix; it is not turned
-                        # into a point, and the runway threshold supplies the
-                        # start of a runway transition.
+                        # A heading or course leg has no fix to place. Keep its
+                        # published course and altitude on the transition so
+                        # the app can draw the climb truthfully; do not invent
+                        # a lateral point for it here.
+                        if kind == "sid" and not points and initial_climb is None:
+                            course = arinc_course(row.get("course"))
+                            altitude = arinc_altitude(row.get("altitude"))
+                            if course is not None and altitude is not None:
+                                initial_climb = {
+                                    "terminator": row["terminator"],
+                                    "courseDeg": course,
+                                    "altFt": altitude,
+                                    "altDesc": row.get("altDesc") or "",
+                                }
                         continue
                     point = resolve_fix(row, airport, runways, waypoints, enroute, navaids, airports)
                     if not point:
                         skipped += 1
                         continue
                     entry = {"id": row["fix"], "lat": point["lat"], "lon": point["lon"]}
+                    if "elevFt" in point:
+                        entry["elevFt"] = point["elevFt"]
                     if row["fix"].startswith("RW"):
                         entry["runway"] = True
                         if kind == "approach":
@@ -334,14 +385,17 @@ def build_airport(airport, rows, runways, waypoints, enroute, navaids, airports,
                     served = next((p["id"] for p in reversed(points) if p["id"].startswith("RW")), "")
                     landed = re.fullmatch(r"RW(\d{2}[LRCB]?)", served)
                     runway = landed.group(1) if landed else ""
-                transitions.append({
+                published = {
                     "id": transition,
                     "runway": runway,
                     "combined": bool(re.fullmatch(r"RW\d{2}B", transition)),
                     "points": points,
                     "skipped": skipped,
                     "complete": skipped == 0,
-                })
+                }
+                if initial_climb:
+                    published["initialClimb"] = initial_climb
+                transitions.append(published)
                 if kind == "approach" and not transition and missed_points:
                     # The missed approach belongs to the final segment, whose
                     # transition id is empty; its runway is the one just served.
