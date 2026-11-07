@@ -625,6 +625,8 @@ test('ChartFox is an explicit external fallback, never a silent redirect', () =>
   const fallback = /chartfox\.org\/\$\{encodeURIComponent\(code\)\}/;
   assert.match(read('app/js/pilot/charts.js'), fallback, 'a publisher that cannot be embedded opens its ChartFox airport page');
   assert.match(read('app/js/efb/charts.js'), fallback, 'the EFB charts viewer offers the same fallback');
+  assert.match(read('app/js/efb/charts.js'), /data-chartfox=/, 'the EFB lists ChartFox document groups beside integrated charts');
+  assert.match(read('app/js/efb/charts.js'), /Standard instrument departures/);
   assert.match(read('app/js/pilot/briefing.js'), /pilot\.html#charts/);
   assert.match(read('app/pilot.html'), /data-section="charts"/);
   assert.match(read('app/js/pilot.js'), /charts: \{ label: 'Charts'/);

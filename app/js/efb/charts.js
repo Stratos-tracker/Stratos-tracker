@@ -45,6 +45,20 @@ const CATEGORY_FILTERS = [
 
 const APPROACH_FAMILIES = ['ils', 'loc', 'rnav', 'vor', 'ndb', 'approach', 'visual'];
 
+/* ChartFox's own document groups. Individual chart metadata is only available
+   through its authenticated API; these groups open the airport page instead. */
+const CHARTFOX_GROUPS = [
+  { key: 'ground', title: 'Airport & ground layout', category: 'diagram', label: 'ChartFox · Ground' },
+  { key: 'sid', title: 'Standard instrument departures', category: 'sid', label: 'ChartFox · Departures' },
+  { key: 'star', title: 'Standard terminal arrivals', category: 'star', label: 'ChartFox · Arrivals' },
+  { key: 'approach', title: 'Approach charts', category: 'approach', label: 'ChartFox · Approaches' },
+  { key: 'reference', title: 'General & reference', category: 'other', label: 'ChartFox · Reference' },
+];
+
+function chartfoxUrl(code) {
+  return `https://chartfox.org/${encodeURIComponent(code)}`;
+}
+
 function readList(key, limit) {
   try {
     const raw = JSON.parse(localStorage.getItem(key) || '[]');
@@ -238,6 +252,19 @@ export async function mount(root, ctx) {
       countEl.textContent = '';
       return;
     }
+    if (!catalogue && coverage && !coverage.integrated) {
+      const shown = filterCharts(chartfoxRows(), query);
+      countEl.textContent = `${shown.length} ChartFox group${shown.length === 1 ? '' : 's'}`;
+      listEl.innerHTML = `<div class="ch-hint">
+        <b>ChartFox · ${esc(icao)}</b>
+        <span>Each group opens its ${esc(icao)} page on ChartFox in a new tab. ChartFox needs a free VATSIM login.</span>
+      </div>${shown.length ? shown.map(row => `<a class="e-list-item" href="${esc(row.external)}" target="_blank" rel="noopener noreferrer" data-chartfox="${esc(row.category)}">
+        <div class="li-main"><b>${esc(row.title)}</b><span>${esc(row.categoryLabel)} · opens on ChartFox</span></div>
+        <span class="e-badge">ChartFox ↗</span>
+      </a>`).join('') : '<div class="ch-hint"><b>No matching ChartFox groups</b><span>Clear the filter to see them all.</span></div>'}
+        <div class="e-small e-faint" style="padding:4px 10px 10px">ChartFox’s own chart names and files are not copied into Stratos.</div>`;
+      return;
+    }
     if (!catalogue) {
       listEl.innerHTML = `<div class="ch-hint">
         <b>No charts loaded</b>
@@ -381,7 +408,20 @@ export async function mount(root, ctx) {
      can open at the source. ChartFox needs a free VATSIM login; the link is the
      airport page only, never a copied document. */
   function chartfoxLink(code) {
-    return `<a class="e-btn small" style="margin-top:10px;align-self:flex-start" href="https://chartfox.org/${encodeURIComponent(code)}" target="_blank" rel="noopener noreferrer">Open ${esc(code)} on ChartFox ↗</a>`;
+    return `<a class="e-btn small" style="margin-top:10px;align-self:flex-start" href="${esc(chartfoxUrl(code))}" target="_blank" rel="noopener noreferrer">Open ${esc(code)} on ChartFox ↗</a>`;
+  }
+
+  /** The ChartFox document groups, for the same list the FAA documents use. */
+  function chartfoxRows() {
+    const external = chartfoxUrl(icao);
+    const rows = CHARTFOX_GROUPS.map(group => ({
+      id: `chartfox-${group.key}`,
+      title: group.title,
+      category: group.category,
+      categoryLabel: group.label,
+      external,
+    }));
+    return category === 'all' ? rows : rows.filter(row => row.category === category);
   }
 
   function renderViewer() {

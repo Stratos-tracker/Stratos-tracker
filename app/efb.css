@@ -1133,6 +1133,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--efb-accent); }
 .ch-list .e-list-item { padding: 7px 9px; gap: 8px; }
 .ch-list .e-list-item .li-main b { font-size: 12px; font-weight: 600; }
 .ch-list .e-list-item .li-main span { font-size: 10px; }
+.ch-list a.e-list-item { text-decoration: none; }
 .ch-hint { padding: 14px 12px; display: flex; flex-direction: column; gap: 4px; }
 .ch-hint b { font-size: 12px; font-weight: 600; color: var(--efb-text); }
 .ch-hint span { font-size: 11px; color: var(--efb-faint); line-height: 1.5; }
