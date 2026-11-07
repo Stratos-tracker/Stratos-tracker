@@ -252,6 +252,92 @@ export const REGIONAL_SOURCES = [
   }),
 ];
 
+/* Airport-specific chart portals a pilot may need in addition to the national
+ * publisher. These are still links, never copies: a virtual FIR or a flight-plan
+ * site publishing a chart is not a redistribution licence. They are listed by
+ * ICAO so an airport page can add them without widening a whole country. */
+export const AIRPORT_SOURCES = {
+  CYUL: [
+    source({
+      id: 'czul-cyul',
+      country: 'Canada',
+      iso2: 'CA',
+      region: 'North America',
+      icao: ['CYUL'],
+      authority: 'CZUL — Montreal Virtual FIR',
+      name: 'CZUL — CYUL airport charts',
+      url: 'https://czul.ca/en/airport/CYUL/',
+      licence: 'FREE_PUBLIC',
+      access: 'FREE_PUBLIC_ACCESS',
+      categories: ['diagram', 'sid', 'star', 'approach'],
+      checked: '2026-11-07',
+      note: 'Free CYUL charts published by the Montreal Virtual FIR for flight simulation. The portal grants no redistribution, so Stratos opens it at the source.',
+    }),
+    source({
+      id: 'ivao-ca-cap',
+      country: 'Canada',
+      iso2: 'CA',
+      region: 'North America',
+      icao: ['CYUL', 'CYYZ'],
+      authority: 'IVAO Canada',
+      name: 'IVAO Canada — CAP charts',
+      url: 'https://www.ivao.ca/charts/cap/',
+      licence: 'FREE_PUBLIC',
+      access: 'FREE_PUBLIC_ACCESS',
+      categories: ['diagram', 'sid', 'star', 'approach'],
+      checked: '2026-11-07',
+      note: 'Canadian airport procedure charts published for IVAO simulation. Free to view at IVAO Canada; no redistribution licence was found.',
+    }),
+    source({
+      id: 'fltplan',
+      country: 'Canada',
+      iso2: 'CA',
+      region: 'North America',
+      icao: ['CYUL', 'CYYZ'],
+      authority: 'FltPlan',
+      name: 'FltPlan — airport charts',
+      url: 'https://www.fltplan.com/',
+      licence: 'FREE_PUBLIC',
+      access: 'FREE_WITH_REGISTRATION',
+      categories: ['diagram', 'sid', 'star', 'approach'],
+      checked: '2026-11-07',
+      note: 'Free airport and procedure charts after creating a FltPlan account. The site’s terms do not grant third-party display, so Stratos links out.',
+    }),
+  ],
+  CYYZ: [
+    source({
+      id: 'ivao-ca-cap',
+      country: 'Canada',
+      iso2: 'CA',
+      region: 'North America',
+      icao: ['CYUL', 'CYYZ'],
+      authority: 'IVAO Canada',
+      name: 'IVAO Canada — CAP charts',
+      url: 'https://www.ivao.ca/charts/cap/',
+      licence: 'FREE_PUBLIC',
+      access: 'FREE_PUBLIC_ACCESS',
+      categories: ['diagram', 'sid', 'star', 'approach'],
+      checked: '2026-11-07',
+      note: 'Canadian airport procedure charts published for IVAO simulation. Free to view at IVAO Canada; no redistribution licence was found.',
+    }),
+    source({
+      id: 'fltplan',
+      country: 'Canada',
+      iso2: 'CA',
+      region: 'North America',
+      icao: ['CYUL', 'CYYZ'],
+      authority: 'FltPlan',
+      name: 'FltPlan — airport charts',
+      url: 'https://www.fltplan.com/',
+      licence: 'FREE_PUBLIC',
+      access: 'FREE_WITH_REGISTRATION',
+      categories: ['diagram', 'sid', 'star', 'approach'],
+      checked: '2026-11-07',
+      note: 'Free airport and procedure charts after creating a FltPlan account. The site’s terms do not grant third-party display, so Stratos links out.',
+    }),
+  ],
+};
+
 export const CHART_SOURCES = [
   /* ── North America ─────────────────────────────────────────────────── */
   source({

@@ -155,12 +155,18 @@ test('every registered country resolves to its own publisher, never a copy', asy
   const {
     officialSourcesFor, isListedRegion, countryForIcao, registryStats, LICENCES, LISTED_PUBLISHERS,
   } = await import('../app/js/lib/chartdir.js');
+  const { chartCoverage } = await import('../app/js/lib/chartproviders.js');
 
   const canada = officialSourcesFor('CYYZ');
-  assert.equal(canada.length, 1, 'NAV CANADA is the only listed source for Canada');
-  assert.equal(canada[0].id, 'navcanada');
+  assert.equal(canada[0].id, 'navcanada', 'NAV CANADA remains the national publisher');
   assert.match(canada[0].url, /^https:\/\/www\.navcanada\.ca\//);
   assert.match(canada[0].note, /licensed/i);
+  assert.deepEqual(canada.map(source => source.id), ['navcanada', 'ivao-ca-cap', 'fltplan']);
+  const montreal = officialSourcesFor('CYUL');
+  assert.deepEqual(montreal.map(source => source.id), ['navcanada', 'czul-cyul', 'ivao-ca-cap', 'fltplan']);
+  assert.equal(montreal[1].url, 'https://czul.ca/en/airport/CYUL/');
+  assert.equal(montreal[3].access, 'FREE_WITH_REGISTRATION');
+  assert.equal(chartCoverage('CYUL').integrated, false, 'the extra portals are links, never mirrored charts');
 
   assert.deepEqual(officialSourcesFor('EGLL').map(source => source.id), ['nats-uk', 'ead-basic', 'ais-online', 'eurocontrol-cartography']);
   assert.equal(officialSourcesFor('EDDF')[0].id, 'dfs');

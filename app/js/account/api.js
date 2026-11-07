@@ -35,8 +35,11 @@ export function apiBase() {
     const saved = clean(localStorage.getItem(BASE_KEY));
     if (saved) return saved;
   } catch (_) { /* private mode */ }
+  // The packaged desktop app loads its files from file:, but its account lives
+  // on the deployed service. Only a local dev server uses the local Worker.
+  if (location.protocol === 'file:') return clean(DEFAULT_RELAY);
   const host = String(location.hostname || '');
-  if (host === 'localhost' || host === '127.0.0.1' || host === '') return 'http://127.0.0.1:8788';
+  if (host === 'localhost' || host === '127.0.0.1') return 'http://127.0.0.1:8788';
   return clean(DEFAULT_RELAY);
 }
 
@@ -105,8 +108,9 @@ export async function signup({ email, password, username }) {
   return payload;
 }
 
-export async function login({ email, password }) {
-  const payload = await request('/api/auth/login', { method: 'POST', body: { email, password }, auth: false });
+export async function login({ email, username, identifier, password }) {
+  const who = String(identifier ?? email ?? username ?? '').trim();
+  const payload = await request('/api/auth/login', { method: 'POST', body: { identifier: who, password }, auth: false });
   if (payload.token) rememberToken(payload.token);
   return payload;
 }
@@ -130,6 +134,16 @@ export const resendVerification = () => request('/api/auth/resend', { method: 'P
 export const forgotPassword = email => request('/api/auth/forgot', { method: 'POST', body: { email }, auth: false });
 export const resetPassword = async ({ token, password }) => {
   const payload = await request('/api/auth/reset', { method: 'POST', body: { token, password }, auth: false });
+  if (payload.token) rememberToken(payload.token);
+  return payload;
+};
+
+/** A single-use code that lets the local bridge page inherit this session. */
+export const createHandoff = () => request('/api/auth/handoff', { method: 'POST' });
+export const exchangeHandoff = async code => {
+  const payload = await request('/api/auth/exchange', {
+    method: 'POST', body: { token: code }, auth: false,
+  });
   if (payload.token) rememberToken(payload.token);
   return payload;
 };
@@ -171,6 +185,12 @@ export const liveTicket = () => request('/api/live/ticket', { method: 'POST' });
 export const ingestLive = snapshot => request('/api/live/ingest', { method: 'POST', body: snapshot });
 export const clearLive = () => request('/api/live/clear', { method: 'POST' });
 
+// ── Local bridge presence ───────────────────────────────────────────
+// The PC reports the LAN address of the bridge it found; a tablet on the same
+// account reads it back. Only the authenticated account can see its own rows.
+export const reportBridge = bridge => request('/api/bridge/presence', { method: 'POST', body: bridge });
+export const discoverBridges = () => request('/api/bridge/discover');
+
 export function liveSocketUrl(ticket, base = apiBase()) {
   const origin = clean(base).replace(/^http/i, 'ws');
   return `${origin}/api/live/ws?ticket=${encodeURIComponent(ticket)}`;
@@ -184,6 +204,7 @@ export const api = {
   updateAccount, changePassword, listSessions, revokeSession,
   dashboard, getFlights, getPrefs, putPrefs, syncFlights,
   liveSnapshot, liveTicket, ingestLive, clearLive, liveSocketUrl,
+  createHandoff, exchangeHandoff, reportBridge, discoverBridges,
 };
 
 export default api;

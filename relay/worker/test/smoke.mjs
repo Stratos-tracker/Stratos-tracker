@@ -8,7 +8,8 @@
  */
 import assert from 'node:assert/strict';
 
-const { RelaySessions } = await import('../src/index.js');
+const { RelaySessions, AccountLive } = await import('../src/index.js');
+const { cleanBridgePresence } = await import('../src/live.js');
 
 function storageStub() {
   const data = new Map();
@@ -17,6 +18,7 @@ function storageStub() {
     async get(key) { return data.get(key); },
     async put(key, value) { data.set(key, value); },
     async setAlarm() {},
+    async blockConcurrencyWhile(fn) { return await fn(); },
   };
 }
 
@@ -40,6 +42,30 @@ const health = await call('GET', '/health');
 assert.equal(health.status, 200);
 assert.equal(health.payload.service, 'stratos-relay');
 assert.equal(health.payload.runtime, 'cloudflare-workers');
+
+// 1b. An account's bridge presence is private, fresh and cannot point at the internet.
+const bridge = cleanBridgePresence({
+  id: 'pc-123456', url: 'http://192.168.1.40:8765', name: 'Flight PC', simulator: 'MSFS',
+});
+assert.equal(bridge.url, 'http://192.168.1.40:8765');
+assert.throws(() => cleanBridgePresence({ id: 'pc-123456', url: 'http://203.0.113.9:8765' }));
+assert.throws(() => cleanBridgePresence({ id: 'pc-123456', url: 'https://192.168.1.40:8765' }));
+const room = new AccountLive({
+  storage: storageStub(),
+  blockConcurrencyWhile(fn) { return Promise.resolve().then(fn); },
+}, {});
+const report = await room.fetch(new Request('https://live.internal/bridge/presence', {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ id: 'pc-123456', url: 'http://192.168.1.40:8765', name: 'Flight PC' }),
+}));
+assert.equal(report.status, 200);
+const found = await room.fetch(new Request('https://live.internal/bridge/discover'));
+assert.equal(found.status, 200);
+const bridges = (await found.json()).bridges;
+assert.equal(bridges.length, 1);
+assert.equal(bridges[0].name, 'Flight PC');
+assert.equal(bridges[0].url, 'http://192.168.1.40:8765');
 
 // 2. A desktop pairs, then nobody can read without a token.
 const pair = await call('POST', '/api/pair', { body: { name: 'PC' } });

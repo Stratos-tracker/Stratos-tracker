@@ -11,7 +11,7 @@
  */
 
 import {
-  ACCESS, CHART_SOURCES, COUNTRIES, LICENCES, REGIONAL_SOURCES, REGIONS, SOURCE_BY_ID,
+  ACCESS, AIRPORT_SOURCES, CHART_SOURCES, COUNTRIES, LICENCES, REGIONAL_SOURCES, REGIONS, SOURCE_BY_ID,
   accessFor, accessKeyFor, establishedFor, licenceFor,
 } from '../data/chart-sources.js';
 
@@ -79,19 +79,27 @@ const isEuropean = code => /^[ELB]/.test(String(code || ''));
  * An empty list means no publisher is registered for that part of the world —
  * which is coverage information, never a reason to show an invented chart.
  */
+/** Airport-only portals registered for a specific ICAO, in display order. */
+export function airportSourcesFor(icao) {
+  const code = normalIcao(icao);
+  return code && AIRPORT_SOURCES[code] ? AIRPORT_SOURCES[code] : [];
+}
+
 export function officialSourcesFor(icao) {
   const code = normalIcao(icao);
   if (!code) return [];
   const publisher = publisherFor(code);
+  const airport = airportSourcesFor(code);
   if (publisher) {
     // A European state is also served by the EUROCONTROL indexes, so they are
     // offered after the national publisher. Everywhere else the national
-    // authority is the only listed source.
+    // authority is the listed source, followed by any airport-only portal.
     if (publisher.region === 'Europe') {
-      return [publisher, ...REGIONAL_SOURCES.filter(entry => entry.id !== publisher.id)];
+      return [publisher, ...REGIONAL_SOURCES.filter(entry => entry.id !== publisher.id), ...airport];
     }
-    return [publisher];
+    return [publisher, ...airport];
   }
+  if (airport.length) return airport;
   if (isEuropean(code)) return REGIONAL_SOURCES;
   return [];
 }

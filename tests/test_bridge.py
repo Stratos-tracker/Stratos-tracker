@@ -286,6 +286,12 @@ class PairLandingTests(unittest.TestCase):
 
     def test_a_phone_can_ask_for_the_map_instead(self):
         self.assertEqual(self.handler("/pair/connect?next=%2Findex.html").pair_landing(), "/index.html")
+        # The account hand-off lives in the fragment, which is never sent to
+        # this server, and still lands on a page served by this bridge.
+        self.assertEqual(
+            self.handler("/pair/connect?next=%2Findex.html%23account%3Dabc123").pair_landing(),
+            "/index.html#account=abc123",
+        )
 
     def test_the_landing_page_cannot_be_sent_off_this_bridge(self):
         for bad in ("/pair/connect?next=https://example.com",

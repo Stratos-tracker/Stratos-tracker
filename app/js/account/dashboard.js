@@ -8,6 +8,7 @@
 
 import * as api from './api.js';
 import { LiveFeed, startPublisher, findBridge, LIVE_STALE_MS } from './live.js';
+import { startBridgePresence, startAutoConnect } from './discovery.js';
 import {
   $, $$, showAlert, hideAlert, setBusy, guard, goTo, paintAvatar, brandMark,
   formatHours, formatDuration, formatNumber, formatDate, timeAgo,
@@ -712,6 +713,10 @@ async function boot() {
   await loadSessions();
   startFeed();
   startPublishing();
+  // On a PC this publishes the bridge's LAN address to the account; on a tablet
+  // it opens the discovered PC map without asking for an address or a tap.
+  startBridgePresence();
+  startAutoConnect();
 }
 
 boot();

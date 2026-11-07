@@ -46,6 +46,7 @@ const MAX_FLIGHT_TEXT = 110 * 1024;
 const VERIFY_TTL_MS = 48 * 60 * 60 * 1000;
 const RESET_TTL_MS = 60 * 60 * 1000;
 const TICKET_TTL_MS = 90 * 1000;
+const HANDOFF_TTL_MS = 90 * 1000;
 const MAX_FAILED = 8;
 const LOCK_MS = 15 * 60 * 1000;
 
@@ -278,6 +279,8 @@ export async function handleAccountApi(request, env, url, cors = {}) {
     || path === '/api/flights'
     || path === '/api/flights/sync'
     || path === '/api/prefs'
+    || path === '/api/bridge/presence'
+    || path === '/api/bridge/discover'
     || path === '/api/live'
     || path === '/api/live/ingest'
     || path === '/api/live/ticket'
@@ -342,17 +345,29 @@ export async function handleAccountApi(request, env, url, cors = {}) {
     // ── Sign in ────────────────────────────────────────────────────
     if (path === '/api/auth/login' && method === 'POST') {
       const body = await readJson(request);
-      const emailNorm = normalizeEmail(body.email);
+      // One field accepts either the address or the username. A value with an
+      // @ is an email; anything else is looked up as a username, so an account
+      // that chose a username containing @ is still unambiguous.
+      const identifier = String(body.identifier ?? body.email ?? '').trim();
+      const emailNorm = identifier.includes('@') ? normalizeEmail(identifier) : '';
+      const usernameNorm = identifier.includes('@') ? '' : normalizeUsername(identifier);
       const password = String(body.password == null ? '' : body.password);
-      if (!emailNorm || !password) throw new ApiError(400, 'Enter your email address and password.');
+      if ((!emailNorm && !usernameNorm) || !password) {
+        throw new ApiError(400, 'Enter your email or username and your password.');
+      }
 
-      const record = await db.prepare(
-        `SELECT ${USER_COLUMNS}, u.password_hash, u.password_salt, u.iterations, u.failed_attempts, u.locked_until
-           FROM users u WHERE u.email_norm = ?`,
-      ).bind(emailNorm).first();
-      // One message for an unknown address and a wrong password, so the endpoint
-      // cannot be used to discover which addresses have accounts.
-      const rejected = new ApiError(401, 'That email and password do not match an account.');
+      const record = emailNorm
+        ? await db.prepare(
+          `SELECT ${USER_COLUMNS}, u.password_hash, u.password_salt, u.iterations, u.failed_attempts, u.locked_until
+             FROM users u WHERE u.email_norm = ?`,
+        ).bind(emailNorm).first()
+        : await db.prepare(
+          `SELECT ${USER_COLUMNS}, u.password_hash, u.password_salt, u.iterations, u.failed_attempts, u.locked_until
+             FROM users u WHERE u.username_norm = ?`,
+        ).bind(usernameNorm).first();
+      // One message for an unknown identifier and a wrong password, so the
+      // endpoint cannot be used to discover which accounts exist.
+      const rejected = new ApiError(401, 'That email or username and password do not match an account.');
       if (!record) throw rejected;
 
       const now = Date.now();
@@ -376,6 +391,39 @@ export async function handleAccountApi(request, env, url, cors = {}) {
     if (path === '/api/auth/session' && method === 'GET') {
       const { user } = await authenticate(request, env);
       return json(200, { ok: true, user: userView(user) }, cors);
+    }
+
+    // ── A one-time hand-off into the local bridge page ─────────────
+    // The tablet is signed in on the hosted HTTPS origin, but the bridge page
+    // is served over plain HTTP on the LAN. The token cannot cross that origin
+    // boundary in a URL, so the hosted page asks for a short-lived, single-use
+    // code and puts it in the fragment. The bridge never receives it (fragments
+    // are not sent to servers); the local page exchanges it in the background.
+    if (path === '/api/auth/handoff' && method === 'POST') {
+      const { user } = await authenticate(request, env);
+      await db.prepare('DELETE FROM email_tokens WHERE user_id = ? AND purpose = ?')
+        .bind(user.id, 'handoff').run();
+      const token = await issueEmailToken(env, user.id, 'handoff', HANDOFF_TTL_MS);
+      return json(200, { ok: true, code: token, expiresAt: Date.now() + HANDOFF_TTL_MS }, cors);
+    }
+
+    if (path === '/api/auth/exchange' && method === 'POST') {
+      const body = await readJson(request, 4096);
+      const token = String(body.token || body.code || '').trim();
+      if (!token) throw new ApiError(400, 'That hand-off code is missing.');
+      const row = await db.prepare(
+        'SELECT token_hash, user_id, expires_at, used_at FROM email_tokens WHERE token_hash = ? AND purpose = ?',
+      ).bind(await sha256(token), 'handoff').first();
+      if (!row || row.used_at || Number(row.expires_at) < Date.now()) {
+        throw new ApiError(401, 'That hand-off has expired. Open the PC map from your account again.');
+      }
+      const now = Date.now();
+      await db.prepare('UPDATE email_tokens SET used_at = ? WHERE token_hash = ?')
+        .bind(now, row.token_hash).run();
+      const session = await createSession(env, row.user_id, request, now);
+      const user = await db.prepare(`SELECT ${USER_COLUMNS} FROM users u WHERE u.id = ?`)
+        .bind(row.user_id).first();
+      return json(200, { ok: true, token: session, user: userView(user) }, cors);
     }
 
     // ── Sign out ───────────────────────────────────────────────────
@@ -683,6 +731,30 @@ export async function handleAccountApi(request, env, url, cors = {}) {
         })),
         live,
       }, cors);
+    }
+
+    // ── Bridge presence ────────────────────────────────────────────
+    // The PC advertises the LAN URL of the bridge it found. The record lives in
+    // the account's existing Durable Object, so it expires naturally and no new
+    // D1 table or migration is needed. Only the authenticated account can read
+    // its own list; the URL is validated as a private HTTP address by the object.
+    if (path === '/api/bridge/presence' && method === 'POST') {
+      const { user } = await authenticate(request, env);
+      const raw = await request.text();
+      if (raw.length > 4096) throw new ApiError(413, 'That bridge record is too large.');
+      const forwarded = await liveStub(env, user.id).fetch(new Request('https://live.internal/bridge/presence', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: raw,
+      }));
+      return json(forwarded.status, await forwarded.json(), cors);
+    }
+
+    if (path === '/api/bridge/discover' && method === 'GET') {
+      const { user } = await authenticate(request, env);
+      const forwarded = await liveStub(env, user.id)
+        .fetch(new Request('https://live.internal/bridge/discover'));
+      return json(forwarded.status, await forwarded.json(), cors);
     }
 
     // ── Live flight ────────────────────────────────────────────────

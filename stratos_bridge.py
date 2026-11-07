@@ -1972,7 +1972,10 @@ class Handler(BaseHTTPRequestHandler):
         """
         query = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         wanted = (query.get("next", [""])[0] or "").strip()
-        if re.match(r"^/[A-Za-z0-9._~%/\-]*$", wanted) and ".." not in wanted and not wanted.startswith("//"):
+        # A fragment (for the one-time account hand-off) is allowed because the
+        # browser never sends it to this server. It still has to be a path on
+        # this bridge, so the parameter cannot navigate the phone elsewhere.
+        if re.match(r"^/[A-Za-z0-9._~%/\-#=]*$", wanted) and ".." not in wanted and not wanted.startswith("//"):
             return wanted
         return "/live.html"
 

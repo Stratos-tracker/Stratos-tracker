@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import { toSnapshot } from '../app/js/account/live.js';
 import { liveSocketUrl, AccountError } from '../app/js/account/api.js';
+import { bridgeNextPath, pairConnectUrl, isPrivateBridgeUrl } from '../app/js/account/discovery.js';
 import {
   esc, initials, formatDuration, formatHours, formatNumber,
   passwordScore, safeNext,
@@ -99,6 +100,22 @@ test('account: durations, counts and initials read like the rest of the app', ()
   assert.equal(initials('Jamie Rivers'), 'JR');
   assert.equal(initials('pilot', 'pilot@example.com'), 'PI');
   assert.equal(esc('<script>&"'), '&lt;script&gt;&amp;&quot;');
+});
+
+test('account: automatic PC discovery only accepts a private bridge and keeps the hand-off out of the bridge query', () => {
+  assert.equal(isPrivateBridgeUrl('http://192.168.1.20:8765'), true);
+  assert.equal(isPrivateBridgeUrl('http://10.0.0.4:8765'), true);
+  assert.equal(isPrivateBridgeUrl('http://stratos.local:8765'), true);
+  assert.equal(isPrivateBridgeUrl('https://192.168.1.20:8765'), false, 'a TLS URL is not a local bridge');
+  assert.equal(isPrivateBridgeUrl('http://203.0.113.9:8765'), false, 'a public address is refused');
+  assert.equal(isPrivateBridgeUrl('http://192.168.1.20:8765/other'), false, 'only an origin is accepted');
+
+  assert.equal(bridgeNextPath(), '/index.html');
+  assert.equal(bridgeNextPath('abc 123'), '/index.html#account=abc%20123');
+  assert.equal(
+    pairConnectUrl('http://192.168.1.20:8765', 'abc123'),
+    'http://192.168.1.20:8765/pair/connect?next=%2Findex.html%23account%3Dabc123',
+  );
 });
 
 test('account: password strength never calls a one-character password strong', () => {

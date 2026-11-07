@@ -83,16 +83,18 @@ async function signIn() {
   form?.addEventListener('submit', async event => {
     event.preventDefault();
     if (form.dataset.busy === '1') return;
-    const email = String($('#email')?.value || '').trim();
+    const identifier = String($('#email')?.value || '').trim();
     const password = String(passwordInput?.value || '');
-    if (!validEmail(email)) return fail('Enter the email address on your account.');
+    if (!identifier) return fail('Enter your email or username.');
+    if (identifier.includes('@') && !validEmail(identifier)) return fail('Enter a valid email address.');
+    if (!identifier.includes('@') && identifier.length < 2) return fail('Enter your username.');
     if (!password) return fail('Enter your password.');
 
     form.dataset.busy = '1';
     hideAlert(errorBox);
     setBusy(submit, true, 'Signing in…');
     try {
-      const result = await api.login({ email, password });
+      const result = await api.login({ identifier, password });
       const name = result?.user?.username ? `, ${result.user.username}` : '';
       succeed(`Signed in${name}. Opening your dashboard…`);
       goTo(safeNext());

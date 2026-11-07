@@ -3798,4 +3798,14 @@ try{if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').t
   // explicit errors.
   if (typeof window.autoImportSimbrief === 'function') window.autoImportSimbrief();
 </script>
+<script type="module">
+  import { consumeAccountHandoff, startBridgePresence, startAutoConnect } from './js/account/discovery.js';
+  // The bridge page arrives with a one-time account code in the fragment.
+  // Exchange it first so the local map is signed in, then advertise this PC or
+  // (on a tablet) look for the PC the account has reported.
+  consumeAccountHandoff().finally(() => {
+    startBridgePresence();
+    startAutoConnect();
+  });
+</script>
 </body></html>

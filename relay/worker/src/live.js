@@ -21,6 +21,63 @@ const MAX_SNAPSHOT_BYTES = 32 * 1024;
 const PERSIST_EVERY_MS = 10 * 1000;
 const STALE_AFTER_MS = 20 * 1000;
 const SNAPSHOT_KEY = 'snapshot';
+const BRIDGES_KEY = 'bridges';
+const BRIDGE_TTL_MS = 2 * 60 * 1000;
+const MAX_BRIDGES = 8;
+
+/** True for a loopback, link-local or RFC1918 hostname, the only places a bridge
+ * can legitimately live. A presence record is not allowed to point a tablet at
+ * an arbitrary internet address. */
+function privateHost(hostname) {
+  const host = String(hostname || '').trim().toLowerCase().replace(/^\[|\]$/g, '');
+  if (host === 'localhost' || host === '::1' || host.endsWith('.local')) return true;
+  const parts = host.split('.');
+  if (parts.length !== 4 || parts.some(part => !/^\d{1,3}$/.test(part) || Number(part) > 255)) return false;
+  const [a, b] = parts.map(Number);
+  return a === 10
+    || a === 127
+    || (a === 169 && b === 254)
+    || (a === 172 && b >= 16 && b <= 31)
+    || (a === 192 && b === 168);
+}
+
+/** Validate and normalise one bridge presence report from the PC. */
+export function cleanBridgePresence(body, now = Date.now()) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    throw new Error('Expected a bridge object');
+  }
+  const id = String(body.id || '').trim().slice(0, 64);
+  if (!/^[A-Za-z0-9_-]{6,64}$/.test(id)) throw new Error('A bridge needs a stable id');
+  let url;
+  try {
+    url = new URL(String(body.url || '').trim());
+  } catch (_) {
+    throw new Error('That bridge address is not a URL');
+  }
+  if (url.protocol !== 'http:' || url.username || url.password) {
+    throw new Error('A bridge must be a plain private HTTP address');
+  }
+  if (!privateHost(url.hostname)) throw new Error('A bridge must be on the local network');
+  if (!url.port) url.port = '8765';
+  const port = Number(url.port);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('That bridge port is invalid');
+  const text = (value, max) => String(value == null ? '' : value).trim().slice(0, max);
+  return {
+    id,
+    url: url.origin,
+    name: text(body.name, 60) || 'Stratos PC',
+    version: text(body.version, 40),
+    simulator: text(body.simulator, 40),
+    updatedAt: now,
+    expiresAt: now + BRIDGE_TTL_MS,
+  };
+}
+
+function freshBridges(list, now = Date.now()) {
+  return (Array.isArray(list) ? list : [])
+    .filter(entry => entry && entry.id && Number(entry.expiresAt) > now)
+    .slice(0, MAX_BRIDGES);
+}
 
 function json(status, payload) {
   return new Response(JSON.stringify(payload), {
@@ -100,12 +157,14 @@ export class AccountLive {
     this.snapshot = null;
     this.updatedAt = 0;
     this.lastPersist = 0;
+    this.bridges = [];
     this.ready = state.blockConcurrencyWhile(async () => {
       const saved = await state.storage.get(SNAPSHOT_KEY);
       if (saved && saved.snapshot) {
         this.snapshot = saved.snapshot;
         this.updatedAt = Number(saved.updatedAt) || 0;
       }
+      this.bridges = freshBridges(await state.storage.get(BRIDGES_KEY));
     });
   }
 
@@ -153,6 +212,12 @@ export class AccountLive {
     } catch (_) { /* storage pressure must not break the live feed */ }
   }
 
+  async persistBridges() {
+    try {
+      await this.state.storage.put(BRIDGES_KEY, this.bridges);
+    } catch (_) { /* presence is best-effort; it will be re-posted */ }
+  }
+
   async fetch(request) {
     await this.ready;
     const url = new URL(request.url);
@@ -177,6 +242,32 @@ export class AccountLive {
 
     if (is('/snapshot')) {
       return json(200, this.payload());
+    }
+
+    if (is('/bridge/presence') && request.method === 'POST') {
+      let body;
+      try {
+        body = await request.json();
+      } catch (_) {
+        return json(400, { ok: false, error: 'Invalid JSON' });
+      }
+      let bridge;
+      try {
+        bridge = cleanBridgePresence(body);
+      } catch (error) {
+        return json(400, { ok: false, error: error.message });
+      }
+      this.bridges = [bridge, ...freshBridges(this.bridges).filter(entry => entry.id !== bridge.id)]
+        .slice(0, MAX_BRIDGES);
+      await this.persistBridges();
+      return json(200, { ok: true, bridge });
+    }
+
+    if (is('/bridge/discover') && request.method === 'GET') {
+      const before = this.bridges.length;
+      this.bridges = freshBridges(this.bridges);
+      if (this.bridges.length !== before) await this.persistBridges();
+      return json(200, { ok: true, bridges: this.bridges });
     }
 
     if (is('/ingest') && request.method === 'POST') {
