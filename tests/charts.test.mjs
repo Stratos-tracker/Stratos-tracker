@@ -162,12 +162,12 @@ test('every registered country resolves to its own publisher, never a copy', asy
   assert.match(canada[0].url, /^https:\/\/www\.navcanada\.ca\//);
   assert.match(canada[0].note, /licensed/i);
 
-  assert.deepEqual(officialSourcesFor('EGLL').map(source => source.id), ['nats-uk', 'ead-basic', 'ais-online']);
+  assert.deepEqual(officialSourcesFor('EGLL').map(source => source.id), ['nats-uk', 'ead-basic', 'ais-online', 'eurocontrol-cartography']);
   assert.equal(officialSourcesFor('EDDF')[0].id, 'dfs');
   assert.equal(officialSourcesFor('LFPO')[0].id, 'sia');
   assert.equal(officialSourcesFor('LIRF')[0].id, 'enav');
   assert.equal(officialSourcesFor('EBBR')[0].id, 'skeyes', 'a registered national publisher wins over the regional index');
-  assert.deepEqual(officialSourcesFor('LYBE').map(source => source.id), ['ead-basic', 'ais-online'], 'a European state with no national entry falls back to EUROCONTROL');
+  assert.deepEqual(officialSourcesFor('LYBE').map(source => source.id), ['ead-basic', 'ais-online', 'eurocontrol-cartography'], 'a European state with no national entry falls back to EUROCONTROL');
   assert.deepEqual(officialSourcesFor('YSSY').map(source => source.id), ['airservices-au']);
 
   // Worldwide: every region in the registry resolves to its own authority.
@@ -325,10 +325,11 @@ test('an airport outside FAA coverage points at its publisher instead of inventi
   const instance = await mount(root, {
     params: new URLSearchParams('icao=EGLL'), directory: [], bridgeBase: 'http://127.0.0.1:8765', health: null,
   });
-  await until(() => root.querySelectorAll('.chart-sources a').length === 3);
+  await until(() => root.querySelectorAll('.chart-sources a').length === 4);
   const names = [...root.querySelectorAll('.chart-sources a b')].map(node => node.textContent);
   assert.match(names[0], /NATS AIS/);
   assert.match(names[1], /EAD Basic/);
+  assert.match(names[3], /Cartography/, 'and the pan-European cartography service is named');
   assert.ok(root.querySelector('#chart-open-file'), 'the viewer offers a local PDF');
   assert.match(root.textContent, /in-app display has not been established/);
   assert.match(root.textContent, /no integrated charts/);

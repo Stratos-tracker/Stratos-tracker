@@ -20,13 +20,13 @@ authority's own portal. Nothing is scraped, framed or re-hosted, and the proxy i
 | Category | Meaning | Publishers |
 | --- | --- | --- |
 | FREE_REUSE | Explicit terms allow third-party display and redistribution. | 3 |
-| FREE_PUBLIC | Free public access. Reuse terms still need to be established. | 12 |
+| FREE_PUBLIC | Free public access. Reuse terms still need to be established. | 13 |
 | FREE_PERSONAL_ONLY | Free for personal use; not authorised for a Stratos integration. | 0 |
 | PAID | Requires a purchase or a commercial licence. | 1 |
 | PERMISSION_REQUIRED | The authority must be asked before the documents can be reused. | 6 |
 | UNKNOWN | The licence position has not been established. | 62 |
 
-**84 national publishers and 2 regional indexes across 84 countries.**
+**85 national publishers and 3 regional indexes across 84 countries.**
 
 ## Access statuses
 
@@ -36,7 +36,7 @@ open inside the EFB; every other status keeps the publisher link and says why.
 | Status | Meaning | Publishers |
 | --- | --- | --- |
 | AVAILABLE_IN_APP | The publisher’s terms allow Stratos to display these documents inside the app. | 3 |
-| FREE_PUBLIC_ACCESS | Publicly accessible at the publisher, but in-app display has not been established. | 10 |
+| FREE_PUBLIC_ACCESS | Publicly accessible at the publisher, but in-app display has not been established. | 11 |
 | FREE_WITH_REGISTRATION | Free, but the publisher requires an account before the documents open. | 5 |
 | PERMISSION_REQUIRED | The publisher’s terms require written approval before another app may display the documents. | 7 |
 | PAID | A purchase or commercial licence is required from the publisher. | 1 |
@@ -60,6 +60,7 @@ links to the publisher and never embeds the document.
 | --- | --- | --- | --- | --- |
 | Australia | Airservices Australia | [Airservices Australia — AIP](https://www.airservicesaustralia.com/aip/aip.asp) | FREE_PUBLIC | not recorded |
 | Brazil | DECEA | [DECEA AISWEB — AIP Brazil](https://ais.decea.mil.br/) | FREE_PUBLIC | not recorded |
+| Germany | open flightmaps association (OFMA) | [open flightmaps — VFR Germany](https://www.openflightmaps.org/ed-germany/) | FREE_PUBLIC | 2026-11-07 |
 | Hong Kong | Civil Aviation Department | [CAD Hong Kong — AIP](https://www.cad.gov.hk/english/publications.html) | FREE_PUBLIC | not recorded |
 | India | Airports Authority of India | [AAI — AIP India](https://www.aai.aero/) | FREE_PUBLIC | not recorded |
 | Ireland | AirNav Ireland | [AirNav Ireland — AIP Ireland](https://www.airnav.ie/air-traffic-management/aeronautical-information-management) | FREE_PUBLIC | not recorded |
@@ -79,7 +80,7 @@ so a pilot always sees who owns the documents and where to ask.
 | Country | Authority | Publisher | Licence | Reason |
 | --- | --- | --- | --- | --- |
 | Canada | NAV CANADA | [NAV CANADA — AIP Canada](https://www.navcanada.ca/en/aeronautical-information/aip-canada.aspx) | PAID | CAP and IFR charts are licensed by NAV CANADA; Stratos does not mirror them. |
-| Germany | DFS Deutsche Flugsicherung | [DFS AIS — AIP Germany](https://ais.dfs.de/pilotservice/briefing/aip_online/aip_online.jsp) | PERMISSION_REQUIRED | Free AIP access. The charts are copyright DFS and reuse needs written approval. |
+| Germany | DFS Deutsche Flugsicherung | [DFS AIS — AIP Germany](https://ais.dfs.de/pilotservice/briefing/aip_online/aip_online.jsp) | PERMISSION_REQUIRED | Free AIP access. The charts are copyright DFS and reuse needs written approval. VATSIM Germany’s knowledgebase points pilots to ChartFox, which needs a VATSIM login, and to open flightmaps for VFR. |
 | Italy | ENAV | [ENAV — AIP Italy](https://www.enav.it/en/login-required) | PERMISSION_REQUIRED | Registration required for the online service. |
 | Netherlands | LVNL | [LVNL — eAIP Netherlands](https://eaip.lvnl.nl/web/eaip/default.html) | PERMISSION_REQUIRED | Reproduction needs LVNL written permission. |
 | Norway | Avinor | [Avinor — AIP Norway](https://partner.avinor.no/en/ais/aip/) | PERMISSION_REQUIRED | AIP Norway is copyright Avinor; use outside copyright law needs permission. |
@@ -162,13 +163,14 @@ The EFB labels these airports exactly that way rather than guessing.
 | --- | --- | --- | --- |
 | [EUROCONTROL EAD Basic](https://www.ead.eurocontrol.int/) | Europe | FREE_PUBLIC | Free after registration. A consultation tool, not an app feed. |
 | [EUROCONTROL — AIS Online index](https://www.eurocontrol.int/articles/ais-online) | Europe | FREE_PUBLIC | Links to each national AIS portal. |
+| [EUROCONTROL — Cartography](https://www.eurocontrol.int/service/cartography) | Europe | FREE_PUBLIC | Pan-European enroute and network charts, free to download for information only. No third-party display grant was found. |
 
 ## Coverage by region
 
 | Region | Countries registered | Publishers |
 | --- | --- | --- |
 | North America | 3 | 3 |
-| Europe | 27 | 27 |
+| Europe | 27 | 28 |
 | Asia | 16 | 16 |
 | Middle East | 9 | 9 |
 | Oceania | 4 | 4 |

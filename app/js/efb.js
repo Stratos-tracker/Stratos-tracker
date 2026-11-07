@@ -180,24 +180,6 @@ function renderAirlineMark(resolved) {
       ? `<b>${esc(air.name)}</b><span>${esc(air.icao)}${air.iata ? ` · ${esc(air.iata)}` : ''}</span>`
       : '';
   }
-  renderBrandMark(air);
-}
-
-/*
- * The operator's mark sits behind the deck, the way a crew tablet's wallpaper
- * carries the airline. When the app ships a licensed file for that operator the
- * real mark is drawn, masked into the airline's accent and faded into the
- * wallpaper; without one, the airline's own code is set in a roundel. Nothing
- * here draws an imitation of a logo, and the house theme gets no mark at all.
- */
-function renderBrandMark(air) {
-  if (!dom.brand) return;
-  const on = Boolean(air && !air.house);
-  dom.brand.classList.toggle('is-on', on);
-  if (!on) { dom.brand.innerHTML = ''; return; }
-  dom.brand.innerHTML = air.logo
-    ? `<span class="hb-mark hb-logo" style="--brand-logo:url('${esc(air.logo)}')"></span>`
-    : `<span class="hb-mark hb-roundel"><span class="hb-code">${esc(airlineText(air))}</span></span>`;
 }
 
 /* ── navigation ──────────────────────────────────────────────────────── */
@@ -257,7 +239,7 @@ function markActive(id) {
 /* ── home screen ─────────────────────────────────────────────────────── */
 
 function tileMarkup(app, size = 30) {
-  return `<a class="hi" href="#/${esc(app.id)}" data-open="${esc(app.id)}">
+  return `<a class="hi hi-${esc(app.id)}" href="#/${esc(app.id)}" data-open="${esc(app.id)}">
     <span class="hi-tile">${icon(app.icon, size)}</span>
     <span class="hi-label">${esc(app.name)}</span>
   </a>`;
@@ -589,7 +571,6 @@ export async function boot() {
   dom.hwTele = document.getElementById('hw-tele');
   dom.airline = document.getElementById('et-airline');
   dom.homeAirline = document.getElementById('home-airline');
-  dom.brand = document.getElementById('home-brand');
 
   state.plan = currentPlan();
   state.route = loadRoute();

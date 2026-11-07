@@ -470,9 +470,10 @@ test('the Notepad types and draws, and keeps neither secret nor synced', async (
   assert.match(shell, /id: 'notepad'/, 'the notepad is an app on the deck');
   assert.match(shell, /module: '\.\/efb\/notepad\.js'/, 'with its own module');
   const css = fs.readFileSync(new URL('app/efb.css', root), 'utf8');
-  assert.doesNotMatch(shell, /TILE_TINT/, 'the deck has one tile tone, not a tint per app');
-  assert.match(css, /\.hi-tile \{[^}]*background: #0e141c/, 'every tile is the same solid dark colour');
-  assert.doesNotMatch(css, /var\(--tile-a/, 'and no per-app gradient survives');
+  assert.doesNotMatch(shell, /TILE_TINT/, 'the deck tints tiles in CSS, not in the shell');
+  assert.match(css, /\.hi-tile \{[^}]*border-radius: 23%/, 'every app tile is an iOS-shaped rounded square');
+  assert.match(css, /\.hi-navigator \.hi-tile \{\s*background: linear-gradient/, 'each app carries its own iOS-style gradient');
+  assert.doesNotMatch(css, /var\(--tile-a/, 'the tints stay in the stylesheet, not in a shell token');
   assert.match(shell, /notepad: '<path/, 'and its own icon');
   assert.ok(fs.existsSync(new URL('app/js/efb/notepad.js', root)));
 
@@ -526,18 +527,14 @@ test('the airline dresses the whole bag, with a preview and a manual override', 
   assert.match(shell, /applyAirlineState\(\);\n  \}\);/, 'a new plan or callsign re-resolves it');
   assert.ok(/id="et-airline"/.test(page), 'the header carries the airline mark');
   assert.ok(/id="home-airline"/.test(page), 'and the deck carries the wordmark');
-  assert.ok(/id="home-brand"/.test(page), 'with the operator mark laid under the deck');
-  assert.match(shell, /function renderBrandMark\(air\)/, 'drawn from the resolved airline');
-  assert.match(shell, /airlineText\(air\)/, 'and a typographic identifier where no mark is bundled');
-  assert.match(css, /\.home-brand\.is-on \{ opacity: 1; \}/, 'only shown once an airline is resolved');
-  assert.match(css, /\.hb-roundel \{[^}]*opacity: \.36/, 'the fallback roundel is faded behind the app labels');
+  assert.ok(/class="home-logo"/.test(page), 'with the house mark, without its wordmark, under the deck');
+  assert.doesNotMatch(page, /home-brand/, 'and no airline wordmark in the bottom-right corner');
+  assert.match(css, /\.home-logo \{[^}]*place-items: center/, 'the mark is centred on the deck');
+  assert.match(css, /\.home-logo svg \{[^}]*color: var\(--efb-accent\)/, 'drawn in the house accent');
+  assert.doesNotMatch(shell, /renderBrandMark/, 'the deck no longer draws an operator wordmark');
   assert.match(css, /body\[data-airline\]:not\(\[data-airline=""\]\) \.home-wall::after/, 'the wallpaper picks up the airline glow');
   assert.match(css, /\.et-airline b \{[^}]*background: var\(--efb-accent\)/, 'the header pill is drawn in the accent');
 
-  // The real operator mark: a bundled, licensed file rendered as a one-tone mask.
-  assert.match(shell, /air\.logo\s*\?\s*`<span class="hb-mark hb-logo"/, 'a bundled mark is preferred over the roundel');
-  assert.match(shell, /--brand-logo:url\('/, 'and is passed to the stylesheet as a mask');
-  assert.match(css, /\.hb-logo \{[^}]*mask: var\(--brand-logo\) center \/ contain no-repeat/, 'so one tone runs across every airline');
   const { AIRLINES: profiles } = await import('../app/js/lib/airlines.js');
   for (const airline of profiles.filter(entry => entry.logo)) {
     assert.ok(fs.existsSync(new URL(`app/${airline.logo}`, root)), `${airline.icao} has the mark it names`);

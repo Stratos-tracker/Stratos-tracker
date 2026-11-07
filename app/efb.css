@@ -443,54 +443,24 @@ body[data-wall="graphite"] .home-wall {
     linear-gradient(170deg, #0a0c11 0%, #06080b 76%);
 }
 
-/* The operator's identity, laid under the deck the way a crew tablet's
-   wallpaper carries it: a large designator and wordmark in the airline's own
-   tone, faint enough to be texture and never over the app labels or the dock. */
-.home-brand {
+/* The house mark, without the wordmark, laid large in the middle of the deck
+   the way a wallpaper carries an identity. One accent tone, faint enough to
+   stay texture behind the app labels and never over the dock. */
+.home-logo {
   position: absolute;
-  right: clamp(22px, 4vw, 54px);
-  bottom: clamp(18px, 4vh, 40px);
+  inset: 0;
   z-index: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
+  display: grid;
+  place-items: center;
   pointer-events: none;
   user-select: none;
-  opacity: 0;
-  transition: opacity .45s ease;
+  opacity: .22;
 }
-.home-brand.is-on { opacity: 1; }
-.hb-mark { display: grid; place-items: center; }
-
-/* The operator's real mark, masked so one tone runs across every logo and then
-   faded into the wallpaper. Masking also keeps a dark wordmark visible on a
-   dark deck without inventing a second colour version of it. */
-.hb-logo {
-  width: clamp(170px, 28vw, 300px);
-  height: clamp(84px, 15vh, 140px);
-  background: var(--efb-accent);
-  -webkit-mask: var(--brand-logo) center / contain no-repeat;
-  mask: var(--brand-logo) center / contain no-repeat;
-  opacity: .24;
-}
-
-/* An operator with no bundled mark gets a roundel carrying its own code: a
-   typographic identifier, never a drawn imitation of someone's logo. */
-.hb-roundel {
-  width: clamp(140px, 22vh, 210px);
-  height: clamp(140px, 22vh, 210px);
-  border-radius: 50%;
-  border: 1px solid var(--efb-accent-line);
-  background: radial-gradient(circle at 50% 34%, var(--efb-airline-glow), transparent 68%);
-  opacity: .36;
-}
-.hb-code { font-size: clamp(42px, 6.4vh, 60px);
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: .06em;
-  text-indent: .06em;
+.home-logo svg {
+  width: clamp(300px, 52vmin, 640px);
+  height: auto;
   color: var(--efb-accent);
+  filter: drop-shadow(0 0 70px var(--efb-airline-glow, transparent));
 }
 
 .home-bar {
@@ -677,22 +647,45 @@ body[data-wall="graphite"] .home-wall {
   position: relative;
   width: 84px;
   height: 84px;
-  border-radius: 22px;
+  border-radius: 23%;
   display: grid;
   place-items: center;
-  color: #dfe8f4;
-  /* One solid dark tone for every app: the glyph is the identity, not a tint. */
-  background: #0e141c;
-  border: 1px solid rgba(148, 163, 184, .18);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 8px 16px rgba(0, 0, 0, .34);
-  transition: transform .14s ease, box-shadow .14s ease, background .14s ease, border-color .14s ease;
+  color: #fff;
+  /* Each app is its own rounded-square tile, the way an iPhone home screen
+     reads: a saturated gradient, a white glyph and a soft top highlight. */
+  background: linear-gradient(160deg, #4a5566, #232b36);
+  border: 1px solid rgba(255, 255, 255, .12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), inset 0 -10px 18px rgba(0, 0, 0, .22), 0 8px 16px rgba(0, 0, 0, .34);
+  transition: transform .14s ease, box-shadow .14s ease, filter .14s ease;
+  overflow: hidden;
 }
-.hi-tile svg { position: relative; z-index: 1; }
+.hi-tile::after {
+  content: "";
+  position: absolute;
+  inset: 1px 1px 52%;
+  border-radius: 22% 22% 40% 40% / 40%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .24), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+.hi-tile svg { position: relative; z-index: 1; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .28)); }
+.hi-navigator .hi-tile { background: linear-gradient(160deg, #5aabff, #0a63d8 70%); }
+.hi-flightplan .hi-tile { background: linear-gradient(160deg, #7d7aff, #3a37b8 70%); }
+.hi-briefing .hi-tile { background: linear-gradient(160deg, #4fc6d9, #0b7f96 70%); }
+.hi-weather .hi-tile { background: linear-gradient(160deg, #6fd6ff, #0a7fd4 70%); }
+.hi-charts .hi-tile { background: linear-gradient(160deg, #4cd964, #1f8f3a 70%); }
+.hi-airport .hi-tile { background: linear-gradient(160deg, #8fa3b8, #46586b 70%); }
+.hi-performance .hi-tile { background: linear-gradient(160deg, #ffb340, #d16900 70%); }
+.hi-weightbalance .hi-tile { background: linear-gradient(160deg, #cf7bff, #8b3fc0 70%); }
+.hi-fuel .hi-tile { background: linear-gradient(160deg, #ffd60a, #e08a00 70%); color: #2b2100; }
+.hi-checklists .hi-tile { background: linear-gradient(160deg, #5ee06f, #1d9a44 70%); }
+.hi-cabin .hi-tile { background: linear-gradient(160deg, #ff6b8b, #c31843 70%); }
+.hi-notepad .hi-tile { background: linear-gradient(160deg, #ffe066, #d4a400 70%); color: #2b2100; }
+.hi-logbook .hi-tile { background: linear-gradient(160deg, #ffa06b, #c2410c 70%); }
+.hi-settings .hi-tile { background: linear-gradient(160deg, #a1a1aa, #52525b 70%); }
 .hi:hover .hi-tile {
   transform: translateY(-2px);
-  background: #131b25;
-  border-color: rgba(160, 178, 200, .26);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 14px 24px rgba(0, 0, 0, .44);
+  filter: saturate(1.12) brightness(1.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .32), inset 0 -10px 18px rgba(0, 0, 0, .22), 0 14px 24px rgba(0, 0, 0, .44);
 }
 .hi:active .hi-tile { transform: scale(.96); }
 .hi:focus-visible .hi-tile { outline: 2px solid var(--efb-accent); outline-offset: 3px; }
@@ -721,7 +714,7 @@ body[data-wall="graphite"] .home-wall {
   -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
 }
-.home-dock .hi-tile { width: 58px; height: 58px; border-radius: 16px; }
+.home-dock .hi-tile { width: 58px; height: 58px; }
 .home-dock .hi-label { display: none; }
 .home-dock .hi { gap: 0; }
 
@@ -1593,12 +1586,9 @@ body.view-map .efb-main { background: #04070b; }
 
   .home-stage { padding: 18px 22px 8px; }
   .home-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px 6px; }
-  .hi-tile { width: 76px; height: 76px; border-radius: 20px; }
+  .hi-tile { width: 76px; height: 76px; }
   .home-head h1 { font-size: 22px; }
-  .home-brand { right: 18px; bottom: calc(78px + env(safe-area-inset-bottom, 0px)); gap: 7px; }
-  .hb-logo { width: clamp(130px, 24vw, 190px); height: clamp(60px, 10vh, 86px); }
-  .hb-roundel { width: clamp(96px, 16vh, 124px); height: clamp(96px, 16vh, 124px); }
-  .hb-code { font-size: clamp(30px, 4.6vh, 38px); }
+  .home-logo svg { width: clamp(260px, 50vmin, 460px); }
 
   .map-hud { padding: 10px 12px; }
   .map-tele { left: 10px; right: 10px; bottom: 10px; }
@@ -1607,7 +1597,7 @@ body.view-map .efb-main { background: #04070b; }
   .map-foot { padding: 0 12px 6px; }
   .map-route-panel { right: 12px; top: 64px; width: min(320px, 72vw); }
   .home-dock { gap: 14px; padding: 9px 14px; margin-bottom: 12px; }
-  .home-dock .hi-tile { width: 52px; height: 52px; border-radius: 15px; }
+  .home-dock .hi-tile { width: 52px; height: 52px; }
   .hb-flight span { display: none; }
   /* Both regions must be re-seated explicitly: the base rules put the rail in
      column 1 and the content in column 2, which would keep a phantom column. */
@@ -1668,14 +1658,11 @@ body.view-map .efb-main { background: #04070b; }
   .home-stage { padding: 12px 16px 4px; }
   .home-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 4px; margin-top: 20px; }
   .home-head h1 { font-size: 20px; }
-  .hi-tile { width: 64px; height: 64px; border-radius: 17px; }
+  .hi-tile { width: 64px; height: 64px; }
   .hi-label { font-size: 10.5px; }
   .home-dock { gap: 12px; padding: 8px 12px; }
-  .home-dock .hi-tile { width: 48px; height: 48px; border-radius: 14px; }
-  /* A phone has no corner to spare and no empty band between the grid and the
-     dock, so the operator mark is dropped here rather than printed across the
-     app labels. The airline pill in the header still names the operator. */
-  .home-brand { display: none; }
+  .home-dock .hi-tile { width: 48px; height: 48px; }
+  .home-logo svg { width: clamp(240px, 68vmin, 420px); }
 
   .map-hud { padding: 8px; gap: 8px; }
   .map-flight { padding: 6px 9px; }
@@ -1707,11 +1694,11 @@ body.view-map .efb-main { background: #04070b; }
   .home-head { display: none; }
   .home-widget { display: none; }
   .home-grid { margin-top: 6px; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px 4px; }
-  .hi-tile { width: 54px; height: 54px; border-radius: 15px; }
+  .hi-tile { width: 54px; height: 54px; }
   .hi-label { font-size: 9.5px; }
   .hi { gap: 4px; }
   .home-dock { gap: 12px; padding: 7px 12px; margin-bottom: 8px; }
-  .home-dock .hi-tile { width: 42px; height: 42px; border-radius: 12px; }
+  .home-dock .hi-tile { width: 42px; height: 42px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
