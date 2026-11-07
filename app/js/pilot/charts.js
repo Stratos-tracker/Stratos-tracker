@@ -17,6 +17,7 @@ import {
 } from '../lib/charts.js';
 import { coverageText, officialSourcesFor } from '../lib/chartdir.js';
 import { chartCoverage, coverageSummary, providerCategories } from '../lib/chartproviders.js';
+import { FREENAV_HOME, isFreenavIcao } from '../lib/freenav.js';
 
 const FETCH_TIMEOUT = 12000;
 const SELECTION_KEY = 'stratos.charts.selection';
@@ -512,6 +513,15 @@ export async function mount(root, ctx) {
     return `<a class="chartfox-open" href="https://chartfox.org/${encodeURIComponent(code)}" target="_blank" rel="noopener noreferrer">Open ${esc(code)} charts on ChartFox ↗</a>`;
   }
 
+  /* FreeNav is a German chart index, not an embedded source: every chart opens
+     the official DFS PDF in a new tab, and its own notice limits it to home and
+     simulation use. */
+  function freenavHtml(code) {
+    if (!isFreenavIcao(code)) return '';
+    return `<span>FreeNav indexes German charts for flight simulation and home use; every chart is a link to the official DFS PDF.</span>
+      <a class="chartfox-open" href="${esc(FREENAV_HOME)}" target="_blank" rel="noopener noreferrer">Open ${esc(code)} charts on FreeNav ↗</a>`;
+  }
+
   function airportCard() {
     if (!catalogue) return '';
     const name = airportName(icao);
@@ -552,6 +562,7 @@ export async function mount(root, ctx) {
         ${provider ? `<span>${esc(provider.name)} publishes: ${esc(providerCategories(provider).join(', ') || 'terminal procedures')}.</span>` : ''}
         <span>Stratos will not copy or scrape a publisher that has not licensed its charts. You can still open a PDF you downloaded from the publisher with <b>Open PDF…</b>; it stays on this device.</span>
         ${chartfoxHtml(icao)}
+        ${freenavHtml(icao)}
         ${officialSourcesHtml(icao)}
       </div>`;
       return;
@@ -561,6 +572,7 @@ export async function mount(root, ctx) {
         <strong>No published charts for ${esc(icao)}</strong>
         <span>${esc(message || 'The source has no terminal procedures for this airport in the current cycle.')}</span>
         ${chartfoxHtml(icao)}
+        ${freenavHtml(icao)}
         ${officialSourcesHtml(icao)}
       </div>`;
       return;

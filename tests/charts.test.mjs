@@ -612,6 +612,74 @@ test('the empty viewer offers every chart and no upgrade prompt', async () => {
   instance.destroy();
 });
 
+test('FreeNav is a German chart index, and only DFS links for the airport are shown', async () => {
+  const {
+    FREENAV_HOME, freenavForIcao, isDfsChartUrl, isFreenavIcao, parseFreenavIndex,
+  } = await import('../app/js/lib/freenav.js');
+
+  assert.equal(FREENAV_HOME, 'https://freenav.github.io/');
+  assert.equal(isFreenavIcao('EDDF'), true);
+  assert.equal(isFreenavIcao('ETAR'), true);
+  assert.equal(isFreenavIcao('LFPG'), false);
+  assert.equal(isFreenavIcao('EDD'), false);
+
+  const source = `airports = {
+    "EDDF": {
+      "GND": {
+        "Ground": "https://aip.dfs.de/basicIFR/print/AD/TOKEN/AD%202%20EDDF%202-5",
+        "Apron": "https://aip.dfs.de/basicIFR/print/AD/TOKEN2/AD%202%20EDDF%202-7",
+      },
+      "SID": { "25L/C SOBRA7N": "https://aip.dfs.de/basicIFR/print/AD/TOKEN3/AD%202%20EDDF%205-7-3" },
+      "STAR": { "RNAV West 25L/C/R": "https://aip.dfs.de/basicIFR/print/AD/TOKEN4/AD%202%20EDDF%203-1-1" },
+      "IAC": { "ILS Z 07L": "https://aip.dfs.de/basicIFR/print/AD/TOKEN5/AD%202%20EDDF%204-2-1" },
+      "VFR": { "Ground": "https://aip.dfs.de/basicVFR/print/AD/TOKEN6/EDDF%20Frankfurt%20Main%203" },
+    },
+    "EDDB": { "GND": { "Ground": "https://aip.dfs.de/basicIFR/print/AD/TOKEN7/AD%202%20EDDB%202-5" } },
+    "EDDM": {
+      "GND": {
+        "Wrong airport": "https://aip.dfs.de/basicIFR/print/AD/TOKEN8/AD%202%20EDDB%202-5",
+        "Foreign host": "https://evil.example/AD%202%20EDDM%202-5",
+        "Insecure": "http://aip.dfs.de/basicIFR/print/AD/TOKEN9/AD%202%20EDDM%202-5",
+        "Script": "javascript:alert(1)",
+      }
+    },
+    "LFPG": { "GND": { "Ground": "https://aip.dfs.de/basicIFR/print/AD/TOKEN10/AD%202%20LFPG%202-5" } }
+  };`;
+  const index = parseFreenavIndex(source);
+  assert.ok(index);
+  assert.equal(index.has('EDDF'), true);
+  assert.equal(index.has('EDDM'), false, 'an airport with no verified DFS link is omitted');
+  assert.equal(index.has('LFPG'), false, 'FreeNav is a German source');
+  const eddf = freenavForIcao(index, 'eddf');
+  assert.equal(eddf.icao, 'EDDF');
+  assert.deepEqual(eddf.sections.map(section => section.key), ['GND', 'SID', 'STAR', 'IAC', 'VFR']);
+  assert.equal(eddf.charts.length, 6);
+  assert.deepEqual(eddf.charts.map(chart => chart.category), ['diagram', 'diagram', 'sid', 'star', 'approach', 'vfr']);
+  assert.equal(eddf.charts[0].title, 'Ground');
+  assert.match(eddf.charts[0].url, /^https:\/\/aip\.dfs\.de\/basicIFR\/print\/AD\//);
+  assert.equal(freenavForIcao(index, 'EDDM'), null);
+  assert.equal(freenavForIcao(index, 'ZZZZ'), null);
+
+  assert.equal(isDfsChartUrl('https://aip.dfs.de/basicIFR/print/AD/TOKEN/AD%202%20EDDF%202-5', 'EDDF'), true);
+  assert.equal(isDfsChartUrl('https://aip.dfs.de/basicVFR/print/AD/TOKEN/EDDF%20Frankfurt%203', 'EDDF'), true);
+  assert.equal(isDfsChartUrl('https://aip.dfs.de/basicIFR/print/AD/TOKEN/AD%202%20EDDF%202-5', 'EDDM'), false);
+  assert.equal(isDfsChartUrl('https://aip.dfs.de.evil.example/basicIFR/print/AD/TOKEN/AD%202%20EDDF%202-5', 'EDDF'), false);
+  assert.equal(isDfsChartUrl('http://aip.dfs.de/basicIFR/print/AD/TOKEN/AD%202%20EDDF%202-5', 'EDDF'), false);
+  assert.equal(isDfsChartUrl('https://aip.dfs.de/basicIFR/print/AD/../../etc/passwd', 'EDDF'), false);
+  assert.equal(isDfsChartUrl('https://aip.dfs.de/basicIFR/print/AD/TOKEN/AD%202%20EDDF%202-5#x', 'EDDF'), false);
+  assert.equal(isDfsChartUrl('javascript:alert(1)', 'EDDF'), false);
+  assert.equal(parseFreenavIndex('const airports = 1;'), null);
+  assert.equal(parseFreenavIndex('airports = { broken'), null);
+
+  const page = read('app/js/efb/charts.js');
+  assert.match(page, /from '\.\.\/lib\/freenav\.js'/);
+  assert.match(page, /data-freenav=/);
+  assert.match(page, /Open FreeNav/);
+  assert.match(page, /FREENAV_NOTICE/);
+  assert.match(page, /target="_blank" rel="noopener noreferrer"/);
+  assert.match(read('app/js/pilot/charts.js'), /Open .* charts on FreeNav/);
+});
+
 test('ChartFox is an explicit external fallback, never a silent redirect', () => {
   const deck = read('app/index.html');
   assert.doesNotMatch(deck, /chartfox/i);

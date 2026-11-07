@@ -28,6 +28,9 @@ import {
 } from '../lib/charts.js';
 import { defaultBridgeBase, isHostedPage } from '../bridge.js';
 import { ChartViewer } from '../pilot/charts.js';
+import {
+  FREENAV_HOME, FREENAV_NOTICE, freenavForIcao, isFreenavIcao, loadFreenavIndex,
+} from '../lib/freenav.js';
 
 /** Integrated publishers whose catalogue is an AIP edition, not an FAA cycle. */
 const EAIP_CYCLE = new Set(['austrocontrol-eaip', 'sia-france']);
@@ -153,6 +156,7 @@ export async function mount(root, ctx) {
   let selected = null;
   let documentState = { status: 'idle' };
   let viewer = null;
+  let freenav = null;
   let airport = null;
   let regionName = '';
   let countryIso = '';
@@ -253,11 +257,17 @@ export async function mount(root, ctx) {
       return;
     }
     if (!catalogue && coverage && !coverage.integrated) {
+      if (freenavList()) return;
+      const fallbackNote = isFreenavIcao(icao) && freenav
+        ? (freenav.status === 'empty'
+          ? ' FreeNav lists no charts for this airport.'
+          : freenav.status === 'error' ? ' FreeNav’s index could not be loaded.' : '')
+        : '';
       const shown = filterCharts(chartfoxRows(), query);
       countEl.textContent = `${shown.length} ChartFox group${shown.length === 1 ? '' : 's'}`;
       listEl.innerHTML = `<div class="ch-hint">
         <b>ChartFox · ${esc(icao)}</b>
-        <span>Each group opens its ${esc(icao)} page on ChartFox in a new tab. ChartFox needs a free VATSIM login.</span>
+        <span>Each group opens its ${esc(icao)} page on ChartFox in a new tab. ChartFox needs a free VATSIM login.${esc(fallbackNote)}</span>
       </div>${shown.length ? shown.map(row => `<a class="e-list-item" href="${esc(row.external)}" target="_blank" rel="noopener noreferrer" data-chartfox="${esc(row.category)}">
         <div class="li-main"><b>${esc(row.title)}</b><span>${esc(row.categoryLabel)} · opens on ChartFox</span></div>
         <span class="e-badge">ChartFox ↗</span>
@@ -424,6 +434,56 @@ export async function mount(root, ctx) {
     return category === 'all' ? rows : rows.filter(row => row.category === category);
   }
 
+  function freenavLink() {
+    return `<a class="e-btn small" style="margin-top:10px;align-self:flex-start" href="${esc(FREENAV_HOME)}" target="_blank" rel="noopener noreferrer">Open FreeNav ↗</a>`;
+  }
+
+  /** FreeNav chart entries, grouped by the AIP chapter FreeNav itself uses. */
+  function freenavGroups() {
+    if (!freenav || freenav.status !== 'ready' || freenav.icao !== icao) return [];
+    return freenav.sections.map(section => ({
+      key: section.key,
+      label: section.label,
+      category: section.category,
+      charts: section.charts.filter(chart => {
+        if (category === 'other') {
+          if (['diagram', 'sid', 'star', 'approach'].includes(section.category)) return false;
+        } else if (category !== 'all' && section.category !== category) {
+          return false;
+        }
+        return filterCharts([{ ...chart, categoryLabel: section.label }], query).length > 0;
+      }),
+    })).filter(section => section.charts.length);
+  }
+
+  /** The German chart list: FreeNav's own index, with DFS links, never a guess. */
+  function freenavList() {
+    if (!isFreenavIcao(icao) || !freenav || freenav.icao !== icao) return false;
+    if (freenav.status === 'loading') {
+      countEl.textContent = 'Loading FreeNav…';
+      listEl.innerHTML = `<div class="ch-hint">
+        <b>FreeNav · ${esc(icao)}</b>
+        <span>Reading FreeNav’s German chart index…</span>
+      </div><div class="e-loading"><i></i>Loading FreeNav charts…</div>`;
+      return true;
+    }
+    if (freenav.status !== 'ready' || !freenav.charts.length) return false;
+    const sections = freenavGroups();
+    const count = sections.reduce((sum, section) => sum + section.charts.length, 0);
+    countEl.textContent = `${count} FreeNav chart${count === 1 ? '' : 's'}`;
+    const rows = sections.map(section => `<div class="e-label" style="padding:8px 10px 2px">${esc(section.label)}</div>`
+      + section.charts.map(chart => `<a class="e-list-item" href="${esc(chart.url)}" target="_blank" rel="noopener noreferrer" data-freenav="${esc(section.key)}">
+        <div class="li-main"><b>${esc(chart.title)}</b><span>${esc(section.label)} · PDF on DFS · opens in a new tab</span></div>
+        <span class="e-badge">FreeNav ↗</span>
+      </a>`).join('')).join('');
+    listEl.innerHTML = `<div class="ch-hint">
+      <b>FreeNav · ${esc(icao)}</b>
+      <span>${esc(FREENAV_NOTICE)} Each chart opens the official DFS PDF in a new tab.</span>
+    </div>${rows || '<div class="ch-hint"><b>No matching FreeNav charts</b><span>Clear the filter to see them all.</span></div>'}
+      <div class="e-small e-faint" style="padding:4px 10px 10px">FreeNav is an independent index; the charts remain DFS documents. Stratos does not copy, frame or proxy them.</div>`;
+    return true;
+  }
+
   function renderViewer() {
     if (!viewerCard) return;
     if (!selected) {
@@ -445,7 +505,8 @@ export async function mount(root, ctx) {
             <div class="e-label">Charts · ${esc(icao)}</div>
             <div class="ch-viewer-title">${esc(titles[access] || titles.UNKNOWN)}</div>
             <p class="ch-viewer-text">${esc((coverage && coverage.message) || 'The charts for this airport are published by an external provider.')}</p>
-          </div>${chartfoxLink(icao)}${sourcesPanel(sourceLinks)}`;
+            ${isFreenavIcao(icao) ? '<p class="ch-viewer-text">FreeNav indexes the German charts for flight simulation and home use. Its chart list opens the official DFS PDFs in a new tab; Stratos does not copy or frame them.</p>' : ''}
+          </div>${chartfoxLink(icao)}${isFreenavIcao(icao) ? freenavLink() : ''}${sourcesPanel(sourceLinks)}`;
         return;
       }
       viewerCard.innerHTML = `<div class="ch-viewer-empty">
@@ -578,6 +639,21 @@ export async function mount(root, ctx) {
     }
   }
 
+  async function loadFreenav(code) {
+    try {
+      const index = await loadFreenavIndex();
+      if (destroyed || icao !== code) return;
+      const found = freenavForIcao(index, code);
+      freenav = found
+        ? { status: 'ready', icao: code, sections: found.sections, charts: found.charts }
+        : { status: 'empty', icao: code, sections: [], charts: [] };
+    } catch (error) {
+      if (destroyed || icao !== code) return;
+      freenav = { status: 'error', icao: code, sections: [], charts: [], error: error.message };
+    }
+    renderList();
+  }
+
   async function load() {
     icao = String(icao || '').trim().toUpperCase();
     if (!icao) {
@@ -591,6 +667,11 @@ export async function mount(root, ctx) {
     sourceLinks = [];
     noticeEl.innerHTML = '';
     coverage = chartCoverage(icao);
+    freenav = null;
+    if (isFreenavIcao(icao)) {
+      freenav = { status: 'loading', icao, sections: [], charts: [] };
+      loadFreenav(icao);
+    }
     headerEl.innerHTML = '';
     renderList();
     renderViewer();
