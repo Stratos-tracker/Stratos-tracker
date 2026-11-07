@@ -962,6 +962,11 @@ test('world layer: the tracker offers the style, ships the data and draws names'
   assert.match(TRACKER_HTML, /world:\{n:'World'/, 'a World style is offered');
   assert.match(TRACKER_HTML, /L\.style!='world'/, 'World is drawn, not tiled');
   assert.match(TRACKER_HTML, /world:\{n:'World',m:18,a:'Natural Earth \(public domain\)'\}/, 'the source is credited in the style');
+  // A coastline crossing the date line arrives as 179° then -179°. Joined as it
+  // comes, that closing line painted horizontal bands across the whole chart, so
+  // rings are unwrapped and repeated by whole worlds instead.
+  assert.match(TRACKER_HTML, /const ringsOf=co=>/, 'world rings are unwrapped at the date line');
+  assert.match(TRACKER_HTML, /const k0=Math\.ceil\(\(-M-x1\)\/worldPx\)/, 'an unwrapped ring is repeated by whole worlds');
 
   const projection = trackerPiece('const wpx=', 'const dist=');
   const layer = trackerPiece('var WD=null', 'function drawTiles()');
@@ -1271,7 +1276,10 @@ test('the flown trail is a continuous line coloured by height above the ground',
   const draw = page.slice(page.indexOf('function drawTrail(a,cur,own,key)'), page.indexOf('function trails()'));
   assert.doesNotMatch(draw, /globalAlpha=\.[0-9]/, 'the drawn path is opaque');
   assert.doesNotMatch(draw, /f\*f|wmax/, 'there is no tapering width');
-  assert.match(draw, /cx\.lineWidth=7;cx\.stroke\(\)[\s\S]*cx\.lineWidth=4/, 'a dark casing under a 4 px line');
+  assert.match(draw, /strokeRun\(0,m-1,TRAIL_EDGE,7\)[\s\S]*strokeRun\(from,to,ink,4\)/, 'a dark casing under a 4 px coloured line');
+  // Consecutive samples either side of the date line sit at opposite edges of
+  // the chart; joined, that segment sweeps the whole map.
+  assert.match(draw, /trailCut=\(a,b\)=>Math\.abs\(a\[0\]-b\[0\]\)>trailWorld\/2/, 'the trail breaks at the date line instead of sweeping the chart');
 });
 
 test('TOC and TOD are computed on the route legs by the profile module', async () => {

@@ -79,6 +79,7 @@ export class ChartViewer {
     this.pageHeight = 1;
     this.offset = { x: 0, y: 0 };
     this.renderTask = null;
+    this.renderChain = Promise.resolve();
     this.frame = 0;
     this.destroyed = false;      this.stage = document.createElement('div');
     this.stage.className = 'chart-stage';
@@ -213,6 +214,16 @@ export class ChartViewer {
   }
 
   async render() {
+    // pdf.js refuses to run two passes on the same canvas at once, and cancelling
+    // one does not finish it synchronously. A resize during a load, or a zoom
+    // gesture, otherwise fails with "Cannot use the same canvas during multiple
+    // render() operations", so every pass is queued behind the previous one.
+    const pass = this.renderChain.then(() => this.draw(), () => this.draw());
+    this.renderChain = pass.catch(() => {});
+    return pass;
+  }
+
+  async draw() {
     if (!this.doc || this.destroyed) return;
     const page = await this.doc.getPage(this.pageNumber);
     if (this.destroyed) return;
@@ -228,6 +239,16 @@ export class ChartViewer {
     // for no visible gain and competes with the simulator for GPU bandwidth.
     const dpr = Math.min(scale > 2 ? 1.25 : 2, window.devicePixelRatio || 1);
     const viewport = page.getViewport({ scale: scale * dpr });
+
+    // Let an earlier pass unwind before this canvas is reused.
+    if (this.renderTask) {
+      const previous = this.renderTask;
+      this.renderTask = null;
+      try { previous.cancel(); } catch (_) {}
+      try { await previous.promise; } catch (_) {}
+    }
+    if (this.destroyed) return;
+
     this.canvas.width = Math.max(1, Math.round(viewport.width));
     this.canvas.height = Math.max(1, Math.round(viewport.height));
     this.pageWidth = viewport.width / dpr;
@@ -239,10 +260,6 @@ export class ChartViewer {
     context.fillStyle = '#ffffff';
     context.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    if (this.renderTask) {
-      try { this.renderTask.cancel(); } catch (_) {}
-      this.renderTask = null;
-    }
     this.renderTask = page.render({ canvasContext: context, viewport });
     try {
       await this.renderTask.promise;

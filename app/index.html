@@ -2043,22 +2043,41 @@ function buildWorld(g){
   const landC=night?'#16212c':C.land,coastC=night?'rgba(122,160,200,.34)':C.coast;
   g.fillStyle=C.bg;g.fillRect(-WM,-WM,W+WM*2,H+WM*2);
   const labelBg=C.ui||C.bg, M=WM+40;
-  /* Heaviest outlines first so a dropped label is never a big country's. */
-  const order=WD.countries.slice().sort((a,b)=>(a.k||8)-(b.k||8));
+  /* Heaviest outlines first so a dropped label is never a big country's. */  const order=WD.countries.slice().sort((a,b)=>(a.k||8)-(b.k||8));
+  /* A coastline that crosses the date line arrives as 179° followed by -179°.
+     Projected as it comes, the closing line sweeps the whole chart and paints
+     the horizontal bands a world view used to show, worst around Antarctica and
+     the Arctic. Each ring is kept continuous instead, placed on the world copy
+     nearest the view, then repeated by whole worlds so a copy over the chart is
+     drawn. */
+  const c0=wpx(V.lon,V.lat,V.z),worldPx=SZ*2**V.z;
+  const projectWorld=(lon,lat)=>{const p=wpx(lon,lat,V.z);return[p[0]-c0[0]+W/2,p[1]-c0[1]+H/2]};
+  const ringsOf=co=>co.p.map(ring=>{
+    const pts=[];let prev=null;
+    for(let i=0;i<ring.length;i+=2){
+      let lon=ring[i];
+      if(prev!==null){while(lon-prev>180)lon-=360;while(lon-prev<-180)lon+=360}
+      prev=lon;pts.push([lon,ring[i+1]])
+    }
+    if(pts.length){const mean=pts.reduce((s,p)=>s+p[0],0)/pts.length,shift=Math.round((V.lon-mean)/360)*360;for(const p of pts)p[0]+=shift}
+    return pts.map(p=>projectWorld(p[0],p[1]))
+  });
   for(const co of order){
+    const rings=ringsOf(co);
     let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
-    g.beginPath();
-    for(const ring of co.p){
-      for(let i=0;i<ring.length;i+=2){
-        const pt=sc(ring[i],ring[i+1]),x=pt[0],y=pt[1];
-        if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;
-        i?g.lineTo(x,y):g.moveTo(x,y)
-      }
-      g.closePath()
+    for(const ring of rings)for(const [x,y] of ring){
+      if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y
     }
     if(x1<-M||x0>W+M||y1<-M||y0>H+M)continue;
-    g.fillStyle=landC;g.fill();
-    g.strokeStyle=coastC;g.lineWidth=1;g.stroke()
+    const k0=Math.ceil((-M-x1)/worldPx),k1=Math.floor((W+M-x0)/worldPx);
+    for(let k=k0;k<=k1;k++){
+      g.beginPath();
+      for(const ring of rings){
+        for(let i=0;i<ring.length;i++){const [x,y]=ring[i];i?g.lineTo(x+k*worldPx,y):g.moveTo(x+k*worldPx,y)}
+        g.closePath()
+      }
+      g.fillStyle=landC;g.fill();g.strokeStyle=coastC;g.lineWidth=1;g.stroke()
+    }
   }
   const taken=[];
   const fits=(x,y,w,h)=>!taken.some(r=>x<r[2]&&x+w>r[0]&&y<r[3]&&y+h>r[1]);
@@ -2551,12 +2570,16 @@ if(pts.length<2)return;
 const sm=smoothTrail(key||'own',pts,hs),spts=sm.points,shs=sm.heights;
 const m=spts.length;if(m<2)return;
 cx.lineCap='round';cx.lineJoin='round';cx.globalAlpha=1;
-cx.beginPath();cx.moveTo(spts[0][0],spts[0][1]);for(let i=1;i<m;i++)cx.lineTo(spts[i][0],spts[i][1]);
-cx.strokeStyle=TRAIL_EDGE;cx.lineWidth=7;cx.stroke();
+/* A trail crossing the date line has consecutive samples at opposite edges of
+   the chart; joined as one path, that segment sweeps the whole width of the map.
+   Every such break starts a new subpath instead. */
+const trailWorld=SZ*2**V.z,trailCut=(a,b)=>Math.abs(a[0]-b[0])>trailWorld/2;
+const strokeRun=(from,to,color,width)=>{cx.strokeStyle=color;cx.lineWidth=width;cx.beginPath();for(let i=from;i<=to;i++){const p=spts[i];if(i===from||trailCut(spts[i-1],p)){if(i>from)cx.stroke();cx.beginPath();cx.moveTo(p[0],p[1])}else cx.lineTo(p[0],p[1])}cx.stroke()};
+strokeRun(0,m-1,TRAIL_EDGE,7);
 /* One stroke per run of points that share a colour: a climb changes colour in
    small steps instead of one stroke per segment, so the cost stays flat. */
 const inks=shs.map(trailInk);let start=0,ink=inks[0];
-const run=(from,to)=>{cx.beginPath();cx.moveTo(spts[from][0],spts[from][1]);for(let i=from+1;i<=to;i++)cx.lineTo(spts[i][0],spts[i][1]);cx.strokeStyle=ink;cx.lineWidth=4;cx.stroke()};
+const run=(from,to)=>strokeRun(from,to,ink,4);
 for(let i=1;i<m;i++){if(inks[i]!==ink){run(start,i);start=i;ink=inks[i]}}
 run(start,m-1);
 cx.lineCap='butt'}
@@ -2589,7 +2612,7 @@ function clusterAirports(){
   return true;
 }
 function trails(){if(CH.on||RP.trail<=0)return;const col=trailCol();
-if(L.trl){cx.strokeStyle=col;cx.lineWidth=1.2;cx.globalAlpha=.35;TRL.forEach((a,k)=>{if(k=='own'||a.length<3)return;const p=[];a.slice(-60).forEach(q=>p.push([q[1],q[0]]));const sm=window.TRAILP?window.TRAILP.smoothPath(p,null,{passes:1}):{points:p};cx.beginPath();sm.points.forEach((q,i)=>{const t=sc(q[0],q[1]);i?cx.lineTo(t[0],t[1]):cx.moveTo(t[0],t[1])});cx.stroke()});cx.globalAlpha=1}
+if(L.trl){cx.strokeStyle=col;cx.lineWidth=1.2;cx.globalAlpha=.35;TRL.forEach((a,k)=>{if(k=='own'||a.length<3)return;const p=[];a.slice(-60).forEach(q=>p.push([q[1],q[0]]));const sm=window.TRAILP?window.TRAILP.smoothPath(p,null,{passes:1}):{points:p};const wp=SZ*2**V.z;let prev=null;cx.beginPath();sm.points.forEach(q=>{const t=sc(q[0],q[1]);if(!prev)cx.moveTo(t[0],t[1]);else if(Math.abs(t[0]-prev[0])>wp/2){cx.stroke();cx.beginPath();cx.moveTo(t[0],t[1])}else cx.lineTo(t[0],t[1]);prev=t});cx.stroke()});cx.globalAlpha=1}
 if(sel&&sel.k=='trf'){const a=TRL.get(sel.hx||sel.id);if(a)drawTrail(a,sel,false,sel.hx||sel.id)}
 if(liveOk()){const a=TRL.get('own');if(a)drawTrail(a,own,true,'own')}}
 /* A selected aircraft's filed airports, joined by a dashed reference line.
