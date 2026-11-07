@@ -21,6 +21,7 @@ import {
   fmtNum, loadRoute, loadRouteMeta, onLive, onPlanChange, plannedRouteFromOfp,
 } from './common.js';
 import { MiniMap } from '../minimap.js';
+import { Track3DView } from './track3d.js';
 import { bearingDeg, distanceNm } from '../lib/geo.js';
 import { trailContinues } from '../lib/trailpath.js';
 import { routeProgress } from '../lib/planner.js';
@@ -101,11 +102,15 @@ export async function mount(root, ctx) {
   let stateNow = null;
   let lastMessage = null;
   let listKey = '';
+  let trackView = null;
+  let trackMode = '2d';
 
   root.innerHTML = `
     <div class="nav-shell map-shell">
       <div class="nav-view map-view">
         <canvas id="nav-canvas" aria-label="Aircraft position and planned route"></canvas>
+        <canvas id="nav-track3d" class="nav-track3d" aria-label="Recorded track in three dimensions" hidden></canvas>
+        <div class="nav-3d-tip" id="nav-3d-tip" hidden></div>
 
         <div class="map-hud">
           <div class="map-flight">
@@ -121,6 +126,11 @@ export async function mount(root, ctx) {
         <div class="map-banner" id="nav-banner"></div>
 
         <div class="nav-tools" role="group" aria-label="Map controls">
+          <div class="nav-mode" role="group" aria-label="Track display">
+            <button class="nav-mode-btn is-on" type="button" data-track-mode="2d" aria-pressed="true" title="2D path">2D</button>
+            <button class="nav-mode-btn" type="button" data-track-mode="3d" aria-pressed="false" title="3D path">3D</button>
+          </div>
+          <span class="nav-tool-gap" aria-hidden="true"></span>
           <button class="nav-tool" type="button" data-follow aria-pressed="${follow}" title="Follow the aircraft" aria-label="Follow the aircraft">${ICON.follow}</button>
           <span class="nav-tool-gap" aria-hidden="true"></span>
           <button class="nav-tool" type="button" data-zoom="in" title="Zoom in" aria-label="Zoom in">+</button>
@@ -201,6 +211,28 @@ export async function mount(root, ctx) {
     root.querySelector('.nav-view').insertAdjacentHTML('beforeend',
       `<div class="map-banner bad">The map could not start: ${esc(error.message)}</div>`);
     map = null;
+  }
+
+  /* The 3D overlay reads the same recorded track the 2D map draws; switching
+     views never touches the track, the connection or the follow state. */
+  trackView = new Track3DView(root.querySelector('#nav-track3d'), root.querySelector('#nav-3d-tip'), { accent: accentNow() });
+
+  function setTrackMode(mode) {
+    trackMode = mode === '3d' ? '3d' : '2d';
+    root.querySelector('.map-shell')?.classList.toggle('is-3d', trackMode === '3d');
+    root.querySelector('#nav-track3d').hidden = trackMode !== '3d';
+    root.querySelector('#nav-canvas').style.visibility = trackMode === '3d' ? 'hidden' : '';
+    root.querySelectorAll('[data-track-mode]').forEach(button => {
+      const on = button.dataset.trackMode === trackMode;
+      button.classList.toggle('is-on', on);
+      button.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    if (trackMode === '3d') {
+      trackView.setTrack(drawnTrack);
+      trackView.resize();
+    } else {
+      trackView.hideTip();
+    }
   }
 
   /* ── header, chips and messages ───────────────────────────────────────── */
@@ -606,7 +638,10 @@ export async function mount(root, ctx) {
   root.querySelector('[data-panel]')?.addEventListener('click', () => setPanel(!panelOpen));
   root.querySelector('[data-panel-close]')?.addEventListener('click', () => setPanel(false));
   root.querySelector('[data-chart]')?.addEventListener('click', () => setChartTheme(chartTheme === 'night' ? 'day' : 'night'));
-  const onResize = () => syncMapInsets();
+  root.querySelectorAll('[data-track-mode]').forEach(button => {
+    button.addEventListener('click', () => setTrackMode(button.dataset.trackMode));
+  });
+  const onResize = () => { syncMapInsets(); trackView?.resize(); };
   window.addEventListener('resize', onResize);
 
   /* ── live data ───────────────────────────────────────────────────────── */
@@ -662,6 +697,7 @@ export async function mount(root, ctx) {
         drawnTrack = track.slice();
         map.setTrack(drawnTrack);
       }
+      trackView?.setTrack(drawnTrack);
     }
     if (t) {
       map.options.ownLabel = `${fmtFl(t.alt)} ${TREND(t.vs) === 'climbing' ? '▲' : TREND(t.vs) === 'descending' ? '▼' : ''}`.trim();
@@ -712,6 +748,7 @@ export async function mount(root, ctx) {
   // accent follows an airline change without a reload.
   const onAirline = () => {
     if (map) { map.options.accent = accentNow(); map.draw(); }
+    trackView?.setAccent(accentNow());
   };
   window.addEventListener('stratos:efb-airline', onAirline);
 
@@ -743,6 +780,7 @@ export async function mount(root, ctx) {
       offPlan();
       window.removeEventListener('resize', onResize);
       window.removeEventListener('stratos:efb-airline', onAirline);
+      if (trackView) { try { trackView.destroy(); } catch (_) { /* gone */ } trackView = null; }
       if (map) { try { map.destroy(); } catch (_) { /* gone */ } map = null; }
     },
   };

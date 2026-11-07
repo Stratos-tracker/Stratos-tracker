@@ -9,9 +9,10 @@
 
 import {
   airportByCode, airportFrequencies, airportRunways, esc, fmtFt, searchAirports,
-  currentPlan, loadRoute,
+  currentPlan, loadRoute, onLive,
 } from './common.js';
 import { defaultBridgeBase, isHostedPage } from '../bridge.js';
+import { GroundChart } from './groundchart.js';
 
 function runwaySurface(row) {
   if (!row.surface) return '—';
@@ -36,6 +37,9 @@ export async function mount(root, ctx) {
   let proceduresError = '';
   let proceduresBusy = false;
   let destroyed = false;
+  let ground = null;
+  let groundCode = '';
+  let lastTelemetry = null;
 
   root.innerHTML = `
     <div class="e-row" style="margin-bottom:10px">
@@ -49,6 +53,8 @@ export async function mount(root, ctx) {
       <button class="e-btn small" type="button" data-charts>Charts ↗</button>
     </div>
     <div class="e-row" style="margin-bottom:12px" id="apt-shortcuts"></div>
+    <!-- Outside #apt-body so a procedures refresh never tears down the chart. -->
+    <div class="e-card" id="apt-ground-host" hidden></div>
     <div id="apt-body"><div class="e-loading"><i></i>Loading the airport…</div></div>`;
 
   const body = root.querySelector('#apt-body');
@@ -140,16 +146,48 @@ export async function mount(root, ctx) {
     </div>`;
   }
 
+  function planRunway() {
+    if (!ofp || !airport) return '';
+    if (ofp.origin && ofp.origin.icao === airport.id) return ofp.origin.rwy || '';
+    if (ofp.destination && ofp.destination.icao === airport.id) return ofp.destination.rwy || '';
+    return '';
+  }
+
+  function ensureGround() {
+    const host = root.querySelector('#apt-ground-host');
+    if (!host) return;
+    if (!airport) {
+      host.hidden = true;
+      if (ground) { ground.destroy(); ground = null; groundCode = ''; }
+      return;
+    }
+    host.hidden = false;
+    if (ground && groundCode === airport.id) return;
+    if (ground) { ground.destroy(); ground = null; }
+    groundCode = airport.id;
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--efb-accent').trim() || '#22d3ee';
+    ground = new GroundChart(host, { airport, runway: planRunway(), accent });
+    if (lastTelemetry) ground.setPosition(lastTelemetry);
+  }
+
   function render() {
     if (destroyed) return;
-    if (loading) { body.innerHTML = '<div class="e-loading"><i></i>Loading the airport…</div>'; return; }
+    if (loading) {
+      const host = root.querySelector('#apt-ground-host');
+      if (host) host.hidden = true;
+      if (ground) { ground.destroy(); ground = null; groundCode = ''; }
+      body.innerHTML = '<div class="e-loading"><i></i>Loading the airport…</div>';
+      return;
+    }
     if (error) {
       body.innerHTML = `<div class="e-notice bad"><div><b>${esc(icao)}</b><br>${esc(error)}</div></div>
         <div class="e-row" style="margin-top:10px"><button class="e-btn" type="button" data-retry>Retry</button></div>`;
       body.querySelector('[data-retry]')?.addEventListener('click', () => load());
+      ensureGround();
       return;
     }
     if (!airport) {
+      ensureGround();
       body.innerHTML = `<div class="e-empty"><b>Search for an airport</b><p>The directory covers the bundled snapshot and, with the bridge running, the world.</p></div>`;
       return;
     }
@@ -174,6 +212,8 @@ export async function mount(root, ctx) {
       <div style="margin-bottom:12px">${proceduresCard()}</div>
       ${notamCard()}
       <div class="e-small e-faint" style="margin:14px 2px 0">Airport data: OurAirports (public domain). Procedures: the simulator navigation data. Confirm operational information against the current AIP.</div>`;
+    // The chart host lives outside this markup, so it survives a re-render.
+    ensureGround();
   }
 
   async function loadProcedures(code) {
@@ -261,9 +301,22 @@ export async function mount(root, ctx) {
   root.querySelector('[data-load]').addEventListener('click', () => { icao = input.value.trim().toUpperCase(); load(); });
   root.querySelector('[data-charts]').addEventListener('click', () => ctx.go('charts', { icao }));
 
+  const offLive = onLive(next => {
+    const telemetry = next && next.telemetry;
+    if (!telemetry) return;
+    lastTelemetry = telemetry;
+    ground?.setPosition(telemetry);
+  });
+
   renderShortcuts();
   if (icao) load();
   else render();
 
-  return { destroy() { destroyed = true; } };
+  return {
+    destroy() {
+      destroyed = true;
+      offLive();
+      if (ground) { ground.destroy(); ground = null; }
+    },
+  };
 }
