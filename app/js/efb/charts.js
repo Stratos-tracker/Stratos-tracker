@@ -377,6 +377,13 @@ export async function mount(root, ctx) {
     }));
   }
 
+  /* A publisher that does not license in-app display still has charts the pilot
+     can open at the source. ChartFox needs a free VATSIM login; the link is the
+     airport page only, never a copied document. */
+  function chartfoxLink(code) {
+    return `<a class="e-btn small" style="margin-top:10px;align-self:flex-start" href="https://chartfox.org/${encodeURIComponent(code)}" target="_blank" rel="noopener noreferrer">Open ${esc(code)} on ChartFox ↗</a>`;
+  }
+
   function renderViewer() {
     if (!viewerCard) return;
     if (!selected) {
@@ -398,7 +405,7 @@ export async function mount(root, ctx) {
             <div class="e-label">Charts · ${esc(icao)}</div>
             <div class="ch-viewer-title">${esc(titles[access] || titles.UNKNOWN)}</div>
             <p class="ch-viewer-text">${esc((coverage && coverage.message) || 'The charts for this airport are published by an external provider.')}</p>
-          </div>${sourcesPanel(sourceLinks)}`;
+          </div>${chartfoxLink(icao)}${sourcesPanel(sourceLinks)}`;
         return;
       }
       viewerCard.innerHTML = `<div class="ch-viewer-empty">

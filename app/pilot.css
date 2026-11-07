@@ -430,6 +430,8 @@ textarea.input { min-height: 110px; resize: vertical; font-family: var(--mono); 
 .chart-empty strong { color: var(--txt); font-size: 13.5px; }
 .chart-empty.tall { min-height: 420px; align-items: center; justify-content: center; text-align: center; }
 .chart-empty.bad strong { color: var(--bad, #f87171); }
+.chart-empty .chartfox-open { align-self: flex-start; color: #8fd0ff; font-weight: 650; text-decoration: none; }
+.chart-empty .chartfox-open:hover { text-decoration: underline; }
 .chart-meta { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; padding: 0 16px 12px; font-size: 11.5px; color: var(--mut); }
 .chart-meta b { color: var(--txt); font-weight: 600; }
 .chart-meta .spacer { flex: 1; }

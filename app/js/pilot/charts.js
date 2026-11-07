@@ -506,6 +506,12 @@ export async function mount(root, ctx) {
         </a>`).join('')}</div>`;
   }
 
+  /* ChartFox is where a pilot can read the charts Stratos may not mirror. It
+     needs a free VATSIM login, and the link opens the airport page, not a file. */
+  function chartfoxHtml(code) {
+    return `<a class="chartfox-open" href="https://chartfox.org/${encodeURIComponent(code)}" target="_blank" rel="noopener noreferrer">Open ${esc(code)} charts on ChartFox ↗</a>`;
+  }
+
   function airportCard() {
     if (!catalogue) return '';
     const name = airportName(icao);
@@ -545,6 +551,7 @@ export async function mount(root, ctx) {
         <span>${esc(message || coverage.message)}</span>
         ${provider ? `<span>${esc(provider.name)} publishes: ${esc(providerCategories(provider).join(', ') || 'terminal procedures')}.</span>` : ''}
         <span>Stratos will not copy or scrape a publisher that has not licensed its charts. You can still open a PDF you downloaded from the publisher with <b>Open PDF…</b>; it stays on this device.</span>
+        ${chartfoxHtml(icao)}
         ${officialSourcesHtml(icao)}
       </div>`;
       return;
@@ -553,6 +560,7 @@ export async function mount(root, ctx) {
       host.innerHTML = `<div class="chart-empty">
         <strong>No published charts for ${esc(icao)}</strong>
         <span>${esc(message || 'The source has no terminal procedures for this airport in the current cycle.')}</span>
+        ${chartfoxHtml(icao)}
         ${officialSourcesHtml(icao)}
       </div>`;
       return;

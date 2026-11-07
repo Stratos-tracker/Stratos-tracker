@@ -612,7 +612,7 @@ test('the empty viewer offers every chart and no upgrade prompt', async () => {
   instance.destroy();
 });
 
-test('ChartFox redirects and hard-coded chart URLs are gone', () => {
+test('ChartFox is an explicit external fallback, never a silent redirect', () => {
   const deck = read('app/index.html');
   assert.doesNotMatch(deck, /chartfox/i);
   assert.doesNotMatch(deck, /FAA_APD/);
@@ -622,6 +622,9 @@ test('ChartFox redirects and hard-coded chart URLs are gone', () => {
 
   assert.doesNotMatch(read('app/js/pilot/airports.js'), /chartfox/i);
   assert.doesNotMatch(read('app/js/pilot/briefing.js'), /chartfox/i);
+  const fallback = /chartfox\.org\/\$\{encodeURIComponent\(code\)\}/;
+  assert.match(read('app/js/pilot/charts.js'), fallback, 'a publisher that cannot be embedded opens its ChartFox airport page');
+  assert.match(read('app/js/efb/charts.js'), fallback, 'the EFB charts viewer offers the same fallback');
   assert.match(read('app/js/pilot/briefing.js'), /pilot\.html#charts/);
   assert.match(read('app/pilot.html'), /data-section="charts"/);
   assert.match(read('app/js/pilot.js'), /charts: \{ label: 'Charts'/);

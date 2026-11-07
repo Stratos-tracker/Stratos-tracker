@@ -121,6 +121,33 @@ export function icon(name, size = 16) {
   return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 }
 
+/* Home-screen artwork, drawn in the idiom of a tablet's own apps: Notes with
+   its yellow band, Settings' grey gears, Safari's compass, Reminders' coloured
+   bullets, Calculator's keypad. These are Stratos' own drawings in that style,
+   not Apple artwork, and they are used only on the deck tiles; the rail keeps
+   the single-weight line set above. */
+const APP_ICONS = {
+  navigator: '<circle cx="12" cy="12" r="9.3" fill="#f8f9fb"/><path d="M12 4.3l2.7 7.7H9.3z" fill="#ff3b30"/><path d="M12 19.7l-2.7-7.7h5.4z" fill="#9aa1ab"/><circle cx="12" cy="12" r="1.5" fill="#fff"/><path d="M12 5.4v1.2M12 17.4v1.2M5.4 12H6.6M17.4 12h1.2" stroke="#c3c8d0" stroke-width="1" stroke-linecap="round"/>',
+  flightplan: '<path d="M3 12.4 21 4l-6.6 16-2.6-6.3z" fill="#ff9500"/><path d="m11.8 13.7 9.2-9.7-6.6 16z" fill="#ffb340"/>',
+  briefing: '<path d="M3 7.9a2 2 0 0 1 2-2h4.1l1.9 2.3H19a2 2 0 0 1 2 2v8.9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#0a84ff"/><path d="M3 10.2h18v6.6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#4fa9ff"/>',
+  weather: '<circle cx="9.2" cy="8.6" r="2.6" fill="#ffd60a"/><path d="M7 17.2a2.8 2.8 0 0 1 .2-5.6 3.6 3.6 0 0 1 6.9.8 2.5 2.5 0 0 1-.4 4.8z" fill="#fff"/>',
+  charts: '<path d="M6 3.4h7.7l4.3 4.3v12.1a.9.9 0 0 1-.9.9H6.9a.9.9 0 0 1-.9-.9z" fill="#ff3b30"/><path d="M13.7 3.4v4.3h4.3" fill="#ff8a80"/><path d="M8.4 10.8h6.6M8.4 13.2h6.6M8.4 15.6h4.4" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/>',
+  airport: '<path d="M7.6 20V9.2L12 7l4.4 2.2V20" fill="#fff"/><path d="M4.6 20h14.8" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><path d="M9.8 11.8h4.4M9.8 14.4h4.4M9.8 17h4.4" stroke="#2c7be5" stroke-width="1.1"/>',
+  performance: '<path d="M4.4 16.6a7.6 7.6 0 1 1 15.2 0" fill="none" stroke="#ff9500" stroke-width="2.3" stroke-linecap="round"/><path d="M12 16.6l3.8-6.4" stroke="#ff3b30" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.6" r="1.6" fill="#ff3b30"/>',
+  weightbalance: '<rect x="4" y="2.6" width="16" height="18.8" rx="3.4" fill="#2c2c2e"/><rect x="6.2" y="5" width="11.6" height="4.2" rx="1.1" fill="#d1d1d6"/><circle cx="7.6" cy="12.4" r="1.1" fill="#8e8e93"/><circle cx="12" cy="12.4" r="1.1" fill="#8e8e93"/><circle cx="16.4" cy="12.4" r="1.1" fill="#ff9f0a"/><circle cx="7.6" cy="15.2" r="1.1" fill="#8e8e93"/><circle cx="12" cy="15.2" r="1.1" fill="#8e8e93"/><circle cx="16.4" cy="15.2" r="1.1" fill="#ff9f0a"/><circle cx="7.6" cy="18" r="1.1" fill="#8e8e93"/><circle cx="12" cy="18" r="1.1" fill="#8e8e93"/><circle cx="16.4" cy="18" r="1.1" fill="#ff9f0a"/>',
+  fuel: '<path d="M6 20V6a1.6 1.6 0 0 1 1.6-1.6h3.8A1.6 1.6 0 0 1 13 6v14z" fill="#fff"/><rect x="7.4" y="6.4" width="4.2" height="3.2" rx=".8" fill="#34c759"/><path d="M13 11.6h1.8a1.7 1.7 0 0 1 1.7 1.7v3a1.3 1.3 0 0 0 2.6 0V9.6l-2-2" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.6 20h9.8" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>',
+  checklists: '<path d="M10.6 7.4h9M10.6 12h9M10.6 16.6h6.4" stroke="#c7c7cc" stroke-width="1.7" stroke-linecap="round"/><circle cx="6.4" cy="7.4" r="1.6" fill="#ff3b30"/><circle cx="6.4" cy="12" r="1.6" fill="#ff9500"/><circle cx="6.4" cy="16.6" r="1.6" fill="#0a84ff"/>',
+  cabin: '<path d="M4.4 9.4h3.2L14 5.6v12.8l-6.4-3.8H4.4z" fill="#fff"/><path d="M17 9.2a4.4 4.4 0 0 1 0 5.6M19.2 6.8a8 8 0 0 1 0 10.4" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>',
+  notepad: '<path d="M8.2 10.6h7.6M8.2 13.4h7.6M8.2 16.2h5" stroke="#c7c7cc" stroke-width="1.5" stroke-linecap="round"/>',
+  logbook: '<path d="M4 6.4c2.6-1 5.4-.3 8 1.5v10.9c-2.6-1.8-5.4-2.5-8-1.5z" fill="#ff9500"/><path d="M20 6.4c-2.6-1-5.4-.3-8 1.5v10.9c2.6-1.8 5.4-2.5 8-1.5z" fill="#ffb340"/>',
+  settings: '<circle cx="12" cy="12" r="7.6" fill="none" stroke="#e5e5ea" stroke-width="2.2"/><path d="M12 3.4v2.4M12 18.2v2.4M3.4 12h2.4M18.2 12h2.4M6 6l1.7 1.7M16.3 16.3 18 18M6 18l1.7-1.7M16.3 7.7 18 6" stroke="#e5e5ea" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="12" r="3" fill="#8e8e93"/>',
+};
+
+export function appIcon(name, size = 40) {
+  const body = APP_ICONS[name] || APP_ICONS.settings;
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" aria-hidden="true">${body}</svg>`;
+}
+
 /* ── shell state ─────────────────────────────────────────────────────── */
 
 const state = {
@@ -238,9 +265,9 @@ function markActive(id) {
 
 /* ── home screen ─────────────────────────────────────────────────────── */
 
-function tileMarkup(app, size = 30) {
+function tileMarkup(app, size = 40) {
   return `<a class="hi hi-${esc(app.id)}" href="#/${esc(app.id)}" data-open="${esc(app.id)}">
-    <span class="hi-tile">${icon(app.icon, size)}</span>
+    <span class="hi-tile">${appIcon(app.icon, size)}</span>
     <span class="hi-label">${esc(app.name)}</span>
   </a>`;
 }
@@ -249,7 +276,7 @@ function renderHome() {
   if (!dom.homeGrid) return;
   dom.homeGrid.innerHTML = APPS.map(app => tileMarkup(app)).join('');
   const dockApps = DOCK.map(id => APPS.find(app => app.id === id)).filter(Boolean);
-  if (dom.homeDock) dom.homeDock.innerHTML = dockApps.map(app => tileMarkup(app, 26)).join('');
+  if (dom.homeDock) dom.homeDock.innerHTML = dockApps.map(app => tileMarkup(app, 30)).join('');
 }
 
 /* The deck widget: route from the stored plan, numbers from the same bridge

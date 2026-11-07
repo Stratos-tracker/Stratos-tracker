@@ -668,20 +668,20 @@ body[data-wall="graphite"] .home-wall {
   pointer-events: none;
 }
 .hi-tile svg { position: relative; z-index: 1; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .28)); }
-.hi-navigator .hi-tile { background: linear-gradient(160deg, #5aabff, #0a63d8 70%); }
-.hi-flightplan .hi-tile { background: linear-gradient(160deg, #7d7aff, #3a37b8 70%); }
-.hi-briefing .hi-tile { background: linear-gradient(160deg, #4fc6d9, #0b7f96 70%); }
-.hi-weather .hi-tile { background: linear-gradient(160deg, #6fd6ff, #0a7fd4 70%); }
-.hi-charts .hi-tile { background: linear-gradient(160deg, #4cd964, #1f8f3a 70%); }
-.hi-airport .hi-tile { background: linear-gradient(160deg, #8fa3b8, #46586b 70%); }
-.hi-performance .hi-tile { background: linear-gradient(160deg, #ffb340, #d16900 70%); }
-.hi-weightbalance .hi-tile { background: linear-gradient(160deg, #cf7bff, #8b3fc0 70%); }
-.hi-fuel .hi-tile { background: linear-gradient(160deg, #ffd60a, #e08a00 70%); color: #2b2100; }
-.hi-checklists .hi-tile { background: linear-gradient(160deg, #5ee06f, #1d9a44 70%); }
-.hi-cabin .hi-tile { background: linear-gradient(160deg, #ff6b8b, #c31843 70%); }
-.hi-notepad .hi-tile { background: linear-gradient(160deg, #ffe066, #d4a400 70%); color: #2b2100; }
-.hi-logbook .hi-tile { background: linear-gradient(160deg, #ffa06b, #c2410c 70%); }
-.hi-settings .hi-tile { background: linear-gradient(160deg, #a1a1aa, #52525b 70%); }
+.hi-navigator .hi-tile { background: linear-gradient(160deg, #f5f7fa, #c6cfda); }
+.hi-flightplan .hi-tile { background: linear-gradient(160deg, #ffffff, #eef1f5); }
+.hi-briefing .hi-tile { background: linear-gradient(160deg, #ffffff, #eef1f5); }
+.hi-weather .hi-tile { background: linear-gradient(160deg, #4fb0ff, #0a63d8 78%); }
+.hi-charts .hi-tile { background: linear-gradient(160deg, #ffffff, #eef1f5); }
+.hi-airport .hi-tile { background: linear-gradient(160deg, #4b9bff, #0a5bd0 78%); }
+.hi-performance .hi-tile { background: linear-gradient(160deg, #ffffff, #eef1f5); }
+.hi-weightbalance .hi-tile { background: linear-gradient(160deg, #2c2c2e, #1c1c1e 78%); }
+.hi-fuel .hi-tile { background: linear-gradient(160deg, #4cd964, #1a8f3a 78%); }
+.hi-checklists .hi-tile { background: linear-gradient(160deg, #ffffff, #eef1f5); }
+.hi-cabin .hi-tile { background: linear-gradient(160deg, #ff5c7c, #b3123c 78%); }
+.hi-notepad .hi-tile { background: linear-gradient(180deg, #ffd60a 0 27%, #ffffff 27%); }
+.hi-logbook .hi-tile { background: linear-gradient(160deg, #ffffff, #eef1f5); }
+.hi-settings .hi-tile { background: linear-gradient(160deg, #c3c8d0, #6c727c 78%); }
 .hi:hover .hi-tile {
   transform: translateY(-2px);
   filter: saturate(1.12) brightness(1.06);
