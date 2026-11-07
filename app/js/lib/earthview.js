@@ -137,6 +137,84 @@ export function gibsZoomForSphere(radiusPx, { capDeg = 90, maxTiles = MAX_FACE_T
   return level;
 }
 
+/* ── Esri World Imagery ───────────────────────────────────────────────────
+ *
+ * The globe's imagery is read from Esri World Imagery, the same keyless service
+ * the flat chart already draws from. It matters here for one reason: the NASA
+ * Blue Marble mosaic stops at about 500 m per pixel, so any globe zoomed past a
+ * continent was enlarging the same coarse picture — which is what a pilot sees
+ * as a pixelated globe. World Imagery is a true pyramid down to street level,
+ * so the tile level can follow the zoom all the way in, and the shore of a lake
+ * or an airport apron resolves instead of turning into blocks.
+ *
+ * Tiles are 256-pixel Web Mercator, so the arithmetic is the same Mercator row
+ * the terrain store already uses. Beyond 85.05° a Mercator tile grid does not
+ * exist; the sample is taken from the last row rather than leaving a hole, which
+ * is what every web map does at the pole.
+ */
+
+export const ESRI = {
+  id: 'esri',
+  service: 'Esri World Imagery',
+  base: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile',
+  maxZoom: 19,
+  tilePixels: 256,
+  limit: 85.05112878,
+  attribution: 'Imagery: Esri, Maxar, Earthstar Geographics and the GIS User Community, from Esri World Imagery',
+  terms: 'Displayed from the publisher\u2019s own service; Stratos redistributes none of it.',
+};
+
+/** A real World Imagery tile URL, or null outside that level. */
+export function esriTileUrl(z, x, y) {
+  const zoom = Math.round(Number(z));
+  const n = 2 ** zoom;
+  if (!(zoom >= 0 && zoom <= ESRI.maxZoom) || !(x >= 0 && x < n) || !(y >= 0 && y < n)) return null;
+  return `${ESRI.base}/${zoom}/${y}/${x}`;
+}
+
+/** The ground a World Imagery tile covers. */
+export function esriCoverage(z, x, y) {
+  const n = 2 ** Math.round(Number(z));
+  return {
+    west: (x / n) * 360 - 180,
+    east: ((x + 1) / n) * 360 - 180,
+    north: mercatorLat(y / n),
+    south: mercatorLat((y + 1) / n),
+  };
+}
+
+/** The latitude of a Mercator row fraction, the inverse of mercatorFraction. */
+export function mercatorLat(fraction) {
+  const f = Math.max(0, Math.min(1, Number(fraction) || 0));
+  return Math.atan(Math.sinh(Math.PI * (1 - 2 * f))) / DEG;
+}
+
+/** Metres per pixel of a level at a latitude, from the publisher's grid. */
+export function esriMetresPerPixel(zoom, lat = 0) {
+  const z = Math.max(0, Math.min(ESRI.maxZoom, Math.round(Number(zoom) || 0)));
+  return (360 / (ESRI.tilePixels * 2 ** z)) * 111320 * Math.cos(Math.max(-85, Math.min(85, Number(lat) || 0)) * DEG);
+}
+
+/**
+ * The World Imagery level for a sphere of this drawn radius.
+ *
+ * Same rule as the imagery it replaces — the source is at least as fine as the
+ * sphere is drawn — but the ceiling is the publisher's real one instead of a
+ * global mosaic's, and the level is held to the pane's own tile count so a deep
+ * zoom fetches a handful of tiles rather than a slab of the world.
+ */
+export function esriZoomForSphere(radiusPx, { capDeg = 90, maxTiles = MAX_FACE_TILES, maxZoom = ESRI.maxZoom } = {}) {
+  const px = Math.max(8, Number(radiusPx) || 0);
+  const drawn = px / 90;                       // pixels per degree where the sphere faces the camera
+  const cap = Number.isFinite(Number(capDeg)) ? Math.max(0.002, Math.min(90, Number(capDeg))) : 90;
+  const room = Math.max(1, Number(maxTiles) || MAX_FACE_TILES);
+  const ceiling = Math.max(0, Math.min(ESRI.maxZoom, Math.round(Number(maxZoom)) || ESRI.maxZoom));
+  let level = Math.ceil(Math.log2((drawn * 360) / ESRI.tilePixels));
+  level = Math.max(0, Math.min(ceiling, level));
+  while (level > 0 && paneTiles(2 ** level, cap) > room) level -= 1;
+  return level;
+}
+
 /* ── AWS / Mapzen terrain tiles ─────────────────────────────────────────── */
 
 export const TERRAIN = {
@@ -359,7 +437,7 @@ export const EARTH_STYLES = [
   {
     id: 'imagery',
     label: 'Imagery',
-    hint: 'NASA Blue Marble Next Generation satellite mosaic, served by NASA GIBS (public domain).',
+    hint: 'Esri World Imagery, a pyramid deep enough to read an airport apron; nothing is mirrored or bundled.',
     source: 'nasa',
   },
   {
@@ -598,7 +676,7 @@ export class GlobeRaster {
 
 /* ── The tile store and the sampler ─────────────────────────────────────── */
 
-const MAX_TILES = 96;
+const MAX_TILES = 160;
 const MAX_IN_FLIGHT = 6;
 const MAX_REQUESTS_PER_PASS = 12;
 /* A 5x5 scan plus the deep point tile: enough to cover a scan completely, and
@@ -668,15 +746,15 @@ export class EarthView {
     const px = Math.max(8, Number(drawnPx) || this.rasterPx);
     this.rasterPx = px;
     this.capDeg = Math.max(0, Math.min(90, Number.isFinite(Number(capDeg)) ? Number(capDeg) : 90));
-    this.imageryZoom = gibsZoomForSphere(px / 2, { capDeg: this.capDeg });
+    this.imageryZoom = esriZoomForSphere(px / 2, { capDeg: this.capDeg });
     this.demZoom = terrainZoomForSphere(px / 2, { capDeg: this.capDeg });
-    const matrix = gibsMatrix(this.imageryZoom);
+    // Imagery is a Web Mercator pyramid, so its geometry is the terrain store's
+    // arithmetic with the publisher's own tile size: a coordinate maps to a
+    // tile and a pixel inside it, and a level of 19 is about 0.3 m per pixel.
     this.imageryGeometry = {
       zoom: this.imageryZoom,
-      width: matrix.width,
-      height: matrix.height,
-      xScale: matrix.width / 360,
-      yScale: matrix.height / 180,
+      n: 2 ** this.imageryZoom,
+      xScale: (2 ** this.imageryZoom) / 360,
     };
     this.terrainGeometry = {
       zoom: this.demZoom,
@@ -803,32 +881,43 @@ export class EarthView {
        cap, so each candidate tile's own centre is measured against it. */
     const candidates = [];
     const consider = (kind, z, resolve, tileZ, tileX, tileY) => {
-      const width = kind === 'imagery' ? gibsMatrix(z).width : 2 ** z;
-      const height = kind === 'imagery' ? gibsMatrix(z).height : 2 ** z;
+      const n = 2 ** z;
       const bounds = kind === 'imagery'
-        ? gibsCoverage(z, tileX, tileY)
-        : { west: (tileX / width) * 360 - 180, east: ((tileX + 1) / width) * 360 - 180, south: 90 - ((tileY + 1) / height) * 180, north: 90 - (tileY / height) * 180 };
+        ? esriCoverage(z, tileX, tileY)
+        : { west: (tileX / n) * 360 - 180, east: ((tileX + 1) / n) * 360 - 180, south: mercatorLat((tileY + 1) / n), north: mercatorLat(tileY / n) };
       const tileLat = (bounds.north + bounds.south) / 2;
       const tileLon = (bounds.west + bounds.east) / 2;
       const entry = this.tiles.get(this.key(kind, tileZ, tileX, tileY));
       if (entry && (entry.ready || entry.requested)) return;
-      if (sphericalDistanceDeg(lat, lon, tileLat, tileLon) > this.fetchReach(capDeg, width)) return;
+      if (sphericalDistanceDeg(lat, lon, tileLat, tileLon) > this.fetchReach(capDeg, n)) return;
       candidates.push({ kind, z: tileZ, x: tileX, y: tileY, resolve, distance: sphericalDistanceDeg(lat, lon, tileLat, tileLon) });
     };
 
-    if (wantImagery) {
-      const { zoom, width, height } = gibsMatrix(this.imageryZoom);
-      for (let y = 0; y < height; y += 1) for (let x = 0; x < width; x += 1) {
-        consider('imagery', zoom, gibsTileUrl, zoom, x, y);
-      }
-    }
-    if (wantTerrain) {
-      const z = this.demZoom;
+    /* Only the tiles the visible cap can actually touch are considered. Walking
+       the whole square of a deep level is a billion iterations at level 15 and
+       was the reason a zoomed globe queued work it could never finish; the
+       candidate list here is a few dozen tiles whatever the level. */
+    const walk = (kind, z, resolve) => {
       const n = 2 ** z;
-      for (let y = 0; y < n; y += 1) for (let x = 0; x < n; x += 1) {
-        consider('terrain', z, terrainTileUrl, z, x, y);
+      const reach = Math.max(0.002, Math.min(90, Number(capDeg) || 90)) + 360 / n;
+      const north = Math.min(89.9, lat + reach);
+      const south = Math.max(-89.9, lat - reach);
+      const y0 = Math.max(0, Math.min(n - 1, Math.floor(mercatorFraction(north) * n)));
+      const y1 = Math.max(0, Math.min(n - 1, Math.floor(mercatorFraction(south) * n)));
+      // Longitude widens towards the pole at the same rate the cosine shrinks,
+      // which is exactly the width of the cap on the ground.
+      const half = Math.min(180, reach / Math.max(0.05, Math.cos(lat * DEG)));
+      const first = Math.round(((lon - half + 180) / 360) * n);
+      const last = Math.round(((lon + half + 180) / 360) * n);
+      for (let y = y0; y <= y1; y += 1) {
+        for (let x = first; x <= last; x += 1) {
+          consider(kind, z, resolve, z, ((x % n) + n) % n, y);
+        }
       }
-    }
+    };
+
+    if (wantImagery) walk('imagery', this.imageryZoom, esriTileUrl);
+    if (wantTerrain) walk('terrain', this.demZoom, terrainTileUrl);
     candidates.sort((a, b) => a.distance - b.distance);
     this.pending = candidates.length;
     for (const candidate of candidates) {
@@ -907,13 +996,17 @@ export class EarthView {
   /** The imagery colour at a coordinate, or null where the tile is not read. */
   imageryPixel(lat, lon, out = [0, 0, 0, 0]) {
     const geometry = this.imageryGeometry;
-    const x = Math.floor((lon + 180) * geometry.xScale);
-    const y = Math.floor((90 - lat) * geometry.yScale);
-    if (!(x >= 0 && x < geometry.width && y >= 0 && y < geometry.height)) return null;
+    // A Mercator grid has no row beyond its limit; the last one stands in, so a
+    // polar view reads the edge of the mosaic rather than a hole.
+    const phi = Math.max(-ESRI.limit, Math.min(ESRI.limit, Number(lat) || 0));
+    const n = geometry.n;
+    const x = Math.floor((((Number(lon) + 180) % 360 + 360) % 360) * geometry.xScale);
+    const y = Math.floor(mercatorFraction(phi) * n);
+    if (!(x >= 0 && x < n && y >= 0 && y < n)) return null;
     const entry = this.tiles.get(this.key('imagery', geometry.zoom, x, y));
     if (!entry || !entry.ready) return null;
-    const u = ((lon + 180) * geometry.xScale - x) * entry.width;
-    const v = ((90 - lat) * geometry.yScale - y) * entry.height;
+    const u = ((Number(lon) + 180) * geometry.xScale - x) * entry.width;
+    const v = (mercatorFraction(phi) * n - y) * entry.height;
     return this.pixel(entry.data, entry.width, entry.height, u, v, out);
   }
 
@@ -1083,7 +1176,7 @@ export class EarthView {
       demZoom: this.demZoom,
       pointZoom: POINT_ZOOM,
       rasterPx: this.rasterPx,
-      imageryMetresPerPixel: (360 / (gibsMatrix(this.imageryZoom).width * GIBS.tilePixels)) * 111320,
+      imageryMetresPerPixel: esriMetresPerPixel(this.imageryZoom, this.center.lat),
       terrainMetresPerPixel: terrainMetresPerPixel(this.demZoom, this.center.lat),
       pointMetresPerPixel: terrainMetresPerPixel(POINT_ZOOM, this.center.lat),
       pending: this.pending || 0,
@@ -1095,8 +1188,8 @@ export class EarthView {
     const stats = this.stats();
     if (this.styleId === 'imagery') {
       return [
-        `${GIBS.attribution}. ${GIBS.terms}`,
-        `Level ${stats.imageryZoom} of the GIBS 4326 pyramid, about ${Math.round(stats.imageryMetresPerPixel)} m per pixel at the equator · ${stats.imageryTiles} tile${stats.imageryTiles === 1 ? '' : 's'} read${stats.waiting ? `, ${stats.waiting} on the way` : ''}${stats.failed ? `, ${stats.failed} failed` : ''}.`,
+        `${ESRI.attribution}. ${ESRI.terms}`,
+        `Level ${stats.imageryZoom} of Esri World Imagery, about ${Math.round(stats.imageryMetresPerPixel)} m per pixel here · ${stats.imageryTiles} tile${stats.imageryTiles === 1 ? '' : 's'} read${stats.waiting ? `, ${stats.waiting} on the way` : ''}${stats.failed ? `, ${stats.failed} failed` : ''}.`,
       ];
     }
     if (this.needsTerrain()) {

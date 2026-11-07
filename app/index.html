@@ -401,6 +401,66 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
    clear of the plan panel rather than drawn underneath it. */
 @media(min-width:901px){#app.dk-plan-open #fc,#app.dk-plan-open #fp{left:322px}}
 @media(max-width:900px){.dkpane{top:auto;bottom:76px;left:8px;right:8px;width:auto;max-height:44vh}.dk-left{left:8px}.dk-right{right:8px;width:auto}.dk-wps{max-height:26vh}}
+/* ── The settings drawer, and a map that can take the whole window ──── */
+#lay{right:68px;top:64px;width:min(320px,calc(100vw - 92px));max-height:min(74dvh,calc(100dvh - 132px));padding:0;overflow:hidden;display:none;flex-direction:column;border-radius:10px;background:var(--ui);border:1px solid var(--ui2);box-shadow:0 16px 40px rgba(0,0,0,.4)}
+.lay-h{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--ui2);background:var(--ui);flex:0 0 auto}
+.lay-h b{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--mut);font-weight:800}
+.lay-x{margin-left:auto;width:26px;height:26px;min-height:0;padding:0;border:0;background:none;color:var(--mut);font-size:12px;border-radius:5px}
+.lay-x:hover{color:var(--txt);background:var(--ui2)}
+.lay-body{overflow-y:auto;overscroll-behavior:contain;padding:2px 12px 12px;scrollbar-width:thin}
+#lay .lay-s>h3{cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0;padding:10px 2px 7px}
+#lay .lay-s>h3::after{content:'\25BE';font-size:9px;opacity:.55;transition:transform .15s ease}
+#lay .lay-s.closed>h3::after{transform:rotate(-90deg)}
+#lay .lay-s.closed>:not(h3){display:none}
+#lay .lay-s>h3:focus-visible{outline:1px solid var(--acc);outline-offset:2px;border-radius:3px}
+.lay-s{padding:9px 0;border-bottom:1px solid color-mix(in srgb,var(--ui2) 60%,transparent)}
+.lay-s:last-child{border-bottom:0}
+.lay-s h3{margin:0 0 6px;font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--mut)}
+.lay-s button{min-height:27px;padding:5px 8px;border-radius:4px;font-size:11.5px;font-weight:600}
+.lay-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.lay-chips{display:flex;flex-wrap:wrap;gap:4px}
+.lay-theme{display:flex;gap:4px;margin-top:6px}
+.lay-theme button{flex:1;padding:5px 3px;font-size:10.5px}
+.lay-row{display:flex;gap:5px;margin-top:6px}
+.lay-row button{flex:1}
+.lay-f{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mut)}
+.lay-f select{flex:1;min-width:0;padding:6px 7px;border-radius:4px;border:1px solid var(--ui2);background:var(--ui2);color:var(--txt);font-size:11.5px}
+.lay-sub{margin:8px 0 5px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.lay-wide{width:100%;margin-top:6px;border:1px solid color-mix(in srgb,var(--acc) 38%,transparent);background:color-mix(in srgb,var(--acc) 9%,transparent);color:var(--txt)}
+.lay-wide.on{background:var(--acc);border-color:var(--acc);color:#06161d}
+#lay p.m{font-size:10.5px;line-height:1.45;margin:6px 0 0;max-width:none}
+#lay #gwrap[hidden]{display:none}
+body.panels-hidden .dkpane{display:none!important}
+#fab{gap:8px}
+#fab .fab{width:40px;height:40px;font-size:16px}
+#fc{width:min(336px,calc(100% - 24px));padding:11px 13px}
+#fc .fr{font-size:24px;margin:10px 0 3px}
+#fc .fg{margin-top:9px;padding-top:8px;gap:4px}
+#fc .fca{margin-top:9px}
+#appbar .tb-support{display:none}
+/* The resting card is a summary of the flight, not a sheet of paperwork:
+   procedures and the OFP actions wait behind Details. */
+#fp:not(.fpexp){padding:10px 13px 11px}
+#fp:not(.fpexp) .fpr{font-size:20px;margin:7px 0 1px}
+#fp:not(.fpexp) .fpproc{display:none}
+#fp:not(.fpexp) .fpacts{margin-top:8px}
+#fp:not(.fpexp) .fpacts button[data-fp-act="ofp"],
+#fp:not(.fpexp) .fpacts button[data-fp-act="summary"],
+#fp:not(.fpexp) .fpacts button[data-fp-act="refresh"]{display:none}
+/* The settings sheet is a sheet: it sits above the procedure and plan panes,
+   never beneath them, and on a phone it covers the map rather than being
+   covered by it. */
+#lay{z-index:40;color-scheme:dark}
+#lay .lay-body{scrollbar-color:color-mix(in srgb,var(--coast) 60%,transparent) transparent}
+/* A dark panel gets a dark scrollbar rather than the platform's white one. */
+#lay .lay-body::-webkit-scrollbar,.dk-body::-webkit-scrollbar{width:8px}
+#lay .lay-body::-webkit-scrollbar-thumb,.dk-body::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--coast) 62%,transparent);border-radius:8px}
+#lay .lay-body::-webkit-scrollbar-track,.dk-body::-webkit-scrollbar-track{background:transparent}
+.dk-body{scrollbar-color:color-mix(in srgb,var(--coast) 62%,transparent) transparent}
+@media(max-width:767px){
+  #lay{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:min(74dvh,620px);border-radius:14px}
+  #fab .fab{width:38px;height:38px}
+}
 </style></head><body><div class="app-shell">
 <header id="appbar" class="tb" data-title="Flight Deck" data-context="Live Map"></header>
 <nav id="tabs" aria-label="Sections"><button class="tab act" id="bMap" data-group="Fly" data-label="Flight Deck"><b>&#8982;</b><span>Flight Deck</span></button><button class="tab" id="bRoute" data-group="Fly" data-label="Flight Planning"><b>&#8599;</b><span>Flight Planning</span></button><a class="tab" href="logbook.html" data-group="Fly" data-label="Logbook"><b>&#9776;</b><span>Logbook</span></a><a class="tab" href="discover.html" data-group="Explore" data-label="Explore"><b>&#10022;</b><span>Explore</span></a><a class="tab" href="pilot.html#settings" data-group="Account" data-label="Profile &amp; Settings"><b>&#9881;</b><span>Profile</span></a><a class="rail-product" href="efb.html" title="Stratos EFB — electronic flight bag" aria-label="Open Stratos EFB"><b>&#9635;</b><span>Stratos EFB<small>Briefing · charts</small></span></a><button class="tab rail-toggle" data-rail-toggle type="button" title="Collapse sidebar" aria-label="Collapse sidebar"><b>&#8249;</b><span>Collapse</span></button></nav>
@@ -417,9 +477,22 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 <div id="fc" class="box"></div>
 <div id="fp" class="box" aria-live="polite"></div>
 <div id="online" class="box"><b id="olPlace">–</b><span id="olCount">–</span></div>
-<div id="fab"><button id="bTheme" class="fab" title="Theme">Day</button>
-<button id="bLay" class="fab" title="Layers and tools">&#9776;</button><button id="bFol" class="fab" title="Follow aircraft">&#9992;</button><button id="bZi" class="fab" title="Zoom in">+</button><button id="bZo" class="fab" title="Zoom out">−</button>
-</div><div id="lay"><b>Map layers</b><button data-l="apt" class="on">Airports</button><button data-l="nav" class="on">Navaids</button><button data-l="trf" class="on">Traffic</button><button data-l="trl">All trails</button><button data-l="rte" class="on">Route</button><b>Procedures</b><div id="dklay"><button data-dk-layer="sid" class="on">SID</button><button data-dk-layer="star" class="on">STAR</button><button data-dk-layer="approach" class="on">Approach</button><button data-dk-layer="missed">Missed</button></div><div id="dkproctip" class="m" style="max-width:220px;margin-top:2px"></div><b>Chart</b><button data-l="grid">Grid</button><b>Traffic source</b><select id="trs" aria-label="Traffic source"><option value="vatsim">VATSIM — live pilots</option><option value="adsb">ADS-B — community feeds</option></select><div class="m" id="trsnote" style="max-width:220px;margin-top:2px">Both sources are keyless and free.</div><b>Map style</b><div id="ms"></div><b>Projection</b><div id="pj"></div><div id="gwrap" hidden><b>Globe surface</b><div id="gs"></div><div class="m" id="gn"></div><div class="row"><button type="button" id="gReset" title="Centre the globe on the route again">Reset view</button><button type="button" id="gRead" title="Read terrain elevations around the centre">Read terrain</button></div></div><b>Workspaces</b><div id="mwtools"><button id="bLive" type="button">Live tracking</button><button id="bCh" type="button">Charts</button><button id="bWx" type="button">Weather</button><button id="bData" type="button">Data</button><button id="bEfb" type="button" title="Electronic flight bag">Stratos EFB</button></div></div>
+<div id="fab"><button id="bLay" class="fab" title="Map settings" aria-label="Map settings" aria-expanded="false">&#9776;</button><button id="bFol" class="fab" title="Follow aircraft">&#9992;</button><button id="bZi" class="fab" title="Zoom in">+</button><button id="bZo" class="fab" title="Zoom out">−</button>
+</div><aside id="lay" role="dialog" aria-label="Map settings" aria-hidden="true">
+<header class="lay-h"><b>Map settings</b><button type="button" class="lay-x" id="layX" aria-label="Close settings">&#10005;</button></header>
+<div class="lay-body">
+  <section class="lay-s"><h3>Map display</h3><div id="ms" class="lay-grid"></div>
+    <div class="lay-theme"><button type="button" data-theme-set="day">Day</button><button type="button" data-theme-set="night">Night</button><button type="button" data-theme-set="contrast">High contrast</button></div></section>
+  <section class="lay-s"><h3>Layers</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="trf" class="on">Traffic</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="trl">Trails</button><button type="button" data-l="grid">Grid</button></div></section>
+  <section class="lay-s"><h3>Projection</h3><div id="pj"></div>
+    <div id="gwrap" hidden><div class="lay-sub">Globe surface</div><div id="gs"></div><p class="m" id="gn"></p>
+      <div class="lay-row"><button type="button" id="gReset" title="Centre the globe on the route again">Reset view</button><button type="button" id="gRead" title="Read terrain elevations around the centre">Read terrain</button></div></div></section>
+  <section class="lay-s"><h3>Traffic</h3><label class="lay-f"><span>Source</span><select id="trs" aria-label="Traffic source"><option value="vatsim">VATSIM — live pilots</option><option value="adsb">ADS-B — community feeds</option></select></label><p class="m" id="trsnote">Both sources are keyless and free.</p></section>
+  <section class="lay-s"><h3>Procedures</h3><div id="dklay" class="lay-chips"><button type="button" data-dk-layer="sid" class="on">SID</button><button type="button" data-dk-layer="star" class="on">STAR</button><button type="button" data-dk-layer="approach" class="on">Approach</button><button type="button" data-dk-layer="missed">Missed</button></div><p class="m" id="dkproctip"></p></section>
+  <section class="lay-s"><h3>Workspaces</h3><div id="mwtools"><button id="bLive" type="button">Live tracking</button><button id="bCh" type="button">Charts</button><button id="bWx" type="button">Weather</button><button id="bData" type="button">Data</button><button id="bEfb" type="button" title="Electronic flight bag">Stratos EFB</button></div>
+    <button type="button" id="bPanels" class="lay-wide">Hide side panels</button></section>
+  <section class="lay-s"><h3>Go to region</h3><div id="regions" class="lay-chips"></div></section>
+</div></aside>
 
 <div id="cv"><div class="cvh"><button id="cvx" aria-label="Back">&#8592;</button><div class="cvt"><b id="cvi"></b><span id="cvn"></span><span id="cvm"></span></div><button id="cvf">Fit</button></div><div class="seg" id="cvs"></div></div><div id="ci"></div>
 <div id="chart"></div>
@@ -827,7 +900,7 @@ function globeGraticule(r){
 function globeCredit(r){
   const style=globeStyle(V.gs);
   if(!style.source)return;
-  const text=style.source==='nasa'?'Imagery: NASA Earth Observatory Blue Marble · NASA GIBS/ESDIS':'Terrain: AWS Open Data Terrain Tiles (Mapzen) · 3DEP/SRTM/GMTED2010/ETOPO1';
+  const text=style.source==='nasa'?'Imagery: Esri, Maxar, Earthstar Geographics · Esri World Imagery':'Terrain: AWS Open Data Terrain Tiles (Mapzen) · 3DEP/SRTM/GMTED2010/ETOPO1';
   cx.save();cx.font='9.5px system-ui, sans-serif';cx.textAlign='center';cx.textBaseline='middle';
   const w=cx.measureText(text).width,x=W/2,y=Math.min(H/2+r*.84,H/2+r-7);
   cx.fillStyle='rgba(2,6,12,.58)';cx.fillRect(x-w/2-6,y-7,w+12,14);
@@ -844,7 +917,11 @@ function globeEarth(){
 /* The picture on the sphere, from the shared painter: the same pane, the same
    bands and the same coarse pass while turning as the EFB's own map draws. */
 function globePainter(){
-  if(!GV.painter)GV.painter=new (globeModule().GlobeRaster)();
+  // A retina canvas is worth painting at its own resolution, and a drag is
+  // worth more than the old 22 000-sample smear: the coarse pass is what the
+  // pilot sees while the sphere is turning, so it is budgeted to about a
+  // quarter of a second of work rather than to a thumbnail.
+  if(!GV.painter)GV.painter=new (globeModule().GlobeRaster)({coarse:90000,sharp:4200000,band:64000});
   return GV.painter;
 }
 /* The pane of the globe this frame can see, and the levels the tiles behind it
@@ -969,7 +1046,7 @@ function globeAttr(){
   const a=$('#attr');if(!a)return;
   const style=globeStyle(V.gs);
   const text=V.mode!=='globe'?'© OpenStreetMap contributors · Esri imagery'
-    :style.source==='nasa'?'Imagery: NASA Earth Observatory Blue Marble · NASA GIBS/ESDIS'
+    :style.source==='nasa'?'Imagery: Esri, Maxar, Earthstar Geographics · Esri World Imagery'
     :style.source?'Terrain: AWS Open Data Terrain Tiles (Mapzen) · 3DEP/SRTM/GMTED2010/ETOPO1'
     :'Globe outlines: Natural Earth 1:110m (public domain)';
   if(a.textContent!==text)a.textContent=text;
@@ -982,8 +1059,13 @@ function globeMode(mode){
   GV.msg='';
   if(next==='globe'&&!globeStyles().length){GV.msg='The globe module has not loaded yet, so the chart is still flat. Switch again in a moment.';GV.noteAt=0;gNote();return V.mode}
   if(next==='globe'&&CH.on){GV.msg='A charted approach is a flat chart: close the chart to use the globe.';GV.noteAt=0;gNote();return V.mode}
+  const wasGlobe=V.mode==='globe';
   V.mode=next;V.in=null;V.tz=null;V.anchor=null;drag=null;pinch=null;GV.read=null;
-  if(next==='globe'){V.gz=1;globeRings()}
+  // The switch changes the projection, not the pilot's place: the globe keeps
+  // the zoom it was left at, so going out to the chart and back does not throw
+  // the camera away.
+  if(next==='globe'){V.gz=GV.gzSave>0?GV.gzSave:V.gz;globeRings()}
+  else if(wasGlobe)GV.gzSave=V.gz;
   try{localStorage.setItem('dl.mode',next)}catch(_){}
   GV.noteAt=0;pjUi();gsUi();globeAttr();gNote();
   return V.mode;
@@ -1011,29 +1093,35 @@ function setGlobeSurface(id){
 }
 /* Zoom about a point on the sphere, so the place under the pointer or the middle
    of the screen stays under it — the same anchor the flat chart's zoom keeps. */
+/* The deepest globe zoom, in sphere radii. The old ceiling of 40 stopped the
+   camera about 220 km wide, so an airport could never fill the screen. This one
+   reaches roughly 6 km across a 1000-pixel canvas — about chart zoom 17 — and
+   the imagery level follows it to the publisher's own deepest tile rather than
+   being held back by a number in the UI. */
+const MAXGZ=32768;
 function globeZoomAbout(x,y,factor){
   const g=globeModule();if(!g)return;
   const before=g.globeUnproject(x,y,globeCam());
-  const next=Math.max(1,Math.min(40,V.gz*factor));
+  const next=Math.max(1,Math.min(MAXGZ,V.gz*factor));
   if(next===V.gz)return;
   V.gz=next;GV.moved=performance.now();V.tz=null;V.in=null;
   if(before){const after=g.globeUnproject(x,y,globeCam());if(after){V.lon=((V.lon+(before.lon-after.lon)+540)%360)-180;V.lat=Math.max(-89.5,Math.min(89.5,V.lat+(before.lat-after.lat)))}}
 }
 /* The chart's own zoom, in globe units, for the places that focus on a point:
    a search result, a route waypoint, a region button. */
-function focusZoom(z){if(V.mode==='globe'){V.gz=Math.max(1,Math.min(40,2**((z-6)/3)));V.tz=null;V.in=null;return}V.z=z;V.tz=null}
+function focusZoom(z){if(V.mode==='globe'){V.gz=Math.max(1,Math.min(MAXGZ,2**((z-6)/3)));V.tz=null;V.in=null;return}V.z=z;V.tz=null}
 /* The same, for the places that zoom in only if they are further out than a
    named scale — focusing an airport, or the first live position. */
-function focusAtLeast(z){if(V.mode==='globe'){V.gz=Math.max(V.gz,Math.min(40,2**((z-6)/3)));V.tz=null;V.in=null;return}V.z=Math.max(V.z,z);V.tz=null}
+function focusAtLeast(z){if(V.mode==='globe'){V.gz=Math.max(V.gz,Math.min(MAXGZ,2**((z-6)/3)));V.tz=null;V.in=null;return}V.z=Math.max(V.z,z);V.tz=null}
 
 const dist=(a,b)=>{const dl=(b.lat-a.lat)*R,dn=(b.lon-a.lon)*R,h=Math.sin(dl/2)**2+Math.cos(a.lat*R)*Math.cos(b.lat*R)*Math.sin(dn/2)**2;return 6880.13*Math.asin(Math.sqrt(h))};
 const brg=(a,b)=>{const y=Math.sin((b.lon-a.lon)*R)*Math.cos(b.lat*R),x=Math.cos(a.lat*R)*Math.sin(b.lat*R)-Math.sin(a.lat*R)*Math.cos(b.lat*R)*Math.cos((b.lon-a.lon)*R);return(Math.atan2(y,x)/R+360)%360};
 const fwd=(a,h,d)=>{const r=d/3440.065,l1=a.lat*R,o1=a.lon*R,l2=Math.asin(Math.sin(l1)*Math.cos(r)+Math.cos(l1)*Math.sin(r)*Math.cos(h*R)),o2=o1+Math.atan2(Math.sin(h*R)*Math.sin(r)*Math.cos(l1),Math.cos(r)-Math.sin(l1)*Math.sin(l2));return{lat:l2/R,lon:o2/R}};
 const legs=()=>route.slice(1).map((p,i)=>dist(route[i],p)),total=()=>legs().reduce((a,b)=>a+b,0);
 const hm=h=>{if(!isFinite(h))return'–';const m=Math.round(h*60);return Math.floor(m/60)+':'+String(m%60).padStart(2,'0')};
-function theme(t){try{localStorage.setItem('dl.theme',t)}catch(_){}document.documentElement.dataset.theme=t;$('#bTheme').textContent={day:'Day',night:'Night',contrast:'High'}[t];const cs=getComputedStyle(document.documentElement);['bg','land','coast','grid','ap','nav','route','own','txt','trf','mut'].forEach(n=>C[n]=cs.getPropertyValue('--'+n).trim())}
+function theme(t){try{localStorage.setItem('dl.theme',t)}catch(_){}document.documentElement.dataset.theme=t;const tb=$('#bTheme');if(tb)tb.textContent={day:'Day',night:'Night',contrast:'High'}[t];document.querySelectorAll('[data-theme-set]').forEach(b=>b.classList.toggle('on',b.dataset.themeSet===t));const cs=getComputedStyle(document.documentElement);['bg','land','coast','grid','ap','nav','route','own','txt','trf','mut'].forEach(n=>C[n]=cs.getPropertyValue('--'+n).trim())}
 theme((function(){try{return localStorage.getItem('dl.theme')||'night'}catch(e){return'night'}})());
-$('#bTheme').onclick=()=>{const o=['day','night','contrast'];theme(o[(o.indexOf(document.documentElement.dataset.theme)+1)%3])};
+document.querySelectorAll('[data-theme-set]').forEach(b=>b.onclick=()=>theme(b.dataset.themeSet));theme(document.documentElement.dataset.theme||'night');
 /* The bitmap must always match the canvas box. A window resize is not the only
    thing that moves it: the shell collapses the rail after the first paint, a
    card can open, and on a vertical monitor the box is tall enough that a stale
@@ -1089,7 +1177,7 @@ function fitRoute(){
     V.lon=centre.lon;V.lat=centre.lat;V.tz=null;V.in=null;setFol(false);
     const farthest=Math.max(...route.map(p=>dist(centre,p)),1);
     const theta=Math.min(Math.PI/2.05,(farthest/60)*R);
-    V.gz=Math.max(1,Math.min(40,.8/Math.max(.02,Math.sin(theta))));
+    V.gz=Math.max(1,Math.min(MAXGZ,.8/Math.max(.02,Math.sin(theta))));
     return true;
   }
   // Normalised Web Mercator (0..1 across the world), so the same numbers work at
@@ -1148,7 +1236,7 @@ for(let o=Math.ceil(a[0]/s)*s;o<b[0];o+=s){const x=sc(o,0)[0];cx.moveTo(x,0);cx.
 for(let t=Math.ceil(b[1]/s)*s;t<a[1];t+=s){const y=sc(0,t)[1];cx.moveTo(0,y);cx.lineTo(W,y);cx.fillText(t.toFixed(s<1?1:0)+'°',4,y-2)}cx.stroke()}
 const ppn=lat=>SZ*2**V.z/360/(60*Math.cos(lat*R));MKL.length=0;
 if(L.nav&&!CH.on)N.forEach(n=>{const q=vis(n.lon,n.lat);if(!q||lblZ()<6)return;const[x,y]=q;if(x<-20||x>W+20||y<-20||y>H+20)return;const t=String(n.type||'').toUpperCase(),kind=/NDB/.test(t)?'ndb':/VOR|TACAN|DME/.test(t)?'vor':'int';mkDraw(kind,x,y,mkRz()*.8);if(lblZ()>5.5)mkText(n.id,x+Math.round(mkRz()*.55)-4,y+4,mkColor(kind),11,false)});
-if(L.apt)A.forEach(a=>{if(CH.on&&a!==CH.a)return;const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;if(a.x&&lblZ()<6)return;const mg=lblZ()>10?4000:60;if(x<-mg||x>W+mg||y<-mg||y>H+mg)return;
+if(L.apt&&clusterAirports()){}else if(L.apt)A.forEach(a=>{if(CH.on&&a!==CH.a)return;const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;if(a.x&&lblZ()<6)return;const mg=lblZ()>10?4000:60;if(x<-mg||x>W+mg||y<-mg||y>H+mg)return;
 if(V.mode!=='globe'&&V.z>8.5)drawReal(a,x,y);else a.det=false;if(0)pairs(a).forEach(pr=>{const n=pr[0],h=n*10,p=ppn(a.lat)*1.4,dx=Math.sin(h*R)*p,dy=-Math.cos(h*R)*p;cx.strokeStyle=C.ap;cx.lineWidth=Math.max(3,p/9);cx.lineCap='butt';cx.beginPath();cx.moveTo(x-dx,y-dy);cx.lineTo(x+dx,y+dy);cx.stroke()});
 if(a.det){}else if(V.mode!=='globe'&&V.z>8.5){cx.beginPath();cx.arc(x,y,3,0,7);cx.fillStyle=C.land;cx.fill();cx.strokeStyle=C.ap;cx.lineWidth=2.2;cx.stroke()}else mkRing(x,y,mkRz()*.9,mkColor('apt'),1);
 if(lblZ()>(a.x?7:4.8)&&x>-40&&x<W+40&&y>-40&&y<H+40&&!(L.rte&&planTocTod().ids.has(String(a.id).toUpperCase())))mkText(a.id,x+Math.round(mkRz()*.62)-3,y-6,SAT()?(DKM()?'#fff':'#111'):C.txt,12.5,true)});
@@ -1486,6 +1574,7 @@ window.addEventListener('aircraft-atlas-ready', draw);
 let last=performance.now(),lastDraw=0;
 const frameMs=1000/RP.fps;
 requestAnimationFrame(function loop(t){
+  size();
   const dt=Math.min((t-last)/1000,.2);last=t;
   if(!document.hidden && t-lastDraw>=frameMs){
     lastDraw=t;
@@ -1500,7 +1589,7 @@ cv.onpointerdown=e=>{V.in=null;V.tz=null;V.anchor=null;cv.setPointerCapture(e.po
 cv.onpointermove=e=>{if(!drag||pinch)return;const nw=performance.now();if(drag.t){const k=Math.max(1,nw-drag.t);drag.vx=(e.clientX-drag.px)/k*1000;drag.vy=(e.clientY-drag.py)/k*1000}drag.t=nw;drag.px=e.clientX;drag.py=e.clientY;const dx=e.clientX-drag.startX,dy=e.clientY-drag.startY;drag.m=Math.max(drag.m,Math.hypot(dx,dy));if(drag.wp>=0&&drag.m>4){moveWp(drag.wp,e.clientX,e.clientY);return}if(drag.m>4){setFol(false);tk=false;if(V.mode==='globe'){GV.moved=performance.now();const g=globeModule(),c=g&&g.orbitBy({lat:drag.startLat,lon:drag.startLon},dx,dy,globeR());if(c){V.lon=c.lon;V.lat=c.lat}}else{const c0=wpx(drag.startLon,drag.startLat,V.z),p=wun(c0[0]-dx,c0[1]-dy,V.z);V.lon=p[0];V.lat=p[1]}}};
 cv.onpointerup=e=>{if(drag&&drag.wp>=0&&drag.m>4){moveWp(drag.wp,e.clientX,e.clientY);save();render();drag=null;return}if(drag&&drag.m>4&&drag.vx!=null&&performance.now()-drag.t<90)V.in=[drag.vx,drag.vy];if(drag&&drag.m<=4&&!pinch&&drag.wp>=0&&route[drag.wp]){wpIdx=drag.wp;openRouteCard({kind:'wp',index:drag.wp},e.clientX,e.clientY)}else if(drag&&drag.m<=4&&!pinch)tap(e.clientX,e.clientY);drag=null};
 cv.addEventListener('touchstart',e=>{if(e.touches.length==2){drag=null;V.in=null;V.tz=null;V.anchor=null;const t1=e.touches[0],t2=e.touches[1],d=Math.max(1,Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY)),mx=(t1.clientX+t2.clientX)/2,my=(t1.clientY+t2.clientY)/2,c=wpx(V.lon,V.lat,V.z);pinch={d,mx,my,z:V.z,gz:V.gz,geo:wun(c[0]+mx-W/2,c[1]+my-H/2,V.z)}}},{passive:true});
-cv.addEventListener('touchmove',e=>{if(e.touches.length==2){const t1=e.touches[0],t2=e.touches[1],d=Math.max(1,Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY)),mx=(t1.clientX+t2.clientX)/2,my=(t1.clientY+t2.clientY)/2;if(!pinch){const c=wpx(V.lon,V.lat,V.z);pinch={d,mx,my,z:V.z,gz:V.gz,geo:wun(c[0]+mx-W/2,c[1]+my-H/2,V.z)};return}setFol(false);tk=false;if(V.mode==='globe'){const target=Math.max(1,Math.min(40,(pinch.gz||1)*(d/pinch.d)));globeZoomAbout(mx,my,target/V.gz);return}const newZ=Math.max(2.5,Math.min(17.5,pinch.z+Math.log2(d/pinch.d))),pNew=wpx(pinch.geo[0],pinch.geo[1],newZ),dx=mx-W/2,dy=my-H/2,cNew=[pNew[0]-dx,pNew[1]-dy],p=wun(cNew[0],cNew[1],newZ);V.lon=p[0];V.lat=p[1];V.z=newZ}},{passive:true});
+cv.addEventListener('touchmove',e=>{if(e.touches.length==2){const t1=e.touches[0],t2=e.touches[1],d=Math.max(1,Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY)),mx=(t1.clientX+t2.clientX)/2,my=(t1.clientY+t2.clientY)/2;if(!pinch){const c=wpx(V.lon,V.lat,V.z);pinch={d,mx,my,z:V.z,gz:V.gz,geo:wun(c[0]+mx-W/2,c[1]+my-H/2,V.z)};return}setFol(false);tk=false;if(V.mode==='globe'){const target=Math.max(1,Math.min(MAXGZ,(pinch.gz||1)*(d/pinch.d)));globeZoomAbout(mx,my,target/V.gz);return}const newZ=Math.max(2.5,Math.min(17.5,pinch.z+Math.log2(d/pinch.d))),pNew=wpx(pinch.geo[0],pinch.geo[1],newZ),dx=mx-W/2,dy=my-H/2,cNew=[pNew[0]-dx,pNew[1]-dy],p=wun(cNew[0],cNew[1],newZ);V.lon=p[0];V.lat=p[1];V.z=newZ}},{passive:true});
 cv.addEventListener('touchend',e=>{if(e.touches.length<2){pinch=null;drag=null}});
 cv.onwheel=e=>{e.preventDefault();V.in=null;setFol(false);if(V.mode==='globe'){globeZoomAbout(e.clientX,e.clientY,2**(-e.deltaY*0.0025));return}const base=V.tz==null?V.z:V.tz,targetZ=Math.max(2.5,Math.min(17.5,base-e.deltaY*0.0025)),c=wpx(V.lon,V.lat,V.z),geo=wun(c[0]+e.clientX-W/2,c[1]+e.clientY-H/2,V.z);V.anchor={sx:e.clientX,sy:e.clientY,geo};V.tz=targetZ};
 $('#bZi').onclick=()=>{V.in=null;setFol(false);if(V.mode==='globe'){globeZoomAbout(W/2,H/2,1.4);return}V.anchor={sx:W/2,sy:H/2,geo:[V.lon,V.lat]};V.tz=Math.min(17.5,(V.tz==null?V.z:V.tz)+.7)};
@@ -1841,7 +1930,59 @@ function tabHi(){
   if(routeTab)routeTab.classList.toggle('act',planning);
   [['bCh','charts'],['bWx','wx'],['bLive','live'],['bData','data']].forEach(([i,p])=>{const el=$('#'+i);if(el)el.classList.toggle('on',panel==p)});
 }
-$('#bLay').onclick=()=>{const l=$('#lay');l.style.display=l.style.display=='flex'?'none':'flex'};
+/* ── The settings drawer ─────────────────────────────────────────────────
+   One compact panel, grouped by what the setting is for, and never taller than
+   the window: the body scrolls inside it while the map behind stays put. It
+   closes on its own button, on Escape, and on a press outside it. */
+function layOpen(){const l=$('#lay');return !!l&&l.style.display==='flex'}
+function setLay(open){const l=$('#lay');if(!l)return;l.style.display=open?'flex':'none';l.setAttribute('aria-hidden',open?'false':'true');$('#bLay').classList.toggle('on',open);$('#bLay').setAttribute('aria-expanded',open?'true':'false')}
+/* A drawer with seven groups is taller than the screen, so each group folds and
+   the fold is remembered. Nothing is removed: a closed group is one tap away. */
+(function layFolds(){
+  const l=$('#lay');if(!l)return;
+  let open={};try{open=JSON.parse(localStorage.getItem('stratos.mapFolds')||'{}')||{}}catch(_){}
+  l.querySelectorAll('.lay-s').forEach(s=>{
+    const h=s.querySelector('h3');if(!h)return;
+    const key=h.textContent.trim();
+    h.setAttribute('role','button');h.tabIndex=0;
+    const show=v=>{s.classList.toggle('closed',!v);h.setAttribute('aria-expanded',v?'true':'false')};
+    show(open[key]!==false);
+    const toggle=()=>{const v=s.classList.contains('closed');show(v);open[key]=v;try{localStorage.setItem('stratos.mapFolds',JSON.stringify(open))}catch(_){}};
+    h.addEventListener('click',toggle);
+    h.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle()}});
+  });
+})();
+$('#bLay').onclick=e=>{e.stopPropagation();setLay(!layOpen())};
+$('#layX').onclick=()=>setLay(false);
+document.addEventListener('pointerdown',e=>{if(!layOpen())return;const l=$('#lay');if(l.contains(e.target)||e.target.closest('#bLay'))return;setLay(false)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&layOpen())setLay(false)});
+/* The pilots' layers survive a reload, like every other map setting. */
+const LKEY='stratos.mapLayers';
+(function restoreLayers(){
+  try{const s=JSON.parse(localStorage.getItem(LKEY)||'null');if(s&&typeof s==='object')for(const k of ['apt','nav','trf','trl','rte','grid'])if(typeof s[k]==='boolean')L[k]=s[k]?1:0}catch(_){}
+  document.querySelectorAll('[data-l]').forEach(b=>b.classList.toggle('on',!!L[b.dataset.l]))
+})();
+document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{L[b.dataset.l]^=1;b.classList.toggle('on',!!L[b.dataset.l]);
+  try{localStorage.setItem(LKEY,JSON.stringify({apt:!!L.apt,nav:!!L.nav,trf:!!L.trf,trl:!!L.trl,rte:!!L.rte,grid:!!L.grid}))}catch(_){}
+  render()});
+/* Both chart panels folded away is what a full-screen map means: the map keeps
+   the whole window and one press brings them back. */
+(function panelsToggle(){
+  const b=$('#bPanels');if(!b)return;
+  const sync=()=>{const hidden=document.body.classList.contains('panels-hidden');b.textContent=hidden?'Show side panels':'Hide side panels';b.classList.toggle('on',hidden);b.setAttribute('aria-pressed',hidden?'true':'false')};
+  b.onclick=()=>{document.body.classList.toggle('panels-hidden');sync()};
+  sync()
+})();
+/* Quick regions: a place and the scale it reads at, nothing else. */
+const REGIONS=[['World',18,-12,2.2],['Europe',50,10,4.4],['North America',39,-98,3.7],['South America',-16,-60,3.5],['Africa',4,20,3.3],['Middle East',27,45,4.1],['Asia',34,100,3.3],['Oceania',-25,141,3.5]];
+(function regionsUi(){
+  const host=$('#regions');if(!host)return;
+  host.innerHTML=REGIONS.map(([n])=>`<button type="button" data-region="${esc(n)}">${esc(n)}</button>`).join('');
+  host.onclick=e=>{const b=e.target.closest('[data-region]');if(!b)return;const r=REGIONS.find(x=>x[0]===b.dataset.region);if(!r)return;
+    setFol(false);V.lon=r[2];V.lat=r[1];V.tz=null;V.in=null;
+    if(V.mode==='globe')V.gz=Math.max(1,Math.min(MAXGZ,2**((r[3]-6)/3)));else V.z=r[3];
+    render()}
+})();
 $('#bMap').onclick=()=>{panel=null;sel=null;tk=false;render()};
 $('#st').onclick=()=>{panel='live';render()};
 function TILED(){if(!RP.tiles)return false;if(CH.on)return CH.pg=='sat'&&!(TS.ok==0&&TS.err>6);return L.style!='vec'&&L.style!='world'&&!(TS.ok==0&&TS.err>6)}
@@ -2419,6 +2560,34 @@ const run=(from,to)=>{cx.beginPath();cx.moveTo(spts[from][0],spts[from][1]);for(
 for(let i=1;i<m;i++){if(inks[i]!==ink){run(start,i);start=i;ink=inks[i]}}
 run(start,m-1);
 cx.lineCap='butt'}
+/* Airports, clustered while the chart is too wide to show them one by one.
+   A world view used to paint every airport as its own ring, which is a field of
+   confetti over the route. Below about chart zoom 5 they share one muted mark
+   per cell with a count, and a name waits until there is room for it; the
+   plan's own airports are drawn by the route markers regardless. */
+function clusterAirports(){
+  const zoom=lblZ();
+  if(zoom>=5.4)return false;
+  const cell=Math.max(40,Math.min(64,52)),groups=new Map();
+  for(const a of A){
+    if(CH.on&&a!==CH.a)continue;
+    if(a.x&&zoom<6)continue;
+    const q=vis(a.lon,a.lat);if(!q)continue;
+    const[x,y]=q;if(x<-60||x>W+60||y<-60||y>H+60)continue;
+    const key=Math.floor(x/cell)+':'+Math.floor(y/cell),g=groups.get(key);
+    if(g)g.n+=1;else groups.set(key,{n:1,x,y});
+  }
+  const ink=SAT()?(DKM()?'#fff':'#111'):C.txt,ring=mkColor('apt');
+  cx.save();
+  for(const g of groups.values()){
+    if(g.n===1){mkRing(g.x,g.y,mkRz()*.8,ring,1);continue}
+    cx.beginPath();cx.arc(g.x,g.y,8,0,7);cx.fillStyle='rgba(8,19,30,.62)';cx.fill();
+    cx.strokeStyle=ring;cx.lineWidth=1.1;cx.stroke();
+    mkText(String(g.n),g.x,g.y+3,ink,9.5,true);
+  }
+  cx.restore();
+  return true;
+}
 function trails(){if(CH.on||RP.trail<=0)return;const col=trailCol();
 if(L.trl){cx.strokeStyle=col;cx.lineWidth=1.2;cx.globalAlpha=.35;TRL.forEach((a,k)=>{if(k=='own'||a.length<3)return;const p=[];a.slice(-60).forEach(q=>p.push([q[1],q[0]]));const sm=window.TRAILP?window.TRAILP.smoothPath(p,null,{passes:1}):{points:p};cx.beginPath();sm.points.forEach((q,i)=>{const t=sc(q[0],q[1]);i?cx.lineTo(t[0],t[1]):cx.moveTo(t[0],t[1])});cx.stroke()});cx.globalAlpha=1}
 if(sel&&sel.k=='trf'){const a=TRL.get(sel.hx||sel.id);if(a)drawTrail(a,sel,false,sel.hx||sel.id)}

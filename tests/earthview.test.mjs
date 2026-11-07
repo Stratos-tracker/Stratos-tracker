@@ -2,9 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  EARTH_STYLES, GIBS, GlobeRaster, MAX_FACE_TILES, MAX_TERRAIN_FACE_TILES, POINT_ZOOM, TERRAIN,
-  EarthView, decodeTerrarium, earthStyle, elevationColor, gibsCoverage, gibsMatrix, gibsTileUrl,
-  gibsZoomForSphere, mercatorFraction, offsetNm, probeZoomForRadius, shadeTerrainTile,
+  EARTH_STYLES, ESRI, GIBS, GlobeRaster, MAX_FACE_TILES, MAX_TERRAIN_FACE_TILES, POINT_ZOOM, TERRAIN,
+  EarthView, decodeTerrarium, earthStyle, elevationColor, esriCoverage, esriMetresPerPixel,
+  esriTileUrl, esriZoomForSphere, gibsCoverage, gibsMatrix, gibsTileUrl,
+  gibsZoomForSphere, mercatorFraction, mercatorLat, offsetNm, probeZoomForRadius, shadeTerrainTile,
   terrainMetresPerPixel, terrainTileAt, terrainTileUrl, terrainZoomForSphere,
 } from '../app/js/lib/earthview.js';
 
@@ -69,6 +70,35 @@ test('the imagery level follows what is drawn, and is bounded by the pane', () =
     assert.ok(tiles <= MAX_FACE_TILES, `a ${radius} px sphere asks for ${Math.round(tiles)} tiles`);
   }
   assert.equal(gibsZoomForSphere(13920, { capDeg: 90 }), 3, 'the same sphere over a whole hemisphere is held back');
+});
+
+test('World Imagery is a Mercator pyramid, so a deep globe reads a deep tile', () => {
+  // The URL is the publisher's own tile/{z}/{y}/{x}, not a slippy assumption.
+  assert.equal(esriTileUrl(3, 2, 3), `${ESRI.base}/3/3/2`);
+  assert.equal(esriTileUrl(20, 0, 0), null, 'past the publisher\'s ceiling');
+  assert.equal(esriTileUrl(3, 8, 0), null, 'x outside that level is never requested');
+
+  const tile = esriCoverage(2, 2, 1);
+  assert.ok(Math.abs(tile.west - 0) < 1e-9 && Math.abs(tile.east - 90) < 1e-9, 'a tile is a quarter turn wide');
+  assert.ok(tile.north > tile.south, 'and rows run north to south');
+  assert.ok(Math.abs(mercatorLat(0.5)) < 1e-9, 'the middle row is the equator');
+
+  // A globe drawn larger reads a deeper level, all the way to level 19; the old
+  // 500 m mosaic topped out near level 7, which is what made a close globe soft.
+  const shallow = esriZoomForSphere(300, { capDeg: 90 });
+  const deep = esriZoomForSphere(200000, { capDeg: 0.4 });
+  assert.ok(deep > shallow, `a closer camera reads a deeper level (${shallow} → ${deep})`);
+  assert.ok(deep >= 10, 'and reaches street-level imagery');
+  assert.ok(esriZoomForSphere(1e9, { capDeg: 0.001 }) <= ESRI.maxZoom, 'the publisher\'s ceiling is the only ceiling');
+  assert.ok(esriMetresPerPixel(19) < 1, 'level 19 is sub-metre at the equator');
+  assert.ok(esriMetresPerPixel(19, 60) < esriMetresPerPixel(19, 0), 'and finer still towards the pole');
+  // The pane's own tile count still bounds the level, so a deep zoom fetches a
+  // handful of tiles rather than a slab of the world.
+  for (const [radius, capDeg] of DRAWN) {
+    const level = esriZoomForSphere(radius, { capDeg });
+    const tiles = ((capDeg * 2 ** level) / 180) ** 2;
+    assert.ok(tiles <= MAX_FACE_TILES, `a ${radius} px sphere asks for ${Math.round(tiles)} tiles`);
+  }
 });
 
 test('the drawn level stays cheap and the probe level stays honest', () => {
@@ -162,8 +192,11 @@ test('an EarthView names its sources and never turns an unread tile into a numbe
 
   view.setStyle('imagery');
   const imagery = view.notes().join(' ');
-  assert.match(imagery, /NASA/);
-  assert.match(imagery, /public domain/);
+  // The globe reads a pyramid deep enough to resolve an airport, not a global
+  // mosaic that has to be enlarged past the point where it is a picture.
+  assert.match(imagery, /Esri/);
+  assert.match(imagery, /Maxar/);
+  assert.match(imagery, /Level \d+/);
 
   view.setStyle('vector');
   assert.match(view.notes().join(' '), /Natural Earth/, 'outlines say they are outlines');

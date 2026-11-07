@@ -1527,7 +1527,8 @@ test('the tracker map runs the same globe module and surfaces as the EFB', async
   // and painted by the same banded painter the EFB's map uses: a coarse pane
   // while the sphere turns, the pane at its drawn size once the camera is still.
   assert.ok(page.includes('if(!style.source)return false;'), 'a surface with no public raster never makes a request');
-  assert.ok(page.includes('new (globeModule().GlobeRaster)()'), 'the sphere is painted by the shared painter');
+  assert.ok(page.includes('new (globeModule().GlobeRaster)({coarse:90000,sharp:4200000,band:64000})'),
+    'the sphere is painted by the shared painter, at a budget that can fill a retina pane');
   assert.ok(page.includes('e.setResolution(Math.max(48,Math.round(r*2)),{capDeg:pane.capDeg});'), 'the tile level comes from the sphere and the pane, not from a transient cap');
   assert.ok(page.includes('still:performance.now()-GV.moved>=240'), 'the pane is only painted sharp once the camera is still');
   assert.ok(page.includes('tiles:e.readyCount()'), 'what is loaded is what decides when the pane is painted again');
@@ -1536,12 +1537,12 @@ test('the tracker map runs the same globe module and surfaces as the EFB', async
   assert.ok(page.includes(`localStorage.setItem('dl.globe',V.gs)`) && page.includes(`localStorage.getItem('dl.globe')||'vector'`), 'so is the surface');
 
   // The controls, and the sentences that keep the display honest.
-  assert.ok(page.includes('<b>Projection</b><div id="pj"></div><div id="gwrap" hidden>'), 'the layers sheet carries the projection switch');
+  assert.match(page, /<h3>Projection<\/h3><div id="pj"><\/div>[\s\S]{0,220}id="gwrap" hidden/, 'the settings drawer carries the projection switch');
   assert.ok(page.includes('globeStyles().map(s=>'), 'the surface list is the shared table');
   assert.ok(page.includes('id="gReset"') && page.includes('id="gRead"'), 'reset and read-terrain are offered');
   assert.ok(page.includes('e.readTerrain(V.lat,V.lon,{radiusNm:nm,rasterPx:globeReadSize()})'), 'terrain is read at the centre with the documented radius');
   assert.ok(page.includes('terrain.displayOnly'), 'and reading elevation is not treated as licence to draw the tiles');
-  assert.ok(page.includes(`'Imagery: NASA Earth Observatory Blue Marble · NASA GIBS/ESDIS'`), 'imagery is credited to its publisher');
+  assert.ok(page.includes(`'Imagery: Esri, Maxar, Earthstar Geographics · Esri World Imagery'`), 'imagery is credited to its publisher');
   assert.ok(page.includes(`'Globe outlines: Natural Earth 1:110m (public domain)'`), 'and the outline fallback to its own');
 
   // A georeferenced chart is a flat sheet: opening one leaves the globe, and
@@ -1552,7 +1553,7 @@ test('the tracker map runs the same globe module and surfaces as the EFB', async
 
   // Framing and label density follow the sphere rather than a Web Mercator
   // tile level, and the flat zoom integrals are switched off.
-  assert.ok(page.includes('V.gz=Math.max(1,Math.min(40,.8/Math.max(.02,Math.sin(theta))));'), 'fitting a route turns the sphere to it and zooms from its span');
+  assert.ok(page.includes('V.gz=Math.max(1,Math.min(MAXGZ,.8/Math.max(.02,Math.sin(theta))));'), 'fitting a route turns the sphere to it and zooms from its span, up to the full zoom ceiling');
   assert.ok(page.includes(`function lblZ(){return V.mode==='globe'?2.6+`), 'labels are placed by pixels per degree');
   assert.ok(page.includes(`if(V.mode!=='globe'&&V.tz!=null){`), 'the flat zoom integral is not run on the sphere');
   assert.ok(page.includes(`V.z<12&&!CH.on&&V.mode!=='globe'`), 'and the graticule is not drawn over imagery');
