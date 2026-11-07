@@ -9,6 +9,7 @@ import { esc, fmtDateTime, relTime, toast, pickFile, currentTheme, setTheme, tag
 import { APP_VERSION } from '../lib/version.js';
 import { mountUpdateCenter } from '../update-ui.js';
 import { loadSimbriefId, saveSimbriefId, clearSimbriefId, validateSimbriefId } from '../lib/simbrief.js';
+import { DEFAULT_MAP_SETTINGS, readMapSettings, writeMapSettings } from '../lib/mapsettings.js';
 
 export async function mount(root, ctx) {
   let mode = (await getSetting('resourceMode', detectResourceMode()).catch(() => detectResourceMode())) || 'normal';
@@ -35,6 +36,7 @@ export async function mount(root, ctx) {
   const desktop = window.stratosDesktop || null;
   let simbriefId = loadSimbriefId(localStorage);
   let simbriefMessage = null;
+  let mapSettings = readMapSettings(localStorage);
 
   async function refreshBridge() {
     busy = true;
@@ -199,6 +201,28 @@ export async function mount(root, ctx) {
               <span><strong>${esc(profile.name)}</strong><br><span class="muted small">${esc(profile.description)}</span></span>
             </label>`).join('')}
           </div>
+        </div>
+        <div class="card" style="grid-column:1/-1">
+          <div class="card-head"><h2>Own aircraft &amp; trail</h2><span class="spacer"></span><span class="tag" id="map-pref-tag">${mapSettings.halo ? 'halo on' : 'clean symbol'}</span></div>
+          <p class="help">These choices apply to the aircraft you are flying on the Flight Deck. Traffic keeps its own colours so it stays distinguishable.</p>
+          <div class="grid grid-2" style="gap:16px">
+            <div>
+              <div class="field"><label for="map-own-color">Symbol colour</label>
+                <div class="row" style="gap:10px"><input type="color" id="map-own-color" value="${mapSettings.color}" style="width:48px;height:36px;padding:3px;background:var(--surface);border:1px solid var(--coast);border-radius:8px"><span class="mono small" id="map-own-color-value">${mapSettings.color.toUpperCase()}</span></div>
+              </div>
+              <div class="field" style="margin-top:12px"><label for="map-own-size">Symbol size <span class="mono" id="map-own-size-value">${mapSettings.size.toFixed(2)}×</span></label>
+                <input type="range" id="map-own-size" min="0.7" max="2" step="0.05" value="${mapSettings.size}" style="width:100%;accent-color:var(--acc)">
+              </div>
+            </div>
+            <div>
+              <label class="row" style="align-items:flex-start;gap:8px;padding:8px 0"><input type="checkbox" id="map-own-halo" ${mapSettings.halo ? 'checked' : ''} style="margin-top:3px"><span><strong>Yellow halo</strong><br><span class="muted small">Off by default. The aircraft symbol itself is already larger than traffic.</span></span></label>
+              <label class="row" style="align-items:flex-start;gap:8px;padding:8px 0"><input type="checkbox" id="map-own-trail" ${mapSettings.trail ? 'checked' : ''} style="margin-top:3px"><span><strong>Show own trail</strong><br><span class="muted small">The flown path stays on the map while the route ahead starts at the aircraft.</span></span></label>
+              <div class="field" style="margin-top:6px"><label for="map-own-trail-width">Trail width <span class="mono" id="map-own-trail-width-value">${mapSettings.trailWidth.toFixed(2)}×</span></label>
+                <input type="range" id="map-own-trail-width" min="0.5" max="2" step="0.05" value="${mapSettings.trailWidth}" style="width:100%;accent-color:var(--acc)">
+              </div>
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:8px"><button class="btn small ghost" id="map-own-reset">Reset aircraft map style</button></div>
         </div>
         <div class="card colour-board" style="grid-column:1/-1">
           <div class="card-head"><h2>Aviation colour board</h2><span class="spacer"></span>${tag('system palette', 'accent')}</div>
@@ -422,6 +446,38 @@ export async function mount(root, ctx) {
       toast(`Resource profile: ${RESOURCE_MODES[mode].name}.`, 'good');
       render();
     }));
+    const saveMapSettings = patch => {
+      mapSettings = writeMapSettings(localStorage, { ...mapSettings, ...patch });
+      const label = document.getElementById('map-pref-tag');
+      if (label) label.textContent = mapSettings.halo ? 'halo on' : 'clean symbol';
+    };
+    document.getElementById('map-own-color')?.addEventListener('input', event => {
+      saveMapSettings({ color: event.target.value });
+      const label = document.getElementById('map-own-color-value');
+      if (label) label.textContent = mapSettings.color.toUpperCase();
+    });
+    document.getElementById('map-own-size')?.addEventListener('input', event => {
+      saveMapSettings({ size: Number(event.target.value) });
+      const label = document.getElementById('map-own-size-value');
+      if (label) label.textContent = `${mapSettings.size.toFixed(2)}×`;
+    });
+    document.getElementById('map-own-halo')?.addEventListener('change', event => {
+      saveMapSettings({ halo: event.target.checked });
+      render();
+    });
+    document.getElementById('map-own-trail')?.addEventListener('change', event => {
+      saveMapSettings({ trail: event.target.checked });
+    });
+    document.getElementById('map-own-trail-width')?.addEventListener('input', event => {
+      saveMapSettings({ trailWidth: Number(event.target.value) });
+      const label = document.getElementById('map-own-trail-width-value');
+      if (label) label.textContent = `${mapSettings.trailWidth.toFixed(2)}×`;
+    });
+    document.getElementById('map-own-reset')?.addEventListener('click', () => {
+      mapSettings = writeMapSettings(localStorage, DEFAULT_MAP_SETTINGS);
+      toast('Own aircraft map style reset.', 'good');
+      render();
+    });
     document.getElementById('refresh-bridge')?.addEventListener('click', refreshBridge);
     document.getElementById('restart-bridge')?.addEventListener('click', async () => {
       try {

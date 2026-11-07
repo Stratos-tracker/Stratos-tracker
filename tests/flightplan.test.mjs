@@ -8,7 +8,7 @@ import {
   procedureRoute, applyProcedure, clearProcedure, procedureTransitions,
   suggestTransitions, fuelEstimate, burnFromOfp, alternateCandidates,
   weatherFreshness, storedRoute, planFromStored, mapRoute, planDisplayName,
-  runwayFromTransitionId,
+  runwayFromTransitionId, ROUTE_GEOMETRY_VERSION,
 } from '../app/js/lib/routeplan.js';
 
 const CYUL = { id: 'CYUL', name: 'Montréal-Trudeau', lat: 45.47, lon: -73.741, elev: 118 };
@@ -259,6 +259,7 @@ test('a SID with a published heading leg stores the runway end and altitude turn
   assert.deepEqual(applied.plan.points.map(point => point.id), ['KDEN', 'RW08', 'RW08E', 'RW08C', 'KIDNG', 'KEWR']);
   assert.equal(applied.plan.points.find(point => point.id === 'RW08C').synthetic, true);
   assert.equal(applied.plan.points.find(point => point.id === 'RW08C').altFt, 5934);
+  assert.equal(applied.plan.sid.geometryVersion, ROUTE_GEOMETRY_VERSION, 'a new procedure records the geometry it was built from');
 });
 
 test('a STAR ends on the arrival and never runs through the field', () => {
@@ -580,6 +581,7 @@ test('the stored plan carries what the Navigator and the Flight Deck draw', () =
   assert.equal(stored.plan.alternate.id, 'KJFK');
   assert.equal(stored.plan.sid.id, 'FLOSI4');
   assert.equal(stored.plan.departureRwy, '24L');
+  assert.equal(stored.plan.geometryVersion, ROUTE_GEOMETRY_VERSION, 'the stored plan states its procedure geometry version');
   assert.equal(stored.points[1].altFt, 36000, 'a planned level survives the round trip');
   assert.equal(stored.points[1].lat, Math.round(stored.points[1].lat * 1e6) / 1e6);
 

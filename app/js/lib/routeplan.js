@@ -38,6 +38,7 @@ export const STEP_IDS = STEPS.map(step => step.id);
 export const NO_DEPARTURE = 'Please select a departure airport before adding waypoints to your flight plan.';
 
 export const MAX_POINTS = 200;
+export const ROUTE_GEOMETRY_VERSION = 2;
 export const ROUTE_KEY = 'stratos.activeRoute';
 export const MAP_ROUTE_KEY = 'dl.route';
 
@@ -1022,6 +1023,7 @@ export function applyProcedure(plan, kind, route) {
     complete: route.complete !== false,
     connectorOnly: Boolean(route.connectorOnly),
     missingRunway: Boolean(route.missingRunway),
+    geometryVersion: ROUTE_GEOMETRY_VERSION,
     initialClimb: route.initialClimb || null,
     source: route.source || '',
     cycle: route.cycle || '',
@@ -1300,6 +1302,7 @@ export function storedRoute(plan) {
     dirty: Boolean(plan.dirty),
     plan: {
       version: 1,
+      geometryVersion: ROUTE_GEOMETRY_VERSION,
       builtAt: Date.now(),
       origin: plan.origin ? normalizeStop(plan.origin) : null,
       destination: plan.destination ? normalizeStop(plan.destination) : null,

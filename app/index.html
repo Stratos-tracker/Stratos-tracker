@@ -10,6 +10,13 @@
 html,body{height:100%;min-height:100%;margin:0;background:var(--bg);color:var(--txt);font:14px/1.35 "Trebuchet MS","Segoe UI",system-ui,sans-serif;overscroll-behavior:none}
 #app{position:relative;height:100vh;height:100dvh;min-height:320px;overflow:hidden;isolation:isolate}
 canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+#map3d{z-index:1;background:#04080d}
+#map3d[hidden]{display:none}
+.map3d-tip{position:absolute;z-index:2;pointer-events:none;display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:10px;background:rgba(4,10,17,.9);border:1px solid rgba(148,163,184,.28);box-shadow:0 8px 24px rgba(0,0,0,.3);color:#e2e8f0;font-size:11px;line-height:1.25;min-width:120px}
+.map3d-tip[hidden]{display:none}
+.map3d-tip b{font-size:13px;color:#f8fafc}.map3d-tip span{color:#94a3b8}
+#b3d{font-size:12px;font-weight:800;letter-spacing:.04em}
+#b3d.on{background:var(--acc);color:#fff;border-color:transparent}
 .box{background:var(--ui);border:1px solid var(--ui2);border-radius:10px;position:absolute;box-shadow:0 2px 10px rgba(0,0,0,.25)}
 #q{flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:1px solid var(--ui2);background:var(--ui);color:var(--txt);font:inherit;font-size:16px}
 button{font:inherit;color:var(--txt);background:var(--ui);border:1px solid var(--ui2);border-radius:8px;padding:7px 10px;cursor:pointer}
@@ -467,6 +474,8 @@ body.panels-hidden .dkpane{display:none!important}
 <div class="app-main">
 <div id="app">
 <canvas id="map" aria-label="Aviation chart map"></canvas>
+<canvas id="map3d" hidden aria-label="3D track view"></canvas>
+<div id="map3dtip" class="map3d-tip" hidden></div>
 <div id="attr">© OpenStreetMap contributors · Esri imagery</div>
 <!-- The shell adopts these two: the search moves into the centred slot in the
      bar, and this button becomes the connection line under the brand. One of
@@ -477,13 +486,13 @@ body.panels-hidden .dkpane{display:none!important}
 <div id="fc" class="box"></div>
 <div id="fp" class="box" aria-live="polite"></div>
 <div id="online" class="box"><b id="olPlace">–</b><span id="olCount">–</span></div>
-<div id="fab"><button id="bLay" class="fab" title="Map settings" aria-label="Map settings" aria-expanded="false">&#9776;</button><button id="bFol" class="fab" title="Follow aircraft">&#9992;</button><button id="bZi" class="fab" title="Zoom in">+</button><button id="bZo" class="fab" title="Zoom out">−</button>
+<div id="fab"><button id="bLay" class="fab" title="Map settings" aria-label="Map settings" aria-expanded="false">&#9776;</button><button id="bFol" class="fab" title="Follow aircraft" aria-pressed="false">&#9992;</button><button id="b3d" class="fab" title="3D track view" aria-label="3D track view" aria-pressed="false">3D</button><button id="bZi" class="fab" title="Zoom in">+</button><button id="bZo" class="fab" title="Zoom out">−</button>
 </div><aside id="lay" role="dialog" aria-label="Map settings" aria-hidden="true">
 <header class="lay-h"><b>Map settings</b><button type="button" class="lay-x" id="layX" aria-label="Close settings">&#10005;</button></header>
 <div class="lay-body">
   <section class="lay-s"><h3>Map display</h3><div id="ms" class="lay-grid"></div>
     <div class="lay-theme"><button type="button" data-theme-set="day">Day</button><button type="button" data-theme-set="night">Night</button><button type="button" data-theme-set="contrast">High contrast</button></div></section>
-  <section class="lay-s"><h3>Layers</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="trf" class="on">Traffic</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="trl">Trails</button><button type="button" data-l="grid">Grid</button></div></section>
+  <section class="lay-s"><h3>Layers</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="trf" class="on">Traffic</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="trl">Trails</button><button type="button" data-l="grid">Grid</button><button type="button" data-l="wxrain">Rain</button><button type="button" data-l="wxwind">Wind</button><button type="button" data-l="wxturb">Turbulence</button><button type="button" data-l="dn">Day / night</button></div><p class="m">Rain uses animated radar frames from <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a>. Wind and turbulence use Open-Meteo's 10 m wind and gust/CAPE field; the wind layer is animated as streamlines and turbulence is a smoothed estimate. None of it is a PIREP, SIGMET or a substitute for official weather.</p></section>
   <section class="lay-s"><h3>Projection</h3><div id="pj"></div>
     <div id="gwrap" hidden><div class="lay-sub">Globe surface</div><div id="gs"></div><p class="m" id="gn"></p>
       <div class="lay-row"><button type="button" id="gReset" title="Centre the globe on the route again">Reset view</button><button type="button" id="gRead" title="Read terrain elevations around the centre">Read terrain</button></div></div></section>
@@ -728,8 +737,11 @@ const RL={KSFO:[11870,8650],KOAK:[10520],KSJC:[11000],KSAC:[8600],KRNO:[11002],K
 function pairs(a){const o=[];a.rw.forEach(n=>{if(!o.some(p=>p[0]==n||p[1]==n))o.push([n,(n+17)%36+1])});return o}
 function liveOk(){return live.on&&live.d&&live.d.lat!=null&&live.d.age<3&&performance.now()-live.at<3000}
 const cv=$('#map'),cx=cv.getContext('2d');let W,H,dpr,C={};
-const V={lon:-119.5,lat:38.8,z:6,fol:false,mode:'plane',gz:1,gs:'vector'},L={apt:1,nav:1,trf:1,grid:0,rte:1,procSid:1,procStar:1,procApproach:1,procMissed:0,style:(function(){try{return localStorage.getItem('dl.style')||'sat'}catch(e){return'sat'}})()};
+const V={lon:-119.5,lat:38.8,z:6,fol:false,mode:'plane',gz:1,gs:'vector'},L={apt:1,nav:1,trf:1,grid:0,rte:1,procSid:1,procStar:1,procApproach:1,procMissed:0,wxrain:0,wxwind:0,wxturb:0,dn:0,style:(function(){try{return localStorage.getItem('dl.style')||'sat'}catch(e){return'sat'}})()};
 let plan=false,panel=null,sel=null,route=[],trav=0,own={lat:0,lon:0,hdg:0,alt:0,vs:0};
+const MAP_DEFAULTS={color:'#fbbf24',size:1.35,halo:false,trail:true,trailWidth:1};
+function readMapPrefs(){try{const raw=JSON.parse(localStorage.getItem('stratos.mapSettings')||'null')||{};const col=typeof raw.color==='string'&&/^#[0-9a-f]{6}$/i.test(raw.color.trim())?raw.color.trim():MAP_DEFAULTS.color;const size=Number(raw.size);const width=Number(raw.trailWidth);return{color:col,size:Number.isFinite(size)?Math.min(2,Math.max(.7,size)):MAP_DEFAULTS.size,halo:typeof raw.halo==='boolean'?raw.halo:MAP_DEFAULTS.halo,trail:typeof raw.trail==='boolean'?raw.trail:MAP_DEFAULTS.trail,trailWidth:Number.isFinite(width)?Math.min(2,Math.max(.5,width)):MAP_DEFAULTS.trailWidth}}catch(_){return{...MAP_DEFAULTS}}}
+let MP=readMapPrefs();
 const byId=id=>A.find(a=>a.id==id)||N.find(a=>a.id==id);
 const wp=o=>({id:o.id,name:o.name,lat:o.lat,lon:o.lon,k:o.k||'fix',elev:o.elev||0,ss:o.ss||'',aw:o.aw||''});
 const wpx=(lon,lat,z)=>{const zoom=z!==undefined?z:V.z,k=SZ*2**zoom,s=Math.sin(lat*R);return[(lon+180)/360*k,(.5-Math.log((1+s)/(1-s))/(4*Math.PI))*k]};
@@ -1153,12 +1165,12 @@ const T=[],WT={n:0,src:'',busy:0,fail:0,last:'',okAt:0};
 function save(){try{localStorage.setItem('dl.route',JSON.stringify(route));mirrorRoute()}catch(e){}}
 function mirrorRoute(){try{
   const a=JSON.parse(localStorage.getItem('stratos.activeRoute')||'null')||{};
-  localStorage.setItem('stratos.activeRoute',JSON.stringify({...a,points:route.map(p=>({id:p.id,name:p.name||p.id,lat:p.lat,lon:p.lon,kind:p.k||'fix',elev:Number(p.elev)||0,altFt:Number(p.altFt)||null,ss:String(p.ss||'').toLowerCase(),aw:p.aw||''}))}));
+  localStorage.setItem('stratos.activeRoute',JSON.stringify({...a,points:route.map(p=>({id:p.id,name:p.name||p.id,lat:p.lat,lon:p.lon,kind:p.k||'fix',elev:Number(p.elev)||0,altFt:p.altFt==null?null:Number(p.altFt),ss:String(p.ss||'').toLowerCase(),aw:p.aw||'',terminator:p.terminator||'',courseDeg:p.courseDeg==null?null:Number(p.courseDeg),synthetic:Boolean(p.synthetic),climb:Boolean(p.climb),runwayEnd:Boolean(p.runwayEnd),vectorJoin:Boolean(p.vectorJoin)}))}));
 }catch(e){}}
 function load(){
   try{const a=JSON.parse(localStorage.getItem('stratos.activeRoute')||'null');
     if(a&&Array.isArray(a.points)){
-      route=a.points.map(p=>({id:p.id,name:p.name||p.id,lat:+p.lat,lon:+p.lon,k:routeKindName(p.kind||p.k),elev:Number(p.elev)||0,ss:String(p.ss||'').toLowerCase(),aw:p.aw||'',terminator:p.terminator||''}));
+      route=a.points.map(p=>({id:p.id,name:p.name||p.id,lat:+p.lat,lon:+p.lon,k:routeKindName(p.kind||p.k),elev:Number(p.elev)||0,altFt:p.altFt==null?null:Number(p.altFt),ss:String(p.ss||'').toLowerCase(),aw:p.aw||'',terminator:p.terminator||'',courseDeg:p.courseDeg==null?null:Number(p.courseDeg),synthetic:Boolean(p.synthetic),climb:Boolean(p.climb),runwayEnd:Boolean(p.runwayEnd),vectorJoin:Boolean(p.vectorJoin)}));
       return true;
     }
   }catch(e){}
@@ -1239,17 +1251,18 @@ const tl=wpx(V.lon,V.lat);
 if(L.grid&&V.z<12&&!CH.on&&V.mode!=='globe'){const s=V.z<4?10:V.z<5.5?5:V.z<7?2:V.z<8.5?1:V.z<10?.5:.1,a=wun(tl[0]-W/2,tl[1]-H/2),b=wun(tl[0]+W/2,tl[1]+H/2);cx.strokeStyle=C.grid;cx.lineWidth=1;cx.fillStyle=C.coast;cx.font='10px sans-serif';cx.beginPath();
 for(let o=Math.ceil(a[0]/s)*s;o<b[0];o+=s){const x=sc(o,0)[0];cx.moveTo(x,0);cx.lineTo(x,H);cx.fillText(o.toFixed(s<1?1:0)+'°',x+2,H-100)}
 for(let t=Math.ceil(b[1]/s)*s;t<a[1];t+=s){const y=sc(0,t)[1];cx.moveTo(0,y);cx.lineTo(W,y);cx.fillText(t.toFixed(s<1?1:0)+'°',4,y-2)}cx.stroke()}
+if(wxOn())wxFetch();drawWeather();drawDayNight();
 const ppn=lat=>SZ*2**V.z/360/(60*Math.cos(lat*R));MKL.length=0;
 if(L.nav&&!CH.on)N.forEach(n=>{const q=vis(n.lon,n.lat);if(!q||lblZ()<6)return;const[x,y]=q;if(x<-20||x>W+20||y<-20||y>H+20)return;const t=String(n.type||'').toUpperCase(),kind=/NDB/.test(t)?'ndb':/VOR|TACAN|DME/.test(t)?'vor':'int';mkDraw(kind,x,y,mkRz()*.8);if(lblZ()>5.5)mkText(n.id,x+Math.round(mkRz()*.55)-4,y+4,mkColor(kind),11,false)});
 if(L.apt&&clusterAirports()){}else if(L.apt)A.forEach(a=>{if(CH.on&&a!==CH.a)return;const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;if(a.x&&lblZ()<6)return;const mg=lblZ()>10?4000:60;if(x<-mg||x>W+mg||y<-mg||y>H+mg)return;
 if(V.mode!=='globe'&&V.z>8.5)drawReal(a,x,y);else a.det=false;if(0)pairs(a).forEach(pr=>{const n=pr[0],h=n*10,p=ppn(a.lat)*1.4,dx=Math.sin(h*R)*p,dy=-Math.cos(h*R)*p;cx.strokeStyle=C.ap;cx.lineWidth=Math.max(3,p/9);cx.lineCap='butt';cx.beginPath();cx.moveTo(x-dx,y-dy);cx.lineTo(x+dx,y+dy);cx.stroke()});
 if(a.det){}else if(V.mode!=='globe'&&V.z>8.5){cx.beginPath();cx.arc(x,y,3,0,7);cx.fillStyle=C.land;cx.fill();cx.strokeStyle=C.ap;cx.lineWidth=2.2;cx.stroke()}else mkRing(x,y,mkRz()*.9,mkColor('apt'),1);
 if(lblZ()>(a.x?7:4.8)&&x>-40&&x<W+40&&y>-40&&y<H+40&&!(L.rte&&planTocTod().ids.has(String(a.id).toUpperCase())))mkText(a.id,x+Math.round(mkRz()*.62)-3,y-6,SAT()?(DKM()?'#fff':'#111'):C.txt,12.5,true)});
-drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){cx.save();cx.globalAlpha=.35;cx.strokeStyle=C.route;cx.lineWidth=12;cx.lineCap='round';cx.lineJoin='round';drawPlanLine(drawnRoutePoints());if(liveOk()&&route.length>1){const pr=routeProg(),pts=[route[0]];let acc=0;for(let i=0;i<route.length-1;i++){acc+=dist(route[i],route[i+1]);if(acc<pr)pts.push(route[i+1])}pts.push(pos(pr));cx.globalAlpha=.6;drawPlanLine(pts)}cx.restore()
+drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){cx.save();cx.globalAlpha=.62;cx.strokeStyle=C.route;cx.lineWidth=12;cx.lineCap='round';cx.lineJoin='round';drawPlanLine(routeAhead());cx.restore()
 drawProcedureRouteLine();drawRouteMarkers();}
 trails();if(L.trf&&!CH.on)T.forEach(a=>{const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;drawAircraft(a.type,x,y,a.hdg,C.trf,32);if(lblZ()>6&&x>-40&&x<W+40&&y>-20&&y<H+20)mkText(a.id+' '+Math.round(a.alt/100),x+4,y+4,C.trf,10,false)});
-if(liveOk()){const q=vis(own.lon,own.lat);if(q){const[x,y]=q;cx.beginPath();cx.arc(x,y,19,0,7);cx.strokeStyle=C.own;cx.globalAlpha=.38;cx.lineWidth=1.5;cx.stroke();cx.globalAlpha=1;drawAircraft(live.d?.type||live.d?.aircraft||live.d?.aircraftType,x,y,own.hdg,C.own,40)}}
-if(CH.on)chartFx();if(sel&&!CH.on){const s0=sel.k=='own'?own:sel,p0=vis(s0.lon,s0.lat);if(p0){const[x,y]=p0;cx.strokeStyle=C.txt;cx.lineWidth=2;cx.beginPath();cx.arc(x,y,16+(tk?3*Math.sin(performance.now()/260):0),0,7);cx.stroke()}}}
+if(liveOk()){const q=vis(own.lon,own.lat);if(q){const[x,y]=q;if(MP.halo){cx.beginPath();cx.arc(x,y,19+6*MP.size,0,7);cx.strokeStyle=MP.color;cx.globalAlpha=.32;cx.lineWidth=1.5;cx.stroke();cx.globalAlpha=1}drawAircraft(live.d?.type||live.d?.aircraft||live.d?.aircraftType,x,y,own.hdg,MP.color,42*MP.size)}}
+if(view3d)sync3d();if(CH.on)chartFx();if(sel&&!CH.on&&sel.k!='own'){const s0=sel.k=='own'?own:sel,p0=vis(s0.lon,s0.lat);if(p0){const[x,y]=p0;cx.strokeStyle=C.txt;cx.lineWidth=2;cx.beginPath();cx.arc(x,y,16+(tk?3*Math.sin(performance.now()/260):0),0,7);cx.stroke()}}}
 
 /* ── Waypoint markers ─────────────────────────────────────────────────
    One chart-style symbol per aeronautical meaning: a blue crosshair for an
@@ -1413,7 +1426,7 @@ function routeSegmentKind(a,b){
   return next=='sid'?'sid':''
 }
 function drawProcedureRouteLine(){
-  const points=drawnRoutePoints();
+  const points=liveOk()?routeAhead():drawnRoutePoints();
   if(!points.length||CH.on||!L.rte)return;
   cx.save();cx.lineCap='round';cx.lineJoin='round';cx.lineWidth=8;
   for(let i=1;i<points.length;){
@@ -1668,7 +1681,20 @@ cv.addEventListener('touchend',e=>{if(e.touches.length<2){pinch=null;drag=null}}
 cv.onwheel=e=>{e.preventDefault();V.in=null;setFol(false);if(V.mode==='globe'){globeZoomAbout(e.clientX,e.clientY,2**(-e.deltaY*0.0025));return}const base=V.tz==null?V.z:V.tz,targetZ=Math.max(2.5,Math.min(17.5,base-e.deltaY*0.0025)),c=wpx(V.lon,V.lat,V.z),geo=wun(c[0]+e.clientX-W/2,c[1]+e.clientY-H/2,V.z);V.anchor={sx:e.clientX,sy:e.clientY,geo};V.tz=targetZ};
 $('#bZi').onclick=()=>{V.in=null;setFol(false);if(V.mode==='globe'){globeZoomAbout(W/2,H/2,1.4);return}V.anchor={sx:W/2,sy:H/2,geo:[V.lon,V.lat]};V.tz=Math.min(17.5,(V.tz==null?V.z:V.tz)+.7)};
 $('#bZo').onclick=()=>{V.in=null;setFol(false);if(V.mode==='globe'){globeZoomAbout(W/2,H/2,1/1.4);return}V.anchor={sx:W/2,sy:H/2,geo:[V.lon,V.lat]};V.tz=Math.max(2.5,(V.tz==null?V.z:V.tz)-.7)};
-function setFol(v){V.fol=v;$('#bFol').classList.toggle('on',v)}
+function setFol(v){V.fol=!!v;const b=$('#bFol');if(b){b.classList.toggle('on',V.fol);b.setAttribute('aria-pressed',V.fol?'true':'false');b.title=V.fol?'Stop following the aircraft':'Follow the aircraft';}if(V.fol){const q=sel&&sel.k=='trf'?sel:own;if(Number.isFinite(q.lon)&&Number.isFinite(q.lat)){V.lon=q.lon;V.lat=q.lat}}}
+$('#bFol').onclick=()=>{setFol(!V.fol);render()};
+/* The Flight Deck's 3D view is the same recorded track and the same Track3DView
+   module as the Navigator. A left drag orbits, a right drag pitches; the map
+   underneath is untouched. */
+let track3d=null,view3d=false,t3sig='';
+function t3Points(){const out=[],a=TRL.get('own');if(a)for(const p of a){if(Array.isArray(p)&&Number.isFinite(p[0])&&Number.isFinite(p[1]))out.push([p[0],p[1],Number(p[2])||0,Number(p[3])||0,Number.isFinite(p[4])?p[4]:null])}if(liveOk()){const last=out[out.length-1];if(!last||Math.abs(last[0]-own.lat)>1e-7||Math.abs(last[1]-own.lon)>1e-7)out.push([own.lat,own.lon,own.alt||0,Date.now(),live.d&&live.d.agl])}return out}
+function ensure3d(){if(track3d)return track3d;const Ctor=window.Track3DView;if(!Ctor)return null;track3d=new Ctor($('#map3d'),$('#map3dtip'),{accent:MP.color,leftTilt:false,ownMarker:true});return track3d}
+function sync3d(force){if(!view3d||!track3d)return;const pts=t3Points(),last=pts[pts.length-1],sig=pts.length+':'+(last?last[0].toFixed(6)+','+last[1].toFixed(6):'');if(!force&&sig===t3sig)return;t3sig=sig;track3d.setTrack(pts)}
+function set3d(on){const next=!!on;if(next&&!ensure3d())return;view3d=next;$('#map3d').hidden=!next;$('#b3d').classList.toggle('on',next);$('#b3d').setAttribute('aria-pressed',next?'true':'false');if(next){track3d.resize();sync3d(true)}else track3d?.hideTip()}
+$('#b3d').onclick=()=>set3d(!view3d);
+addEventListener('stratos-track3d-ready',()=>{if(view3d){ensure3d();sync3d(true)}});
+addEventListener('focus',()=>{MP=readMapPrefs();if(track3d)track3d.setAccent(MP.color);if(view3d)render()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){MP=readMapPrefs();if(track3d)track3d.setAccent(MP.color);if(view3d)render()}});
 function askSimbriefId(){return new Promise(res=>{const b=document.createElement('div');b.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999';b.innerHTML='<form style="background:#111a24;color:#e6edf4;padding:18px;border-radius:10px;min-width:280px;font:14px system-ui"><div style="margin-bottom:10px">Enter your SimBrief Username or Pilot ID</div><input name="v" autocomplete="off" style="width:100%;box-sizing:border-box;padding:6px"><div style="margin-top:12px;text-align:right"><button type="button" data-c>Cancel</button> <button type="submit">OK</button></div></form>';document.body.appendChild(b);const done=v=>{b.remove();res(v)};b.querySelector('form').onsubmit=e=>{e.preventDefault();done(b.querySelector('input').value.trim()||null)};b.querySelector('[data-c]').onclick=()=>done(null);b.querySelector('input').focus();});}
 // Planning descent gradient in ft per nm. Calibrated to a real sim descent that started ~2 nm after NOSIT
 // (~41 nm from MMMX, 18,000 ft to 9,800 ft). 318 would be a 3 degree glide path. Based on one flight.
@@ -1703,6 +1729,9 @@ function simbriefMarkerMatches(record,key,choice){
   const applied=record.applied||{};
   return (!choice.sid||applied.sid===choice.sid)&&(!choice.star||applied.star===choice.star)&&(!choice.approach||applied.approach===choice.approach)
 }
+function activeRouteGeometryCurrent(){
+  try{return SBROUTE.activeRouteGeometryVersion(localStorage)>=SBROUTE.ROUTE_GEOMETRY_VERSION}catch(_){return false}
+}
 function applySimbriefPlan(result,{manual=false}={}){
   const hadRoute=route.length>1,previousTrav=trav;
   route=result.map.map(p=>({...p,k:routeKindName(p.k)}));
@@ -1735,7 +1764,7 @@ async function importSimbrief({manual=false,force=false}={}){
     try{FP.saveOfp(localStorage,ofp,id)}catch(_){}
     const key=SBROUTE.planKey(ofp),choice=SBROUTE.procedureChoice(ofp);
     if(!manual&&!force){
-      if(simbriefMarkerMatches(activeSimbriefRecord(),key,choice))return {unchanged:true};
+      if(simbriefMarkerMatches(activeSimbriefRecord(),key,choice)&&activeRouteGeometryCurrent())return {unchanged:true};
       // A newer manual EFB route and an older SimBrief plan: the pilot's own
       // build wins. A newly generated SimBrief plan is newer and is imported.
       const generatedMs=(Number(ofp.generatedAt)||0)*1000;
@@ -2112,11 +2141,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&layOpen())setLay(fa
 /* The pilots' layers survive a reload, like every other map setting. */
 const LKEY='stratos.mapLayers';
 (function restoreLayers(){
-  try{const s=JSON.parse(localStorage.getItem(LKEY)||'null');if(s&&typeof s==='object')for(const k of ['apt','nav','trf','trl','rte','grid'])if(typeof s[k]==='boolean')L[k]=s[k]?1:0}catch(_){}
+  try{const s=JSON.parse(localStorage.getItem(LKEY)||'null');if(s&&typeof s==='object')for(const k of ['apt','nav','trf','trl','rte','grid','wxrain','wxwind','wxturb','dn'])if(typeof s[k]==='boolean')L[k]=s[k]?1:0}catch(_){}
   document.querySelectorAll('[data-l]').forEach(b=>b.classList.toggle('on',!!L[b.dataset.l]))
 })();
 document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{L[b.dataset.l]^=1;b.classList.toggle('on',!!L[b.dataset.l]);
-  try{localStorage.setItem(LKEY,JSON.stringify({apt:!!L.apt,nav:!!L.nav,trf:!!L.trf,trl:!!L.trl,rte:!!L.rte,grid:!!L.grid}))}catch(_){}
+  try{localStorage.setItem(LKEY,JSON.stringify({apt:!!L.apt,nav:!!L.nav,trf:!!L.trf,trl:!!L.trl,rte:!!L.rte,grid:!!L.grid,wxrain:!!L.wxrain,wxwind:!!L.wxwind,wxturb:!!L.wxturb,dn:!!L.dn}))}catch(_){}
   render()});
 /* Both chart panels folded away is what a full-screen map means: the map keeps
    the whole window and one press brings them back. */
@@ -2325,6 +2354,250 @@ if(Z>0){const p=t.ok&&now-t.t>260?null:tileImg(Z-1,x>>1,y>>1);if(p&&p.ok)cx.draw
 if(t.ok){cx.globalAlpha=Math.min(1,(now-t.t)/220);cx.drawImage(t.i,dx,dy,s+.5,s+.5);cx.globalAlpha=1}}
 const tx='Imagery © Esri, Maxar, Earthstar Geographics';cx.font='10px sans-serif';cx.strokeStyle='rgba(0,0,0,.65)';cx.lineWidth=3;cx.strokeText(tx,8,H-84);cx.fillStyle='#fff';cx.fillText(tx,8,H-84)}
 var fcS='',aTab='info';
+/* Weather and the terminator are model/solar overlays, never aeronautical
+   warnings. The grid is fetched for the current view and cached for ten
+   minutes; every value is labelled in the layer panel. */
+const WX={key:'',at:0,pts:[],busy:false,err:'',box:null,cols:7,rows:5,pending:'',settle:0,failAt:0};
+const RADAR={host:'',frames:[],at:0,busy:false,err:'',tiles:new Map()};
+const WIND={parts:[],last:0,key:''};
+const TURB={canvas:null,key:''};
+const DN={canvas:null,ctx:null,img:null,key:'',at:0};
+function wxOn(){return !!(L.wxrain||L.wxwind||L.wxturb)}
+function normLon(lon){const v=((Number(lon)+180)%360+360)%360-180;return v===-180?180:v}
+function wxView(){
+  if(V.mode==='globe')return{minLon:-180,maxLon:180,minLat:-65,maxLat:65};
+  const a=unvis(0,0),b=unvis(W,H);
+  if(!a||!b)return{minLon:-180,maxLon:180,minLat:-65,maxLat:65};
+  const center=normLon(V.lon);
+  let span=Math.abs(b[0]-a[0]);
+  if(!Number.isFinite(span))span=360;
+  span=Math.min(360,Math.max(.5,span));
+  let minLon=center-span/2,maxLon=center+span/2;
+  if(span>=300){minLon=-180;maxLon=180}
+  else if(minLon<-180){minLon=-180;maxLon=Math.min(180,minLon+span)}
+  else if(maxLon>180){maxLon=180;minLon=Math.max(-180,maxLon-span)}
+  const minLat=Math.max(-80,Math.min(a[1],b[1])),maxLat=Math.min(80,Math.max(a[1],b[1]));
+  return{minLon,maxLon,minLat,maxLat}
+}
+function wxPoints(){
+  const b=wxView(),pts=[];
+  const cols=7,rows=5;
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+    const f=c/(cols-1),g=r/(rows-1);
+    pts.push([b.minLat+(b.maxLat-b.minLat)*g,b.minLon+(b.maxLon-b.minLon)*f])
+  }
+  pts.box=b;pts.cols=cols;pts.rows=rows;return pts
+}
+function wxFetch(){
+  if(!wxOn()||WX.busy)return;
+  const key=V.mode==='globe'?'globe':[V.lon.toFixed(2),V.lat.toFixed(2),V.z.toFixed(1),W,H].join('|');
+  /* Wait for the pan to settle and remember a failed query independently of
+     the view key; otherwise a giant pan can fire one request per frame. */
+  if(WX.pending!==key){WX.pending=key;WX.settle=Date.now();return}
+  if(Date.now()-WX.settle<420)return;
+  if(WX.err&&Date.now()-WX.failAt<120000)return;
+  if(WX.key===key&&Date.now()-WX.at<600000)return;
+  const pts=wxPoints();if(!pts.length)return;
+  const box=pts.box,fieldCols=pts.cols,fieldRows=pts.rows;
+  WX.busy=true;WX.err='';
+  const root=WX;
+  const lat=pts.map(p=>p[0].toFixed(2)).join(','),lon=pts.map(p=>p[1].toFixed(2)).join(',');
+  const url='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=precipitation,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cape&wind_speed_unit=kn&precipitation_unit=mm&timezone=UTC';
+  fetch(url,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(data=>{
+    const dataRows=Array.isArray(data)?data:[data];
+    root.pts=pts.map((p,i)=>{const c=(dataRows[i]&&dataRows[i].current)||{};return{lat:p[0],lon:p[1],rain:Number(c.precipitation)||0,wind:Number(c.wind_speed_10m)||0,dir:Number(c.wind_direction_10m)||0,gust:Number(c.wind_gusts_10m)||0,cape:Number(c.cape)||0}});
+    root.box=box;root.cols=fieldCols;root.rows=fieldRows;root.key=key;root.at=Date.now();root.err=''
+  }).catch(e=>{root.err=e.message||'unavailable';root.failAt=Date.now();root.key=key;root.at=Date.now()}).finally(()=>{root.busy=false;render()})
+}
+/* Smooth model fields for wind and turbulence. The old point/arrow overlay
+   read as a scatter plot; this version samples a real grid, draws streamlines
+   in the direction of the wind, and renders a smoothed turbulence heat field. */
+function wxAt(lon,lat){
+  const b=WX.box,pts=WX.pts;if(!b||!pts.length)return null;
+  const cols=WX.cols||7,rows=WX.rows||5;
+  const dx=Math.max(1e-6,b.maxLon-b.minLon),dy=Math.max(1e-6,b.maxLat-b.minLat);
+  const fx=Math.max(0,Math.min(cols-1,(lon-b.minLon)/dx*(cols-1)));
+  const fy=Math.max(0,Math.min(rows-1,(lat-b.minLat)/dy*(rows-1)));
+  const i=Math.min(cols-2,Math.floor(fx)),j=Math.min(rows-2,Math.floor(fy));
+  const tx=fx-i,ty=fy-j;
+  const at=(rr,cc)=>pts[Math.min(rows-1,rr)*cols+Math.min(cols-1,cc)]||{};
+  const uv=p=>{const d=(Number(p.dir)||0)*R,v=Number(p.wind)||0;return{u:-v*Math.sin(d),v:-v*Math.cos(d),rain:Number(p.rain)||0,gust:Number(p.gust)||0,cape:Number(p.cape)||0}};
+  const a=uv(at(j,i)),b1=uv(at(j,i+1)),c=uv(at(j+1,i)),d=uv(at(j+1,i+1));
+  const mix=(p,q,w)=>p+(q-p)*w;
+  const u=mix(mix(a.u,b1.u,tx),mix(c.u,d.u,tx),ty);
+  const v=mix(mix(a.v,b1.v,tx),mix(c.v,d.v,tx),ty);
+  return{u,v,speed:Math.hypot(u,v),rain:mix(mix(a.rain,b1.rain,tx),mix(c.rain,d.rain,tx),ty),gust:mix(mix(a.gust,b1.gust,tx),mix(c.gust,d.gust,tx),ty),cape:mix(mix(a.cape,b1.cape,tx),mix(c.cape,d.cape,tx),ty)}
+}
+function wxNotice(text){
+  cx.save();cx.font='11px system-ui,sans-serif';cx.fillStyle='rgba(226,232,240,.76)';cx.fillText(text,12,22);cx.restore()
+}
+function radarFetch(){
+  if(!L.wxrain||RADAR.busy||Date.now()-RADAR.at<600000)return;
+  RADAR.busy=true;RADAR.err='';
+  fetch('https://api.rainviewer.com/public/weather-maps.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(data=>{
+    const frames=Array.isArray(data&&data.radar&&data.radar.past)?data.radar.past.slice(-6):[];
+    if(!frames.length)throw new Error('No radar frames');
+    RADAR.host=data.host||'https://tilecache.rainviewer.com';RADAR.frames=frames;RADAR.at=Date.now()
+  }).catch(e=>{RADAR.err=e.message||'unavailable';RADAR.at=Date.now()}).finally(()=>{RADAR.busy=false;render()})
+}
+function radarTile(url){
+  let t=RADAR.tiles.get(url);
+  if(!t){t={i:new Image(),ok:false};t.i.onload=()=>{t.ok=true};t.i.onerror=()=>{t.err=true};t.i.src=url;RADAR.tiles.set(url,t);if(RADAR.tiles.size>600)RADAR.tiles.delete(RADAR.tiles.keys().next().value)}
+  return t
+}
+function drawRadar(){
+  const frames=RADAR.frames;if(!frames.length)return false;
+  /* A coarse radar pyramid keeps the frame loop light enough for RainViewer's
+     public rate limit while still moving across the map. */
+  const z=Math.min(4,Math.max(0,Math.floor(V.z-1))),s=256*2**(V.z-z),c=wpx(V.lon,V.lat),n=2**z;
+  const x0=Math.max(0,Math.floor((c[0]-W/2)/s)),x1=Math.min(n-1,Math.floor((c[0]+W/2)/s));
+  const y0=Math.max(0,Math.floor((c[1]-H/2)/s)),y1=Math.min(n-1,Math.floor((c[1]+H/2)/s));
+  const now=performance.now(),frame=frames[Math.floor(now/900)%frames.length];
+  cx.save();cx.globalAlpha=.82;cx.imageSmoothingEnabled=true;
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+    const t=radarTile(RADAR.host+frame.path+'/256/'+z+'/'+x+'/'+y+'/2/1_1.png');
+    if(t.ok)cx.drawImage(t.i,x*s-c[0]+W/2,y*s-c[1]+H/2,s+.5,s+.5)
+  }
+  cx.restore();return true
+}
+function drawModelRain(){
+  if(!WX.pts.length)return;
+  cx.save();
+  for(const p of WX.pts){
+    if(p.rain<=.05)continue;const q=vis(p.lon,p.lat);if(!q)continue;const[x,y]=q,s=Math.min(1,p.rain/4),rad=32+55*s,g=cx.createRadialGradient(x,y,1,x,y,rad);
+    g.addColorStop(0,'rgba(30,120,255,'+(.15+.3*s)+')');g.addColorStop(.55,'rgba(56,189,248,'+(.08+.18*s)+')');g.addColorStop(1,'rgba(56,189,248,0)');cx.fillStyle=g;cx.beginPath();cx.arc(x,y,rad,0,7);cx.fill()
+  }
+  cx.restore()
+}
+function drawTurbulence(){
+  if(!WX.pts.length)return;
+  const b=WX.box;if(!b)return;
+  if(!TURB.canvas){TURB.canvas=document.createElement('canvas');TURB.canvas.width=220;TURB.canvas.height=170;TURB.key=''}
+  const t=TURB.ctx||(TURB.ctx=TURB.canvas.getContext('2d'));if(!t)return;
+  const key=WX.at+'|'+b.minLon+'|'+b.maxLon+'|'+b.minLat+'|'+b.maxLat;
+  if(key!==TURB.key){
+    TURB.key=key;
+    const cw=TURB.canvas.width,ch=TURB.canvas.height;
+    t.clearRect(0,0,cw,ch);
+    const img=t.createImageData(cw,ch),d=img.data;
+    const dx=Math.max(1e-6,b.maxLon-b.minLon),dy=Math.max(1e-6,b.maxLat-b.minLat);
+    /* Interpolate the whole 7x5 field, not one circle per sample: a continuous
+       raster reads like a weather chart and keeps the low-risk areas quiet. */
+    for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){
+      const w=wxAt(b.minLon+(x+.5)/cw*dx,b.maxLat-(y+.5)/ch*dy);if(!w)continue;
+      const risk=Math.min(1,Math.max(0,(w.gust-w.speed)/32,w.cape/3400));
+      if(risk<.22)continue;
+      const hot=risk>=.62,warm=risk>=.36;
+      const r=hot?239:warm?249:250,g=hot?68:warm?115:204,bl=hot?68:warm?22:21;
+      const a=Math.round(Math.min(.62,Math.pow((risk-.22)/.78,1.35)*.65)*255),i=(y*cw+x)*4;
+      d[i]=r;d[i+1]=g;d[i+2]=bl;d[i+3]=a
+    }
+    t.putImageData(img,0,0)
+  }
+  cx.save();cx.globalAlpha=.9;cx.imageSmoothingEnabled=true;cx.drawImage(TURB.canvas,0,0,W,H);cx.restore()
+}
+function seedWind(){
+  const count=Math.min(620,Math.max(280,Math.round(W*H/2200)));
+  WIND.parts=Array.from({length:count},()=>({x:Math.random()*W,y:Math.random()*H,age:Math.random()*90,life:70+Math.random()*110}));
+  WIND.last=performance.now()
+}
+function drawWind(){
+  if(!WX.pts.length)return;
+  const key=[V.mode,V.lon.toFixed(2),V.lat.toFixed(2),V.z.toFixed(1),W,H].join('|');
+  if(key!==WIND.key){WIND.key=key;seedWind()}
+  if(!WIND.parts.length)seedWind();
+  const now=performance.now(),dt=WIND.last?Math.min(.12,(now-WIND.last)/1000):.016;WIND.last=now;
+  cx.save();cx.lineCap='round';cx.lineJoin='round';
+  for(const p of WIND.parts){
+    const geo=unvis(p.x,p.y),w=geo?wxAt(geo[0],geo[1]):null;
+    if(!w||!Number.isFinite(w.u)||!Number.isFinite(w.v)){p.age=p.life;continue}
+    /* Trace a short curved path through the sampled field instead of drawing
+       an isolated dash. The particle advances each frame, so the lines drift
+       with the wind like a streamline layer. */
+    let px=p.x,py=p.y,ok=false;
+    cx.beginPath();cx.moveTo(px,py);
+    for(let k=0;k<5;k++){
+      const g=unvis(px,py),q=g?wxAt(g[0],g[1]):null;
+      if(!q||q.speed<.05)break;
+      const nx=px+q.u/q.speed*4.2,ny=py-q.v/q.speed*4.2;
+      if(!Number.isFinite(nx)||!Number.isFinite(ny))break;
+      cx.lineTo(nx,ny);px=nx;py=ny;ok=true;
+      if(px<-10||px>W+10||py<-10||py>H+10)break
+    }
+    if(ok){
+      const a=.15+Math.min(.4,w.speed/55);
+      cx.strokeStyle='rgba(225,246,255,'+a.toFixed(3)+')';cx.lineWidth=Math.max(.65,Math.min(1.4,w.speed/22));cx.stroke()
+    }
+    const nx=p.x+w.u*.72*dt,ny=p.y-w.v*.72*dt;
+    if(nx<-20||nx>W+20||ny<-20||ny>H+20||p.age>p.life){Object.assign(p,{x:Math.random()*W,y:Math.random()*H,age:0,life:70+Math.random()*110});continue}
+    p.x=nx;p.y=ny;p.age++
+  }
+  cx.restore()
+}
+function drawWeather(){
+  if(!wxOn()||CH.on)return;
+  if(L.wxrain){
+    radarFetch();
+    if(!drawRadar()){
+      if(WX.pts.length)drawModelRain();
+      else wxNotice(RADAR.err?'Rain radar unavailable':'Rain radar loading…')
+    }
+  }
+  if(L.wxwind||L.wxturb){
+    wxFetch();
+    if(!WX.pts.length){if(!L.wxrain)wxNotice(WX.err?'Weather overlay unavailable':'Weather overlay loading…')}
+    else{if(L.wxturb)drawTurbulence();if(L.wxwind)drawWind()}
+  }
+}
+function drawDayNight(){
+  if(!L.dn||CH.on||!W||!H)return;
+  const nowMs=performance.now();
+  if(!DN.canvas){DN.canvas=document.createElement('canvas');DN.canvas.width=240;DN.canvas.height=180;DN.key='';DN.at=0}
+  const viewKey=[V.mode,V.lon.toFixed(3),V.lat.toFixed(3),V.z.toFixed(2),W,H].join('|');
+  /* The sun moves slowly, but the view can move every frame. Rebuild in the
+     same frame as a pan or zoom so the shade tracks the map instead of
+     sticking to the old screen position. */
+  if(viewKey!==DN.key||nowMs-DN.at>30000){
+    const t=DN.ctx||(DN.ctx=DN.canvas.getContext('2d'));if(!t)return;
+    const now=new Date(),day=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate())/86400000;
+    const decl=-23.44*Math.cos(2*Math.PI*(day+10)/365.24)*R;
+    const b=2*Math.PI*(day-81)/364,eot=9.87*Math.sin(2*b)-7.53*Math.cos(b)-1.5*Math.sin(b);
+    const utc=now.getUTCHours()+now.getUTCMinutes()/60+now.getUTCSeconds()/3600;
+    const sub=180-(utc+eot/60)*15,sinDecl=Math.sin(decl),cosDecl=Math.cos(decl);
+    const cw=DN.canvas.width,ch=DN.canvas.height;
+    if(!DN.img||DN.img.width!==cw||DN.img.height!==ch)DN.img=t.createImageData(cw,ch);
+    const d=DN.img.data;d.fill(0);
+    const flat=V.mode!=='globe';
+    let cosH=null,sinLat=null,cosLat=null;
+    if(flat){
+      const c=wpx(V.lon,V.lat,V.z);
+      cosH=new Float32Array(cw);sinLat=new Float32Array(ch);cosLat=new Float32Array(ch);
+      for(let x=0;x<cw;x++){const lon=wun(c[0]+(x+.5)/cw*W-W/2,c[1],V.z)[0];cosH[x]=Math.cos((lon-sub)*R)}
+      for(let y=0;y<ch;y++){const lat=wun(c[0],c[1]+(y+.5)/ch*H-H/2,V.z)[1];sinLat[y]=Math.sin(lat*R);cosLat[y]=Math.cos(lat*R)}
+    }
+    for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){
+      let sinAlt;
+      if(flat)sinAlt=sinLat[y]*sinDecl+cosLat[y]*cosDecl*cosH[x];
+      else{const g=unvis((x+.5)/cw*W,(y+.5)/ch*H);if(!g)continue;const la=g[1]*R;sinAlt=Math.sin(la)*sinDecl+Math.cos(la)*cosDecl*Math.cos((g[0]-sub)*R)}
+      /* A tighter twilight than the first pass: the shade starts just above
+         the horizon and is full night by roughly ten degrees below it. */
+      let n=Math.max(0,Math.min(1,(.04-sinAlt)/.18));n=n*n*(3-2*n);
+      const i=(y*cw+x)*4;d[i]=3;d[i+1]=8;d[i+2]=20;d[i+3]=Math.round(n*190)
+    }
+    t.putImageData(DN.img,0,0);DN.key=viewKey;DN.at=nowMs
+  }
+  cx.save();cx.imageSmoothingEnabled=true;cx.drawImage(DN.canvas,0,0,W,H);cx.restore()
+}
+/* While live, the planned line starts at the aircraft and runs to the next
+   waypoint; the flown part is the trail. Keeping the whole line underneath was
+   what made the route look like it came from behind the aircraft. */
+function routeAhead(){
+  const pts=drawnRoutePoints();
+  if(!liveOk()||pts.length<2)return pts;
+  let best=0, bestD=Infinity;
+  for(let i=0;i<pts.length;i++){const d=dist(own,pts[i]);if(d<bestD){bestD=d;best=i}}
+  return [{lat:own.lat,lon:own.lon,k:'own'},...pts.slice(best+1)]
+}
 function routeProg(){let best=1e9,acc=0,at=0;for(let i=0;i<route.length-1;i++){const a=route[i],b=route[i+1],L2=dist(a,b),k=Math.cos(a.lat*R),bx=(b.lon-a.lon)*k*60,by=(b.lat-a.lat)*60,px=(own.lon-a.lon)*k*60,py=(own.lat-a.lat)*60,d2=bx*bx+by*by||1e-9,t=Math.max(0,Math.min(1,(px*bx+py*by)/d2)),dd=Math.hypot(px-bx*t,py-by*t);if(dd<best){best=dd;at=acc+t*L2}acc+=L2}return at}
 
 /* VATSIM online ATC for an airport: confirmed positions and inferred centers (lib/vatsim.js). */
@@ -2400,7 +2673,7 @@ return h+'<div class="row"><button onclick="addSel()">Add to route</button><butt
 function closeChart(){$('#chart').style.display='none'}
 function chartMap(){closeChart();setFol(false);V.lon=sel.lon;V.lat=sel.lat;V.tz=null;V.z=12.5;panel='sel';render()}
 /* X-Plane live link */
-function liveStep(dt){T.forEach(a=>{if(Date.now()-(a.seen||0)<45000){const p=fwd(a,a.hdg,a.gs/3600*dt);a.lat=p.lat;a.lon=p.lon}});if((tk||V.fol)&&sel&&sel.k=='trf'){V.lon=sel.lon;V.lat=sel.lat}const d=live.d;own.lat=d.lat;own.lon=d.lon;trlAdd('own',d.lat,d.lon,d.alt,9000,d.agl);own.hdg=d.hdg||0;own.alt=d.alt;own.vs=d.vs||0;const gs=d.gs||0,el=route.length?dist(own,route.at(-1)):NaN;
+function liveStep(dt){T.forEach(a=>{if(Date.now()-(a.seen||0)<45000){const p=fwd(a,a.hdg,a.gs/3600*dt);a.lat=p.lat;a.lon=p.lon}});if((tk||V.fol)&&sel&&sel.k=='trf'){V.lon=sel.lon;V.lat=sel.lat}const d=live.d;own.lat=d.lat;own.lon=d.lon;trlAdd('own',d.lat,d.lon,d.alt,9000,d.agl);own.hdg=d.hdg||0;own.alt=d.alt;own.vs=d.vs||0;if(V.fol&&(!sel||sel.k=='own')){V.lon=own.lon;V.lat=own.lat}const gs=d.gs||0,el=route.length?dist(own,route.at(-1)):NaN;
 $('#tGS').textContent=Math.round(gs);$('#tAL').textContent=Math.round(own.alt);$('#tHD').textContent=String(Math.round(own.hdg+360)%360).padStart(3,'0');$('#tVS').textContent=Math.round(own.vs/10)*10;$('#tDS').textContent=isFinite(el)?el.toFixed(1):'–';$('#tEt').textContent=isFinite(el)&&gs>30?hm(el/gs):'–';if(V.fol){const q=(sel&&sel.k=='trf')?sel:own;V.lon=q.lon;V.lat=q.lat}}
 let wxList=[];try{wxList=JSON.parse(localStorage.getItem('dl.wx')||'[]')}catch(_){}
 function wxAdd(a){if(!wxList.includes(a.id)){wxList.unshift(a.id);wxList=wxList.slice(0,8);try{localStorage.setItem('dl.wx',JSON.stringify(wxList))}catch(_){}}}
@@ -2707,7 +2980,7 @@ function smoothTrail(key,pts,hs){
   const hit=TRLSM.get(key);
   if(hit&&hit.signature===sig)return hit;
   let made;
-  if(window.TRAILP&&window.TRAILP.smoothPathCache)made=window.TRAILP.smoothPathCache(sig,pts,hs,{passes:2,maxPoints:3000});
+  if(window.TRAILP&&window.TRAILP.smoothPathCache)made=window.TRAILP.smoothPathCache(sig,pts,hs,{passes:3,maxPoints:4000});
   else made={signature:sig,points:pts,heights:hs};
   TRLSM.set(key,made);
   return made
@@ -2728,11 +3001,12 @@ cx.lineCap='round';cx.lineJoin='round';cx.globalAlpha=1;
    Every such break starts a new subpath instead. */
 const trailWorld=SZ*2**V.z,trailCut=(a,b)=>Math.abs(a[0]-b[0])>trailWorld/2;
 const strokeRun=(from,to,color,width)=>{cx.strokeStyle=color;cx.lineWidth=width;cx.beginPath();for(let i=from;i<=to;i++){const p=spts[i];if(i===from||trailCut(spts[i-1],p)){if(i>from)cx.stroke();cx.beginPath();cx.moveTo(p[0],p[1])}else cx.lineTo(p[0],p[1])}cx.stroke()};
-strokeRun(0,m-1,TRAIL_EDGE,7);
+const tw=own?MP.trailWidth:1;
+strokeRun(0,m-1,TRAIL_EDGE,7*tw);
 /* One stroke per run of points that share a colour: a climb changes colour in
    small steps instead of one stroke per segment, so the cost stays flat. */
 const inks=shs.map(trailInk);let start=0,ink=inks[0];
-const run=(from,to)=>strokeRun(from,to,ink,4);
+const run=(from,to)=>strokeRun(from,to,ink,4*tw);
 for(let i=1;i<m;i++){if(inks[i]!==ink){run(start,i);start=i;ink=inks[i]}}
 run(start,m-1);
 cx.lineCap='butt'}
@@ -2767,7 +3041,7 @@ function clusterAirports(){
 function trails(){if(CH.on||RP.trail<=0)return;const col=trailCol();
 if(L.trl){cx.strokeStyle=col;cx.lineWidth=1.2;cx.globalAlpha=.35;TRL.forEach((a,k)=>{if(k=='own'||a.length<3)return;const p=[];a.slice(-60).forEach(q=>p.push([q[1],q[0]]));const sm=window.TRAILP?window.TRAILP.smoothPath(p,null,{passes:1}):{points:p};const wp=SZ*2**V.z;let prev=null;cx.beginPath();sm.points.forEach(q=>{const t=sc(q[0],q[1]);if(!prev)cx.moveTo(t[0],t[1]);else if(Math.abs(t[0]-prev[0])>wp/2){cx.stroke();cx.beginPath();cx.moveTo(t[0],t[1])}else cx.lineTo(t[0],t[1]);prev=t});cx.stroke()});cx.globalAlpha=1}
 if(sel&&sel.k=='trf'){const a=TRL.get(sel.hx||sel.id);if(a)drawTrail(a,sel,false,sel.hx||sel.id)}
-if(liveOk()){const a=TRL.get('own');if(a)drawTrail(a,own,true,'own')}}
+if(liveOk()&&MP.trail){const a=TRL.get('own');if(a)drawTrail(a,own,true,'own')}}
 /* A selected aircraft's filed airports, joined by a dashed reference line.
    It shows where the flight is going, not a guessed airway routing: the filed
    route string itself stays on the aircraft card. Nothing is drawn when either
@@ -2977,7 +3251,8 @@ function fcRepHtml(ref){
   if(!r||r.state=='loading')return '<div class="fcph load"><span class="fcph-t">Finding a backup '+who+' '+type+'…</span><span class="fcph-c">Live ADS-B · Planespotters.net</span></div>';
   if(r.state=='unavailable')return '<div class="fcph none"><span class="fcph-t">'+who+' '+type+'</span><span class="fcph-c">The live ADS-B backup lookup failed, so no '+who+' '+type+' could be found</span></div>';
   if(r.state=='none')return '<div class="fcph none"><span class="fcph-t">'+who+' '+type+'</span><span class="fcph-c">No live '+who+' '+type+' found for a backup photo</span></div>';
-  const p=PHOTOS.get(r.registration);
+  const shotRef=fcRegPhotoRef(r.registration);
+  const p=PHOTOS.get(shotRef.key);
   if(!p||p.state=='loading')return '<div class="fcph load"><span class="fcph-t">Looking up backup '+esc(r.registration)+'…</span><span class="fcph-c">Planespotters.net</span></div>';
   if(p.state=='unavailable')return '<div class="fcph none"><span class="fcph-t">'+who+' '+type+'</span><span class="fcph-c">Backup photo lookup is unavailable here · '+esc(r.registration)+'</span></div>';
   if(p.state!='ok'||!p.photo)return '<div class="fcph none"><span class="fcph-t">'+who+' '+type+'</span><span class="fcph-c">No spotter photo published for backup '+esc(r.registration)+'</span></div>';
@@ -2994,6 +3269,17 @@ function fcPhotoHtml(o){
   const p=PHOTOS.get(ref.key);
   const match=ref.kind=='hex'?'Mode S '+ref.value:'registration '+ref.value;
   if(!p||p.state=='loading')return '<div class="fcph load"><span class="fcph-t">Looking up '+esc(ref.kind=='hex'?'Mode S '+ref.value:ref.value)+'…</span><span class="fcph-c">Planespotters.net</span></div>';
+  /* A reported registration whose photo cannot be fetched falls back to the
+     same operator and ICAO type, using the callsign without its flight number.
+     The result remains labelled as a representative aircraft. */
+  if(p.state=='unavailable'||p.state=='none'){
+    const backup=fcRepQuery(o);
+    if(backup){
+      const repRef={kind:'rep',...backup,key:'rep:'+backup.key};
+      if(!REPS.has(repRef.key))fcRepPhoto(repRef);
+      return fcRepHtml(repRef)
+    }
+  }
   if(p.state=='unavailable')return '<div class="fcph none"><span class="fcph-t">'+esc(label)+'</span><span class="fcph-c">Photo lookup is unavailable here · '+esc(match)+'</span></div>';
   if(p.state!='ok'||!p.photo)return '<div class="fcph none"><span class="fcph-t">'+esc(label)+'</span><span class="fcph-c">No spotter photo published for '+esc(match)+'</span></div>';
   const credit=esc(window.PHOTO.photoCredit(p.photo)),link=esc(p.photo.link);
@@ -3111,7 +3397,8 @@ function fcAircraftHtml(o){
     +(away!=null?'<span><b>'+away+'</b> nm</span>':'')
     +'</div>';
   const actions='<div class="fca">'
-    +(io?'':'<button type="button" class="'+(tk?'on':'')+'" data-fc-act="track">'+(tk?'Stop tracking':'Track')+'</button><button type="button" class="'+(V.fol?'on':'')+'" data-fc-act="follow" title="Keep this aircraft centred as it moves">Follow</button>')
+    +(io?'':'<button type="button" class="'+(tk?'on':'')+'" data-fc-act="track">'+(tk?'Stop tracking':'Track')+'</button>')
+    +'<button type="button" class="'+(V.fol&&((sel&&sel.k=='trf')||!sel||sel.k=='own')?'on':'')+'" data-fc-act="follow" title="Keep this aircraft centred as it moves">'+(V.fol?'Following':'Follow')+'</button>'
     +(io&&fpOfp()?'<button type="button" data-fc-act="ofp" title="Open the Operational Flight Plan SimBrief generated for this flight">OFP</button>':'')
     +'<button type="button" data-fc-act="center">Center</button>'
     +'</div>';
@@ -3173,7 +3460,7 @@ function clampCard(){
     if(t.hasAttribute('data-fc-toggle')){fcTog();return}
     const act=t.dataset.fcAct;
     if(act=='track'){tk=!tk;if(tk)setFol(false);fCard()}
-    else if(act=='follow'){setFol(!(V.fol&&sel&&sel.k=='trf'));if(V.fol&&sel){V.lon=sel.lon;V.lat=sel.lat}render();fCard()}
+    else if(act=='follow'){const on=!(V.fol&&((sel&&sel.k=='trf')||!sel||sel.k=='own'));setFol(on);render();fCard()}
     else if(act=='expand'){fExp=true;try{localStorage.setItem('stratos.cardExpanded','1')}catch(_){}fCard()}
     else if(act=='center'){trCenter();fCard()}
     else if(act=='ofp'){openOfpDoc()}
@@ -3460,6 +3747,11 @@ h+='<h3 style="margin-top:14px">Weather</h3><code>'+a.metar+'</code><div class="
 return h+'<div style="margin-top:14px">'+faaHtml(a)+'</div>'}
 $('#cvx').onclick=closeCharts;$('#cvf').onclick=chFit;$('#cvs').onclick=e=>{const p=e.target.dataset&&e.target.dataset.p;if(p)chPage(p)};
 try{if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').then(reg=>{reg.addEventListener('updatefound',()=>{const w=reg.installing;if(!w)return;w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller){const b=document.getElementById('st');if(b){b.textContent='Update ready — reopen Stratos';b.onclick=()=>location.reload()}}})})}).catch(()=>{})}}catch(_){}
+</script>
+<script type="module">
+  import { Track3DView } from './js/efb/track3d.js';
+  window.Track3DView = Track3DView;
+  window.dispatchEvent(new Event('stratos-track3d-ready'));
 </script>
 <script type="module">
   import { mountShell } from './js/shell.js';

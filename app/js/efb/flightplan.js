@@ -1141,6 +1141,38 @@ export async function mount(root, ctx) {
     return RP.procedureList(payload, kind).find(procedure => String(procedure.id || '').toUpperCase() === choice[kind].ident) || null;
   }
 
+  /**
+   * A plan stored by an older build has procedure points but no geometry
+   * version. Re-resolve its SID once the current CIFP data is in hand, so an
+   * existing draft gains the runway centreline and climb turn instead of
+   * keeping geometry the code no longer draws.
+   */
+  async function refreshLegacyProcedureGeometry() {
+    const before = plan;
+    const sid = before.sid;
+    if (!sid || Number(sid.geometryVersion) >= RP.ROUTE_GEOMETRY_VERSION) return;
+    const ident = String(sid.id || '').toUpperCase();
+    const runway = String(sid.runway || before.departureRwy || '').replace(/^RW/i, '');
+    if (!before.origin || !ident || !runway) return;
+    await loadProcedures('sid');
+    if (destroyed || plan !== before) return;
+    const payload = procedures.sid.payload;
+    if (!payload || !payload.ok) return;
+    const route = RP.procedureRoute(payload, {
+      kind: 'sid',
+      ident,
+      runway,
+      runwayTransition: sid.runwayTransition || '',
+      enrouteTransition: sid.enrouteTransition || '',
+    });
+    if (!route.ok) return;
+    const applied = RP.applyProcedure(before, 'sid', route);
+    if (!applied.ok) return;
+    plan = { ...applied.plan, dirty: before.dirty };
+    saveDraft();
+    render();
+  }
+
   function applyProcedureSelection(kind) {
     const payload = procedures[kind].payload;
     const ident = choice[kind].ident;
@@ -2561,6 +2593,7 @@ export async function mount(root, ctx) {
   onLive(() => { if (!destroyed) paintReadout(); });
   refreshNear({ force: true });
   importLatestSimbrief().catch(() => {});
+  refreshLegacyProcedureGeometry().catch(() => {});
   if (step === 'procedures' || (plan.sid || plan.star || plan.approach)) {
     if (plan.origin) loadProcedures('sid');
     if (plan.destination) loadProcedures('star');

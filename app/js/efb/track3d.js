@@ -24,11 +24,13 @@ function fmtClock(stamp) {
 }
 
 export class Track3DView {
-  constructor(canvas, tip, { accent = '#22d3ee' } = {}) {
+  constructor(canvas, tip, { accent = '#22d3ee', leftTilt = true, ownMarker = false } = {}) {
     this.canvas = canvas;
     this.tip = tip;
     this.track = [];
     this.accent = accent;
+    this.leftTilt = leftTilt !== false;
+    this.ownMarker = Boolean(ownMarker);
     this.yaw = 0.62;
     this.pitch = 0.34;
     this.zoom = 1;
@@ -41,9 +43,11 @@ export class Track3DView {
     this.destroyed = false;
 
     this.onDown = event => {
-      if (event.button != null && event.button !== 0) return;
+      // Right-drag is the map-mode pitch control; a left drag moves the view.
+      if (event.button != null && event.button !== 0 && event.button !== 2) return;
+      event.preventDefault();
       this.canvas.setPointerCapture?.(event.pointerId);
-      this.drag = { x: event.clientX, y: event.clientY, moved: 0 };
+      this.drag = { x: event.clientX, y: event.clientY, moved: 0, right: event.button === 2 };
     };
     this.onMove = event => {
       const rect = this.canvas.getBoundingClientRect();
@@ -55,8 +59,12 @@ export class Track3DView {
         this.drag.moved += Math.abs(dx) + Math.abs(dy);
         this.drag.x = event.clientX;
         this.drag.y = event.clientY;
-        this.yaw += dx * 0.006;
-        this.pitch = clamp(this.pitch + dy * 0.004, -0.15, 1.2);
+        if (this.drag.right) {
+          this.pitch = clamp(this.pitch + dy * 0.004, -0.15, 1.2);
+        } else {
+          this.yaw += dx * 0.006;
+          if (this.leftTilt) this.pitch = clamp(this.pitch + dy * 0.004, -0.15, 1.2);
+        }
         this.pinned = false;
         this.requestDraw();
         return;
@@ -95,7 +103,9 @@ export class Track3DView {
     canvas.addEventListener('pointerup', this.onUp);
     canvas.addEventListener('pointercancel', this.onUp);
     canvas.addEventListener('pointerleave', this.onLeave);
+    this.onContext = event => event.preventDefault();
     canvas.addEventListener('wheel', this.onWheel, { passive: false });
+    canvas.addEventListener('contextmenu', this.onContext);
   }
 
   setTrack(points) {
@@ -260,6 +270,31 @@ export class Track3DView {
 
     const start = projection.points[0];
     const end = projection.points[projection.points.length - 1];
+    if (this.ownMarker) {
+      // A small aircraft-shaped marker at the latest recorded point, so the 3D
+      // view reads as the same flight as the map below it.
+      ctx.save();
+      ctx.translate(end.x, end.y);
+      ctx.fillStyle = this.accent;
+      ctx.beginPath();
+      ctx.moveTo(0, -7);
+      ctx.lineTo(2, -1);
+      ctx.lineTo(9, 2);
+      ctx.lineTo(9, 4);
+      ctx.lineTo(2, 3);
+      ctx.lineTo(2, 7);
+      ctx.lineTo(4, 9);
+      ctx.lineTo(0, 8);
+      ctx.lineTo(-4, 9);
+      ctx.lineTo(-2, 7);
+      ctx.lineTo(-2, 3);
+      ctx.lineTo(-9, 4);
+      ctx.lineTo(-9, 2);
+      ctx.lineTo(-2, -1);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
     ctx.fillStyle = '#34d399';
     ctx.beginPath(); ctx.arc(start.x, start.y, 3.4, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = this.accent;
@@ -304,6 +339,7 @@ export class Track3DView {
     canvas.removeEventListener('pointercancel', this.onUp);
     canvas.removeEventListener('pointerleave', this.onLeave);
     canvas.removeEventListener('wheel', this.onWheel);
+    canvas.removeEventListener('contextmenu', this.onContext);
     this.hideTip();
   }
 }

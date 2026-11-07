@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import { fetchSimbriefPlan, simbriefQuery, validateSimbriefId } from '../app/js/lib/simbrief.js';
 import { compareRouteWithOfp, loadOfp, parseOfp, planProcedures, routeProcedures } from '../app/js/lib/flightsummary.js';
 import {
-  basePlanFromOfp, buildProcedurePlan, loadProcedurePayloads, planKey, procedureChoice, storageFromPlan,
+  activeRouteGeometryVersion, basePlanFromOfp, buildProcedurePlan, loadProcedurePayloads, planKey,
+  procedureChoice, storageFromPlan, ROUTE_GEOMETRY_VERSION,
 } from '../app/js/lib/simbriefroute.js';
 
 // The payload shape the SimBrief json=v2 endpoint returns, trimmed to the fields
@@ -380,6 +381,10 @@ test('simbrief route: the filed procedures become one continuous verified route'
   assert.deepEqual(stored.map.map(point => point.id), built.plan.points.map(point => point.id));
   assert.equal(stored.map.find(point => point.id === 'CAVOB').ss, 'sid', 'the map copy uses the map tag spelling');
   assert.equal(stored.map.find(point => point.id === 'HONIE').ss, 'star');
+  assert.equal(stored.active.plan.geometryVersion, ROUTE_GEOMETRY_VERSION);
+  assert.equal(activeRouteGeometryVersion({ getItem: () => JSON.stringify(stored.active) }), ROUTE_GEOMETRY_VERSION);
+  assert.equal(activeRouteGeometryVersion({ getItem: () => JSON.stringify({ plan: { version: 1 } }) }), 0,
+    'a plan saved by an older build is refreshed instead of treated as current');
 });
 
 test('simbrief: imported procedure legs are not mistaken for edits to the OFP route', () => {

@@ -191,16 +191,17 @@ def dms_to_decimal(text: str):
 
 
 def parse_runways(lines):
-    """Runway designator -> threshold coordinate, from the file's RWY: records."""
+    """Runway designator -> threshold coordinate and elevation, from RWY: records."""
     runways = {}
     for line in lines:
         if not line.startswith("RWY:"):
             continue
-        designator = line[4:].split(",", 1)[0].strip().upper()
-        tail = line.split(";", 1)
-        if len(tail) < 2 or not designator:
+        head, _, tail = line[4:].partition(";")
+        prefix = head.split(",")
+        designator = (prefix[0] if prefix else "").strip().upper()
+        if not tail or not designator:
             continue
-        parts = tail[1].split(",")
+        parts = tail.split(",")
         if len(parts) < 2:
             continue
         lat = dms_to_decimal(parts[0])
@@ -209,9 +210,34 @@ def parse_runways(lines):
             continue
         # Keyed by the designator the plan and the app use (16L), not the
         # file's RW16L, so a plan's runway matches a CIFP transition directly.
-        runways[designator[2:] if designator.startswith("RW") else designator] = {
-            "lat": round(lat, 6), "lon": round(lon, 6)}
+        entry = {"lat": round(lat, 6), "lon": round(lon, 6)}
+        # RWY field 4 is the threshold elevation. The climb turn is measured
+        # from the departure-end threshold, so keep it when the file states it.
+        if len(prefix) > 3 and re.fullmatch(r"\d{1,5}", prefix[3].strip()):
+            entry["elevFt"] = int(prefix[3].strip())
+        runways[designator[2:] if designator.startswith("RW") else designator] = entry
     return runways
+
+
+def arinc_course(raw):
+    """A magnetic heading/course in degrees from its four-digit ARINC field."""
+    text = str(raw or "").strip()
+    if not re.fullmatch(r"\d{4}", text):
+        return None
+    value = int(text) / 10
+    return value if 0 <= value < 360 else None
+
+
+def arinc_altitude(raw):
+    """An altitude in feet from the ARINC altitude field (05934 or FL180)."""
+    text = str(raw or "").strip().upper()
+    if not text:
+        return None
+    if text.startswith("FL") and text[2:].isdigit():
+        return int(text[2:]) * 100
+    if text.isdigit():
+        return int(text)
+    return None
 
 
 # ── CIFP rows ──────────────────────────────────────────────────────
@@ -252,6 +278,9 @@ def parse_rows(lines):
             "subsection": (fields[6] or "").strip().upper(),
             "description": (fields[7] or "").strip().upper(),
             "terminator": (fields[10] or "").strip().upper(),
+            "course": (fields[20] if len(fields) > 20 else "").strip(),
+            "altDesc": (fields[22] if len(fields) > 22 else "").strip(),
+            "altitude": (fields[23] if len(fields) > 23 else "").strip(),
         })
     rows.sort(key=lambda row: (row["kind"], row["procedure"], row["transition"], row["sequence"]))
     return rows
@@ -407,6 +436,23 @@ def _transition_points(rows, resolved, runways):
     return points, skipped
 
 
+def _initial_climb(rows):
+    """The published heading/course-to-altitude leg before a SID's first fix."""
+    for row in rows:
+        if row["fix"]:
+            break
+        course = arinc_course(row.get("course"))
+        altitude = arinc_altitude(row.get("altitude"))
+        if course is not None and altitude is not None:
+            return {
+                "terminator": row["terminator"],
+                "courseDeg": course,
+                "altFt": altitude,
+                "altDesc": row.get("altDesc") or "",
+            }
+    return None
+
+
 def _runway_of(transition):
     match = re.fullmatch(r"RW(\d{2})([LRCB])", transition or "")
     if not match:
@@ -446,14 +492,18 @@ def build_airport(cifp_text, airport, resolver, source="X-Plane 12 CIFP", cycle=
                 if not points:
                     continue
                 runway = _runway_of(transition)
-                transitions.append({
+                published = {
                     "id": transition,
                     "runway": runway,
                     "combined": transition.endswith("B"),
                     "points": points,
                     "skipped": skipped,
                     "complete": skipped == 0,
-                })
+                }
+                initial_climb = _initial_climb(grouped[name][transition]) if kind == "sid" and runway else None
+                if initial_climb:
+                    published["initialClimb"] = initial_climb
+                transitions.append(published)
             if transitions:
                 procedures.append({"id": name, "transitions": transitions})
         out[kind] = procedures

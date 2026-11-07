@@ -15,8 +15,10 @@
 import { endpointsFor } from './procdeck.js';
 import {
   applyProcedure, createPlan, mapRoute, procedureRoute, storedRoute,
-  suggestTransitions,
+  suggestTransitions, ROUTE_GEOMETRY_VERSION,
 } from './routeplan.js';
+
+export { ROUTE_GEOMETRY_VERSION };
 
 const up = value => String(value == null ? '' : value).trim().toUpperCase();
 const num = value => (Number.isFinite(Number(value)) ? Number(value) : null);
@@ -325,6 +327,7 @@ export function buildProcedurePlan(ofp, { depPayload = null, arrPayload = null }
 /** The storage records the Flight Deck and EFB both read for this plan. */
 export function storageFromPlan(plan, ofp, simbriefId, warnings = [], applied = {}) {
   const stored = storedRoute(plan);
+  stored.plan.geometryVersion = ROUTE_GEOMETRY_VERSION;
   stored.plan.builtAt = Date.now();
   stored.plan.sources = [
     {
@@ -372,6 +375,17 @@ export function activeRouteBuiltAt(storage = (typeof localStorage === 'undefined
     const raw = storage && storage.getItem('stratos.activeRoute');
     const parsed = raw ? JSON.parse(raw) : null;
     return Number(parsed && parsed.plan && parsed.plan.builtAt) || 0;
+  } catch (_) {
+    return 0;
+  }
+}
+
+/** The procedure geometry version of the active route, or 0 for an old plan. */
+export function activeRouteGeometryVersion(storage = (typeof localStorage === 'undefined' ? null : localStorage)) {
+  try {
+    const raw = storage && storage.getItem('stratos.activeRoute');
+    const parsed = raw ? JSON.parse(raw) : null;
+    return Number(parsed && parsed.plan && parsed.plan.geometryVersion) || 0;
   } catch (_) {
     return 0;
   }

@@ -15,17 +15,22 @@ from pathlib import Path
 import stratos_cifp as cifp
 
 
-def procedure_row(kind, sequence, procedure, transition, fix, region="K1", section="E", terminator="TF"):
+def procedure_row(kind, sequence, procedure, transition, fix, region="K1", section="E", terminator="TF",
+                  course="", alt_desc="", altitude=""):
     fields = ["4", procedure, transition, fix, region, section, "A", "E   ", " ", "   ", terminator,
               " ", " ", " ", " ", " ", "      ", "    ", "    ", "    ", "    ",
               " ", "     ", "     ", "     ", " ", "   ", "    ", "   ",
               " ", " ", " ", " ", " ", " ", " ", " ", " "]
+    fields[20] = course
+    fields[22] = alt_desc
+    fields[23] = altitude
     return "%s:%03d,%s ;" % (kind, sequence, ",".join(fields))
 
 
 CIFP = "\r\n".join([
     # A SID with a heading leg from the runway, then fixes and a VOR.
-    procedure_row("SID", 10, "TEST1", "RW16L", " ", terminator="CA"),
+    procedure_row("SID", 10, "TEST1", "RW16L", " ", terminator="VA",
+                  course="0825", alt_desc="+", altitude="05934"),
     procedure_row("SID", 20, "TEST1", "RW16L", "CAVOB", section="P", terminator="DF"),
     procedure_row("SID", 30, "TEST1", "RW16L", "RENBE"),
     procedure_row("SID", 40, "TEST1", "RW16L", "BTG", section="D"),
@@ -104,8 +109,18 @@ class CifpTests(unittest.TestCase):
         payload = self.nav.procedures("KSEA")
         self.assertEqual(payload["runways"]["16L"]["lat"], 47.463794)
         self.assertAlmostEqual(payload["runways"]["16L"]["lon"], -122.30775, places=6)
+        self.assertEqual(payload["runways"]["16L"]["elevFt"], 432)
         self.assertAlmostEqual(payload["runways"]["34R"]["lat"], 47.431172, places=6)
         self.assertEqual(payload["cycle"], "2610")
+
+    def test_a_sid_keeps_its_published_heading_and_altitude_for_the_climb(self):
+        payload = self.nav.procedures("KSEA", "sid", "TEST1")
+        transitions = {t["id"]: t for t in payload["procedures"]["sid"][0]["transitions"]}
+        climb = transitions["RW16L"]["initialClimb"]
+        self.assertEqual(climb["terminator"], "VA")
+        self.assertEqual(climb["courseDeg"], 82.5)
+        self.assertEqual(climb["altFt"], 5934)
+        self.assertEqual(climb["altDesc"], "+")
 
     def test_a_sid_keeps_its_fixes_in_order_and_resolves_a_vor(self):
         payload = self.nav.procedures("KSEA", "sid", "TEST1")
