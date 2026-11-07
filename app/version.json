@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-07",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.37/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.37/Stratos-Setup.exe",
+      "sha256": "9ba77f95f7ffb1af0ca84ece5ae80b6847fa04de52d694b52350f4408c0b46d7",
+      "size": 109822719
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.37/Stratos-2.1.37-mac-arm64.dmg",
+      "sha256": "2ef25825ca2478803ee2292689629ebe2817bd4c47a88ed1f5ca1e1123338c7b",
+      "size": 125649538
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.37/Stratos-2.1.37-mac-x64.dmg",
+      "sha256": "39cc39f3ec89868238b048d48026bed498e25f3adb7860e50f31aec12a222cb1",
+      "size": 131100670
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.37/Stratos-2.1.37-linux-x64.AppImage",
+      "sha256": "c63dc6ec1fc9422b0b3fc35be4e463c16baa9ca453fcbea93d19a28f9f2f2e43",
+      "size": 146740037
+    }
+  },
   "summary": "SID paths now start on the runway and follow the published initial-climb heading to its altitude-gated turn, including SLEEK2 runway 8 at KDEN.",
   "reason": "",
   "releaseNotes": [
