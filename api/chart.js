@@ -1,7 +1,8 @@
 // Stratos API: one published chart document.
 // Query: /api/chart?cycle=2610&file=00375AD.PDF                    (FAA d-TPP)
 //        /api/chart?source=austrocontrol&icao=LOWW&cycle=261030&pdf=LO_AD_2_LOWW_1-1_en.pdf
-//        /api/chart?source=sia-france&icao=LFPG&edition=eAIP_29_OCT_2026
+//        /api/chart?source=sia-france&icao=LFPG&edition=eAIP_29_OCT_2026&pdf=AD_2_LFPG_SID_...pdf
+//        /api/chart?source=sia-france&icao=LFPG&edition=eAIP_29_OCT_2026   (aerodrome sheet)
 //
 // A deliberately narrow pass-through. The only hosts, path shapes and document
 // names that can be requested are those the publishing authority actually
@@ -11,7 +12,7 @@
 //   - AIP France: Licence Ouverte, attribution shown beside the chart.
 // No other URL, header or credential is forwarded.
 
-import { EAIP_SOURCES, francePdfUrl, isEaipPdfName } from '../app/js/lib/eaip.js';
+import { EAIP_SOURCES, franceChartUrl, francePdfUrl, isEaipPdfName } from '../app/js/lib/eaip.js';
 
 const ALLOWED_FILE = /^[A-Z0-9]{1,12}\.PDF$/;
 const ALLOWED_CYCLE = /^\d{4}$/;
@@ -61,11 +62,15 @@ export function documentUrl(query) {
   if (source === 'sia-france') {
     const edition = String(query.edition || '').trim();
     const icao = String(query.icao || '').trim().toUpperCase();
+    const pdf = String(query.pdf || '').trim();
     if (!ALLOWED_ICAO.test(icao)) return null;
-    // The document name is built here from the ICAO, never taken from the
-    // caller: the SIA publishes exactly one direct file, the aerodrome chart.
-    const url = francePdfUrl(EAIP_SOURCES['sia-france'], edition, icao);
-    return url ? { url, credit: EAIP_SOURCES['sia-france'].attribution } : null;
+    const provider = EAIP_SOURCES['sia-france'];
+    // Without a name the aerodrome sheet is served from its stable direct path.
+    // With one, it must be a chart the SIA publishes for this very airport in
+    // this edition's Cartes folder: the URL is built here, never taken from the
+    // caller, so a chart cannot be fetched from another aerodrome's folder.
+    const url = pdf ? franceChartUrl(provider, edition, icao, pdf) : francePdfUrl(provider, edition, icao);
+    return url ? { url, credit: provider.attribution } : null;
   }
   const cycle = String((query && query.cycle) || '').trim();
   const file = String((query && query.file) || '').trim().toUpperCase();

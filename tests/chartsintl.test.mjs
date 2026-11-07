@@ -2,8 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  eaipForIcao, eaipPdfUrl, francePdfUrl, isEaipPdfName, parseEaipCharts, parseEaipCycleIndex,
-  parseEaipValidity, parseFranceEdition,
+  classifyFranceChart,  eaipForIcao, eaipPdfUrl, franceAirportPageUrl, franceAiracFolder, franceChartUrl, francePdfUrl,
+  isEaipPdfName, isFranceChartName, parseEaipCharts, parseEaipCycleIndex, parseEaipValidity,
+  parseFranceCharts, parseFranceEdition,
 } from '../app/js/lib/eaip.js';
 import { chartCoverage, coverageStatus } from '../app/js/lib/chartproviders.js';
 import { normaliseCatalogue, pdfName } from '../app/js/lib/charts.js';
@@ -83,6 +84,7 @@ test('the French edition and aerodrome chart come from the SIA\'s own pattern', 
     + '\n<p>en vigueur du 29/10/2026 au 25/11/2026 inclus</p>';
   const edition = parseFranceEdition(listing);
   assert.equal(edition.folder, 'eAIP_29_OCT_2026');
+  assert.equal(edition.airacFolder, 'AIRAC-2026-10-29', 'the charts sit under the AIRAC folder');
   assert.equal(edition.cycle, '11/26');
   assert.equal(edition.effective, Date.UTC(2026, 9, 29));
   assert.equal(edition.expires, Date.UTC(2026, 10, 25));
@@ -95,6 +97,48 @@ test('the French edition and aerodrome chart come from the SIA\'s own pattern', 
   // Only French airports exist on the SIA server, and only a real edition folder.
   assert.equal(francePdfUrl(source, edition.folder, 'EDDM'), null);
   assert.equal(francePdfUrl(source, 'latest', 'LFPG'), null);
+});
+
+test('the French eAIP lists SID, STAR and approach charts as per-chart PDFs', () => {
+  // Captured shape of the SIA's AD 2 page: every chart is an anchor into that
+  // airport's own Cartes folder, alongside tabular DATA files that are not charts.
+  const page = `
+    <a href="Cartes/LFPG/AD_2_LFPG_ADC_01.pdf">AD_2_LFPG_ADC_01</a>
+    <a href="Cartes/LFPG/AD_2_LFPG_ADC_02.pdf">AD_2_LFPG_ADC_02</a>
+    <a href="Cartes/LFPG/AD_2_LFPG_SID_RWY08L_RNAV_01.pdf">AD_2_LFPG_SID_RWY08L_RNAV_01</a>
+    <a href="Cartes/LFPG/AD_2_LFPG_STAR_RWY26L_RNAV_01.pdf">AD_2_LFPG_STAR_RWY26L_RNAV_01</a>
+    <a href="Cartes/LFPG/AD_2_LFPG_IAC_RWY08L_FNA_ILS_CAT123_LOC.pdf">AD_2_LFPG_IAC_RWY08L_FNA_ILS_CAT123_LOC</a>
+    <a href="Cartes/LFPG/AD_2_LFPG_DATA_SID_RWY08L_RNAV_CODE_01.pdf">AD_2_LFPG_DATA_SID_RWY08L_RNAV_CODE_01</a>
+    <a href="Cartes/LFPO/AD_2_LFPO_SID_RWY06_RNAV_01.pdf">another airport</a>
+    <a href="Cartes/LFPG/../../etc/passwd.pdf">hostile</a>`;
+  const charts = parseFranceCharts(page, { icao: 'LFPG' });
+  assert.deepEqual(charts.map(chart => chart.category), ['diagram', 'diagram', 'sid', 'star', 'approach']);
+  assert.equal(charts.length, 5, 'data tables, another aerodrome and a traversal are dropped');
+  assert.match(charts[2].title, /^SID · RWY08L/);
+  assert.match(charts[4].title, /^Instrument approach · RWY08L/);
+  assert.equal(charts[0].pdf, 'AD_2_LFPG_ADC_01.pdf', 'the published name keeps its case');
+  assert.equal(classifyFranceChart('AD_2_LFPG_DATA_SID_01.pdf'), 'other', 'a DATA file is not a chart');
+});
+
+test('a French procedure URL is built from the airport and the published name', () => {
+  const source = eaipForIcao('LFPG');
+  const edition = 'eAIP_29_OCT_2026';
+  const base = 'https://www.sia.aviation-civile.gouv.fr/media/dvd/eAIP_29_OCT_2026/FRANCE/AIRAC-2026-10-29/html/eAIP';
+  assert.equal(franceAiracFolder(edition), 'AIRAC-2026-10-29');
+  assert.equal(franceAiracFolder('eAIP_29_FOO_2026'), '', 'a folder that is not a real date is refused');
+  assert.equal(franceAirportPageUrl(source, edition, 'LFPG'), `${base}/FR-AD-2.LFPG-fr-FR.html`);
+  assert.equal(franceChartUrl(source, edition, 'LFPG', 'AD_2_LFPG_SID_RWY08L_RNAV_01.pdf'),
+    `${base}/Cartes/LFPG/AD_2_LFPG_SID_RWY08L_RNAV_01.pdf`);
+  assert.equal(franceChartUrl(source, edition, 'LFPG', 'AD_2_LFPO_SID_RWY06_RNAV_01.pdf'), null,
+    'another aerodrome\'s chart cannot be requested');
+  assert.equal(franceChartUrl(source, edition, 'EDDM', 'AD_2_LFPG_SID_RWY08L_RNAV_01.pdf'), null);
+  assert.equal(franceChartUrl(source, 'latest', 'LFPG', 'AD_2_LFPG_SID_RWY08L_RNAV_01.pdf'), null);
+  assert.equal(franceChartUrl(source, edition, 'LFPG', 'AD_2_LFPG_DATA_SID_01.pdf'), null, 'data tables are refused');
+  assert.equal(isFranceChartName('AD_2_LFPG_IAC_RWY08L_FNA_ILS_CAT123_LOC.pdf', 'LFPG'), true);
+
+  const viaProxy = documentUrl({ source: 'sia-france', icao: 'LFPG', edition, pdf: 'AD_2_LFPG_STAR_RWY26L_RNAV_01.pdf' });
+  assert.equal(viaProxy.url, `${base}/Cartes/LFPG/AD_2_LFPG_STAR_RWY26L_RNAV_01.pdf`);
+  assert.equal(documentUrl({ source: 'sia-france', icao: 'LFPG', edition, pdf: '../../etc/passwd.pdf' }), null);
 });
 
 test('the proxy accepts only an allowlisted publisher request', () => {
@@ -161,6 +205,8 @@ test('coverage separates what Stratos can display from what it may only link', (
   assert.equal(france.access, 'AVAILABLE_IN_APP', 'the SIA Licence Ouverte permits in-app display');
   assert.equal(france.integrated, true);
   assert.match(france.provider.name, /AIP France/);
+  assert.deepEqual(france.categories, ['diagram', 'sid', 'star', 'approach'],
+    'the SIA publishes the aerodrome sheet and all three procedure families');
   assert.equal(chartCoverage('WSSS').access, 'FREE_WITH_REGISTRATION');
   assert.equal(chartCoverage('RJTT').access, 'FREE_PUBLIC_ACCESS');
   assert.equal(chartCoverage('SBGR').access, 'FREE_PUBLIC_ACCESS');

@@ -4,7 +4,8 @@
 // Three publishers are integrated, each because its own terms allow it:
 //   - FAA d-TPP (U.S. Government work, public domain): one metafile per cycle.
 //   - AIP Austria (CC BY 4.0): the authority's chart index per aerodrome.
-//   - AIP France (Licence Ouverte): the SIA's aerodrome chart per aerodrome.
+//   - AIP France (Licence Ouverte): every chart the SIA lists in the airport's
+//     Cartes folder — aerodrome, SID, STAR and instrument approach.
 // Every other authority is a link in data/chart-sources.js, not a catalogue:
 // a publicly readable AIP is not a redistribution licence.
 //
@@ -13,8 +14,8 @@
 
 import { FAA_BASE, faaCycle, parseFaaAirport, parseMetafileHeader } from '../app/js/lib/charts.js';
 import {
-  eaipAirportPage, eaipForIcao, eaipPdfUrl, francePdfUrl, parseEaipCharts, parseEaipCycleIndex,
-  parseEaipValidity, parseFranceEdition,
+  eaipAirportPage, eaipForIcao, eaipPdfUrl, franceAirportPageUrl, franceChartUrl, francePdfUrl,
+  parseEaipCharts, parseEaipCycleIndex, parseEaipValidity, parseFranceCharts, parseFranceEdition,
 } from '../app/js/lib/eaip.js';
 
 const CACHE_MS = 6 * 60 * 60 * 1000;
@@ -124,19 +125,35 @@ async function eaipCatalogue(source, icao) {
   let effective = edition.effective;
   let expires = edition.expires;
   if (source.kind === 'france-atlas') {
-    const url = francePdfUrl(source, edition.folder, icao);
-    if (!url || !(await documentExists(url))) return null;
-    charts = [{
-      code: 'VAC',
-      title: 'Aerodrome chart — VAC',
-      caption: 'Visual approach chart',
-      pdf: `AD-2.${String(icao).toUpperCase()}.pdf`,
-      category: 'diagram',
+    // The SIA's eAIP page for the airport lists every chart in its Cartes
+    // folder — aerodrome, SID, STAR and approach — as per-chart PDFs, so the
+    // catalogue is read from the publisher's own page rather than assumed.
+    const page = franceAirportPageUrl(source, edition.folder, icao);
+    const html = page ? await download(page, 'text/html') : null;
+    charts = (html ? parseFranceCharts(html, { icao }) : []).map(chart => ({
+      ...chart,
       cycle: edition.cycle,
       edition: edition.folder,
       icao: String(icao).toUpperCase(),
-      url,
-    }];
+      url: franceChartUrl(source, edition.folder, icao, chart.pdf),
+    })).filter(chart => chart.url);
+    if (!charts.length) {
+      // The page can be unavailable; the aerodrome sheet is still published on a
+      // stable direct path, so it is the honest fallback rather than an empty list.
+      const url = francePdfUrl(source, edition.folder, icao);
+      if (!url || !(await documentExists(url))) return null;
+      charts = [{
+        code: 'VAC',
+        title: 'Aerodrome chart — VAC',
+        caption: 'Visual approach chart',
+        pdf: `AD-2.${String(icao).toUpperCase()}.pdf`,
+        category: 'diagram',
+        cycle: edition.cycle,
+        edition: edition.folder,
+        icao: String(icao).toUpperCase(),
+        url,
+      }];
+    }
   } else {
     const html = await download(eaipAirportPage(source, edition.folder, icao), 'text/html');
     if (!html) return null;
@@ -215,6 +232,7 @@ export default async function handler(req, res) {
         pdf: chart.pdf,
         url: chart.url,
         category: chart.category,
+        icao: chart.icao || icao,
         edition: chart.edition || null,
       })),
     });

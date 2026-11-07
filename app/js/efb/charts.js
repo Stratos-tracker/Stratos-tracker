@@ -109,9 +109,11 @@ function documentUrls(chart) {
   if (chart.source === 'austrocontrol-eaip') {
     query = `source=austrocontrol&icao=${encodeURIComponent(chart.icao || '')}&cycle=${encodeURIComponent(chart.cycle || '')}&pdf=${encodeURIComponent(chart.pdf)}`;
   } else if (chart.source === 'sia-france') {
-    // The proxy builds the French document name from the ICAO: the SIA publishes
-    // one direct file per aerodrome, so no name is ever taken from the page.
-    query = `source=sia-france&icao=${encodeURIComponent(chart.icao || '')}&edition=${encodeURIComponent(chart.edition || '')}`;
+    // The proxy rebuilds the French document address from the ICAO, edition and
+    // the SIA's own file name; the name is only forwarded after the catalogue
+    // read it from the publisher's page.
+    query = `source=sia-france&icao=${encodeURIComponent(chart.icao || '')}&edition=${encodeURIComponent(chart.edition || '')}`
+      + (chart.pdf ? `&pdf=${encodeURIComponent(chart.pdf)}` : '');
   } else {
     query = `cycle=${encodeURIComponent(chart.cycle || '')}&file=${encodeURIComponent(chart.pdf)}`;
   }

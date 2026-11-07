@@ -48,7 +48,7 @@ open inside the EFB; every other status keeps the publisher link and says why.
 | Country | Authority | Publisher | Charts | Terms | Last checked |
 | --- | --- | --- | --- | --- | --- |
 | Austria | Austro Control | [AIP Austria](https://eaip.austrocontrol.at/) | diagram, sid, star, approach, minimums, hotspot | Explicit terms allow third-party display and redistribution. | 2026-11-06 |
-| France | Service de l’information aéronautique | [SIA — AIP France](https://www.sia.aviation-civile.gouv.fr/?___store=english) | diagram | Explicit terms allow third-party display and redistribution. | 2026-11-06 |
+| France | Service de l’information aéronautique | [SIA — AIP France](https://www.sia.aviation-civile.gouv.fr/?___store=english) | diagram, sid, star, approach | Explicit terms allow third-party display and redistribution. | 2026-11-06 |
 | United States | Federal Aviation Administration | [FAA Digital Terminal Procedures](https://www.faa.gov/air_traffic/flight_info/aeronav/digital_products/) | diagram, sid, star, approach, minimums, hotspot, enroute, area, vfr, obstacle, visual, parking | Explicit terms allow third-party display and redistribution. | 2026-11-06 |
 
 ## Link-only, free to view

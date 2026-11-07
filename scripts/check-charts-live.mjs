@@ -47,7 +47,7 @@ function documentQuery(chart) {
     return { source: 'austrocontrol', icao: chart.icao, cycle: chart.cycle, pdf: chart.pdf };
   }
   if (chart.source === 'sia-france') {
-    return { source: 'sia-france', icao: chart.icao, edition: chart.edition };
+    return { source: 'sia-france', icao: chart.icao, edition: chart.edition, pdf: chart.pdf };
   }
   return { cycle: chart.cycle, file: chart.pdf };
 }

@@ -58,9 +58,10 @@ export const EAIP_SOURCES = {
     attribution: '© SIA — AIP France, Licence Ouverte',
     terms: 'https://www.sia.aviation-civile.gouv.fr/produits-numeriques-en-libre-disposition.html',
     checked: '2026-11-06',
-    // The SIA exposes the aerodrome (VAC) chart as a direct PDF; the procedure
-    // charts are inside the eAIP package, so no other category is claimed.
-    categories: ['diagram'],
+    // The eAIP page for an airport lists every chart in that airport's Cartes
+    // folder: the aerodrome sheet, SIDs, STARs and instrument approaches. Each
+    // is a per-chart PDF the SIA itself serves, so all four families are claimed.
+    categories: ['diagram', 'sid', 'star', 'approach'],
     note: 'The SIA publishes the eAIP and its charts under the Licence Ouverte, which permits redistribution and inclusion in another application with attribution.',
   },
 };
@@ -118,6 +119,9 @@ export function parseFranceEdition(html) {
   return {
     folder: `eAIP_${String(day).padStart(2, '0')}_${MONTHS[month - 1]}_${year}`,
     cycle: airac ? `${airac[1]}/${airac[2]}` : '',
+    // Inside the edition the charts sit under the AIRAC folder named after the
+    // effective date, e.g. AIRAC-2026-10-29.
+    airacFolder: `AIRAC-${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
     effective: Date.UTC(year, month - 1, day),
     expires: Date.UTC(Number(span[6]), Number(span[5]) - 1, Number(span[4])),
   };
@@ -132,7 +136,107 @@ export function francePdfUrl(source, edition, icao) {
   return `${source.base}/${edition}/Atlas-VAC/PDF_AIPparSSection/VAC/AD/AD-2.${code}.pdf`;
 }
 
-/** The only French document Stratos asks for: the aerodrome chart. */
+/**
+ * The AIRAC folder inside a French eAIP edition, derived from the edition's own
+ * effective date ("eAIP_29_OCT_2026" → "AIRAC-2026-10-29").
+ */
+export function franceAiracFolder(edition) {
+  const match = /^eAIP_(\d{2})_([A-Z]{3})_(\d{4})$/.exec(String(edition || ''));
+  if (!match) return '';
+  const month = MONTHS.indexOf(match[2]);
+  if (month === -1) return '';
+  return `AIRAC-${match[3]}-${String(month + 1).padStart(2, '0')}-${match[1]}`;
+}
+
+/** The eAIP page listing every chart the SIA publishes for one French airport. */
+export function franceAirportPageUrl(source, edition, icao) {
+  const code = String(icao || '').trim().toUpperCase();
+  const airac = franceAiracFolder(edition);
+  if (!source || source.kind !== 'france-atlas' || !airac) return null;
+  if (!/^LF[A-Z0-9]{2}$/.test(code)) return null;
+  return `${source.base}/${edition}/FRANCE/${airac}/html/eAIP/FR-AD-2.${code}-fr-FR.html`;
+}
+
+/**
+ * A chart file the SIA publishes in an airport's Cartes folder. The aerodrome
+ * sheet, SID, STAR and approach families are chart documents; the DATA_* files
+ * in the same folder are tabular data, not charts, and are excluded.
+ */
+export function isFranceChartName(name, icao) {
+  const pdf = String(name || '');
+  const code = String(icao || '').trim().toUpperCase();
+  if (!/^LF[A-Z0-9]{2}$/.test(code)) return false;
+  if (!new RegExp(`^AD_2_${code}_(ADC|SID|STAR|IAC)_[A-Z0-9_-]+\.pdf$`, 'i').test(pdf)) return false;
+  return true;
+}
+
+/** The SIA's own address for one chart in its eAIP package, or null. */
+export function franceChartUrl(source, edition, icao, pdf) {
+  const code = String(icao || '').trim().toUpperCase();
+  const airac = franceAiracFolder(edition);
+  if (!source || source.kind !== 'france-atlas' || !airac) return null;
+  if (!isFranceChartName(pdf, code)) return null;
+  return `${source.base}/${edition}/FRANCE/${airac}/html/eAIP/Cartes/${code}/${pdf}`;
+}
+
+/** Chart family from the SIA's own file name. */
+export function classifyFranceChart(name) {
+  const pdf = String(name || '').toUpperCase();
+  if (/_DATA_/.test(pdf)) return 'other';
+  if (/_ADC_/.test(pdf)) return 'diagram';
+  if (/_SID_/.test(pdf)) return 'sid';
+  if (/_STAR_/.test(pdf)) return 'star';
+  if (/_IAC_/.test(pdf)) return 'approach';
+  return 'other';
+}
+
+const FRANCE_FAMILY = {
+  diagram: { token: 'ADC', label: 'Aerodrome chart' },
+  sid: { token: 'SID', label: 'SID' },
+  star: { token: 'STAR', label: 'STAR' },
+  approach: { token: 'IAC', label: 'Instrument approach' },
+};
+const FRANCE_ORDER = ['diagram', 'sid', 'star', 'approach'];
+
+/**
+ * Charts listed on one French airport's eAIP page. Every entry is a real PDF the
+ * SIA publishes in that airport's Cartes folder; the caption is the publisher's
+ * file name, not a generated one. Tabular DATA_* files are not charts and are
+ * dropped, as are links pointing at another aerodrome.
+ */
+export function parseFranceCharts(html, { icao } = {}) {
+  const code = String(icao || '').trim().toUpperCase();
+  if (!code) return [];
+  const charts = [];
+  const seen = new Set();
+  const pattern = /href="([^"]*?Cartes\/([A-Za-z0-9]{4})\/([^"\/]+\.pdf))"/gi;
+  let match;
+  while ((match = pattern.exec(String(html || '')))) {
+    const folder = match[2].toUpperCase();
+    const pdf = match[3];
+    if (folder !== code || seen.has(pdf) || !isFranceChartName(pdf, code)) continue;
+    const category = classifyFranceChart(pdf);
+    if (category === 'other') continue;
+    seen.add(pdf);
+    const family = FRANCE_FAMILY[category];
+    const tail = pdf.replace(/^AD_2_[A-Z0-9]{4}_/i, '').replace(/\.pdf$/i, '').replace(/_/g, ' ').trim();
+    // The family token is only stripped when it is duplicated by the label; the
+    // aerodrome sheet keeps its ADC number, which is what distinguishes the two.
+    const rest = category === 'diagram' ? tail : tail.replace(new RegExp(`^${family.token}\\s*`, 'i'), '').trim();
+    charts.push({
+      code: family.token,
+      title: rest ? `${family.label} · ${rest}` : family.label,
+      caption: '',
+      pdf,
+      category,
+      icao: code,
+    });
+  }
+  return charts.sort((a, b) => FRANCE_ORDER.indexOf(a.category) - FRANCE_ORDER.indexOf(b.category)
+    || a.title.localeCompare(b.title));
+}
+
+/** The only direct French document outside the eAIP pages: the aerodrome chart. */
 export function isFrancePdfName(name) {
   return /^AD-2\.[A-Z]{4}\.PDF$/i.test(String(name || ''));
 }
