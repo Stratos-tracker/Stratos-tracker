@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-07",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.39/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.39/Stratos-Setup.exe",
+      "sha256": "d98a919ee9080579bc0941b6f84723bdfb2135f0f7192812530a4be414681c25",
+      "size": 109868684
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.39/Stratos-2.1.39-mac-arm64.dmg",
+      "sha256": "07e4c9ade29c6bf8b52f545d57e26e835f93d048a772c8c70c833a20b38e1430",
+      "size": 125698039
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.39/Stratos-2.1.39-mac-x64.dmg",
+      "sha256": "61db65d77b27fc379cd16688520ea66c9931e81fc81fc9150bf7a0550faf0f05",
+      "size": 131161478
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.39/Stratos-2.1.39-linux-x64.AppImage",
+      "sha256": "15d405c294132f42e3579673ae57d11b67d4098ae7c3512f0c3f6ecc5ec6047c",
+      "size": 146793428
+    }
+  },
   "summary": "Montreal and Toronto chart sources join the EFB, signing in accepts a username as well as an email, and a tablet that signs in finds the PC on its own and connects with no code and no address.",
   "reason": "",
   "releaseNotes": [
