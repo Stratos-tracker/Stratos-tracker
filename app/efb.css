@@ -468,6 +468,46 @@ body[data-airline=""] .home-logo { opacity: .22; }
   filter: drop-shadow(0 0 70px var(--efb-airline-glow, transparent));
 }
 
+/* The resolved airline's mark, laid large across the deck and shown only when
+   the bag is dressed for that operator. The house mark above steps aside. */
+.home-airline-logo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  transition: opacity .45s ease;
+}
+body[data-airline]:not([data-airline=""]) .home-airline-logo { opacity: 1; }
+.hb-mark { display: grid; place-items: center; }
+.hb-logo {
+  width: min(86vw, 980px);
+  height: clamp(220px, 34vh, 430px);
+  background: var(--efb-accent);
+  -webkit-mask: var(--brand-logo) center / contain no-repeat;
+  mask: var(--brand-logo) center / contain no-repeat;
+  opacity: .24;
+}
+.hb-roundel {
+  width: clamp(240px, 42vmin, 440px);
+  height: clamp(240px, 42vmin, 440px);
+  border-radius: 50%;
+  border: 1px solid var(--efb-accent-line);
+  background: radial-gradient(circle at 50% 34%, var(--efb-airline-glow), transparent 68%);
+  opacity: .32;
+}
+.hb-code {
+  font-size: clamp(90px, 16vmin, 170px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: .04em;
+  text-indent: .04em;
+  color: var(--efb-accent);
+}
+
 .home-bar {
   position: relative;
   z-index: 2;

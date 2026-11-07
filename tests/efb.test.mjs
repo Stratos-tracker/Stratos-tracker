@@ -532,7 +532,10 @@ test('the airline dresses the whole bag, with a preview and a manual override', 
   assert.match(css, /\.home-logo \{[^}]*place-items: center/, 'the mark is centred on the deck');
   assert.match(css, /\.home-logo svg \{[^}]*color: var\(--efb-accent\)/, 'drawn in the house accent');
   assert.match(css, /body\[data-airline=""\] \.home-logo/, 'and only while no airline is loaded');
-  assert.doesNotMatch(shell, /renderBrandMark/, 'the deck no longer draws an operator wordmark');
+  assert.ok(/id="home-airline-logo"/.test(page), 'with the airline mark on the wallpaper');
+  assert.match(shell, /function renderAirlineWallpaper/, 'drawn from the resolved airline');
+  assert.match(css, /\.hb-logo \{[^}]*mask: var\(--brand-logo\)/, 'so one tone runs across every airline');
+  assert.match(css, /body\[data-airline\]:not\(\[data-airline=""\]\) \.home-airline-logo/, 'shown once an airline is resolved');
   assert.match(css, /body\[data-airline\]:not\(\[data-airline=""\]\) \.home-wall::after/, 'the wallpaper picks up the airline glow');
   assert.match(css, /\.et-airline b \{[^}]*background: var\(--efb-accent\)/, 'the header pill is drawn in the accent');
 

@@ -96,24 +96,40 @@ const DOCK = ['navigator', 'flightplan', 'briefing', 'charts', 'checklists'];
    of the bag draws with, so no page mixes styles. */
 const ICONS = {
   // Navigator: a compass rose over a planned track, not a generic pin.
-  navigator: '<circle cx="12" cy="12" r="8.6"/><path d="M12 6.6v2.2M12 15.2v2.2M6.6 12h2.2M15.2 12h2.2"/><path d="m14.9 9.1-1.6 4.2-4.2 1.6 1.6-4.2z"/>',
-  briefing: '<path d="M7 4.5h7.5L19 9v10.5H7z"/><path d="M14.3 4.6V9H19"/><path d="M9.6 12.4h6M9.6 15.2h6M9.6 17.6h3.8"/><path d="M4.2 7.2v12.3h10.4"/>',
+  // SF Symbols "map": the folded sheet, not a generic pin.
+  navigator: '<path d="M9 4.6 3.8 6.7v12.7L9 17.3l6 2.3 5.2-2.1V4.8L15 6.9z"/><path d="M9 4.6v12.7M15 6.9v12.7"/>',
+  // SF Symbols "doc.text".
+  briefing: '<path d="M6.8 3.6h7.4L18.8 8v12.4H6.8z"/><path d="M14.2 3.7V8h4.5"/><path d="M9.5 11.6h6.4M9.5 14.4h6.4M9.5 17.2h4.2"/>',
   // A planned track between two fixes, with the turns a route makes.
-  flightplan: '<circle cx="5.6" cy="18.4" r="2"/><circle cx="18.4" cy="5.6" r="2"/><path d="M7.1 17.1 10 13.7l3.2 1.4 3.7-6.6"/>',
-  weather: '<path d="M7.6 10.4a3.4 3.4 0 0 1 6.6-.9 3 3 0 0 1 4 2.9 3 3 0 0 1-3 3H8.6a2.6 2.6 0 0 1-1-5z"/><path d="M3.5 5.5h4.2M2.5 9h3.4M16.6 5h4.2"/>',
-  charts: '<path d="M4 6.3 9.3 4l5.4 2.3L20 4v13.7L14.7 20l-5.4-2.3L4 20z"/><path d="M9.3 4v13.7M14.7 6.3V20"/>',
-  airport: '<path d="M7 20V8.4l5-2.4 5 2.4V20"/><path d="M4.5 20h15"/><path d="M9.6 11.2h4.8M9.6 14.4h4.8M9.6 17.6h4.8"/><path d="M12 3v3"/>',
-  performance: '<path d="M3.6 17a8.4 8.4 0 1 1 16.8 0"/><path d="M12 17 16 9.6"/><circle cx="12" cy="17" r="1.5"/><path d="M3.6 17h2.2M18.2 17h2.2"/>',
-  weightbalance: '<path d="M12 4v16"/><path d="M5 7h14"/><path d="M9 7 6.4 12.4a2.7 2.7 0 0 0 5.2 0z"/><path d="M15 7l-2.6 5.4a2.7 2.7 0 0 0 5.2 0z"/><path d="M8 20h8"/>',
-  fuel: '<path d="M6 20V5.5h7V20"/><path d="M6 9.2h7"/><path d="M13 12h2.4a1.8 1.8 0 0 1 1.8 1.8v3.4a1.2 1.2 0 0 0 2.4 0V9.6l-2.2-2.2"/><path d="M4.6 20h9.8"/>',
-  checklists: '<path d="M9 4.8h6v2.4H9z"/><path d="M15 6h2.4A1.6 1.6 0 0 1 19 7.6v11.8H5V7.6A1.6 1.6 0 0 1 6.6 6H9"/><path d="m8.6 12.4 1.9 1.9 4-4.1"/><path d="M8.6 17.2h6.8"/>',
-  notepad: '<path d="M4.8 19.2h4.4L19 9.4l-4.4-4.4L4.8 14.8z"/><path d="m13.4 6.2 4.4 4.4"/><path d="M4.8 19.2 8 18.6"/>',
+  // SF Symbols "airplane".
+  flightplan: '<path d="M10.6 3.2a1.4 1.4 0 0 1 2.8 0v5.2l6.8 4v1.8l-6.8-2v4.1l2.5 1.8v1.5l-3.9-.9-3.9.9v-1.5l2.5-1.8v-4.1l-6.8 2v-1.8l6.8-4z"/>',
+  // SF Symbols "cloud.sun".
+  weather: '<circle cx="12.4" cy="8.2" r="2.4"/><path d="M12.4 3.6v1.2M7.8 4.9l.9.9M17 4.9l-.9.9"/><path d="M8 18.6a3 3 0 0 1 .4-6 3.9 3.9 0 0 1 7.4 1 2.8 2.8 0 0 1-.4 5z"/>',
+  // SF Symbols "chart.xyaxis.line".
+  charts: '<path d="M4 4v16h16"/><path d="m7 15 3.4-4.2 2.8 2.3 4-5.6"/>',
+  // SF Symbols "location".
+  airport: '<path d="M12 20.8s6.6-5.8 6.6-10.4a6.6 6.6 0 1 0-13.2 0c0 4.6 6.6 10.4 6.6 10.4z"/><circle cx="12" cy="10.2" r="2.4"/>',
+  // SF Symbols "gauge".
+  performance: '<path d="M3.8 16.8a8.2 8.2 0 1 1 16.4 0"/><path d="M12 16.8 15.6 10"/><circle cx="12" cy="16.8" r="1.4"/>',
+  // SF Symbols "scalemass".
+  weightbalance: '<path d="M12 3.8v16.4M6.4 20.2h11.2M4.4 7.2h15.2"/><path d="M7.6 7.2 5 12.4a2.7 2.7 0 0 0 5.2 0z"/><path d="M16.4 7.2l-2.6 5.2a2.7 2.7 0 0 0 5.2 0z"/>',
+  // SF Symbols "fuelpump".
+  fuel: '<path d="M6 20V5.6h7V20"/><path d="M6 9.4h7"/><path d="M13 12h2.3a1.8 1.8 0 0 1 1.8 1.8v3.3a1.2 1.2 0 0 0 2.4 0V9.7l-2.2-2.2"/><path d="M4.6 20h9.8"/>',
+  // SF Symbols "checklist".
+  checklists: '<path d="M9.2 6.4h8.6M9.2 12h8.6M9.2 17.6h5.6"/><path d="m3.8 6.1 1.2 1.2 2-2.3M3.8 11.7l1.2 1.2 2-2.3"/>',
+  // SF Symbols "square.and.pencil".
+  notepad: '<path d="M4.6 18.9v-3.6L15.8 4.1a1.6 1.6 0 0 1 2.3 0l1.8 1.8a1.6 1.6 0 0 1 0 2.3L8.2 18.9z"/><path d="m14.6 5.3 4.1 4.1"/><path d="M4.6 18.9 8 18.3"/>',
   // Cabin: a cabin speaker with its own wave, not a generic horn.
-  cabin: '<path d="M4.4 9.4h3.2L14 5.6v12.8l-6.4-3.8H4.4z"/><path d="M17 9.2a4.4 4.4 0 0 1 0 5.6"/><path d="M19.2 6.8a8 8 0 0 1 0 10.4"/>',
-  home: '<path d="M4.2 10.6 12 4.2l7.8 6.4V20H4.2z"/><path d="M9.6 20v-5.6h4.8V20"/>',
-  logbook: '<path d="M6 4.5h11.4A1.6 1.6 0 0 1 19 6.1v13.4H7.6A2.1 2.1 0 0 1 5.5 17.4V6a1.5 1.5 0 0 1 1.5-1.5z"/><path d="M9 8h6.4M9 11.2h4.4"/><path d="M5.6 17.2h13.3"/>',
-  settings: '<circle cx="12" cy="12" r="3"/><path d="M12 3v2.2M12 18.8V21M4.2 7.5l1.9 1.1M17.9 15.4l1.9 1.1M4.2 16.5l1.9-1.1M17.9 8.6l1.9-1.1"/>',
-  external: '<path d="M13 5h6v6"/><path d="m11.6 12.4 7.1-7.1"/><path d="M17 14v4.4H5.6V7H10"/>',
+  // SF Symbols "speaker.wave.2".
+  cabin: '<path d="M4.2 9.4h3.2L13.8 5.6v12.8l-6.4-3.8H4.2z"/><path d="M16.8 9.3a4.2 4.2 0 0 1 0 5.4"/><path d="M19.1 6.9a8 8 0 0 1 0 10.2"/>',
+  // SF Symbols "house".
+  home: '<path d="M4.2 10.7 12 4.1l7.8 6.6V20H4.2z"/><path d="M9.7 20v-5.6h4.6V20"/>',
+  // SF Symbols "book.closed".
+  logbook: '<path d="M6.2 4.4h10.2A1.7 1.7 0 0 1 18.1 6.1v13.5H7.8a2.2 2.2 0 0 1-2.2-2.2V5.9a1.5 1.5 0 0 1 1.5-1.5z"/><path d="M9.2 8.1h5.6M9.2 11.3h4"/><path d="M5.6 17.4h12.5"/>',
+  // SF Symbols "gearshape".
+  settings: '<g transform="translate(2.4 1.8)"><path d="M14.83 8.5 16.43 9.25v1.9L14.83 11.9 15.69 13.45 14.57 14.99 12.83 14.65 12.62 16.41 10.81 16.99 9.6 15.7 8.39 16.99 6.58 16.41 6.37 14.65 4.63 14.99 3.51 13.45 4.37 11.9 2.77 11.15v-1.9L4.37 8.5 3.51 6.95 4.63 5.41 6.37 5.75 6.58 3.99 8.39 3.41 9.6 4.7 10.81 3.41 12.62 3.99 12.83 5.75 14.57 5.41 15.69 6.95z"/><circle cx="9.6" cy="10.2" r="2.9"/></g>',
+  // SF Symbols "arrow.up.right.square".
+  external: '<path d="M13.2 4.8h6v6"/><path d="m19 5-7.4 7.4"/><path d="M17.2 13.6v4.6a1 1 0 0 1-1 1H5.8a1 1 0 0 1-1-1V7.8a1 1 0 0 1 1-1h4.6"/>',
 };
 
 export function icon(name, size = 16) {
@@ -207,6 +223,21 @@ function renderAirlineMark(resolved) {
       ? `<b>${esc(air.name)}</b><span>${esc(air.icao)}${air.iata ? ` · ${esc(air.iata)}` : ''}</span>`
       : '';
   }
+  renderAirlineWallpaper(air);
+}
+
+/*
+ * The resolved airline's mark, laid large across the deck. A bundled wordmark
+ * is masked into the airline's accent so one tone runs across every operator;
+ * an operator without a licensed file gets its own code in a roundel instead.
+ * The house theme clears it, and the Stratos mark in the wallpaper takes over.
+ */
+function renderAirlineWallpaper(air) {
+  if (!dom.airlineWallpaper) return;
+  if (!air) { dom.airlineWallpaper.innerHTML = ''; return; }
+  dom.airlineWallpaper.innerHTML = air.logo
+    ? `<span class="hb-mark hb-logo" style="--brand-logo:url('${esc(air.logo)}')"></span>`
+    : `<span class="hb-mark hb-roundel"><span class="hb-code">${esc(airlineText(air))}</span></span>`;
 }
 
 /* ── navigation ──────────────────────────────────────────────────────── */
@@ -603,6 +634,7 @@ export async function boot() {
   dom.hwTele = document.getElementById('hw-tele');
   dom.airline = document.getElementById('et-airline');
   dom.homeAirline = document.getElementById('home-airline');
+  dom.airlineWallpaper = document.getElementById('home-airline-logo');
 
   state.plan = currentPlan();
   state.route = loadRoute();
