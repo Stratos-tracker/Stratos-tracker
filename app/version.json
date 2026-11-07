@@ -1,86 +1,53 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.1.38",
+  "latestVersion": "2.1.39",
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-07",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.38/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.38/Stratos-Setup.exe",
-      "sha256": "580342bf53bd255c5ab0c7e9a17f05c46eb9af165eb4b85f7ab7a188d1b03e5d",
-      "size": 109852716
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.38/Stratos-2.1.38-mac-arm64.dmg",
-      "sha256": "289442275de4ccd3e2aba45cd1b6144ac846df60fe74444de55b21b132fb3389",
-      "size": 125687494
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.38/Stratos-2.1.38-mac-x64.dmg",
-      "sha256": "a0528eeda1efaa67bd3bfe0af55174a3a900a2f46da38eaaca54591a89b5ac3e",
-      "size": 131161455
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.38/Stratos-2.1.38-linux-x64.AppImage",
-      "sha256": "1f5b177808da29bfba2eee9232f1585d2af982e5d1920c034860ca51b305dee2",
-      "size": 146768784
-    }
-  },
-  "summary": "The Flight Deck map can now show live rain, wind and turbulence, a solar night side, a configurable own-aircraft symbol and a 3D recorded track, all moving smoothly with the map.",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "Montreal and Toronto chart sources join the EFB, signing in accepts a username as well as an email, and a tablet that signs in finds the PC on its own and connects with no code and no address.",
   "reason": "",
   "releaseNotes": [
-    "The Flight Deck map gains optional animated RainViewer radar, Open-Meteo wind streamlines and a smoothed turbulence layer, each switched on from Map settings.",
-    "The aircraft you are flying now has its own colour, size, halo and trail width, while traffic keeps its own styling.",
-    "A 3D recorded-track view shows the flight in perspective: left-drag turns it, right-drag tilts it, and the latest point carries an aircraft marker.",
-    "The map's day/night layer is a solar-elevation mask with a smooth twilight band, rebuilt as the map moves instead of lagging behind a pan.",
-    "The route ahead starts at the aircraft while the flown path stays behind it, and the 3D view uses the same recorded track as the map.",
-    "Weather requests are cached and refreshed on a timer, so radar frames and model fields stay smooth without repeated calls on every frame.",
-    "Turbulence is drawn as an interpolated amber-to-red field instead of separate blobs, and wind is drawn as moving streamlines instead of arrows.",
-    "Panning with the day/night layer on no longer leaves a diagonal night wedge, because the mask follows the current map view.",
-    "A route saved before procedure geometry was versioned now re-resolves its departure instead of keeping the old runway turn.",
-    "The 3D view no longer opens a browser context menu on right-drag or changes pitch when the pointer only pans.",
-    "Turning off the own trail or changing its width no longer affects traffic trails or traffic colours.",
-    "Radar, wind and turbulence are built from cached, coarse rasters that update only when the map view or refresh timer changes.",
-    "The day/night mask rebuilds in the same frame as a pan, keeping map movement at a steady frame rate.",
-    "Map settings now has an Own aircraft & trail card with a colour picker, size and trail-width sliders, halo and trail switches, and a reset action.",
-    "Map layers are grouped in the Map settings panel, with short notes on the weather sources and what they do not replace.",
-    "Stored routes from earlier builds are upgraded in place, so no saved flight plan needs to be re-created.",
-    "The weather layers need a network connection to RainViewer and Open-Meteo; the rest of the map works without them.",
-    "Rain, wind and turbulence are planning aids, not PIREPs, SIGMETs or official weather."
+    "The EFB Charts page names the official sources for Montreal (CYUL) and Toronto (CYYZ): NAV CANADA, the CZUL index for the Montreal FIR, IVAO Canada's CAP charts and FltPlan, each opening in the publisher's own portal.",
+    "Opening Stratos on a tablet that is signed in now finds the PC on the same Wi-Fi by itself, opens the bridge the PC advertises and shows live aircraft, with no code, address or pairing step.",
+    "Signing in accepts an email address or a username, so either one created with the account works on the PC, a tablet and a phone.",
+    "The tablet reports Connected, Searching, Reconnecting or PC not found, and never shows an address or a port.",
+    "Signing in on a tablet hands the account to the local bridge with a one-time code carried in the URL fragment, which is exchanged for a bridge session and never sent to the bridge.",
+    "One PC connects automatically; several PCs on the account show a short name-only chooser, and a bridge that drops reconnects on its own.",
+    "A PC with Stratos open publishes its bridge address to the signed-in account every 30 seconds, and the record expires after two minutes so a closed PC is never offered.",
+    "Chart sources resolve per airport, so the sources offered belong to the airport's own country and region rather than to its FIR alone.",
+    "The bridge accepts a pairing link that carries a fragment, so a handed-off tablet lands on the local map instead of a cleared address.",
+    "The desktop build reads account data from the deployed account service instead of a local origin, so sign-in and discovery work in the installed app.",
+    "Automatic discovery needs the updated account service: an older one reports that bridge discovery is unavailable, and the PC's page can still be opened by hand.",
+    "Stratos links to NAV CANADA, CZUL, IVAO Canada and FltPlan and does not copy or host their documents.",
+    "Charts offered as links are the publisher's current documents, not charts bundled with Stratos."
   ],
   "notes": {
     "features": [
-      "The Flight Deck map gains optional animated RainViewer radar, Open-Meteo wind streamlines and a smoothed turbulence layer, each switched on from Map settings.",
-      "The aircraft you are flying now has its own colour, size, halo and trail width, while traffic keeps its own styling.",
-      "A 3D recorded-track view shows the flight in perspective: left-drag turns it, right-drag tilts it, and the latest point carries an aircraft marker."
+      "The EFB Charts page names the official sources for Montreal (CYUL) and Toronto (CYYZ): NAV CANADA, the CZUL index for the Montreal FIR, IVAO Canada's CAP charts and FltPlan, each opening in the publisher's own portal.",
+      "Opening Stratos on a tablet that is signed in now finds the PC on the same Wi-Fi by itself, opens the bridge the PC advertises and shows live aircraft, with no code, address or pairing step.",
+      "Signing in accepts an email address or a username, so either one created with the account works on the PC, a tablet and a phone."
     ],
     "improvements": [
-      "The map's day/night layer is a solar-elevation mask with a smooth twilight band, rebuilt as the map moves instead of lagging behind a pan.",
-      "The route ahead starts at the aircraft while the flown path stays behind it, and the 3D view uses the same recorded track as the map.",
-      "Weather requests are cached and refreshed on a timer, so radar frames and model fields stay smooth without repeated calls on every frame.",
-      "Turbulence is drawn as an interpolated amber-to-red field instead of separate blobs, and wind is drawn as moving streamlines instead of arrows."
+      "The tablet reports Connected, Searching, Reconnecting or PC not found, and never shows an address or a port.",
+      "Signing in on a tablet hands the account to the local bridge with a one-time code carried in the URL fragment, which is exchanged for a bridge session and never sent to the bridge.",
+      "One PC connects automatically; several PCs on the account show a short name-only chooser, and a bridge that drops reconnects on its own.",
+      "A PC with Stratos open publishes its bridge address to the signed-in account every 30 seconds, and the record expires after two minutes so a closed PC is never offered.",
+      "Chart sources resolve per airport, so the sources offered belong to the airport's own country and region rather than to its FIR alone."
     ],
     "fixes": [
-      "Panning with the day/night layer on no longer leaves a diagonal night wedge, because the mask follows the current map view.",
-      "A route saved before procedure geometry was versioned now re-resolves its departure instead of keeping the old runway turn.",
-      "The 3D view no longer opens a browser context menu on right-drag or changes pitch when the pointer only pans.",
-      "Turning off the own trail or changing its width no longer affects traffic trails or traffic colours."
+      "The bridge accepts a pairing link that carries a fragment, so a handed-off tablet lands on the local map instead of a cleared address.",
+      "The desktop build reads account data from the deployed account service instead of a local origin, so sign-in and discovery work in the installed app."
     ],
-    "performance": [
-      "Radar, wind and turbulence are built from cached, coarse rasters that update only when the map view or refresh timer changes.",
-      "The day/night mask rebuilds in the same frame as a pan, keeping map movement at a steady frame rate."
-    ],
-    "ui": [
-      "Map settings now has an Own aircraft & trail card with a colour picker, size and trail-width sliders, halo and trail switches, and a reset action.",
-      "Map layers are grouped in the Map settings panel, with short notes on the weather sources and what they do not replace."
-    ],
+    "performance": [],
+    "ui": [],
     "compatibility": [
-      "Stored routes from earlier builds are upgraded in place, so no saved flight plan needs to be re-created.",
-      "The weather layers need a network connection to RainViewer and Open-Meteo; the rest of the map works without them."
+      "Automatic discovery needs the updated account service: an older one reports that bridge discovery is unavailable, and the PC's page can still be opened by hand.",
+      "Stratos links to NAV CANADA, CZUL, IVAO Canada and FltPlan and does not copy or host their documents."
     ],
     "other": [
-      "Rain, wind and turbulence are planning aids, not PIREPs, SIGMETs or official weather."
+      "Charts offered as links are the publisher's current documents, not charts bundled with Stratos."
     ]
   }
 }

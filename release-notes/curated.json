@@ -1,4 +1,32 @@
 {
+  "2.1.39": {
+    "summary": "Montreal and Toronto chart sources join the EFB, signing in accepts a username as well as an email, and a tablet that signs in finds the PC on its own and connects with no code and no address.",
+    "changelog": {
+      "features": [
+        "The EFB Charts page names the official sources for Montreal (CYUL) and Toronto (CYYZ): NAV CANADA, the CZUL index for the Montreal FIR, IVAO Canada's CAP charts and FltPlan, each opening in the publisher's own portal.",
+        "Opening Stratos on a tablet that is signed in now finds the PC on the same Wi-Fi by itself, opens the bridge the PC advertises and shows live aircraft, with no code, address or pairing step.",
+        "Signing in accepts an email address or a username, so either one created with the account works on the PC, a tablet and a phone."
+      ],
+      "improvements": [
+        "The tablet reports Connected, Searching, Reconnecting or PC not found, and never shows an address or a port.",
+        "Signing in on a tablet hands the account to the local bridge with a one-time code carried in the URL fragment, which is exchanged for a bridge session and never sent to the bridge.",
+        "One PC connects automatically; several PCs on the account show a short name-only chooser, and a bridge that drops reconnects on its own.",
+        "A PC with Stratos open publishes its bridge address to the signed-in account every 30 seconds, and the record expires after two minutes so a closed PC is never offered.",
+        "Chart sources resolve per airport, so the sources offered belong to the airport's own country and region rather than to its FIR alone."
+      ],
+      "fixes": [
+        "The bridge accepts a pairing link that carries a fragment, so a handed-off tablet lands on the local map instead of a cleared address.",
+        "The desktop build reads account data from the deployed account service instead of a local origin, so sign-in and discovery work in the installed app."
+      ],
+      "compatibility": [
+        "Automatic discovery needs the updated account service: an older one reports that bridge discovery is unavailable, and the PC's page can still be opened by hand.",
+        "Stratos links to NAV CANADA, CZUL, IVAO Canada and FltPlan and does not copy or host their documents."
+      ],
+      "other": [
+        "Charts offered as links are the publisher's current documents, not charts bundled with Stratos."
+      ]
+    }
+  },
   "2.1.36": {
     "summary": "The Settings update centre downloads the published installer instead of reporting an updater feed that is no longer published.",
     "changelog": {

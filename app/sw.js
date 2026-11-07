@@ -2,7 +2,7 @@
    The shell is available offline after the first visit. Live data, telemetry,
    logbook JSON, weather and map tiles are NEVER cached, so stale data can never
    be presented as live. A new build replaces the old cache on activation. */
-const CACHE = 'stratos-shell-2.1.38';
+const CACHE = 'stratos-shell-2.1.39';
 const SHELL = [
   './',
   'index.html',
@@ -34,6 +34,7 @@ const SHELL = [
   'js/account/ui.js',
   'js/account/auth.js',
   'js/account/live.js',
+  'js/account/discovery.js',
   'js/account/dashboard.js',
 ];
 
