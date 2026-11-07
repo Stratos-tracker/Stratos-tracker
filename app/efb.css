@@ -454,8 +454,13 @@ body[data-wall="graphite"] .home-wall {
   place-items: center;
   pointer-events: none;
   user-select: none;
-  opacity: .22;
+  opacity: 0;
+  transition: opacity .45s ease;
 }
+/* The house icon belongs to the unbranded deck: once an airline is resolved,
+   its own colour wash carries the wallpaper and the Stratos mark steps back. */
+body:not([data-airline]) .home-logo,
+body[data-airline=""] .home-logo { opacity: .22; }
 .home-logo svg {
   width: clamp(300px, 52vmin, 640px);
   height: auto;
