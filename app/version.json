@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-08",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.40/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.40/Stratos-Setup.exe",
+      "sha256": "62d82d16ef9cf95cf2cf5e8f514c1e0436cedbf1e5d046702e32bf5b357b4eb6",
+      "size": 109893519
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.40/Stratos-2.1.40-mac-arm64.dmg",
+      "sha256": "a95147a09ec46c03a9034d27ad7d45880c946c341cb7cbc1e8b6107102ff7325",
+      "size": 125767076
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.40/Stratos-2.1.40-mac-x64.dmg",
+      "sha256": "d80568df4c60b37661d9202f10dc2030d0ac17c6a52b3c258fe028c831096879",
+      "size": 131212901
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.40/Stratos-2.1.40-linux-x64.AppImage",
+      "sha256": "de51eb8aa9943277f686d8559d8f8e9be5e72c5fde6939751adb023e1ff1ab6c",
+      "size": 146821949
+    }
+  },
   "summary": "Stratos opens with a real sign-in page that can be skipped for now, keeps a phone's live tracking inside the app instead of opening the PC's address, and detects the aircraft itself.",
   "reason": "",
   "releaseNotes": [
