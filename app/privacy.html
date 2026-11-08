@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Privacy Policy · Stratos</title>
+<meta name="description" content="What a Stratos account stores, what never leaves your PC, and how to have it deleted.">
+<meta name="theme-color" content="#06080a">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="stratos-ui.css">
+<link rel="stylesheet" href="account.css">
+</head>
+<body class="acct">
+<header class="acct-top">
+  <a class="acct-brand" href="auth.html">
+    <span data-brand-mark aria-hidden="true"></span>
+    <span>STRATOS<small>FLIGHT DECK</small></span>
+  </a>
+  <nav class="acct-top__nav">
+    <a href="auth.html">Sign in</a>
+    <a href="terms.html">Terms</a>
+  </nav>
+</header>
+
+<main class="acct-main">
+<article class="legal">
+  <h1>Privacy Policy</h1>
+  <p class="legal__meta">Last updated 8 November 2026</p>
+
+  <h2>What an account stores</h2>
+  <p>Your email address, username, optional full name and profile picture, your preferences, and the
+  logbook flights you sync. Passwords are stored only as a salted PBKDF2 hash: the service cannot
+  read your password back, and neither can anyone who obtains a copy of the database. Session
+  tokens are stored as SHA-256 digests, with a short device label so you can recognise and revoke
+  each signed-in device.</p>
+
+  <h2>What never leaves your computer</h2>
+  <p>Live telemetry travels between your simulator, the bridge on your PC, and the devices watching
+  it on your own network. It is not uploaded to the account service. Charts, airport documents and
+  weather are fetched from their publishers by the device that displays them.</p>
+
+  <h2>Where the data lives</h2>
+  <p>Accounts are held in a Cloudflare D1 database behind the Stratos relay. Requests are served
+  over HTTPS. If email delivery is configured, your address is passed to the mail provider solely
+  to send confirmation and password-reset messages.</p>
+
+  <h2>Cookies and local storage</h2>
+  <p>The account pages do not use advertising or analytics cookies. Your browser stores a session
+  token so you stay signed in: in local storage when you choose “Keep me signed in”, and in session
+  storage otherwise, which ends the session when the tab closes. Signing out removes it.</p>
+
+  <h2>Your choices</h2>
+  <p>You can change your name, username and picture at any time in Settings, change your password,
+  and revoke any signed-in device. To have the account and its flights deleted, ask through the
+  project's issue tracker and it will be removed.</p>
+
+  <h2>Contact</h2>
+  <p>Privacy questions: <a href="https://github.com/Stratos-tracker/Stratos-tracker/issues">open an issue</a>
+  on the project repository.</p>
+
+  <p class="legal__foot"><a href="auth.html">Back to sign in</a> · <a href="terms.html">Terms of Service</a></p>
+</article>
+</main>
+
+<script type="module">
+  import { brandMark } from './js/account/ui.js';
+  for (const slot of document.querySelectorAll('[data-brand-mark]')) slot.innerHTML = brandMark();
+</script>
+</body>
+</html>

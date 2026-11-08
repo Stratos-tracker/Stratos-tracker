@@ -15,6 +15,8 @@ import { DEFAULT_RELAY } from '../lib/connect.js';
 
 const TOKEN_KEY = 'stratos.account.token';
 const BASE_KEY = 'stratos.account.api';
+const USER_KEY = 'stratos.account.user';
+const SKIP_KEY = 'stratos.account.skipped';
 
 export class AccountError extends Error {
   constructor(status, message) {
@@ -52,20 +54,64 @@ export function rememberApiBase(value) {
   return base;
 }
 
+/**
+ * Where the session token lives.
+ *
+ * With "remember me" it goes to localStorage and survives the app being
+ * closed, which is what a pilot expects on their own PC or tablet. Without it
+ * the token lives in sessionStorage, so closing the tab ends the session on a
+ * shared or borrowed device. If a write is refused (private mode), the session
+ * still works for this tab rather than failing outright.
+ */
 export function savedToken() {
-  try { return String(localStorage.getItem(TOKEN_KEY) || ''); } catch (_) { return ''; }
+  try {
+    const local = localStorage.getItem(TOKEN_KEY);
+    if (local) return String(local);
+  } catch (_) { /* private mode */ }
+  try { return String(sessionStorage.getItem(TOKEN_KEY) || ''); } catch (_) { return ''; }
 }
 
-export function rememberToken(token) {
+export function rememberToken(token, { remember = true } = {}) {
+  const value = token ? String(token) : '';
+  // A signed-in device no longer needs the first-launch prompt.
+  if (value) {
+    try { localStorage.removeItem(SKIP_KEY); } catch (_) { /* private mode */ }
+  }
   try {
-    if (token) localStorage.setItem(TOKEN_KEY, String(token));
+    if (value && remember) localStorage.setItem(TOKEN_KEY, value);
     else localStorage.removeItem(TOKEN_KEY);
-  } catch (_) { /* private mode means the session lasts this tab only */ }
-  return token;
+  } catch (_) { /* private mode */ }
+  try {
+    if (value && !remember) sessionStorage.setItem(TOKEN_KEY, value);
+    else sessionStorage.removeItem(TOKEN_KEY);
+  } catch (_) { /* private mode */ }
+  return value;
 }
 
 export function forgetToken() {
   rememberToken('');
+  rememberUser(null);
+}
+
+/**
+ * The account last seen on this device, kept beside the token so a label can
+ * name the pilot without waiting for a request. It is a name, never a secret.
+ */
+export function savedUser() {
+  try { return JSON.parse(localStorage.getItem(USER_KEY) || 'null'); } catch (_) { return null; }
+}
+
+export function rememberUser(user) {
+  try {
+    if (user && (user.username || user.email)) {
+      localStorage.setItem(USER_KEY, JSON.stringify({
+        username: user.username || '',
+        email: user.email || '',
+      }));
+    } else {
+      localStorage.removeItem(USER_KEY);
+    }
+  } catch (_) { /* private mode */ }
 }
 
 async function request(path, { method = 'GET', body, auth = true, base = apiBase() } = {}) {
@@ -102,16 +148,24 @@ async function request(path, { method = 'GET', body, auth = true, base = apiBase
 }
 
 // ── Accounts ─────────────────────────────────────────────────────────
-export async function signup({ email, password, username }) {
-  const payload = await request('/api/auth/signup', { method: 'POST', body: { email, password, username }, auth: false });
-  if (payload.token) rememberToken(payload.token);
+export async function signup({ name, email, password, username, acceptedTerms, remember = true }) {
+  const payload = await request('/api/auth/signup', {
+    method: 'POST',
+    body: { name, email, password, username, acceptedTerms, remember },
+    auth: false,
+  });
+  if (payload.token) rememberToken(payload.token, { remember });
+  if (payload.user) rememberUser(payload.user);
   return payload;
 }
 
-export async function login({ email, username, identifier, password }) {
+export async function login({ email, username, identifier, password, remember = true }) {
   const who = String(identifier ?? email ?? username ?? '').trim();
-  const payload = await request('/api/auth/login', { method: 'POST', body: { identifier: who, password }, auth: false });
-  if (payload.token) rememberToken(payload.token);
+  const payload = await request('/api/auth/login', {
+    method: 'POST', body: { identifier: who, password, remember }, auth: false,
+  });
+  if (payload.token) rememberToken(payload.token, { remember });
+  if (payload.user) rememberUser(payload.user);
   return payload;
 }
 
@@ -126,6 +180,7 @@ export async function logout() {
 export async function session() {
   if (!savedToken()) return null;
   const payload = await request('/api/auth/session');
+  if (payload.user) rememberUser(payload.user);
   return payload.user || null;
 }
 
@@ -135,6 +190,7 @@ export const forgotPassword = email => request('/api/auth/forgot', { method: 'PO
 export const resetPassword = async ({ token, password }) => {
   const payload = await request('/api/auth/reset', { method: 'POST', body: { token, password }, auth: false });
   if (payload.token) rememberToken(payload.token);
+  if (payload.user) rememberUser(payload.user);
   return payload;
 };
 
@@ -145,6 +201,7 @@ export const exchangeHandoff = async code => {
     method: 'POST', body: { token: code }, auth: false,
   });
   if (payload.token) rememberToken(payload.token);
+  if (payload.user) rememberUser(payload.user);
   return payload;
 };
 
@@ -199,6 +256,7 @@ export function liveSocketUrl(ticket, base = apiBase()) {
 export const api = {
   base: apiBase,
   token: savedToken,
+  user: savedUser,
   signup, login, logout, session,
   verifyEmail, resendVerification, forgotPassword, resetPassword,
   updateAccount, changePassword, listSessions, revokeSession,

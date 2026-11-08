@@ -78,7 +78,7 @@ export function setBusy(button, busy, busyLabel = 'Working…') {
  * URL, a protocol-relative URL or anything with a scheme is discarded, so the
  * login page can never be used as an open redirect.
  */
-export function safeNext(fallback = 'account.html') {
+export function safeNext(fallback = 'index.html') {
   let raw = '';
   try { raw = new URLSearchParams(location.search).get('next') || ''; } catch (_) { raw = ''; }
   if (!raw) return fallback;
@@ -93,7 +93,7 @@ export function goTo(url) {
 }
 
 /** Send a signed-in visitor away from an auth page, and a stranger to sign in. */
-export async function guard({ signedIn, next = 'account.html', login = 'login.html' } = {}) {
+export async function guard({ signedIn, next = 'index.html', login = 'auth.html' } = {}) {
   const api = await import('./api.js');
   if (!api.savedToken()) {
     if (signedIn) goTo(`${login}?next=${encodeURIComponent(location.pathname.split('/').pop() + location.search)}`);

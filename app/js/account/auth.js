@@ -79,7 +79,7 @@ function readPasswordPair() {
 }
 
 async function signIn() {
-  await guard({ signedIn: false });
+  await guard({ signedIn: false, next: safeNext('index.html') });
   form?.addEventListener('submit', async event => {
     event.preventDefault();
     if (form.dataset.busy === '1') return;
@@ -94,10 +94,11 @@ async function signIn() {
     hideAlert(errorBox);
     setBusy(submit, true, 'Signing in…');
     try {
-      const result = await api.login({ identifier, password });
+      const remember = Boolean($('#remember')?.checked);
+      const result = await api.login({ identifier, password, remember });
       const name = result?.user?.username ? `, ${result.user.username}` : '';
-      succeed(`Signed in${name}. Opening your dashboard…`);
-      goTo(safeNext());
+      succeed(`Signed in${name}. Opening the map…`);
+      goTo(safeNext('index.html'));
     } catch (error) {
       fail(error.message);
       if (passwordInput) { passwordInput.value = ''; passwordInput.focus(); }
@@ -109,15 +110,19 @@ async function signIn() {
 }
 
 async function signUp() {
-  await guard({ signedIn: false });
+  await guard({ signedIn: false, next: safeNext('index.html') });
   form?.addEventListener('submit', async event => {
     event.preventDefault();
     if (form.dataset.busy === '1') return;
+    const name = String($('#name')?.value || '').trim();
+    const accepted = Boolean($('#accept')?.checked);
     const username = String($('#username')?.value || '').trim();
     const email = String($('#email')?.value || '').trim();
 
-    if (username.length < 2) return fail('Choose a username of at least 2 characters.');
+    if (name.length < 2) return fail('Enter your full name.');
+    if (username.length < 3) return fail('Choose a username of at least 3 characters.');
     if (!validEmail(email)) return fail('Enter a valid email address.');
+    if (!accepted) return fail('Accept the Terms of Service and Privacy Policy to create your account.');
     const pair = readPasswordPair();
     if (pair.error) return fail(pair.error);
 
@@ -125,12 +130,14 @@ async function signUp() {
     hideAlert(errorBox);
     setBusy(submit, true, 'Creating account…');
     try {
-      const result = await api.signup({ email, password: pair.password, username });
+      const result = await api.signup({
+        name, email, password: pair.password, username, acceptedTerms: accepted, remember: true,
+      });
       const sent = result?.verification?.sent;
-      const message = sent
-        ? 'Your account is ready. We emailed a link to confirm your address.'
-        : 'Your account is ready. Email delivery is not configured on this deployment yet, so the confirmation link is below.';
-      finish(message, result?.verification?.devLink);
+      // The service returns a session with the new account, so registration is a
+      // sign-in: go to the map instead of asking for the password a second time.
+      succeed(`${sent ? 'A confirmation link is on its way. ' : ''}Welcome aboard, ${name.split(/\s+/)[0]}. Opening your map…`);
+      setTimeout(() => goTo(safeNext('index.html')), 800);
     } catch (error) {
       fail(error.message);
     } finally {

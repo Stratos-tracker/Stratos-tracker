@@ -86,6 +86,8 @@ function paintUser(user) {
     try { host.textContent = new URL(api.apiBase()).host; } catch (_) { host.textContent = 'account service'; }
   }
 
+  const nameField = $('#profile-name');
+  if (nameField) nameField.value = user.name || '';
   const emailField = $('#profile-email');
   if (emailField) emailField.value = user.email || '';
   const userField = $('#profile-username');
@@ -603,10 +605,12 @@ $('#profile-form')?.addEventListener('submit', async event => {
   event.preventDefault();
   const button = $('#profile-save');
   const username = String($('#profile-username')?.value || '').trim();
-  if (username.length < 2) return fail('Choose a username of at least 2 characters.');
+  const name = String($('#profile-name')?.value || '').trim();
+  if (name.length < 2) return fail('Enter your full name.');
+  if (username.length < 3) return fail('Choose a username of at least 3 characters.');
   setBusy(button, true, 'Saving…');
   try {
-    const changes = { username };
+    const changes = { username, name };
     if (S.pendingAvatar !== null) changes.avatar = S.pendingAvatar;
     const result = await api.updateAccount(changes);
     if (result.user) S.user = result.user;

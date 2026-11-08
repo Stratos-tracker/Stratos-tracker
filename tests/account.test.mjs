@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { toSnapshot } from '../app/js/account/live.js';
-import { liveSocketUrl, AccountError } from '../app/js/account/api.js';
+import {
+  liveSocketUrl, AccountError, savedToken, rememberToken, forgetToken,
+} from '../app/js/account/api.js';
 import { bridgeNextPath, pairConnectUrl, isPrivateBridgeUrl } from '../app/js/account/discovery.js';
 import {
   esc, initials, formatDuration, formatHours, formatNumber,
@@ -83,10 +85,39 @@ test('account: a next= target can only be a path on this site', () => {
   };
   assert.equal(withSearch('?next=account.html'), 'account.html');
   assert.equal(withSearch('?next=logbook.html%3Ftab%3Dcareer'), 'logbook.html?tab=career');
-  assert.equal(withSearch(''), 'account.html');
-  assert.equal(withSearch('?next=https%3A%2F%2Fevil.example'), 'account.html');
-  assert.equal(withSearch('?next=%2F%2Fevil.example'), 'account.html');
-  assert.equal(withSearch('?next=javascript%3Aalert(1)'), 'account.html');
+  assert.equal(withSearch(''), 'index.html', 'a plain sign-in lands on the map');
+  assert.equal(withSearch('?next=https%3A%2F%2Fevil.example'), 'index.html');
+  assert.equal(withSearch('?next=%2F%2Fevil.example'), 'index.html');
+  assert.equal(withSearch('?next=javascript%3Aalert(1)'), 'index.html');
+});
+
+test('account: a remembered session outlives the tab, a short one does not', () => {
+  const make = () => {
+    const map = new Map();
+    return {
+      getItem: key => (map.has(key) ? map.get(key) : null),
+      setItem: (key, value) => map.set(key, String(value)),
+      removeItem: key => map.delete(key),
+    };
+  };
+  const previous = { local: globalThis.localStorage, session: globalThis.sessionStorage };
+  globalThis.localStorage = make();
+  globalThis.sessionStorage = make();
+  try {
+    rememberToken('remembered-token', { remember: true });
+    assert.equal(savedToken(), 'remembered-token');
+    assert.equal(globalThis.sessionStorage.getItem('stratos.account.token'), null);
+
+    rememberToken('tab-token', { remember: false });
+    assert.equal(savedToken(), 'tab-token', 'the short session is still found');
+    assert.equal(globalThis.localStorage.getItem('stratos.account.token'), null, 'but not written to the persistent store');
+
+    forgetToken();
+    assert.equal(savedToken(), '');
+  } finally {
+    if (previous.local === undefined) delete globalThis.localStorage; else globalThis.localStorage = previous.local;
+    if (previous.session === undefined) delete globalThis.sessionStorage; else globalThis.sessionStorage = previous.session;
+  }
 });
 
 test('account: durations, counts and initials read like the rest of the app', () => {

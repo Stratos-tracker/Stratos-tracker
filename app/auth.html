@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sign in · Stratos</title>
+<meta name="description" content="Sign in to Stratos, or create a free account to keep your logbook, aircraft and live flight in step across your PC, phone and tablet.">
+<meta name="theme-color" content="#06080a">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="stratos-ui.css">
+<link rel="stylesheet" href="account.css">
+</head>
+<body class="acct landing">
+<header class="acct-top">
+  <a class="acct-brand" href="auth.html">
+    <span data-brand-mark aria-hidden="true"></span>
+    <span>STRATOS<small>FLIGHT DECK</small></span>
+  </a>
+  <nav class="acct-top__nav">
+    <a href="privacy.html">Privacy</a>
+    <a href="terms.html">Terms</a>
+  </nav>
+</header>
+
+<main class="acct-main landing-main">
+  <section class="landing-hero" aria-labelledby="landing-title">
+    <p class="landing-eyebrow"><i aria-hidden="true"></i>One account · every screen</p>
+    <h1 id="landing-title">Sign in to your flight deck.</h1>
+    <p class="landing-lede">
+      Stratos keeps your logbook, aircraft and flight hours together, then puts them on the map
+      you fly from — PC, tablet or phone.
+    </p>
+    <ul class="landing-points">
+      <li><b>Your logbook follows you.</b> Every flight the bridge records appears on each signed-in device.</li>
+      <li><b>Telemetry stays local.</b> Live position moves between your PC and your bridge; the account only carries the summary.</li>
+      <li><b>You stay in control.</b> Any device can be signed out from Settings, and a password reset signs them all out.</li>
+    </ul>
+  </section>
+
+  <section class="landing-actions" aria-label="Choose how to continue">
+    <a class="choice choice--primary" href="login.html" data-next-into="login.html">
+      <span class="choice__body">
+        <b>Sign in</b>
+        <span>I already have a Stratos account.</span>
+      </span>
+      <span class="choice__arrow" aria-hidden="true">→</span>
+    </a>
+
+    <a class="choice" href="signup.html" data-next-into="signup.html">
+      <span class="choice__body">
+        <b>Create account</b>
+        <span>Free, and takes about a minute.</span>
+      </span>
+      <span class="choice__arrow" aria-hidden="true">→</span>
+    </a>
+
+    <p class="landing-note">
+      Passwords are stored only as salted PBKDF2 hashes. Stratos never keeps a copy it can read,
+      and never asks for your simulator or SimBrief password.
+    </p>
+
+    <button class="landing-skip" type="button" id="skip-signin">Skip for now</button>
+    <p class="landing-skip-note">Stratos works without an account. You can sign in or create one any time from Settings.</p>
+  </section>
+</main>
+
+<footer class="landing-foot">
+  <span>Stratos is a flight-simulator companion. Not for real-world navigation.</span>
+  <span><a href="terms.html">Terms of Service</a> · <a href="privacy.html">Privacy Policy</a></span>
+</footer>
+
+<script type="module" src="js/account/landing.js"></script>
+</body>
+</html>

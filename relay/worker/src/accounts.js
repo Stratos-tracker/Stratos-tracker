@@ -24,6 +24,7 @@
 import {
   ApiError,
   SESSION_TTL_MS,
+  SESSION_SHORT_TTL_MS,
   hashPassword,
   verifyPassword,
   randomToken,
@@ -94,6 +95,7 @@ function userView(row) {
     id: row.id,
     email: row.email,
     username: row.username,
+    name: row.name || '',
     avatar: row.avatar || '',
     emailVerified: Boolean(row.email_verified_at),
     createdAt: row.created_at,
@@ -101,7 +103,7 @@ function userView(row) {
   };
 }
 
-const USER_COLUMNS = 'u.id, u.email, u.username, u.avatar, u.prefs, u.email_verified_at, u.created_at';
+const USER_COLUMNS = 'u.id, u.email, u.username, u.name, u.avatar, u.prefs, u.email_verified_at, u.created_at';
 
 async function authenticate(request, env) {
   const db = requireDb(env);
@@ -111,7 +113,7 @@ async function authenticate(request, env) {
     throw new ApiError(401, 'Sign in to continue.');
   }
   const row = await db.prepare(
-    `SELECT s.id AS session_id, s.expires_at, s.last_seen_at, ${USER_COLUMNS}
+    `SELECT s.id AS session_id, s.expires_at, s.last_seen_at, s.created_at AS session_created_at, ${USER_COLUMNS}
        FROM sessions s JOIN users u ON u.id = s.user_id
       WHERE s.token_hash = ?`,
   ).bind(await sha256(token)).first();
@@ -123,19 +125,22 @@ async function authenticate(request, env) {
   }
   // Slide the window at most twice an hour on a busy account.
   if (now - Number(row.last_seen_at) > 30 * 60 * 1000) {
+    // Slide by the lifetime this session was created with, so a short
+    // "not remembered" session is never silently promoted to a month.
+    const lifetime = Math.max(SESSION_SHORT_TTL_MS, Number(row.expires_at) - Number(row.session_created_at));
     await db.prepare('UPDATE sessions SET last_seen_at = ?, expires_at = ? WHERE id = ?')
-      .bind(now, now + SESSION_TTL_MS, row.session_id).run();
+      .bind(now, now + lifetime, row.session_id).run();
   }
   return { user: row, sessionId: row.session_id, token };
 }
 
-async function createSession(env, userId, request, now = Date.now()) {
+async function createSession(env, userId, request, now = Date.now(), lifetime = SESSION_TTL_MS) {
   const token = randomToken(32);
   const userAgent = String(request.headers.get('user-agent') || '').slice(0, 200);
   await requireDb(env).prepare(
     `INSERT INTO sessions (id, user_id, token_hash, label, user_agent, created_at, last_seen_at, expires_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).bind(newId(), userId, await sha256(token), sessionLabel(userAgent), userAgent, now, now, now + SESSION_TTL_MS).run();
+  ).bind(newId(), userId, await sha256(token), sessionLabel(userAgent), userAgent, now, now, now + lifetime).run();
   return token;
 }
 
@@ -313,16 +318,25 @@ export async function handleAccountApi(request, env, url, cors = {}) {
 
       const now = Date.now();
       const userId = newId();
+      // The full name is part of the profile but is not used to sign in, so a
+      // client that does not send one still gets an account: it falls back to
+      // the username. Accepting the terms, though, is required.
+      const fullName = text(body.name ?? body.fullName, 80);
+      if (fullName && fullName.length < 2) throw new ApiError(400, 'Enter your full name.');
+      if (body.acceptedTerms !== true) {
+        throw new ApiError(400, 'Accept the Terms of Service and Privacy Policy to create an account.');
+      }
       const password = await hashPassword(String(body.password), env.PBKDF2_ITERATIONS);
       await db.prepare(
-        `INSERT INTO users (id, email, email_norm, username, username_norm, password_hash, password_salt,
-                            iterations, avatar, prefs, email_verified_at, failed_attempts, locked_until,
+        `INSERT INTO users (id, email, email_norm, username, username_norm, name, password_hash, password_salt,
+                            iterations, avatar, prefs, email_verified_at, terms_at, failed_attempts, locked_until,
                             created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, '{}', NULL, 0, 0, ?, ?)`,
-      ).bind(userId, email, emailNorm, username, usernameNorm,
-        password.password_hash, password.password_salt, password.iterations, now, now).run();
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, '{}', NULL, ?, 0, 0, ?, ?)`,
+      ).bind(userId, email, emailNorm, username, usernameNorm, fullName || username,
+        password.password_hash, password.password_salt, password.iterations, now, now, now).run();
 
-      const token = await createSession(env, userId, request, now);
+      const token = await createSession(env, userId, request, now,
+        body.remember === false ? SESSION_SHORT_TTL_MS : SESSION_TTL_MS);
       const verifyToken = await issueEmailToken(env, userId, 'verify', VERIFY_TTL_MS);
       const mail = verificationMail(appBase(env), verifyToken);
       const delivery = await sendMail(env, { to: email, subject: mail.subject, text: mail.text });
@@ -383,7 +397,8 @@ export async function handleAccountApi(request, env, url, cors = {}) {
         throw rejected;
       }
       await db.prepare('UPDATE users SET failed_attempts = 0, locked_until = 0 WHERE id = ?').bind(record.id).run();
-      const token = await createSession(env, record.id, request, now);
+      const token = await createSession(env, record.id, request, now,
+        body.remember === false ? SESSION_SHORT_TTL_MS : SESSION_TTL_MS);
       return json(200, { ok: true, token, user: userView(record) }, cors);
     }
 
@@ -538,6 +553,13 @@ export async function handleAccountApi(request, env, url, cors = {}) {
         }
         updates.push('username = ?', 'username_norm = ?');
         values.push(username, usernameNorm);
+      }
+
+      if (body.name !== undefined) {
+        const name = text(body.name, 80);
+        if (name.length < 2) throw new ApiError(400, 'Enter your full name.');
+        updates.push('name = ?');
+        values.push(name);
       }
 
       if (body.avatar !== undefined) {

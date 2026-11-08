@@ -1423,26 +1423,20 @@ test('the flight-plan card replaces the pencil and never invents a value', async
   assert.match(page, /else if\(act=='ofp'\)\{openOfpDoc\(\)\}/, 'the live card\'s OFP action opens the same document');
 });
 
-test('a phone reaches the PC map in one tap and never loses Stratos when the PC is off', async () => {
+test('a signed-in phone tracks its flight inside Stratos, with no PC address to open', async () => {
   const fs = await import('node:fs');
   const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
-  assert.match(page, /function bridgeOrigin\(\)/, 'the page remembers the PC it found');
-  assert.match(page, /location\.href=base\+'\/pair\/connect\?next=%2Findex\.html'/, 'the pairing page hands the phone to the map');
-  // A failed navigation cannot be undone by the page, so the hand-off is a tap
-  // and the Flight Deck itself works with no PC at all.
-  assert.match(page, /else if\(location\.protocol=='https:'&&phoneSized\(\)&&!liveOk\(\)\)pcMapOffer\(\);/, 'only a phone is offered the hand-off');
-  // The offer is a card, never a navigation on load: a PC that is off would
-  // replace the app with the browser error page, which is the dead end it exists
-  // to avoid.
-  assert.match(page, /function pcMapOffer\(\)\{/, 'the hand-off is a card');
-  assert.match(page, /id="pcmap-no"/, 'and it can be put aside');
-  assert.match(page, /sessionStorage\.setItem\('stratos\.pcMapDismissed','1'\)/, 'for the session, not forever');
-  assert.equal(page.includes("if(bridgeOrigin())openBridgeMap();"), false, 'a paired phone is not thrown at the PC on load');
-  assert.equal(page.includes('setTimeout(()=>{if(!liveOk())openBridgeMap()},1600)'), false, 'a first visit does not try the local name by itself');
-  assert.match(page, /function pcMapOffer\(\)/, 'the offer is its own control');
-  assert.match(page, /id="pcmap-go">Open PC map</, 'one button opens the PC map');
-  assert.match(page, /querySelector\('#pcmap-go'\)\.onclick=\(\)=>openBridgeMap\(\)/, 'and it does what it says');
-  assert.match(page, /stratos\.pcMapDismissed/, 'the offer can be put aside for the session');
+  const discovery = fs.readFileSync(new URL('../app/js/account/discovery.js', import.meta.url), 'utf8');
+  // The offer card and its LAN hand-off are gone: nothing asks the pilot to open
+  // another address, and no tap is needed to start tracking.
+  assert.equal(page.includes('Open PC map'), false, 'nothing asks the pilot to open another address');
+  assert.equal(page.includes('pcMapOffer'), false, 'no PC-map offer appears on load');
+  assert.equal(page.includes('openBridgeMap'), false, 'the page never navigates to the bridge origin');
+  // A discovered PC opens the live view inside Stratos, fed by the account.
+  assert.match(discovery, /location\.assign\('live\.html'\)/, 'the phone opens the in-app live view');
+  assert.equal(discovery.includes('location.assign(pairConnectUrl'), false, 'the phone is never sent to the LAN origin');
+  assert.match(page, /startPublisher\(bridge\.base/, 'the Flight Deck publishes the live flight');
+  assert.match(page, /import \{ startPublisher, findBridge \} from '\.\/js\/account\/live\.js'/, 'using the account feed');
   assert.match(page, /if\(location\.protocol=='http:'\)connect\(location\.origin\);/, 'the page served by the PC streams from it directly');
 });
 

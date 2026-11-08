@@ -18,6 +18,9 @@
  */
 
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+/* Without "remember me" a session ends after twelve hours, so a browser left
+   signed in on a borrowed or shared machine does not stay usable for a month. */
+export const SESSION_SHORT_TTL_MS = 12 * 60 * 60 * 1000;
 /* workerd rejects any PBKDF2 count above 100000 at runtime, so this is both the
    ceiling and the default. It is still a deliberately slow hash; the count is
    stored per user, so it can be raised if the platform ever allows more. */

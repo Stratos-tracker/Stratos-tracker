@@ -40,11 +40,15 @@ const pilot = {
   email: `pilot.${stamp}@${EMAIL_DOMAIN}`,
   password: 'Stratus-9-Kestrel',
   username: `Pilot${String(stamp).slice(-6)}`,
+  name: 'Jamie Rivers',
+  acceptedTerms: true,
 };
 const other = {
   email: `other.${stamp}@${EMAIL_DOMAIN}`,
   password: 'Cumulus-4-Tailwind',
   username: `Other${String(stamp).slice(-6)}`,
+  name: 'Alex Chen',
+  acceptedTerms: true,
 };
 
 let failures = 0;
@@ -68,6 +72,7 @@ await check('sign-up creates an account and a session', async () => {
   assert.ok(response.payload.token && response.payload.token.length > 20);
   assert.equal(response.payload.user.email, pilot.email);
   assert.equal(response.payload.user.emailVerified, false);
+  assert.equal(response.payload.user.name, 'Jamie Rivers', 'the full name is stored with the account');
   assert.equal(response.payload.verification.sent, false, 'no mail provider is configured locally');
   assert.ok(response.payload.verification.devLink, 'the link is returned so the flow is testable');
   session = response.payload.token;
@@ -87,6 +92,18 @@ await check('a duplicate email is refused with a readable reason', async () => {
   assert.match(response.payload.error, /already exists/i);
 });
 
+await check('creating an account requires accepting the terms', async () => {
+  const response = await api('POST', '/api/auth/signup', {
+    body: {
+      email: `terms.${stamp}@${EMAIL_DOMAIN}`,
+      password: 'Stratus-9-Kestrel',
+      username: `Terms${String(stamp).slice(-6)}`,
+    },
+  });
+  assert.equal(response.status, 400);
+  assert.match(response.payload.error, /Terms of Service/i);
+});
+
 await check('no token means no data', async () => {
   const response = await api('GET', '/api/dashboard');
   assert.equal(response.status, 401);
@@ -96,6 +113,18 @@ await check('the session identifies the account', async () => {
   const response = await api('GET', '/api/auth/session', { token: session });
   assert.equal(response.status, 200);
   assert.equal(response.payload.user.username, pilot.username);
+});
+
+await check('a sign-in without remember me gets a short session', async () => {
+  const response = await api('POST', '/api/auth/login', {
+    body: { identifier: pilot.email, password: pilot.password, remember: false },
+  });
+  assert.equal(response.status, 200, JSON.stringify(response.payload));
+  const sessions = await api('GET', '/api/account/sessions', { token: response.payload.token });
+  const current = sessions.payload.sessions.find(entry => entry.current);
+  assert.ok(current, 'the new session is listed');
+  const hours = (current.expiresAt - Date.now()) / 3600000;
+  assert.ok(hours > 11 && hours < 13, `expected about 12 hours, got ${hours.toFixed(1)}`);
 });
 
 // ── Email verification ──────────────────────────────────────────────

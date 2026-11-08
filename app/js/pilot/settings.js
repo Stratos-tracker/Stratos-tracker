@@ -1,7 +1,7 @@
 import { RESOURCE_MODES, detectResourceMode } from '../lib/telemetry.js';
 import { getSetting, setSetting, exportBackup, importBackup, getAllSettings, getFlights, downloadJson } from '../lib/store.js';
 import {
-  bridgeHealth, syncLogbook, saveAircraftIdentity, relayStatus, pairRelay, unpairRelay,
+  bridgeHealth, syncLogbook, relayStatus, pairRelay, unpairRelay,
   relayDevices, revokeRelayDevice, defaultBridgeBase, isHostedPage,
   newPairing, pairingStatus, revokePairing, forgetPairedPhone,
 } from '../bridge.js';
@@ -10,6 +10,7 @@ import { APP_VERSION } from '../lib/version.js';
 import { mountUpdateCenter } from '../update-ui.js';
 import { loadSimbriefId, saveSimbriefId, clearSimbriefId, validateSimbriefId } from '../lib/simbrief.js';
 import { DEFAULT_MAP_SETTINGS, readMapSettings, writeMapSettings } from '../lib/mapsettings.js';
+import { savedToken, savedUser, logout } from '../account/api.js';
 
 export async function mount(root, ctx) {
   let mode = (await getSetting('resourceMode', detectResourceMode()).catch(() => detectResourceMode())) || 'normal';
@@ -19,7 +20,7 @@ export async function mount(root, ctx) {
   let devices = [];
   let busy = false;
   let relayUrl = 'https://';
-  let identity = health?.identity || { aircraft: '', registration: '', callsign: '' };
+  let account = { token: savedToken(), user: savedUser() };
   let message = '';
   let desktopStatus = null;
   let diagnostics = null;
@@ -43,7 +44,6 @@ export async function mount(root, ctx) {
     render();
     try {
       health = await bridgeHealth(defaultBridgeBase(), 3500);
-      identity = health.identity || identity;
       message = 'Bridge status refreshed.';
     } catch (error) {
       message = error.name === 'BridgeAuthError'
@@ -179,7 +179,22 @@ export async function mount(root, ctx) {
     const modeInfo = RESOURCE_MODES[mode];
     root.innerHTML = `
       <div class="page-head">
-        <div><h1>Settings</h1><p>Everything here is stored on this device unless stated otherwise. No account is required.</p></div>
+        <div><h1>Settings</h1><p>Everything here is stored on this device unless stated otherwise. An account is optional.</p></div>
+      </div>
+
+      <div class="section-title"><h2>Stratos account</h2><span class="hint">Optional · keeps your logbook in step across devices</span></div>
+      <div class="grid grid-2">
+        <div class="card" style="grid-column:1/-1">
+          <div class="card-head"><h2>${account.user?.username ? esc(account.user.username) : 'Not signed in'}</h2><span class="spacer"></span>${account.user?.username ? tag('signed in', 'good') : tag('this device only', 'muted')}</div>
+          <p class="help">${account.user?.username
+            ? `Signed in${account.user.email ? ` as <b>${esc(account.user.email)}</b>` : ''}. Your logbook, aircraft and live flight follow you to every device you use.`
+            : 'Stratos works without an account: your logbook stays on this PC and the map, EFB and bridge are unchanged. Sign in to keep your logbook in step with your phone and tablet, and to watch your flight on them automatically.'}</p>
+          <div class="btn-row" style="margin-top:10px">
+            ${account.user?.username
+              ? '<a class="btn small" href="account.html">Manage account</a><button class="btn small ghost" id="account-signout">Sign out</button>'
+              : '<a class="btn primary small" href="auth.html?next=pilot.html%23settings">Sign in or create an account</a>'}
+          </div>
+        </div>
       </div>
 
       <div class="section-title"><h2>Appearance and performance</h2></div>
@@ -292,15 +307,6 @@ export async function mount(root, ctx) {
         </div>
 
         <div class="stack">
-          <div class="card">
-            <div class="card-head"><h2>Aircraft identity</h2></div>
-            <p class="help" style="margin-bottom:10px">X-Plane's data output does not send aircraft type. Set it here so landing ratings use the right aircraft class. MSFS supplies its own title when available.</p>
-            <div class="field"><label for="id-aircraft">Aircraft type</label><input class="input" id="id-aircraft" value="${esc(identity.aircraft || '')}" placeholder="e.g. B738, C172, TBM 930"></div>
-            <div class="field" style="margin-top:8px"><label for="id-registration">Registration</label><input class="input" id="id-registration" value="${esc(identity.registration || '')}" placeholder="e.g. N12345"></div>
-            <div class="field" style="margin-top:8px"><label for="id-callsign">Callsign</label><input class="input" id="id-callsign" value="${esc(identity.callsign || '')}" placeholder="e.g. STR123"></div>
-            <button class="btn primary" id="save-identity" style="margin-top:10px" ${bridgeOk ? '' : 'disabled'}>Save to bridge</button>
-            ${bridgeOk ? '' : '<p class="help" style="margin-top:8px">Start the bridge to save identity settings.</p>'}
-          </div>
           <div class="card">
             <div class="card-head"><h2>Access token</h2></div>
             <p class="help">Requests from this PC are trusted. Other devices on your network must enter the bridge token once. The token is stored in <code>${esc(health?.dataDir || 'the bridge data folder')}/bridge_token.txt</code> and printed when the bridge starts.</p>
@@ -519,20 +525,10 @@ export async function mount(root, ctx) {
       busy = false;
       await refreshBridge();
     });
-    document.getElementById('save-identity')?.addEventListener('click', async () => {
-      const next = {
-        aircraft: document.getElementById('id-aircraft').value.trim(),
-        registration: document.getElementById('id-registration').value.trim(),
-        callsign: document.getElementById('id-callsign').value.trim(),
-      };
-      try {
-        await saveAircraftIdentity(next);
-        identity = next;
-        message = 'Aircraft identity saved to the bridge.';
-        toast('Saved.', 'good');
-      } catch (error) {
-        message = `Could not save: ${error.message}`;
-      }
+    document.getElementById('account-signout')?.addEventListener('click', async () => {
+      try { await logout(); } catch (_) { /* the token is cleared regardless */ }
+      account = { token: '', user: null };
+      toast('Signed out. This PC keeps its logbook.');
       render();
     });
     document.getElementById('pair-phone')?.addEventListener('click', startPairing);

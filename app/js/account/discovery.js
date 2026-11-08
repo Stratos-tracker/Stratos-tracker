@@ -213,14 +213,13 @@ export function pairConnectUrl(base, code = '') {
   return `${String(base).replace(/\/+$/, '')}/pair/connect?next=${encodeURIComponent(bridgeNextPath(code))}`;
 }
 
-async function openBridge(bridge) {
+async function openBridge() {
   paintLanStatus('connecting');
-  let code = '';
-  try {
-    const handoff = await api.createHandoff();
-    code = handoff && handoff.code ? String(handoff.code) : '';
-  } catch (_) { /* the local map still works without account sync */ }
-  location.assign(pairConnectUrl(bridge.url, code));
+  // The account has already told us which PC is live, so there is nothing to
+  // open on another origin: Stratos's own live view reads the same flight from
+  // the account feed. No LAN address, no second browser tab, no typing.
+  try { sessionStorage.setItem('stratos.openedLive', '1'); } catch (_) { /* private mode */ }
+  location.assign('live.html');
 }
 
 /**
@@ -230,6 +229,12 @@ async function openBridge(bridge) {
 export function startAutoConnect({ force = false } = {}) {
   if (autoStarted || !hosted() || !api.savedToken()) return;
   if (!force && !phoneSized()) return;
+  // Already there, or the pilot has come back to the Deck on purpose: the live
+  // view is opened once per session, not on every navigation.
+  if (/live\.html$/.test(location.pathname)) return;
+  if (!force) {
+    try { if (sessionStorage.getItem('stratos.openedLive') === '1') return; } catch (_) { /* private mode */ }
+  }
   autoStarted = true;
 
   const look = async () => {

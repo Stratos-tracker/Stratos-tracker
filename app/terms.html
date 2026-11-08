@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Terms of Service · Stratos</title>
+<meta name="description" content="The terms that apply to a Stratos account and the Stratos flight tracker.">
+<meta name="theme-color" content="#06080a">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="stratos-ui.css">
+<link rel="stylesheet" href="account.css">
+</head>
+<body class="acct">
+<header class="acct-top">
+  <a class="acct-brand" href="auth.html">
+    <span data-brand-mark aria-hidden="true"></span>
+    <span>STRATOS<small>FLIGHT DECK</small></span>
+  </a>
+  <nav class="acct-top__nav">
+    <a href="auth.html">Sign in</a>
+    <a href="privacy.html">Privacy</a>
+  </nav>
+</header>
+
+<main class="acct-main">
+<article class="legal">
+  <h1>Terms of Service</h1>
+  <p class="legal__meta">Last updated 8 November 2026</p>
+
+  <h2>1. What Stratos is</h2>
+  <p>Stratos is a companion for flight simulators. It reads telemetry from your simulator through a
+  bridge that runs on your own computer, draws it on a map, and keeps a logbook. It is not an
+  aviation tool: nothing it shows may be used for real-world navigation, flight planning or
+  operational decisions.</p>
+
+  <h2>2. Your account</h2>
+  <p>An account stores a username, an email address, an optional full name and picture, and the
+  flights and preferences you choose to sync. You are responsible for keeping your password to
+  yourself and for what happens under your account. One person per account; do not share
+  credentials. You must be old enough to consent to data processing where you live.</p>
+
+  <h2>3. Acceptable use</h2>
+  <p>Do not attempt to access another person's account or data, probe or overload the service,
+  automate sign-ups, or use Stratos to break the law or a third party's rights. Charts and airport
+  documents are opened from their publishers' own sites under those publishers' terms; Stratos
+  does not grant you any licence to them.</p>
+
+  <h2>4. Availability and changes</h2>
+  <p>The service is provided as it is. Features may change, and the account service may be
+  unavailable while it is maintained. The local parts of Stratos — the map, the bridge, the
+  logbook on this machine — keep working without an account.</p>
+
+  <h2>5. Ending your use</h2>
+  <p>You may stop using Stratos at any time, and you may ask for your account and its data to be
+  deleted. We may suspend an account that abuses the service or breaks these terms.</p>
+
+  <h2>6. Liability</h2>
+  <p>To the extent the law allows, Stratos is provided without warranties, and the people who make
+  it are not liable for indirect or consequential loss arising from its use. Nothing here limits
+  rights you have that cannot be limited by agreement.</p>
+
+  <h2>7. Contact</h2>
+  <p>Questions about these terms: <a href="https://github.com/Stratos-tracker/Stratos-tracker/issues">open an issue</a>
+  on the project repository.</p>
+
+  <p class="legal__foot"><a href="auth.html">Back to sign in</a> · <a href="privacy.html">Privacy Policy</a></p>
+</article>
+</main>
+
+<script type="module">
+  import { brandMark } from './js/account/ui.js';
+  for (const slot of document.querySelectorAll('[data-brand-mark]')) slot.innerHTML = brandMark();
+</script>
+</body>
+</html>

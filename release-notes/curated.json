@@ -1,4 +1,35 @@
 {
+  "2.1.40": {
+    "summary": "Stratos opens with a real sign-in page that can be skipped for now, keeps a phone's live tracking inside the app instead of opening the PC's address, and detects the aircraft itself.",
+    "changelog": {
+      "features": [
+        "Opening Stratos for the first time shows a sign-in page with two choices, Sign in or Create account, and a Skip for now button that leaves the whole app working without an account.",
+        "A complete account flow: full name, username, email, password with confirmation and a strength meter, a Terms and Privacy checkbox the account service enforces, and automatic sign-in to the map after registering.",
+        "Remember me keeps a device signed in for 30 days; without it the session ends after twelve hours or when the tab closes.",
+        "Settings opens with a Stratos account card that names the signed-in pilot, offers Sign in or create an account when the prompt was skipped, and signs out.",
+        "A signed-in PC publishes its live flight to the account, so a phone opens Stratos's own live view by itself: no address, no second browser tab, no taps."
+      ],
+      "improvements": [
+        "Signing in returns to the page that asked for it, or the map, and a signed-in visitor never sees the sign-in page again.",
+        "The first-launch page follows the existing dark navy and cyan design, with subtle motion, and is responsive on desktop, tablet and phone.",
+        "The Flight Deck, live map, EFB, logbook, pilot and weather pages ask for an account; the bridge's own LAN pages stay exempt, and Skip keeps the desktop app usable offline.",
+        "Aircraft identity is detected automatically from X-Plane's datarefs and the MSFS title, so there is nothing to type before flying.",
+        "Username validation now matches the account service at three characters instead of promising two."
+      ],
+      "fixes": [
+        "The PC-map offer and its Open PC map button are gone, so a phone never follows a LAN address that may be switched off.",
+        "Sign-up reports a duplicate email or a taken username without losing what was typed.",
+        "The manual Aircraft identity card was removed, along with the bridge-save step it needed."
+      ],
+      "compatibility": [
+        "The account service must be updated with this release: it adds the full-name and terms columns to the account database (relay/worker/migrations/002-name-and-terms.sql).",
+        "Automatic phone tracking needs the PC signed in with live publishing left on. A phone that skipped the account keeps the local map, logbook and EFB but cannot follow the PC."
+      ],
+      "other": [
+        "Terms of Service and Privacy Policy pages are now published and linked from sign-up."
+      ]
+    }
+  },
   "2.1.39": {
     "summary": "Montreal and Toronto chart sources join the EFB, signing in accepts a username as well as an email, and a tablet that signs in finds the PC on its own and connects with no code and no address.",
     "changelog": {

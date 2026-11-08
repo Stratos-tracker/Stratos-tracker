@@ -18,7 +18,7 @@
     <span>STRATOS<small>ACCOUNT</small></span>
   </a>
   <nav class="acct-top__nav">
-    <a href="index.html">Flight Deck</a>
+    <a href="privacy.html">Privacy</a>
     <a href="signup.html">Create account</a>
   </nav>
 </header>
@@ -51,10 +51,14 @@
         </div>
       </div>
 
-      <div class="auth-row">
-        <span>Stays signed in for 30 days</span>
+      <div class="auth-row auth-row--stack">
+        <label class="check">
+          <input type="checkbox" id="remember" name="remember" checked>
+          <span>Keep me signed in on this device</span>
+        </label>
         <a href="forgot.html">Forgot password?</a>
       </div>
+      <p class="field__hint">Uncheck this on a shared device: the session then ends when the tab closes.</p>
 
       <button class="btn btn--primary btn--wide" id="submit" type="submit">Sign in</button>
       <a class="btn btn--ghost btn--wide" id="auth-continue" href="account.html" hidden>Open my dashboard</a>
@@ -66,7 +70,7 @@
 
 <p class="auth-foot">
   One account keeps your logbook and live flight in step across your PC, phone and tablet.
-  <a href="index.html">Continue without an account</a>
+  <a href="auth.html">Back to sign-in options</a>
 </p>
 
 <script type="module" src="js/account/auth.js"></script>

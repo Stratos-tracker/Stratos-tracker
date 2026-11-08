@@ -92,15 +92,6 @@ button.on{background:var(--acc);color:#fff;border-color:transparent}:root[data-t
 .fg b{display:block;font-size:15px;font-variant-numeric:tabular-nums}.fg span{font-size:9px;color:var(--mut);letter-spacing:.1em}
 /* Location and live-aircraft badge, bottom right over the map. */
 #online{position:absolute;right:12px;bottom:12px;z-index:2;padding:7px 12px;border-radius:12px;text-align:right;background:color-mix(in srgb,var(--surface) 84%,transparent);border:1px solid color-mix(in srgb,var(--coast) 34%,transparent);box-shadow:var(--sh-1)}
-/* The phone's offer to open the map the PC serves. One tap and dismissible, and
-   never automatic: a navigation to a PC that is off would replace Stratos with
-   the browser's error page, which the app cannot undo. */
-#pcmap{left:12px;right:12px;bottom:84px;z-index:4;padding:12px 14px;border-radius:14px;display:flex;flex-direction:column;gap:6px;background:color-mix(in srgb,var(--surface) 96%,transparent);border:1px solid color-mix(in srgb,var(--coast) 46%,transparent);box-shadow:var(--sh-2)}
-#pcmap b{font-size:13.5px}
-#pcmap .m{font-size:11.5px;line-height:1.4}
-#pcmap .row{margin-top:2px}
-#pcmap button{flex:1}
-@media(min-width:768px){#pcmap{display:none}}
 #online b{display:block;font-size:12px;font-weight:700;letter-spacing:.02em}
 #online span{font-size:10.5px;color:var(--mut);letter-spacing:.04em}
 @media(max-width:767px){#online{display:none}}
@@ -468,7 +459,7 @@ body.panels-hidden .dkpane{display:none!important}
   #lay{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:min(74dvh,620px);border-radius:14px}
   #fab .fab{width:38px;height:38px}
 }
-</style></head><body><div class="app-shell">
+</style><script src="js/account/gate.js"></script></head><body><div class="app-shell">
 <header id="appbar" class="tb" data-title="Flight Deck" data-context="Live Map"></header>
 <nav id="tabs" aria-label="Sections"><button class="tab act" id="bMap" data-group="Fly" data-label="Flight Deck"><b>&#8982;</b><span>Flight Deck</span></button><button class="tab" id="bRoute" data-group="Fly" data-label="Flight Planning"><b>&#8599;</b><span>Flight Planning</span></button><a class="tab" href="logbook.html" data-group="Fly" data-label="Logbook"><b>&#9776;</b><span>Logbook</span></a><a class="tab" href="discover.html" data-group="Explore" data-label="Explore"><b>&#10022;</b><span>Explore</span></a><a class="tab" href="pilot.html#settings" data-group="Account" data-label="Profile &amp; Settings"><b>&#9881;</b><span>Profile</span></a><a class="rail-product" href="efb.html" title="Stratos EFB — electronic flight bag" aria-label="Open Stratos EFB"><b>&#9635;</b><span>Stratos EFB<small>Briefing · charts</small></span></a><button class="tab rail-toggle" data-rail-toggle type="button" title="Collapse sidebar" aria-label="Collapse sidebar"><b>&#8249;</b><span>Collapse</span></button></nav>
 <div class="app-main">
@@ -2780,7 +2771,7 @@ setInterval(()=>{
 },5000);
 addEventListener('online',()=>{if(live.on&&live.base)openStream(live.base)});
 function disc(){if(live.es)live.es.close();live.on=false;live.base='';live.d=null;live.seen=0;$('#bLive').classList.remove('on');if(panel=='live')render()}
-function liveHtml(){const web=location.protocol=='http:'||location.protocol=='file:',ok=liveOk(),lb=location.protocol=='http:'?location.origin:'http://127.0.0.1:8765';return `<h3>Live tracking</h3><div class="m"><b>Traffic:</b> ${wtTxt()}${WT.src?' via '+WT.src:''}. Live aircraft load automatically in Stratos; no Python process is needed for public traffic.</div><div class="m" style="margin-top:8px"><b>Simulator link (optional)</b></div><div class="m">${ok?'● Receiving live data from the simulator':live.on?'Connected to bridge, waiting for simulator data…':'Not connected'}</div>`+(web?'':'<div class="m" style="margin-top:6px">This hosted page cannot call your PC directly. The button below opens the map your PC serves — the same Stratos, with your aircraft on it — once the PC is running.</div>')+'<div class="m">To see your own aircraft from X-Plane or MSFS 2020/2024, run the Stratos bridge on your PC.</div><ol class="m" style="padding-left:18px"><li>The Stratos desktop app starts the bridge for you. Manual start: <b>python stratos_bridge.py</b>. For MSFS 2020/2024, run it on the same Windows PC as the sim after a one-time <b>pip install SimConnect</b>, then start a flight. No other MSFS setup.</li><li>X-Plane: nothing to set. Start a flight and your aircraft appears.</li><li>On iPhone Safari open <b>http://PC-IP:8765</b>, then Share → Add to Home Screen</li></ol>'+(web?'<div class="row"><button onclick="connect(\''+lb+'\')">Reconnect</button><button onclick="disc()">Disconnect</button></div>':'<div class="m" style="margin-top:8px"><b>On a phone</b> this page shows your aircraft on the same Stratos map, opened from your PC. The phone remembers that address: one tap the first time, then it goes there by itself.</div><div class="row"><button class="on" onclick="openBridgeMap()">'+(bridgeOrigin()?'Open live map':'Open the live map on my PC')+'</button></div>')}
+function liveHtml(){const web=location.protocol=='http:'||location.protocol=='file:',ok=liveOk(),lb=location.protocol=='http:'?location.origin:'http://127.0.0.1:8765';return `<h3>Live tracking</h3><div class="m"><b>Traffic:</b> ${wtTxt()}${WT.src?' via '+WT.src:''}. Live aircraft load automatically in Stratos; no Python process is needed for public traffic.</div><div class="m" style="margin-top:8px"><b>Simulator link (optional)</b></div><div class="m">${ok?'● Receiving live data from the simulator':live.on?'Connected to bridge, waiting for simulator data…':'Not connected'}</div>`+'<div class="m">To see your own aircraft from X-Plane or MSFS 2020/2024, run the Stratos bridge on your PC.</div><ol class="m" style="padding-left:18px"><li>The Stratos desktop app starts the bridge for you. Manual start: <b>python stratos_bridge.py</b>. For MSFS 2020/2024, run it on the same Windows PC as the sim after a one-time <b>pip install SimConnect</b>, then start a flight. No other MSFS setup.</li><li>X-Plane: nothing to set. Start a flight and your aircraft appears.</li></ol>'+(web?'<div class="row"><button onclick="connect(\''+lb+'\')">Reconnect</button><button onclick="disc()">Disconnect</button></div>':'')}
 $('#bLive').onclick=()=>{panel=panel=='live'?null:'live';render()};
 window.addSel=()=>{if(sel)addWp(sel)};window.rm=i=>{route.splice(i,1);save();trav=0;render()};window.defRoute=defRoute;
 const dms=(v,p,n)=>{const a=Math.abs(v),d=Math.floor(a),m=Math.floor((a-d)*60),s=((a-d)*60-m)*60;return(v<0?n:p)+d+'° '+m+"' "+s.toFixed(2)+'"'};
@@ -2839,53 +2830,8 @@ const AIP={Y:['Australia AIP','https://www.airservicesaustralia.com/aip/aip.asp'
 if(TRS=='vatsim')startVatsimTraffic();else wtPoll();
 setInterval(()=>{if(TRS=='adsb')wtPoll()},RP.wt);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&TRS=='adsb')wtPoll()});
 loadOA();
-/* The PC's own address, remembered once this phone has found it. */
-function bridgeOrigin(){
-  try{
-    const saved=localStorage.getItem('stratos.bridgeUrl')||localStorage.getItem('stratos.bridgeBase')||'';
-    return /^http:\/\/[^/]+$/.test(saved)?saved.replace(/\/+$/,''):''
-  }catch(_){return ''}
-}
-/* Open the same map from the PC. The pairing page enrolls this phone and hands
-   it straight to the map, so even a first visit needs no code and no tap; a
-   phone that is already paired is redirected there without a word. */
-function openBridgeMap(){
-  const base=(bridgeOrigin()||'http://stratos.local:8765');
-  try{localStorage.setItem('stratos.bridgeUrl',base)}catch(_){}
-  location.href=base+'/pair/connect?next=%2Findex.html'
-}
-/* The hand-off leaves Stratos for the page the PC serves, and a browser cannot
-   undo a navigation that fails: if the PC is off, that address replaces the app
-   with "this site can't be reached". So the offer waits for a tap, says which
-   machine it opens, and can be put aside for this session. The Flight Deck it
-   sits on works without the PC, so a phone with the sim off is never stranded. */
-function pcMapOffer(){
-  try{if(sessionStorage.getItem('stratos.pcMapDismissed')==='1')return}catch(_){}
-  if(document.getElementById('pcmap'))return;
-  const known=bridgeOrigin();
-  const el=document.createElement('div');
-  el.id='pcmap';el.className='box';el.setAttribute('role','region');el.setAttribute('aria-label','Live map from your PC');
-  el.innerHTML='<b>Live map from your PC</b><div class="m">'+(known?'Your PC was last at '+esc(known)+'.':'It opens the map your PC serves, with your aircraft on it.')+' Stratos must be running on the PC.</div><div class="row"><button type="button" id="pcmap-go">Open PC map</button><button type="button" id="pcmap-no">Not now</button></div>';
-  (document.getElementById('app')||document.body).appendChild(el);
-  el.querySelector('#pcmap-go').onclick=()=>openBridgeMap();
-  el.querySelector('#pcmap-no').onclick=()=>{try{sessionStorage.setItem('stratos.pcMapDismissed','1')}catch(_){}el.remove()};
-}
-/* A phone is a touch device with a small viewport; a desktop browser on the
-   hosted site is left exactly where it is. */
-function phoneSized(){
-  try{
-    const touch=navigator.maxTouchPoints>0||'ontouchstart' in window||matchMedia('(pointer:coarse)').matches;
-    return touch&&Math.min(innerWidth,innerHeight)<=1024
-  }catch(_){return false}
-}
 if(location.protocol=='http:')connect(location.origin);
 else if(location.protocol=='file:')connect('http://127.0.0.1:8765');
-/* A hosted HTTPS page cannot call an HTTP bridge (mixed content), so the map
-   with the aircraft on it is the page the PC serves, one top-level navigation
-   away. That navigation is offered, never taken on load: a PC that is switched
-   off would replace Stratos with the browser's error page, which is exactly the
-   dead end this card exists to avoid. The page underneath is the Flight Deck. */
-else if(location.protocol=='https:'&&phoneSized()&&!liveOk())pcMapOffer();
 
 /* Location and live-aircraft badge, bottom right over the map. The place name
    is the nearest labelled feature to the view centre (country, continent or
@@ -3800,12 +3746,27 @@ try{if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').t
 </script>
 <script type="module">
   import { consumeAccountHandoff, startBridgePresence, startAutoConnect } from './js/account/discovery.js';
+  import { startPublisher, findBridge } from './js/account/live.js';
+  import { savedToken, getPrefs } from './js/account/api.js';
   // The bridge page arrives with a one-time account code in the fragment.
   // Exchange it first so the local map is signed in, then advertise this PC or
   // (on a tablet) look for the PC the account has reported.
   consumeAccountHandoff().finally(() => {
     startBridgePresence();
     startAutoConnect();
+    publishToAccount();
   });
+  // A signed-in PC publishes one small live snapshot a second to the account, so
+  // a phone watches this flight inside Stratos itself — no LAN address to open
+  // and no second browser tab. Honours the account's own live-publish setting.
+  async function publishToAccount() {
+    if (!savedToken()) return;
+    try {
+      const prefs = await getPrefs();
+      if (prefs && prefs.prefs && prefs.prefs.livePublish === false) return;
+      const bridge = await findBridge();
+      if (bridge) startPublisher(bridge.base, {});
+    } catch (_) { /* publishing is optional; the map is unaffected */ }
+  }
 </script>
 </body></html>
