@@ -79,7 +79,10 @@ Downloads are chosen by platform: `windows`, `mac-arm64`, `mac-x64`,
    node scripts/release-notes.mjs --version 2.1.36 --from v2.1.35
    node scripts/release-notes.mjs --check
    ```
-4. Commit, tag and push `main` and the tag. The Release workflow builds the
+4. Merge the release commit to `main`, push `main`, then create and push the tag.
+   The Release workflow rejects a tag that is not on `main`, because the website
+   and installed PWA deploy from `main`; an off-main tag would ship desktop
+   installers while leaving mobile on the previous version. It builds the
    installers, writes the download table into `releases.json`/`version.json`,
    publishes the release, and copies both manifests back to `main`.
 

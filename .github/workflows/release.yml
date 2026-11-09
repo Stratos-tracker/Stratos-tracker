@@ -6,6 +6,10 @@ name: Release
 #   - a v* tag is pushed, or
 #   - it is started by hand, which releases the version in package.json.
 #
+# A v* tag must point at a commit on main. The website and installed PWA are
+# deployed from main, so an off-main tag would publish desktop installers while
+# leaving mobile on the previous version.
+#
 # Tests run first. Windows, macOS (arm64 and x64) and Linux are then built in
 # parallel, and only one job, "Publish release", creates the release. That job
 # uploads everything as a draft, checks the draft against the published rules
@@ -81,6 +85,17 @@ jobs:
             exit 1
           fi
           TAG="v$VERSION"
+
+          # The website and mobile PWA deploy from main. Reject an off-main tag
+          # before any platform build starts, so a release cannot ship desktop
+          # installers while leaving the hosted app on an older version.
+          if [ "$TRIGGER" = tag ]; then
+            git fetch --quiet origin main
+            if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+              echo "::error::$TAG is not on main. Merge and push the release to main before pushing the tag; the website and mobile PWA deploy from main."
+              exit 1
+            fi
+          fi
 
           # A draft left by an earlier failed run is replaced; a published release
           # is never rebuilt.
