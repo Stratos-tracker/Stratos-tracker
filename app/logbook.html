@@ -259,8 +259,9 @@ a { color: var(--acc); }
 }
 </style>
 <link rel="stylesheet" href="stratos-ui.css">
-<script src="js/account/gate.js"></script></head>
-<body>
+<script src="js/account/gate.js"></script><link rel="stylesheet" href="mobile.css">
+</head>
+<body data-mobile-section="flights">
 <div id="app">
 
 <!-- Topbar -->
@@ -1522,5 +1523,6 @@ window.renderFlights = renderFlights;
 window.switchTab = switchTab;
 window.fetchMini = typeof fetchMini !== 'undefined' ? fetchMini : () => {};
 </script>
+<script type="module" src="js/mobile.js"></script>
 </body>
 </html>

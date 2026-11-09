@@ -1012,15 +1012,29 @@ def udp_loop():
             except struct.error:
                 break
             with state_lock:
-                if index == 3:                       # speeds
+                if index == 3:                       # indicated, true, ground speed
+                    if 0.0 <= values[0] <= 1500.0:
+                        state["ias"] = float(values[0])
+                    if 0.0 <= values[1] <= 1500.0:
+                        state["tas"] = float(values[1])
                     state["gs"] = float(values[3])
                 elif index == 17:                    # pitch, roll, true/mag heading
+                    if -90.0 <= values[0] <= 90.0:
+                        state["pitch"] = float(values[0])
+                    if -90.0 <= values[1] <= 90.0:
+                        state["bank"] = float(values[1])
                     state["hdg"] = float(values[2])
+                    state["hdgMag"] = float(values[3]) % 360.0
                 elif index == 20:                    # lat, lon, alt MSL, alt AGL
                     now = time.time()
                     state.update(lat=float(values[0]), lon=float(values[1]),
                                  alt=float(values[2]), agl=float(values[3]),
                                  t=now, src="X-Plane")
+                    # The UDP rows carry no ground track; derive it from the
+                    # aircraft's own movement rather than reusing the heading.
+                    derived = ground_track_from_motion(float(values[0]), float(values[1]), now)
+                    if derived is not None:
+                        state["trk"] = derived
                     if previous is None:
                         previous = (float(values[2]), now)
                     elif now - previous[1] >= 0.5:
@@ -1067,9 +1081,43 @@ XPLANE_POSITION_DATAREFS = (
     ("alt", "sim/flightmodel/position/elevation", 4, 3.28084),
     ("agl", "sim/flightmodel/position/y_agl", 4, 3.28084),
     ("gs", "sim/flightmodel/position/groundspeed", 4, 1.94384),
+    # True heading and magnetic heading are separate datarefs. The map may draw
+    # with either, but the telemetry strip must never show one as the other.
     ("hdg", "sim/flightmodel/position/true_psi", 4, 1.0),
+    ("hdgMag", "sim/flightmodel/position/mag_psi", 4, 1.0),
+    # hpath is the simulator's own course over the ground (true), not the
+    # direction the nose points. phi/theta are the airframe's real roll and
+    # pitch; ias/tas are indicated and true airspeed in knots.
+    ("trk", "sim/flightmodel/position/hpath", 4, 1.0),
+    ("bank", "sim/flightmodel/position/phi", 4, 1.0),
+    ("pitch", "sim/flightmodel/position/theta", 4, 1.0),
+    ("ias", "sim/flightmodel/position/indicated_airspeed", 4, 1.0),
+    ("tas", "sim/flightmodel/position/true_airspeed", 4, 1.0),
     ("vs", "sim/flightmodel/position/vh_ind_fpm", 4, 1.0),
+    ("windDir", "sim/cockpit2/gauges/indicators/wind_direction_degt", 2, 1.0),
+    ("windSpd", "sim/cockpit2/gauges/indicators/wind_speed_kts", 2, 1.0),
+    ("oat", "sim/cockpit2/temperature/outside_air_temp_degc", 1, 1.0),
 )
+
+# Course over the ground from two consecutive fixes, used only when the
+# simulator does not publish its own ground track. A fix that has not moved is
+# not a course, so it is left alone rather than reported as 0 degrees.
+_GROUND_TRACK = {"lat": None, "lon": None, "at": 0.0}
+
+
+def ground_track_from_motion(lat, lon, now=None):
+    """Bearing between the last two fixes, or None when there is not one yet."""
+    now = time.time() if now is None else now
+    last = _GROUND_TRACK
+    if last["lat"] is None or now - last["at"] > 10.0:
+        last.update(lat=lat, lon=lon, at=now)
+        return None
+    dy = (lat - last["lat"]) * 60.0
+    dx = (lon - last["lon"]) * 60.0 * math.cos(math.radians(lat))
+    if math.hypot(dx, dy) < 0.0008:      # about five metres: too small to be a course
+        return None
+    last.update(lat=lat, lon=lon, at=now)
+    return (math.degrees(math.atan2(dx, dy)) + 360.0) % 360.0
 RREF_POSITION_INDEX_BASE = 9100
 RREF_POSITION_SLOTS = {}
 _XPLANE_POSITION = {}
@@ -1224,11 +1272,20 @@ def apply_xplane_position():
     now = time.time()
     with state_lock:
         state.update(lat=lat, lon=lon, t=now, src="X-Plane")
-        for key in ("alt", "agl", "gs", "vs"):
+        for key in ("alt", "agl", "gs", "vs", "ias", "tas", "bank", "pitch",
+                    "windDir", "windSpd", "oat"):
             if key in _XPLANE_POSITION:
                 state[key] = _XPLANE_POSITION[key]
-        if "hdg" in _XPLANE_POSITION:
-            state["hdg"] = _XPLANE_POSITION["hdg"] % 360
+        for key in ("hdg", "hdgMag", "trk"):
+            if key in _XPLANE_POSITION:
+                state[key] = _XPLANE_POSITION[key] % 360.0
+        # The position datarefs do not carry a ground track in every build, and
+        # an RREF that never answered leaves it absent. Derive it from movement
+        # instead of copying the heading, which is a different direction.
+        if "trk" not in _XPLANE_POSITION:
+            derived = ground_track_from_motion(lat, lon, now)
+            if derived is not None:
+                state["trk"] = derived
         snapshot = dict(state)
     try:
         process_telemetry_for_logbook(snapshot, airports)
@@ -1553,6 +1610,38 @@ def msfs_loop():
                 except Exception:
                     return None
 
+            # The EFB strip needs the same real airframe data X-Plane reports:
+            # both headings, the ground track, roll/pitch, IAS/TAS and the
+            # ambient wind and temperature. A variable this build does not
+            # publish stays absent rather than being filled with the heading.
+            def deg(name):
+                value = safe_get(name)
+                return None if value is None else (math.degrees(float(value)) % 360.0)
+
+            def num(name, low, high):
+                value = safe_get(name)
+                if value is None:
+                    return None
+                value = float(value)
+                return value if low <= value <= high else None
+
+            heading_mag = deg("PLANE_HEADING_DEGREES_MAGNETIC")
+            track = deg("GPS GROUND TRUE TRACK")
+            bank = num("PLANE BANK DEGREES", -180.0, 180.0)
+            bank = None if bank is None else math.degrees(bank)
+            pitch = num("PLANE PITCH DEGREES", -180.0, 180.0)
+            pitch = None if pitch is None else math.degrees(pitch)
+            ias = num("AIRSPEED INDICATED", 0.0, 1500.0)
+            tas = num("AIRSPEED TRUE", 0.0, 1500.0)
+            # SimConnect's ambient wind direction is already in degrees; the
+            # angle variables above are radians.
+            wind_dir = num("AMBIENT WIND DIRECTION", 0.0, 360.0)
+            wind_dir = None if wind_dir is None else wind_dir % 360.0
+            wind_spd = num("AMBIENT WIND VELOCITY", 0.0, 250.0)
+            oat = num("AMBIENT TEMPERATURE", -90.0, 60.0)
+            if track is None:
+                track = ground_track_from_motion(float(lat), float(lon), time.time())
+
             fuel = safe_get("FUEL_TOTAL_QUANTITY")
             title = safe_get("TITLE") or ""
             tail = safe_get("ATC_ID") or ""
@@ -1563,6 +1652,13 @@ def msfs_loop():
                              hdg=float(heading) % 360, gs=float(gs), t=now, src="MSFS",
                              aircraft=str(title)[:48], registration=str(tail)[:24],
                              callsign=str(call)[:24])
+                for key, value in (("hdgMag", heading_mag), ("trk", track),
+                                   ("bank", bank), ("pitch", pitch),
+                                   ("ias", ias), ("tas", tas),
+                                   ("windDir", wind_dir), ("windSpd", wind_spd),
+                                   ("oat", oat)):
+                    if value is not None:
+                        state[key] = round(value, 2)
                 if fuel is not None:
                     state["fuel"] = float(fuel)
                 if previous is None:

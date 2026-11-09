@@ -17,7 +17,16 @@ test('account: the bridge telemetry becomes the one snapshot shape the service s
     lon: -0.4619,
     alt: 12400,
     gs: 452,
+    ias: 276,
+    tas: 451,
     hdg: 268,
+    hdgMag: 270,
+    trk: 263,
+    bank: 12,
+    pitch: 2.5,
+    windDir: 300,
+    windSpd: 40,
+    oat: -52,
     vs: -1200,
     flightPhase: 'cruise',
     aircraftType: 'B738',
@@ -31,6 +40,16 @@ test('account: the bridge telemetry becomes the one snapshot shape the service s
   assert.equal(snapshot.telemetry.alt, 12400);
   assert.equal(snapshot.telemetry.gs, 452);
   assert.equal(snapshot.telemetry.hdg, 268);
+  assert.equal(snapshot.telemetry.ias, 276);
+  assert.equal(snapshot.telemetry.tas, 451);
+  assert.equal(snapshot.telemetry.hdgMag, 270);
+  assert.equal(snapshot.telemetry.trk, 263);
+  assert.notEqual(snapshot.telemetry.hdgMag, snapshot.telemetry.trk, 'heading and track stay separate');
+  assert.equal(snapshot.telemetry.bank, 12);
+  assert.equal(snapshot.telemetry.pitch, 2.5);
+  assert.equal(snapshot.telemetry.windDir, 300);
+  assert.equal(snapshot.telemetry.windSpd, 40);
+  assert.equal(snapshot.telemetry.oat, -52);
   assert.equal(snapshot.telemetry.vs, -1200);
   assert.equal(snapshot.aircraft.type, 'B738');
   assert.equal(snapshot.aircraft.registration, 'G-TEST');
@@ -52,7 +71,11 @@ test('account: missing bridge values stay empty instead of becoming zero', () =>
   const snapshot = toSnapshot({ lat: 40.6, lon: -73.7 });
   assert.equal(snapshot.telemetry.alt, null);
   assert.equal(snapshot.telemetry.gs, null);
+  assert.equal(snapshot.telemetry.ias, null);
   assert.equal(snapshot.telemetry.hdg, null);
+  assert.equal(snapshot.telemetry.trk, null);
+  assert.equal(snapshot.telemetry.bank, null);
+  assert.equal(snapshot.telemetry.oat, null);
   assert.equal(snapshot.aircraft.type, '');
 });
 

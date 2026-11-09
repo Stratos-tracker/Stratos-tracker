@@ -5,10 +5,13 @@
  "start_url": "./",
  "scope": "./",
  "display": "standalone",
- "display_override": ["standalone", "minimal-ui"],
+ "display_override": [
+  "standalone",
+  "minimal-ui"
+ ],
  "orientation": "any",
- "background_color": "#08151d",
- "theme_color": "#08151d",
+ "background_color": "#060d14",
+ "theme_color": "#060d14",
  "icons": [
   {
    "src": "icon-180.png",
@@ -42,5 +45,31 @@
   "productivity"
  ],
  "lang": "en",
- "dir": "ltr"
+ "dir": "ltr",
+ "shortcuts": [
+  {
+   "name": "Live map",
+   "short_name": "Map",
+   "description": "Open the live map and follow the aircraft",
+   "url": "./index.html"
+  },
+  {
+   "name": "Flights",
+   "short_name": "Flights",
+   "description": "Current flight and flight history",
+   "url": "./logbook.html"
+  },
+  {
+   "name": "Charts",
+   "short_name": "Charts",
+   "description": "Airport charts and procedures in the EFB",
+   "url": "./efb.html#/charts"
+  },
+  {
+   "name": "Weather",
+   "short_name": "Weather",
+   "description": "METAR, TAF and airport conditions",
+   "url": "./weather.html"
+  }
+ ]
 }

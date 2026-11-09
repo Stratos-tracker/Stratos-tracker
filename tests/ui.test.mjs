@@ -1106,8 +1106,10 @@ test('a selected aircraft can be followed and shows its filed airport pair', asy
   const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
   assert.match(page, /data-fc-act="follow"/, 'the card offers a follow control');
   assert.match(page, /\(tk\|\|V\.fol\)&&sel&&sel\.k=='trf'/, 'following keeps the selected aircraft centred');
-  assert.match(page, /function drawSelectedAircraftRoute\(\)/, 'its filed airports are drawn as a reference line');
+  assert.match(page, /function drawSelectedAircraftRoute\(\)/, 'its filed route is drawn as a reference line');
   assert.match(page, /FILED '\+dep/, 'the reference line is labelled as the filed airport pair');
+  assert.match(page, /function filedRoute\(o\)/, 'the full VATSIM route is resolved against loaded nav data');
+  assert.match(page, /function trafficHud\(o\)/, 'a tracked VATSIM pilot feeds the telemetry strip');
 });
 
 test('the aircraft card offers a labelled backup of the same airline and type', async () => {
@@ -1260,7 +1262,8 @@ test('observed traffic positions go to the bridge, so a trail outlives the page'
   assert.match(page, /if\(now-trfPostAt<15000\)return/, 'batched: at most one post every fifteen seconds');
   assert.match(page, /fetch\('\/traffic\/trail\?hex='\+encodeURIComponent\(key\)/, 'a clicked aircraft asks the bridge for its path');
   assert.match(page, /TRL\.set\(key,\[...older,\.\.\.have\]\)/, 'the history is prepended, never drawn out of order');
-  assert.match(page, /if\(best\.k=='trf'\)\{tk=true;setFol\(false\);trafficBackfill\(best\)\}/, 'a tap on an aircraft backfills its trail');
+  assert.match(page, /if\(best\.k=='trf'\)\{best\._trackAt=Date\.now\(\);tk=true;setFol\(false\);trafficBackfill\(best\)/, 'a tap on an aircraft backfills its trail');
+  assert.match(page, /if\(best\.source=='vatsim'\)loadVatsim\(\)\.then\(vatsimTraffic\)/, 'a VATSIM selection refreshes its filed route');
   assert.match(page, /trafficPost\(\)\}$/m, 'the VATSIM refresh posts the positions it just saw');
 });
 
@@ -1553,7 +1556,8 @@ test('the tracker map runs the same globe module and surfaces as the EFB', async
   assert.ok(page.includes(`localStorage.setItem('dl.globe',V.gs)`) && page.includes(`localStorage.getItem('dl.globe')||'vector'`), 'so is the surface');
 
   // The controls, and the sentences that keep the display honest.
-  assert.match(page, /<h3>Projection<\/h3><div id="pj"><\/div>[\s\S]{0,220}id="gwrap" hidden/, 'the settings drawer carries the projection switch');
+  assert.match(page, /<h3>Projection<\/h3><div id="pj"><\/div>[\s\S]{0,460}id="gwrap" hidden/, 'the settings drawer carries the projection switch');
+  assert.ok(page.includes('id="bMap3dFlat"'), 'and the flat 3D view is offered beside the globe');
   assert.ok(page.includes('globeStyles().map(s=>'), 'the surface list is the shared table');
   assert.ok(page.includes('id="gReset"') && page.includes('id="gRead"'), 'reset and read-terrain are offered');
   assert.ok(page.includes('e.readTerrain(V.lat,V.lon,{radiusNm:nm,rasterPx:globeReadSize()})'), 'terrain is read at the centre with the documented radius');
@@ -1587,4 +1591,41 @@ test('the procedure tip names the data that answered and a procedure it drops', 
   assert.ok(!deck.includes('`Procedures: FAA CIFP · US airports${'), 'a US-only label is not printed when the simulator answered');
   assert.match(deck, /is not in this data/, 'a plan procedure the cycle lacks is named instead of silently forgotten');
   assert.match(deck, /it has \$\{near\.join/, 'and the alternatives it does publish are offered');
+});
+
+test('the 3D globe carries the live traffic layer instead of dropping it', async () => {
+  const fs = await import('node:fs');
+  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+  const globe = fs.readFileSync(new URL('../app/js/lib/globe3d.js', import.meta.url), 'utf8');
+  assert.match(globe, /id: 'traffic-plane'/, 'the globe has a traffic symbol layer');
+  assert.match(globe, /function trafficIcon\(type, color\)/, 'the globe accepts the detailed aircraft type');
+  assert.match(globe, /window\.aircraftIcon/, 'traffic reuses the detailed aircraft sprite atlas');
+  assert.match(globe, /generic\.svg/, 'unsupported types keep a neutral detailed silhouette');
+  assert.match(globe, /traffic-shadow-/, 'the selected surface icon becomes a shadow');
+  assert.match(globe, /trafficFeatures\(this\.traffic, this\.trafficSelected\)/, 'the globe publishes the traffic features it receives');
+  assert.match(globe, /prototype\.setTraffic = function/, 'there is a public traffic setter');
+  assert.match(page, /function t3TrafficList\(\)/, 'the chart builds the same traffic list for the globe');
+  assert.match(page, /t3d\.setTraffic\(t3TrafficList\(\),active\)/, 'the globe receives traffic on its sync path');
+  assert.match(page, /onTraffic:id=>\{selectTrafficById\(id\)\}/, 'a globe traffic click selects that aircraft');
+});
+
+test('the 3D globe draws the selected traffic as an altitude profile and filed route', async () => {
+  const fs = await import('node:fs');
+  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+  const globe = fs.readFileSync(new URL('../app/js/lib/globe3d.js', import.meta.url), 'utf8');
+  assert.match(globe, /className = 'g3-flightfx'/, 'the observed trail has a camera-aligned overlay');
+  assert.match(globe, /prototype\._drawFlightPath = function/, 'the trail is drawn as an altitude profile');
+  assert.match(globe, /Math\.sin\(\(Number\(this\.map\.getPitch\(\)\) \|\| 0\) \* RAD\)/, 'the profile follows the globe camera pitch');
+  assert.match(globe, /ctx\.createLinearGradient/, 'the path has a vertical curtain');
+  assert.match(globe, /id: 'selected-route-line'/, 'the filed route has its own globe layer');
+  assert.match(globe, /prototype\.setSelectedTraffic = function/, 'the globe accepts selected traffic geometry');
+  assert.match(globe, /routeFeatures\(this\.selectedRoute, -1\)/, 'the filed route uses the resolved great-circle legs');
+  assert.match(page, /function t3SelectedDetail\(\)/, 'the chart supplies the selected trail and route');
+  assert.match(page, /alt:Number\.isFinite\(alt\)\?alt:null/, 'the trail keeps the recorded altitude');
+  assert.match(page, /type:String\(a\.type\|\|a\.actype/, 'the globe receives the aircraft type for detailed artwork');
+  assert.match(page, /id:String\(sel\.id\|\|sel\.callsign/, 'the selected path carries its live callsign');
+  assert.match(page, /heading:Number\.isFinite\(shdg\)/, 'the selected path carries its live heading');
+  assert.match(globe, /planeArtwork\(meta\.type \|\| '', '#fbbf24'\)/, 'the detailed selected aircraft is drawn at the top of the path');
+  assert.match(globe, /ctx\.setLineDash\(\[3, 5\]\)/, 'the aircraft is connected to a ground anchor');
+  assert.match(page, /t3d\.setSelectedTraffic\(t3SelectedDetail\(\)\)/, 'the globe receives that geometry on its sync path');
 });

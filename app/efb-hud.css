@@ -1,0 +1,660 @@
+/* Professional EFB chrome for the Flight Deck.
+   Loaded after mobile.css: the phone layout keeps its bottom sheet, while the
+   desktop and iPad layouts get a status bar over the map and an instrument
+   strip along the bottom. Only presentation lives here; every number is
+   written by the page from the live snapshot. */
+
+/* ── Status bar ─────────────────────────────────────────────────────────── */
+#efbbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 34px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 14px;
+  background: linear-gradient(180deg, rgba(5, 11, 18, .94), rgba(5, 11, 18, .62));
+  border-bottom: 1px solid rgba(120, 150, 175, .18);
+  font: 600 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: #7f93a8;
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+}
+#efbbar .eb-id { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+#efbbar .eb-id b { color: #e8f1fa; font-size: 12px; letter-spacing: .04em; }
+#efbbar .eb-id i { font-style: normal; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+#efbbar .eb-phase {
+  padding: 2px 8px;
+  border: 1px solid rgba(120, 150, 175, .3);
+  border-radius: 3px;
+  color: #cbd5e1;
+}
+#efbbar .eb-gap { flex: 1; }
+#efbbar .eb-link { display: inline-flex; align-items: center; gap: 6px; }
+#efbbar .eb-link::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #64748b;
+}
+#efbbar .eb-link.on { color: #34d399; }
+#efbbar .eb-link.on::before { background: #34d399; box-shadow: 0 0 7px rgba(52, 211, 153, .8); }
+#efbbar .eb-utc { color: #e8f1fa; font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+#efbbar .eb-wx { color: #7f93a8; }
+
+/* The live card now hangs below the status bar instead of under it. */
+@media (min-width: 768px) {
+  #fc { top: 44px; }
+  #sheet { top: 44px; }
+}
+
+/* ── Bottom telemetry strip ─────────────────────────────────────────────── */
+#tel {
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  max-width: none;
+  display: none;
+  padding: 0;
+  z-index: 3;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(120, 150, 175, .22);
+  background: linear-gradient(180deg, rgba(7, 14, 22, .96), rgba(5, 11, 18, .985));
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .38);
+}
+.live #tel { display: block; }
+.live #sheet { bottom: 92px; }
+/* The strip owns the bottom edge while live, so the place badge and the chart
+   credit move above it instead of being covered. */
+.live #online { bottom: 90px !important; }
+.live #attr { bottom: 90px !important; }
+
+.tel-main {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr)) 52px 34px;
+  align-items: stretch;
+}
+.tel-cell {
+  min-width: 0;
+  padding: 7px 9px 6px;
+  border-right: 1px solid rgba(120, 150, 175, .13);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+.tel-cell b {
+  font: 700 18px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  color: #eef5fb;
+  letter-spacing: -.01em;
+  white-space: nowrap;
+}
+.tel-cell span {
+  font: 700 8.5px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: .12em;
+  color: #7f93a8;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.tel-cell.tel-bank { padding: 4px 8px; border-right: 1px solid rgba(120, 150, 175, .13); align-items: center; }
+.tel-bank svg { width: 46px; height: 26px; display: block; overflow: visible; }
+.tel-bank b { font-size: 12px; margin-top: 1px; }
+.tel-bank span { font-size: 8px; }
+.tel-more {
+  border: 0;
+  background: none;
+  color: #7f93a8;
+  font: 700 9px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: .1em;
+  padding: 0;
+  cursor: pointer;
+}
+.tel-more:hover { color: #e8f1fa; }
+.tel-more svg { width: 14px; height: 14px; display: block; margin: 0 auto 2px; transition: transform .16s ease; }
+#tel.open .tel-more svg { transform: rotate(180deg); }
+
+.tel-extra {
+  display: none;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  border-top: 1px solid rgba(120, 150, 175, .16);
+  padding: 7px 2px 8px;
+  background: rgba(4, 9, 15, .72);
+}
+#tel.open .tel-extra { display: grid; }
+.tel-extra div { padding: 3px 9px; border-right: 1px solid rgba(120, 150, 175, .1); min-width: 0; }
+.tel-extra div:nth-last-child(-n + 2) { border-right: 0; }
+.tel-extra b {
+  display: block;
+  font: 700 12px/1.25 ui-monospace, Menlo, monospace;
+  color: #dbe7f2;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tel-extra span {
+  font: 600 8px/1.3 ui-monospace, Menlo, monospace;
+  letter-spacing: .1em;
+  color: #6b7f93;
+  text-transform: uppercase;
+}
+
+/* iPad portrait: two rows of instruments, still over the map edge. */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .tel-main { grid-template-columns: repeat(4, minmax(0, 1fr)) 48px 32px; }
+  .tel-cell { padding: 6px 8px 5px; }
+  .tel-cell b { font-size: 17px; }
+  .tel-extra { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tel-extra div:nth-last-child(-n + 2) { border-right: 1px solid rgba(120, 150, 175, .1); }
+}
+@media (min-width: 768px) and (max-width: 1024px) {
+  .live #sheet { bottom: 160px; }
+  .live #online, .live #attr { bottom: 160px; }
+}
+
+/* Phones keep the purpose-built bottom sheet from mobile.css. */
+@media (max-width: 767px) {
+  #efbbar { display: none; }
+  #tel { display: none !important; }
+  #p3dctl { bottom: auto; top: 96px; }
+}
+
+/* ── Chart scale and north reference ───────────────────────────────────── */
+#mapscl {
+  position: absolute;
+  left: 12px;
+  bottom: 92px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+  font: 600 9px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: .08em;
+  color: #a8b8c8;
+}
+#mapscl .ms-n {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(148, 163, 184, .45);
+  background: rgba(5, 11, 18, .7);
+  position: relative;
+  color: #e8f1fa;
+  font-size: 9px;
+}
+#mapscl .ms-n i {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  margin-left: -2.5px;
+  border-left: 2.5px solid transparent;
+  border-right: 2.5px solid transparent;
+  border-bottom: 5px solid #22d3ee;
+}
+#mapscl .ms-bar {
+  display: inline-flex;
+  align-items: flex-end;
+  height: 12px;
+  min-width: 22px;
+  border-left: 2px solid #b9c7d6;
+  border-right: 2px solid #b9c7d6;
+  border-bottom: 2px solid #b9c7d6;
+  position: relative;
+}
+#mapscl .ms-bar b {
+  position: absolute;
+  left: 0;
+  bottom: 5px;
+  padding: 0 2px;
+  white-space: nowrap;
+  font-weight: 700;
+  color: #dbe7f2;
+}
+.live #mapscl { bottom: 88px; }
+
+@media (max-width: 767px) {
+  #mapscl { display: none; }
+}
+
+/* ── 3D terrain map ─────────────────────────────────────────────────────── */
+#p3dctl {
+  position: absolute;
+  right: 12px;
+  bottom: 92px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 5px;
+  border-radius: 11px;
+  background: rgba(6, 13, 20, .9);
+  border: 1px solid rgba(120, 150, 175, .24);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .35);
+}
+#p3dctl[hidden] { display: none; }
+#p3dctl button {
+  width: 34px;
+  height: 30px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, .05);
+  color: #cbd5e1;
+  font: 700 11px/1 ui-monospace, Menlo, monospace;
+}
+#p3dctl button:hover { border-color: rgba(34, 211, 238, .5); color: #fff; }
+#p3dctl #p3dN { font-size: 9px; letter-spacing: .04em; }
+#p3dctl #p3dX { color: #f17b89; }
+
+@media (max-width: 460px) {
+  .tel-cell b { font-size: 15px; }
+  .tel-cell { padding: 6px 6px 5px; }
+}
+
+/* ── Volanta-style telemetry strip ────────────────────────────────────────
+   Six primary instruments, the plan line beneath them and a status row of
+   pills. Every value still comes from the same tset() calls as before; the
+   extra fields moved behind MORE rather than being dropped. */
+#tel {
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(120, 150, 175, .22);
+  background: linear-gradient(180deg, rgba(8, 15, 24, .96), rgba(5, 11, 18, .985));
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .42);
+  overflow: hidden;
+}
+#tel .tel-main { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); align-items: stretch; }
+#tel .tel-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  min-width: 0;
+  padding: 8px 12px 7px;
+  border-right: 1px solid rgba(120, 150, 175, .13);
+}
+#tel .tel-cell:last-child { border-right: 0; }
+#tel .tel-k {
+  font: 800 8px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: #74889d;
+}
+#tel .tel-cell b {
+  font: 750 21px/1.05 ui-monospace, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  color: #eef5fb;
+  letter-spacing: -.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#tel .tel-u {
+  font: 700 8.5px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #63778c;
+}
+#tel .tel-hdg b { color: #38bdf8; }
+#tel .tel-wind b { font-size: 15px; letter-spacing: 0; }
+#tel .tel-route {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 6px 12px;
+  border-top: 1px solid rgba(120, 150, 175, .16);
+  background: rgba(2, 7, 12, .45);
+  font: 600 11px/1.2 ui-monospace, Menlo, monospace;
+  color: #8ea3b8;
+  white-space: nowrap;
+  overflow: hidden;
+}
+#tel .tel-route b { color: #e8f1fa; font-weight: 700; }
+#tel #tRT { color: #38bdf8; letter-spacing: .06em; margin-right: 14px; }
+#tel .tel-v {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 12px;
+  border-left: 1px solid rgba(120, 150, 175, .16);
+  min-width: 0;
+}
+#tel .tel-v i { font-style: normal; color: #38bdf8; }
+#tel .tel-v s { text-decoration: none; color: #63778c; font-size: 9px; letter-spacing: .08em; }
+#tel .tel-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px 6px;
+  border-top: 1px solid rgba(120, 150, 175, .13);
+  font: 600 10px/1 ui-monospace, Menlo, monospace;
+  color: #8ea3b8;
+  white-space: nowrap;
+  overflow: hidden;
+}
+#tel .tel-clock { color: #e8f1fa; letter-spacing: .05em; }
+#tel .tel-chr {
+  color: #f8b84e;
+  background: rgba(248, 184, 78, .12);
+  border: 1px solid rgba(248, 184, 78, .28);
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+#tel .tel-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, .045);
+  border: 1px solid rgba(120, 150, 175, .2);
+  border-radius: 999px;
+  padding: 3px 8px;
+  color: #7f93a8;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: 9px;
+}
+#tel .tel-pill b { color: #dbe7f2; font-size: 10px; letter-spacing: 0; }
+#tel .tel-more {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  background: none;
+  color: #7f93a8;
+  font: 800 9px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: .12em;
+  padding: 2px;
+  cursor: pointer;
+}
+#tel .tel-more svg { width: 13px; height: 13px; transition: transform .16s ease; }
+#tel.open .tel-more svg { transform: rotate(180deg); }
+#tel .tel-extra { grid-template-columns: repeat(9, minmax(0, 1fr)); padding: 6px 2px 7px; }
+#tel .tel-extra div { padding: 3px 8px; }
+#tel .tel-extra .tel-bank svg { width: 38px; height: 22px; margin-bottom: 1px; }
+.live #sheet { bottom: 150px; }
+.live #online, .live #attr { bottom: 150px !important; }
+.live #mapscl { bottom: 144px; }
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  #tel .tel-main { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #tel .tel-cell { border-bottom: 1px solid rgba(120, 150, 175, .13); }
+  #tel .tel-cell:nth-child(3n) { border-right: 0; }
+  #tel .tel-cell:nth-last-child(-n + 3) { border-bottom: 0; }
+  #tel .tel-extra { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .live #sheet, .live #online, .live #attr { bottom: 286px; }
+}
+@media (max-width: 767px) { #tel { display: none !important; } }
+
+/* ── 3D globe ───────────────────────────────────────────────────────────── */
+#globe3d {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: #04080d;
+  overflow: hidden;
+}
+#globe3d[hidden] { display: none; }
+#globe3d .maplibregl-canvas { outline: none; }
+#globe3d .g3-flightfx {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+#globe3d .maplibregl-ctrl-attrib,
+#globe3d .maplibregl-ctrl-bottom-left,
+#globe3d .maplibregl-ctrl-bottom-right { display: none; }
+.g3-credit {
+  position: absolute;
+  left: 12px;
+  top: 42px;
+  z-index: 2;
+  pointer-events: none;
+  font: 600 9px/1.3 ui-monospace, Menlo, monospace;
+  letter-spacing: .04em;
+  color: rgba(190, 205, 220, .66);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .8);
+  max-width: min(560px, 70%);
+}
+.g3-fail {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  color: #cbd5e1;
+  font: 600 13px/1.5 system-ui;
+  text-align: center;
+  background: #04080d;
+}
+.g3-ac {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .55));
+}
+.g3-stalk {
+  width: 1px;
+  height: 0;
+  background: linear-gradient(180deg, rgba(34, 211, 238, .95), rgba(34, 211, 238, .08));
+  box-shadow: 0 0 4px rgba(34, 211, 238, .7);
+}
+.g3-head { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; color: #fff; }
+.g3-head svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  transform-origin: 50% 50%;
+  filter: drop-shadow(0 0 3px rgba(34, 211, 238, .9));
+}
+.g3-tag {
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(5, 12, 19, .9);
+  border: 1px solid rgba(34, 211, 238, .4);
+  color: #e8f1fa;
+  font: 700 9px/1.2 ui-monospace, Menlo, monospace;
+  letter-spacing: .03em;
+  white-space: nowrap;
+}
+#p3dctl { bottom: 150px; }
+@media (max-width: 767px) { #p3dctl { bottom: auto; top: 96px; } }
+
+/* ── Volanta flight-deck layout ──────────────────────────────────────────
+   The desktop shell. The same telemetry nodes and the same map controls are
+   repositioned, never duplicated: the strip sits across the top, zoom and
+   layers on the left, follow/track on the right rail and a compass over the
+   chart. Phones keep their own bottom-sheet layout. */
+#rose { display: none; }
+@media (min-width: 768px) {
+  html[data-ui="new"] #efbbar { display: none; }
+  html[data-ui="new"] #fc,
+  html[data-ui="new"] #fp,
+  html[data-ui="new"] .dkpane,
+  html[data-ui="new"] #online { display: none !important; }
+
+  html[data-ui="new"] #tel {
+    left: 110px;
+    right: 12px;
+    top: 8px;
+    bottom: auto;
+    max-width: none;
+    margin: 0;
+    border-radius: 9px;
+    border-color: rgba(120, 150, 175, .22);
+    background: linear-gradient(180deg, rgba(8, 16, 25, .96), rgba(4, 10, 16, .98));
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .42);
+  }
+  html[data-ui="new"] #tel .tel-main { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  html[data-ui="new"] #tel .tel-cell { padding: 5px 11px 4px; }
+  html[data-ui="new"] #tel .tel-cell b { font-size: 19px; }
+  html[data-ui="new"] #tel .tel-route { padding: 4px 11px; font-size: 10.5px; }
+  html[data-ui="new"] #tel .tel-status { padding: 4px 9px 5px; }
+  html[data-ui="new"] #tel .tel-extra { grid-template-columns: repeat(9, minmax(0, 1fr)); }
+  html[data-ui="new"] #tel .tel-extra b { font-size: 11px; }
+
+  html[data-ui="new"] #fab {
+    position: absolute;
+    inset: 0;
+    display: block;
+    transform: none;
+    pointer-events: none;
+    z-index: 5;
+  }
+  html[data-ui="new"] #fab .fab {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    pointer-events: auto;
+    color: #dbe7f2;
+    background: rgba(8, 16, 25, .92);
+    border: 1px solid rgba(120, 150, 175, .3);
+    box-shadow: 0 7px 20px rgba(0, 0, 0, .4);
+  }
+  html[data-ui="new"] #fab .fab:hover { color: #fff; border-color: rgba(56, 189, 248, .6); }
+  html[data-ui="new"] #fab .fab.on { background: #38bdf8; color: #04212b; border-color: transparent; }
+
+  /* The screenshot's top-left stack: +/- share one capsule, layers below. */
+  html[data-ui="new"] #bZi {
+    left: 10px;
+    top: 42px;
+    border-radius: 11px 11px 0 0;
+    border-bottom-color: rgba(120, 150, 175, .12);
+    font-size: 23px;
+    font-weight: 500;
+  }
+  html[data-ui="new"] #bZo {
+    left: 10px;
+    top: 86px;
+    border-radius: 0 0 11px 11px;
+    font-size: 23px;
+    font-weight: 500;
+  }
+  html[data-ui="new"] #bLay {
+    left: 10px;
+    top: 140px;
+    border-radius: 11px;
+  }
+  html[data-ui="new"] #bLay .layers-glyph path { stroke: #081019; }
+  html[data-ui="new"] #bFol {
+    right: 12px;
+    left: auto;
+    top: calc(50% - 56px);
+    border-radius: 50%;
+    font-size: 19px;
+  }
+  html[data-ui="new"] #b3d {
+    right: 12px;
+    left: auto;
+    top: calc(50% - 2px);
+    border-radius: 50%;
+    font-size: 10.5px;
+  }
+
+  html[data-ui="new"] #rose {
+    display: block;
+    position: absolute;
+    left: 16px;
+    bottom: 16px;
+    width: 104px;
+    height: 104px;
+    z-index: 2;
+    pointer-events: none;
+    filter: drop-shadow(0 4px 16px rgba(0, 0, 0, .6));
+  }
+  html[data-ui="new"] #rose svg { width: 100%; height: 100%; overflow: visible; }
+  #rose .rose-shadow { fill: rgba(0, 0, 0, .5); }
+  #rose .rose-bezel { fill: none; stroke: url(#roseRing); stroke-width: 2.4; }
+  #rose .rose-face { fill: url(#roseFace); stroke: rgba(148, 163, 184, .22); stroke-width: .8; }
+  #rose .rose-ring { fill: none; stroke: rgba(125, 211, 252, .18); stroke-width: .7; }
+  #rose text { font: 700 7.5px ui-monospace, Menlo, monospace; letter-spacing: .04em; }
+  #rose .rose-n { fill: #38bdf8; font-weight: 800; }
+  #rose .rose-c { fill: #dbe7f2; }
+  #rose .rose-deg { fill: #64748b; font-size: 5px; letter-spacing: .02em; }
+  #rose .rose-needle-n { fill: #f8fafc; filter: drop-shadow(0 0 2px rgba(56, 189, 248, .55)); }
+  #rose .rose-needle-s { fill: #38bdf8; opacity: .9; }
+  #rose .rose-hub { fill: #e2e8f0; stroke: #081019; stroke-width: 1; }
+  #rose .rose-lub { fill: #38bdf8; filter: drop-shadow(0 0 3px rgba(56, 189, 248, .5)); }
+  #rose .rose-hdg {
+    position: absolute;
+    left: 50%;
+    bottom: -10px;
+    transform: translateX(-50%);
+    color: #dbe7f2;
+    font: 700 8px ui-monospace, Menlo, monospace;
+    letter-spacing: .08em;
+    padding: 3px 8px 2px;
+    border-radius: 6px;
+    background: rgba(5, 12, 19, .94);
+    border: 1px solid rgba(120, 150, 175, .32);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .4);
+    white-space: nowrap;
+  }
+  #rose .rose-hdg::before { content: 'HDG '; color: #7f93a8; font-weight: 600; }
+
+  html[data-ui="new"] #attr {
+    left: 50%;
+    bottom: 7px;
+    transform: translateX(-50%);
+    font-size: 9px;
+  }
+  html[data-ui="new"] #mapscl { display: none; }
+  html[data-ui="new"] #p3dctl { right: 12px; top: calc(50% + 54px); bottom: auto; }
+  html[data-ui="new"] #sheet { top: 132px; bottom: 12px; left: auto; right: 12px; width: 390px; max-width: none; max-height: none; z-index: 6; }
+  html[data-ui="new"] #lay {
+    left: 56px;
+    right: auto;
+    top: 178px;
+    bottom: auto;
+    width: 304px;
+    max-height: calc(100% - 196px);
+    z-index: 40;
+  }
+  html[data-ui="new"] .g3-credit { left: auto; right: 12px; top: auto; bottom: 8px; max-width: 60%; text-align: right; }
+}
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  html[data-ui="new"] #tel .tel-main { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  html[data-ui="new"] #tel .tel-cell { border-bottom: 0; }
+  html[data-ui="new"] #tel .tel-cell:nth-child(3n) { border-right: 1px solid rgba(120, 150, 175, .13); }
+  html[data-ui="new"] #tel .tel-cell:nth-last-child(-n + 3) { border-bottom: 0; }
+  html[data-ui="new"] #tel .tel-cell:last-child { border-right: 0; }
+  html[data-ui="new"] .live #sheet { bottom: 12px; }
+}
+#fc .filed-route {
+  display: block;
+  overflow-wrap: anywhere;
+  font-weight: 500;
+  line-height: 1.45;
+  color: #cbd5e1;
+}

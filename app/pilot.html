@@ -15,9 +15,10 @@
 <link rel="stylesheet" href="stratos-ui.css">
 <link rel="stylesheet" href="pilot.css">
 <link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="mobile.css">
 <title>Pilot · Stratos</title>
 <script src="js/account/gate.js"></script></head>
-<body>
+<body data-mobile-section="profile">
 <div class="shell">
   <header id="appbar" class="tb"></header>
 
@@ -59,5 +60,6 @@
     if (navigator.serviceWorker) navigator.serviceWorker.register('sw.js').catch(function () {});
   } catch (_) {}
 </script>
+<script type="module" src="js/mobile.js"></script>
 </body>
 </html>

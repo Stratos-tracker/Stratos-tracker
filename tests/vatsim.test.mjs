@@ -100,6 +100,9 @@ test('vatsim: a pilot\'s filed cruise level and route are kept, and nothing is i
   });
   assert.equal(withPlan.cruiseFt, 36000);
   assert.equal(withPlan.route, 'SUMMA2 SUMMA J523 BLUIT');
+  const longRoute = 'KSEA DCT SUMMA J523 BLUIT DCT KPDX ' + 'FIX '.repeat(30).trim();
+  const [longPlan] = parsePilots({ pilots: [{ callsign: 'ASA456', latitude: 47, longitude: -122, flight_plan: { route: longRoute } }] });
+  assert.equal(longPlan.route, longRoute, 'the filed route is kept in full, not clipped');
   assert.equal(withoutPlan.cruiseFt, null, 'no flight plan means no cruise level');
   assert.equal(withoutPlan.route, null);
   assert.equal(withoutPlan.dep, null);
