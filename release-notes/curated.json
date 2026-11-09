@@ -1,4 +1,33 @@
 {
+  "2.1.41": {
+    "summary": "Selected traffic now has a real 3D altitude path on the Flight Deck globe, with detailed type artwork at the top, a ground shadow beneath, and the live callsign and flight level attached to the aircraft.",
+    "changelog": {
+      "features": [
+        "The selected aircraft's recorded trail now rises from the ground as a translucent 3D altitude curtain, with an altitude-coloured top edge and a faint ground trace.",
+        "The selected aircraft rides at the top of that path as its detailed type silhouette, turned to its live heading with a callsign and flight-level badge.",
+        "The aircraft's surface position remains a subdued detailed shadow inside an amber anchor ring, joined to the airborne marker by a dashed stalk.",
+        "Traffic now uses the detailed aircraft artwork from the chart atlas, with a neutral detailed fallback for types that have no dedicated sprite."
+      ],
+      "improvements": [
+        "The selected path includes the aircraft's current position and altitude, so the 3D marker sits on the live target instead of stopping at the last polled sample.",
+        "The ground shadow suppresses its own map label, leaving one callsign on the airborne marker and no duplicate target below.",
+        "The marker, badge and altitude curtain follow the same camera as the globe through pitch, rotation and zoom."
+      ],
+      "fixes": [
+        "Selected traffic no longer leaves the callsign and aircraft on the ground while its recorded path is elevated; the airborne marker and ground anchor now separate the two.",
+        "Aircraft types missing from the sprite atlas now use the detailed neutral silhouette rather than the simple legacy shape."
+      ],
+      "performance": [
+        "Traffic icons are cached per aircraft type, and the selected 3D path is redrawn only when the camera or selected samples change."
+      ],
+      "ui": [
+        "The 3D path uses the existing instrument palette: cyan and amber rings, an altitude-coloured edge, and a compact callsign and flight-level badge."
+      ],
+      "compatibility": [
+        "The 3D path is built only from observed traffic samples; a filed route remains a flat planned line because it carries no observed altitude profile."
+      ]
+    }
+  },
   "2.1.40": {
     "summary": "Stratos opens with a real sign-in page that can be skipped for now, keeps a phone's live tracking inside the app instead of opening the PC's address, and detects the aircraft itself.",
     "changelog": {
