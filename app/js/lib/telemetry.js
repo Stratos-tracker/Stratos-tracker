@@ -79,10 +79,21 @@ export function parseTelemetry(raw) {
     alt: num(raw.alt, 0),
     agl: num(raw.agl, null),
     gs: Math.max(0, num(raw.gs, 0)),
+    /* Two headings and a track are three different things. `hdg` is the true
+       heading the simulator reported, `hdgMag` the magnetic heading, and `trk`
+       the course over the ground. A bridge build that does not publish one
+       leaves it null here; nothing below substitutes another for it. */
     hdg: normalizeHeading(num(raw.hdg, 0)),
+    hdgMag: raw.hdgMag == null ? null : normalizeHeading(num(raw.hdgMag, null)),
+    trk: raw.trk == null ? null : normalizeHeading(num(raw.trk, null)),
+    ias: num(raw.ias, null),
+    tas: num(raw.tas, null),
     vs: num(raw.vs, 0),
     pitch: num(raw.pitch, null),
     bank: num(raw.bank, null),
+    windDir: raw.windDir == null ? null : normalizeHeading(num(raw.windDir, null)),
+    windSpd: num(raw.windSpd, null),
+    oat: num(raw.oat, null),
     fuel: num(raw.fuel, null),
     onGround: typeof raw.onGround === 'boolean' ? raw.onGround : (num(raw.agl, 999) < 30),
     aircraft: typeof raw.aircraft === 'string' ? raw.aircraft.slice(0, 48) : '',

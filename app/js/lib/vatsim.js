@@ -119,7 +119,7 @@ export function parsePilots(feed) {
       // reported as filed, never used to claim a SID or STAR the plan does not
       // name (the feed carries no procedure identity).
       cruiseFt: Number(pilot.flight_plan?.altitude) > 0 ? Number(pilot.flight_plan.altitude) : null,
-      route: String(pilot.flight_plan?.route || '').trim().slice(0, 240) || null,
+      route: String(pilot.flight_plan?.route || '').trim() || null,
     });
   }
   return out;

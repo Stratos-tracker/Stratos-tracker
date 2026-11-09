@@ -124,9 +124,21 @@ export function cleanSnapshot(body) {
     telemetry: {
       lat, lon,
       alt: num(telemetry.alt, -1000, 100000),
+      agl: num(telemetry.agl, -1000, 100000),
+      // GS, IAS and TAS are separate measurements, as are true heading,
+      // magnetic heading and the course over the ground.
       gs: num(telemetry.gs, 0, 1200),
+      ias: num(telemetry.ias, 0, 1200),
+      tas: num(telemetry.tas, 0, 1200),
       hdg: num(telemetry.hdg, 0, 360),
+      hdgMag: num(telemetry.hdgMag, 0, 360),
+      trk: num(telemetry.trk, 0, 360),
       vs: num(telemetry.vs, -10000, 10000),
+      bank: num(telemetry.bank, -180, 180),
+      pitch: num(telemetry.pitch, -90, 90),
+      windDir: num(telemetry.windDir, 0, 360),
+      windSpd: num(telemetry.windSpd, 0, 250),
+      oat: num(telemetry.oat, -90, 60),
     },
     aircraft: {
       type: text(aircraft.type, 40),

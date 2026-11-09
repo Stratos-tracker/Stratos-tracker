@@ -43,9 +43,21 @@ export function toSnapshot(raw) {
       lat,
       lon,
       alt: number(pick(raw.alt, raw.altFt, raw.altitude, raw.altitudeFt)),
-      gs: number(pick(raw.gs, raw.groundSpeed, raw.spd, raw.ias)),
-      hdg: number(pick(raw.hdg, raw.heading, raw.trk)),
+      agl: number(pick(raw.agl, raw.altAgl, raw.aglFt)),
+      // Four different speeds and three different directions. Each one is
+      // forwarded as itself; none is used as a fallback for another.
+      gs: number(pick(raw.gs, raw.groundSpeed, raw.spd)),
+      ias: number(pick(raw.ias, raw.indicatedAirspeed, raw.kias)),
+      tas: number(pick(raw.tas, raw.trueAirspeed, raw.ktas)),
+      hdg: number(pick(raw.hdg, raw.heading, raw.trueHeading)),
+      hdgMag: number(pick(raw.hdgMag, raw.magneticHeading)),
+      trk: number(pick(raw.trk, raw.track, raw.groundTrack)),
       vs: number(pick(raw.vs, raw.verticalSpeed, raw.vsFpm)),
+      bank: number(pick(raw.bank, raw.roll)),
+      pitch: number(pick(raw.pitch)),
+      windDir: number(pick(raw.windDir, raw.windDirection)),
+      windSpd: number(pick(raw.windSpd, raw.windSpeed)),
+      oat: number(pick(raw.oat, raw.temperature, raw.oatC)),
       ts: Date.now(),
     },
     aircraft: {

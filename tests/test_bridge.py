@@ -536,6 +536,49 @@ class XPlaneIdentityTests(unittest.TestCase):
         self.assertIn("sim/flightmodel/weight/m_total", names)
         self.assertIn("sim/cockpit2/controls/flap_ratio", names)
 
+    def test_ground_track_is_derived_from_movement_not_heading(self):
+        """A track that has not moved is unknown, and a moved one is its course."""
+        bridge._GROUND_TRACK.update(lat=None, lon=None, at=0.0)
+        start = time.time()
+        self.assertIsNone(bridge.ground_track_from_motion(37.0, -122.0, start))
+        course = bridge.ground_track_from_motion(37.01, -121.99, start + 1.0)
+        self.assertIsNotNone(course)
+        self.assertGreater(course, 0.0)
+        self.assertLess(course, 90.0, "north-east movement is a north-east course")
+        self.assertNotAlmostEqual(course, 270.0, msg="the track must not copy a heading")
+
+    def test_position_datarefs_publish_bank_track_and_speeds(self):
+        """Bank, both headings, track, IAS/TAS, wind and OAT reach the snapshot."""
+        saved = dict(bridge._XPLANE_POSITION)
+        keys = ("lat", "lon", "bank", "trk", "hdgMag", "ias", "tas",
+                "windDir", "windSpd", "oat")
+        with bridge.state_lock:
+            keep = {key: bridge.state.get(key) for key in keys}
+        try:
+            bridge._XPLANE_POSITION.update(
+                lat=37.0, lon=-122.0, bank=12.0, trk=263.0, hdgMag=270.0,
+                ias=276.0, tas=451.0, windDir=300.0, windSpd=40.0, oat=-52.0)
+            bridge.apply_xplane_position()
+            with bridge.state_lock:
+                self.assertEqual(bridge.state["bank"], 12.0)
+                self.assertEqual(bridge.state["trk"], 263.0)
+                self.assertEqual(bridge.state["hdgMag"], 270.0)
+                self.assertEqual(bridge.state["ias"], 276.0)
+                self.assertEqual(bridge.state["tas"], 451.0)
+                self.assertEqual(bridge.state["windDir"], 300.0)
+                self.assertEqual(bridge.state["windSpd"], 40.0)
+                self.assertEqual(bridge.state["oat"], -52.0)
+                self.assertNotEqual(bridge.state["hdgMag"], bridge.state["trk"])
+        finally:
+            bridge._XPLANE_POSITION.clear()
+            bridge._XPLANE_POSITION.update(saved)
+            with bridge.state_lock:
+                for key, value in keep.items():
+                    if value is None:
+                        bridge.state.pop(key, None)
+                    else:
+                        bridge.state[key] = value
+
     def test_performance_datarefs_become_physical_values(self):
         saved = dict(bridge._XPLANE_NUMERIC)
         saved_status = dict(bridge.xplane_performance_status)

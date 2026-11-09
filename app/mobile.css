@@ -1,0 +1,798 @@
+/* ═══ Stratos mobile experience ═══════════════════════════════════════
+   A phone-only presentation layer. Every layout rule sits behind the 767 px
+   breakpoint, so the desktop interface, its rail and its panels are untouched.
+   The map pages keep their own engine: this file only re-frames the surfaces
+   the page already renders, never invents a value or a second data source.
+
+   Design language: deep navy and charcoal, one cyan accent, hairline borders,
+   square-line icons, generous but disciplined spacing, 46 px touch targets. */
+
+.m-nav, .m-grip, .m-plan, .m-install, .m-nav-fade, .m-enav { display: none; }
+
+@media (max-width: 767px) {
+  :root {
+    --m-bg: #060d14;
+    --m-bg-2: #08121c;
+    --m-surface: #0d1a26;
+    --m-surface-2: #122333;
+    --m-line: rgba(124, 168, 214, .13);
+    --m-line-2: rgba(124, 168, 214, .24);
+    --m-ink: #eaf3fb;
+    --m-mute: #8ba2b8;
+    --m-faint: #5d738a;
+    --m-cyan: #22d3ee;
+    --m-cyan-2: #38bdf8;
+    --m-cyan-soft: rgba(34, 211, 238, .12);
+    --m-good: #34d399;
+    --m-warn: #f6c453;
+    --m-bad: #f87171;
+    --m-r: 16px;
+    --m-r-sm: 12px;
+    --m-tap: 46px;
+    --m-nav-h: 62px;
+    --m-safe-t: env(safe-area-inset-top, 0px);
+    --m-safe-b: env(safe-area-inset-bottom, 0px);
+    --m-gutter: 12px;
+    color-scheme: dark;
+  }
+
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--m-bg);
+    color: var(--m-ink);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+  }
+  body.has-mnav { padding-bottom: calc(var(--m-nav-h) + var(--m-safe-b)); }
+  /* The map is edge to edge: its sheet and controls already clear the bar. */
+  body[data-mobile-section="map"].has-mnav { padding-bottom: 0; }
+  img, video { max-width: 100%; }
+  button, [role="button"], a, input, select, textarea { touch-action: manipulation; }
+  ::selection { background: rgba(34, 211, 238, .28); color: var(--m-ink); }
+
+  /* ── Bottom navigation ─────────────────────────────────────────────
+     Five destinations, always in the same order, always in the same place.
+     The bar floats over content with a single hairline and a restrained blur;
+     the active tab is cyan with a short indicator, never a filled pill. */
+  .m-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 90;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 2px;
+    padding: 5px 6px calc(5px + var(--m-safe-b));
+    background: linear-gradient(180deg, rgba(8, 18, 28, .82), rgba(5, 11, 17, .98) 42%);
+    -webkit-backdrop-filter: blur(22px) saturate(1.25);
+    backdrop-filter: blur(22px) saturate(1.25);
+    border-top: 1px solid var(--m-line);
+  }
+  .m-nav a {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 50px;
+    padding: 5px 0 3px;
+    border-radius: 12px;
+    color: var(--m-faint);
+    text-decoration: none;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    transition: color .18s ease, background-color .18s ease, transform .18s ease;
+  }
+  .m-nav a svg { width: 23px; height: 23px; display: block; }
+  .m-nav a[aria-current="page"] { color: var(--m-cyan); }
+  .m-nav a[aria-current="page"]::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 18px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--m-cyan);
+    box-shadow: 0 0 10px rgba(34, 211, 238, .65);
+  }
+  .m-nav a:active { background: rgba(34, 211, 238, .08); transform: scale(.96); }
+  .m-nav a:focus-visible { outline: 2px solid var(--m-cyan); outline-offset: -2px; }
+
+  /* ── Shared shell bar ──────────────────────────────────────────────
+     The desktop bar keeps a wordmark, five links, a search, two status pills
+     and five actions. On a phone that is a different bar: identity, state and
+     one search field, nothing else. The five links move to .m-nav. */
+  .tb {
+    height: auto;
+    min-height: 50px;
+    padding: calc(6px + var(--m-safe-t)) var(--m-gutter) 0;
+    gap: 6px;
+    flex-wrap: wrap;
+    background: rgba(6, 13, 20, .78);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    backdrop-filter: blur(18px) saturate(1.2);
+    border-bottom: 1px solid var(--m-line);
+  }
+  .tb-nav, .tb-actions, .tb-status, .tb-support, .tb-clock, .tb-perf-wrap, .tb-efb { display: none !important; }
+  .tb-brand { letter-spacing: .2em; font-size: 12px; gap: 8px; }
+  .tb-brand .tb-name { display: flex; }
+  .tb-brand .tb-state { font-size: 9.5px; letter-spacing: .06em; max-width: 22ch; }
+  .tb-mark {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: var(--m-cyan-soft);
+    border: 1px solid rgba(34, 211, 238, .28);
+  }
+  .tb-gap { display: none; }
+  .tb-search { order: 9; width: 100%; padding: 0 0 9px; }
+  .tb-search:empty { display: none; }
+  #appbar #sb {
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(18, 34, 49, .8);
+    border: 1px solid var(--m-line);
+    padding: 0 12px;
+    box-shadow: none;
+  }
+  #appbar #sb span { font-size: 16px; color: var(--m-faint); }
+  #appbar #q { font-size: 15px; padding: 10px 0; }
+
+  /* ── Map: an immersive full-screen surface ─────────────────────────
+     The bar floats over the chart instead of taking a row from it, the rail is
+     gone (the bottom navigation owns those destinations), and the flight card
+     becomes a bottom sheet above the bar. */
+  /* Keep the shell's grid: the map's height comes from its 1fr row. Only the
+     rail column and the bar's row are removed, and the bar floats above. */
+  body[data-mobile-section="map"] .app-shell {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: 0 minmax(0, 1fr) !important;
+    height: 100vh;
+    height: 100dvh;
+  }
+  body[data-mobile-section="map"] .app-main { height: auto; }
+  body[data-mobile-section="map"] #tabs { display: none !important; }
+  body[data-mobile-section="map"] #app { height: 100vh; height: 100dvh; }
+  body[data-mobile-section="map"] #appbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 42;
+    border-bottom: 0;
+    background: linear-gradient(180deg, rgba(5, 11, 17, .96), rgba(5, 11, 17, .72) 70%, rgba(5, 11, 17, 0));
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  body[data-mobile-section="map"] #appbar #sb {
+    background: rgba(12, 24, 35, .86);
+    border-color: rgba(124, 168, 214, .2);
+  }
+  body[data-mobile-section="map"] #res {
+    position: fixed;
+    top: calc(104px + var(--m-safe-t));
+    left: var(--m-gutter);
+    right: var(--m-gutter);
+    width: auto;
+    max-height: 46dvh;
+    border-radius: 14px;
+    z-index: 43;
+    background: var(--m-surface);
+    border: 1px solid var(--m-line-2);
+  }
+  body[data-mobile-section="map"] #online { display: none !important; }
+  body[data-mobile-section="map"] #tel { display: none !important; }
+
+  /* The controls sit in one column on the right, clear of the bar and sheet. */
+  body[data-mobile-section="map"] #fab {
+    position: fixed;
+    top: auto;
+    right: 10px;
+    bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 14px);
+    gap: 8px;
+    z-index: 46;
+    transition: bottom .24s ease;
+  }
+  body[data-mobile-section="map"].m-flight #fab { bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 208px); }
+  body[data-mobile-section="map"] #fab .fab {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    font-size: 17px;
+    color: var(--m-ink);
+    background: rgba(13, 26, 38, .92);
+    border: 1px solid var(--m-line-2);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+  }
+  body[data-mobile-section="map"] #fab .fab:active { transform: scale(.94); }
+  body[data-mobile-section="map"] #fab .fab.on { background: var(--m-cyan); color: #04212b; border-color: transparent; }
+
+  /* Flight planning stays one tap away even though the rail is gone. */
+  .m-plan {
+    position: fixed;
+    left: var(--m-gutter);
+    bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 14px);
+    z-index: 46;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 12px;
+    font: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--m-ink);
+    background: rgba(13, 26, 38, .92);
+    border: 1px solid var(--m-line-2);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+    transition: bottom .24s ease, border-color .16s ease;
+  }
+  .m-plan svg { width: 16px; height: 16px; color: var(--m-cyan); }
+  .m-plan:active { border-color: var(--m-cyan); }
+  body.m-flight .m-plan { bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 208px); }
+
+  /* ── The flight sheet ─────────────────────────────────────────────
+     The page keeps writing the card; the phone turns it into a sheet with
+     three rests. Only the presentation changes, so every number stays the
+     one the bridge reported. */
+  body[data-mobile-section="map"] #fc {
+    position: fixed !important;
+    left: 8px !important;
+    right: 8px !important;
+    top: auto !important;
+    bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 8px) !important;
+    width: auto !important;
+    max-width: none !important;
+    z-index: 48;
+    overflow: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 16px 14px !important;
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(17, 31, 45, .985), rgba(8, 17, 26, .995)) !important;
+    border: 1px solid var(--m-line-2) !important;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, .45);
+    scrollbar-width: none;
+  }
+  body[data-mobile-section="map"] #fc::-webkit-scrollbar { display: none; }
+  body[data-mobile-section="map"] #fc[data-snap="peek"] { max-height: 196px; }
+  body[data-mobile-section="map"] #fc[data-snap="half"] { max-height: 48dvh; }
+  body[data-mobile-section="map"] #fc[data-snap="full"] { max-height: calc(100dvh - 118px); }
+  body[data-mobile-section="map"] #fc .fh { padding-top: 2px; }
+  body[data-mobile-section="map"] #fc .fr { font-size: 24px; margin: 9px 0 2px; }
+  body[data-mobile-section="map"] #fc .fg { grid-template-columns: repeat(3, 1fr); row-gap: 10px; }
+  body[data-mobile-section="map"] #fc .fca button { min-height: 40px; border-radius: 11px; }
+  body[data-mobile-section="map"] #fc .fcph { margin: 0 -16px 10px; border-radius: 20px 20px 0 0; }
+  body[data-mobile-section="map"] #fc .fcph img { height: 150px; }
+
+  .m-grip {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    width: 100%;
+    height: 26px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 20px 20px 0 0;
+    background: linear-gradient(180deg, rgba(17, 31, 45, .99), rgba(17, 31, 45, .82));
+    cursor: grab;
+    touch-action: none;
+  }
+  .m-grip span {
+    width: 42px;
+    height: 4px;
+    border-radius: 99px;
+    background: rgba(148, 183, 214, .42);
+  }
+  .m-grip:active span { background: var(--m-cyan); }
+  .m-grip:focus-visible { outline: 2px solid var(--m-cyan); outline-offset: -3px; }
+
+  /* The plan card uses the same sheet language when no flight is live. */
+  body[data-mobile-section="map"] #fp {
+    position: fixed !important;
+    left: 8px !important;
+    right: 8px !important;
+    top: auto !important;
+    bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 8px) !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: 46dvh;
+    z-index: 47;
+    border-radius: 20px;
+    padding: 14px 16px !important;
+    background: linear-gradient(180deg, rgba(17, 31, 45, .985), rgba(8, 17, 26, .995)) !important;
+    border: 1px solid var(--m-line-2) !important;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, .45);
+    scrollbar-width: none;
+  }
+  body[data-mobile-section="map"] #fp::-webkit-scrollbar { display: none; }
+
+  /* Map settings arrive as a drawer, not a floating panel. */
+  body[data-mobile-section="map"] #lay {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: auto;
+    bottom: 0;
+    width: auto;
+    max-height: 84dvh;
+    padding: 0 0 calc(10px + var(--m-safe-b));
+    border-radius: 22px 22px 0 0;
+    z-index: 60;
+    background: var(--m-surface);
+    border: 1px solid var(--m-line-2);
+    border-bottom: 0;
+    box-shadow: 0 -18px 50px rgba(0, 0, 0, .5);
+  }
+  body[data-mobile-section="map"] #lay .lay-h {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 14px 16px 10px;
+    background: var(--m-surface);
+    border-bottom: 1px solid var(--m-line);
+    border-radius: 22px 22px 0 0;
+  }
+  body[data-mobile-section="map"] #lay .lay-body { padding: 4px 14px 8px; overscroll-behavior: contain; }
+  body[data-mobile-section="map"] #lay .lay-chips button,
+  body[data-mobile-section="map"] #lay #ms button { min-height: 42px; border-radius: 11px; }
+  body[data-mobile-section="map"] #ms { grid-template-columns: 1fr 1fr; gap: 8px; }
+  body[data-mobile-section="map"] #lay .lay-s { padding: 12px 0; }
+
+  /* Chart viewer is a document: full height, safe areas, one back control. */
+  #cv { padding-top: var(--m-safe-t); }
+  #cv .cvh { min-height: 50px; padding: 6px 10px; gap: 8px; }
+  #cv .cvh button { min-width: 42px; min-height: 42px; }
+  #cv .seg { margin: 6px 10px 10px; }
+  #cv .seg button { min-height: 40px; }
+  #chart { padding: calc(8px + var(--m-safe-t)) 8px calc(8px + var(--m-safe-b)); }
+
+  /* ── Flights: a list of flights, not a dashboard ─────────────────── */
+  body[data-mobile-section="flights"] #topbar {
+    padding: calc(8px + var(--m-safe-t)) var(--m-gutter) 8px;
+    background: rgba(6, 13, 20, .82);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    backdrop-filter: blur(18px) saturate(1.2);
+    border-bottom: 1px solid var(--m-line);
+  }
+  body[data-mobile-section="flights"] #topbar a.home { font-size: 15px; letter-spacing: .18em; }
+  body[data-mobile-section="flights"] #topbar h1 {
+    font-size: 10px; letter-spacing: .16em; border-left-color: var(--m-line);
+    color: var(--m-faint);
+  }
+  body[data-mobile-section="flights"] #tab-bar {
+    position: sticky;
+    top: calc(46px + var(--m-safe-t));
+    z-index: 19;
+    gap: 6px;
+    padding: 8px var(--m-gutter);
+    background: rgba(6, 13, 20, .94);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--m-line);
+    scrollbar-width: none;
+  }
+  body[data-mobile-section="flights"] #tab-bar::-webkit-scrollbar { display: none; }
+  body[data-mobile-section="flights"] .tab-btn {
+    flex: 0 0 auto;
+    padding: 0 14px;
+    min-height: 38px;
+    border: 1px solid var(--m-line);
+    border-bottom: 1px solid var(--m-line);
+    border-radius: 999px;
+    background: var(--m-surface);
+    font-size: 12px;
+    color: var(--m-mute);
+  }
+  body[data-mobile-section="flights"] .tab-btn.act {
+    color: #04212b;
+    background: var(--m-cyan);
+    border-color: var(--m-cyan);
+  }
+  body[data-mobile-section="flights"] #main {
+    padding: var(--m-gutter) var(--m-gutter) calc(16px + var(--m-safe-b));
+    max-width: none;
+  }
+  body[data-mobile-section="flights"] .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  body[data-mobile-section="flights"] .stat-tile {
+    padding: 12px;
+    border-radius: 14px;
+    background: var(--m-surface);
+    border-color: var(--m-line);
+  }
+  body[data-mobile-section="flights"] .stat-tile b { font-size: 22px; }
+  body[data-mobile-section="flights"] .section {
+    padding: 4px 12px 8px;
+    border-radius: var(--m-r);
+    background: var(--m-surface);
+    border-color: var(--m-line);
+  }
+  body[data-mobile-section="flights"] .section h2 { padding-top: 10px; color: var(--m-faint); letter-spacing: .14em; }
+  body[data-mobile-section="flights"] .flight-row {
+    gap: 12px;
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--m-line);
+    border-radius: 0;
+  }
+  body[data-mobile-section="flights"] .flight-row:active { background: rgba(34, 211, 238, .06); }
+  body[data-mobile-section="flights"] .fl-badge {
+    min-width: 54px;
+    border-radius: 9px;
+    background: rgba(34, 211, 238, .1);
+    border-color: rgba(34, 211, 238, .28);
+  }
+  body[data-mobile-section="flights"] .fl-route { font-size: 15.5px; }
+  body[data-mobile-section="flights"] .fl-sub { font-size: 11.5px; }
+  body[data-mobile-section="flights"] .ac-grid { grid-template-columns: 1fr; }
+  body[data-mobile-section="flights"] .ac-card { border-radius: 14px; background: var(--m-surface); }
+  body[data-mobile-section="flights"] .table-wrap, body[data-mobile-section="flights"] .s-table-wrap { max-width: 100%; }
+
+  /* ── Weather: compact panels, one airport at a time ──────────────── */
+  body[data-mobile-section="weather"] #topbar {
+    padding: calc(8px + var(--m-safe-t)) var(--m-gutter) 8px;
+    background: rgba(6, 13, 20, .82);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    backdrop-filter: blur(18px) saturate(1.2);
+    border-bottom: 1px solid var(--m-line);
+  }
+  body[data-mobile-section="weather"] #topbar a.home { font-size: 15px; letter-spacing: .18em; }
+  body[data-mobile-section="weather"] #topbar h1 { font-size: 10px; letter-spacing: .16em; border-left-color: var(--m-line); color: var(--m-faint); }
+  body[data-mobile-section="weather"] #search-wrap {
+    gap: 8px;
+    padding: 10px var(--m-gutter);
+    background: var(--m-bg);
+    border-bottom: 1px solid var(--m-line);
+  }
+  body[data-mobile-section="weather"] #icao-input {
+    min-height: var(--m-tap);
+    border-radius: 12px;
+    background: var(--m-surface);
+    border-color: var(--m-line);
+    font-size: 16px;
+  }
+  body[data-mobile-section="weather"] #search-btn {
+    min-height: var(--m-tap);
+    padding: 0 16px;
+    border-radius: 12px;
+    background: var(--m-cyan);
+    color: #04212b;
+    font-weight: 750;
+  }
+  body[data-mobile-section="weather"] #recent-strip {
+    gap: 6px;
+    padding: 8px var(--m-gutter);
+    background: var(--m-bg);
+    border-bottom: 1px solid var(--m-line);
+  }
+  body[data-mobile-section="weather"] .rec-chip {
+    min-height: 32px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: var(--m-surface);
+    border-color: var(--m-line);
+    color: var(--m-mute);
+  }
+  body[data-mobile-section="weather"] #main {
+    padding: var(--m-gutter) var(--m-gutter) calc(16px + var(--m-safe-b));
+    max-width: none;
+  }
+  body[data-mobile-section="weather"] #apt-header {
+    gap: 10px;
+    padding: 14px;
+    border-radius: var(--m-r);
+    background: var(--m-surface);
+    border-color: var(--m-line);
+  }
+  body[data-mobile-section="weather"] .apt-id { font-size: 32px; }
+  body[data-mobile-section="weather"] .apt-meta { min-width: 120px; }
+  body[data-mobile-section="weather"] .apt-name { font-size: 14px; }
+  body[data-mobile-section="weather"] .apt-right { flex-direction: row; align-items: center; gap: 8px; }
+  body[data-mobile-section="weather"] .cat-badge { font-size: 11px; padding: 4px 10px; }
+  body[data-mobile-section="weather"] .wx-section {
+    padding: 12px 14px;
+    border-radius: var(--m-r);
+    background: var(--m-surface);
+    border-color: var(--m-line);
+  }
+  body[data-mobile-section="weather"] .wx-section h2 { color: var(--m-faint); letter-spacing: .14em; }
+  body[data-mobile-section="weather"] .raw-metar { font-size: 11px; line-height: 1.7; background: var(--m-bg-2); }
+  body[data-mobile-section="weather"] .decoded-row { gap: 6px; padding: 7px 0; }
+  body[data-mobile-section="weather"] .dec-label { min-width: 88px; font-size: 10.5px; letter-spacing: .04em; }
+  body[data-mobile-section="weather"] .dec-val { font-size: 14px; }
+  body[data-mobile-section="weather"] #empty-state,
+  body[data-mobile-section="weather"] #loading-state,
+  body[data-mobile-section="weather"] #error-state { padding: 48px 16px; }
+
+  /* ── Charts: the EFB with a phone's proportions ───────────────────── */
+  body[data-mobile-section="charts"] .efb-top {
+    min-height: 52px;
+    padding: calc(6px + var(--m-safe-t)) 10px 6px;
+    gap: 8px;
+    flex-wrap: nowrap;
+    background: rgba(6, 13, 20, .9);
+    border-bottom: 1px solid var(--m-line);
+  }
+  body[data-mobile-section="charts"] .et-brand small { display: none; }
+  body[data-mobile-section="charts"] .et-flight { max-width: 42vw; font-size: 10.5px; }
+  body[data-mobile-section="charts"] .et-airline { display: none; }
+  body[data-mobile-section="charts"] .et-clock { font-size: 11px; }
+  body[data-mobile-section="charts"] .et-icon { width: 38px; height: 38px; }
+  body[data-mobile-section="charts"] .efb-nav {
+    position: sticky;
+    top: calc(52px + var(--m-safe-t));
+    z-index: 21;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 4px;
+    padding: 6px 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    background: rgba(7, 15, 23, .96);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--m-line);
+  }
+  body[data-mobile-section="charts"] .efb-nav::-webkit-scrollbar { display: none; }
+  /* The EFB's own grouped rail is replaced on a phone by .m-enav, a single row
+     built from the same links. Hiding it also keeps its grouped markup from
+     forcing a tall column above the charts. */
+  body[data-mobile-section="charts"] #efb-nav { display: none !important; }
+  body[data-mobile-section="charts"] .efb-main { padding-top: 84px; }
+  .m-enav {
+    position: fixed;
+    top: calc(52px + var(--m-safe-t));
+    left: 0;
+    right: 0;
+    z-index: 22;
+    display: flex;
+    gap: 4px;
+    padding: 6px 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    background: rgba(7, 15, 23, .96);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--m-line);
+  }
+  .m-enav::-webkit-scrollbar { display: none; }
+  .m-enav a {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 48px;
+    min-width: 64px;
+    padding: 5px 9px;
+    border-radius: 11px;
+    border: 1px solid transparent;
+    color: var(--m-faint);
+    text-decoration: none;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .m-enav a svg { width: 19px; height: 19px; }
+  .m-enav a[aria-current="page"] {
+    color: var(--m-cyan);
+    background: var(--m-cyan-soft);
+    border-color: rgba(34, 211, 238, .26);
+  }
+  body[data-mobile-section="charts"] .efb-nav .en-home,
+  body[data-mobile-section="charts"] .efb-nav .en-item {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 48px;
+    padding: 4px 10px;
+    border-radius: 11px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--m-faint);
+    white-space: nowrap;
+  }
+  body[data-mobile-section="charts"] .efb-nav .en-home svg,
+  body[data-mobile-section="charts"] .efb-nav .en-item svg { width: 19px; height: 19px; }
+  body[data-mobile-section="charts"] .efb-nav .en-label { font-size: 9px; }
+  body[data-mobile-section="charts"] .efb-nav .en-home[aria-current="page"],
+  body[data-mobile-section="charts"] .efb-nav .en-item[aria-current="page"],
+  body[data-mobile-section="charts"] .efb-nav .en-home.act,
+  body[data-mobile-section="charts"] .efb-nav .en-item.act,
+  body[data-mobile-section="charts"] .efb-nav .en-home.on,
+  body[data-mobile-section="charts"] .efb-nav .en-item.on {
+    color: var(--m-cyan);
+    background: var(--m-cyan-soft);
+    border-color: rgba(34, 211, 238, .26);
+  }
+  body[data-mobile-section="charts"] .efb-main {
+    padding: 10px var(--m-gutter) calc(18px + var(--m-safe-b));
+    max-width: none;
+  }
+  body[data-mobile-section="charts"] .efb-page-head {
+    gap: 8px;
+    padding: 0 0 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--m-line);
+  }
+  body[data-mobile-section="charts"] .efb-page-head h1 { font-size: 19px; }
+  body[data-mobile-section="charts"] .efb-page-head p { font-size: 11.5px; }
+  body[data-mobile-section="charts"] .efb-body,
+  body[data-mobile-section="charts"] .efb-body * { min-width: 0; }
+  body[data-mobile-section="charts"] .efb-body { font-size: 13.5px; }
+  body[data-mobile-section="charts"] .efb-body button,
+  body[data-mobile-section="charts"] .efb-body .btn,
+  body[data-mobile-section="charts"] .efb-body input,
+  body[data-mobile-section="charts"] .efb-body select { min-height: 42px; font-size: 14px; }
+  body[data-mobile-section="charts"] .efb-body table { display: block; overflow-x: auto; max-width: 100%; }
+  body[data-mobile-section="charts"] .perf-layout { grid-template-columns: minmax(0, 1fr); }
+  body[data-mobile-section="charts"] .efb-body img,
+  body[data-mobile-section="charts"] .efb-body canvas,
+  body[data-mobile-section="charts"] .efb-body iframe { max-width: 100%; }
+  body[data-mobile-section="charts"] .efb-body .card,
+  body[data-mobile-section="charts"] .efb-body [class$="-card"] { border-radius: 14px; }
+  /* The EFB's own deck keeps four columns instead of shrinking to specks. */
+  body[data-mobile-section="charts"] .home-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  body[data-mobile-section="charts"] .home-stage { padding: 0 12px 90px; }
+  body[data-mobile-section="charts"] .home-dock { bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 8px); }
+
+  /* ── Profile: account and settings as a settings app ─────────────── */
+  body[data-mobile-section="profile"] .page {
+    padding: var(--m-gutter) var(--m-gutter) calc(16px + var(--m-safe-b));
+    max-width: none;
+  }
+  body[data-mobile-section="profile"] .subnav {
+    position: sticky;
+    top: calc(50px + var(--m-safe-t));
+    z-index: 25;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    padding: 8px var(--m-gutter);
+    overflow-x: auto;
+    scrollbar-width: none;
+    background: rgba(6, 13, 20, .94);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--m-line);
+  }
+  body[data-mobile-section="profile"] .subnav::-webkit-scrollbar { display: none; }
+  body[data-mobile-section="profile"] .subnav button {
+    flex: 0 0 auto;
+    min-height: 38px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: var(--m-surface);
+    border: 1px solid var(--m-line);
+    color: var(--m-mute);
+    font-size: 12px;
+    font-weight: 650;
+  }
+  body[data-mobile-section="profile"] .subnav button.act,
+  body[data-mobile-section="profile"] .subnav button[aria-current="page"],
+  body[data-mobile-section="profile"] .subnav button.on {
+    color: #04212b;
+    background: var(--m-cyan);
+    border-color: var(--m-cyan);
+  }
+  body[data-mobile-section="profile"] .grid-2,
+  body[data-mobile-section="profile"] .grid-3,
+  body[data-mobile-section="profile"] .grid-4,
+  body[data-mobile-section="profile"] .grid-main { grid-template-columns: minmax(0, 1fr) !important; }
+  body[data-mobile-section="profile"] .grid-main > .span-2 { grid-column: auto; }
+  body[data-mobile-section="profile"] .card {
+    padding: 14px;
+    border-radius: var(--m-r);
+    background: var(--m-surface);
+    border-color: var(--m-line);
+  }
+  body[data-mobile-section="profile"] .stat-value { font-size: 24px; }
+  body[data-mobile-section="profile"] .btn,
+  body[data-mobile-section="profile"] button { min-height: 42px; }
+  body[data-mobile-section="profile"] table.data { min-width: 0; }
+  body[data-mobile-section="profile"] .dashboard-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  /* Install card: the one place the app asks to be installed. */
+  .m-install {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 12px;
+    padding: 12px 14px;
+    width: 100%;
+    text-align: left;
+    border-radius: var(--m-r);
+    background: var(--m-cyan-soft);
+    border: 1px solid rgba(34, 211, 238, .28);
+    color: var(--m-ink);
+    font: inherit;
+  }
+  .m-install svg { width: 22px; height: 22px; color: var(--m-cyan); flex: 0 0 auto; }
+  .m-install b { display: block; font-size: 13px; font-weight: 700; }
+  .m-install span { display: block; font-size: 11px; color: var(--m-mute); margin-top: 1px; }
+  .m-install-row { display: flex; align-items: stretch; gap: 6px; margin: 0 0 12px; }
+  .m-install-row .m-install { margin: 0; flex: 1 1 auto; }
+  .m-install-x {
+    flex: 0 0 40px;
+    min-height: 40px;
+    border-radius: 12px;
+    background: transparent;
+    border: 1px solid var(--m-line);
+    color: var(--m-mute);
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  /* ── Motion ───────────────────────────────────────────────────────
+     Two short transitions, both transform/opacity only. Nothing here runs
+     while the map draws. */
+  @media (prefers-reduced-motion: no-preference) {
+    body.m-enter { animation: mFade .2s ease both; }
+    body.m-leaving { opacity: .55; transition: opacity .12s ease; }
+    body[data-mobile-section="map"] #fc,
+    body[data-mobile-section="map"] #fp { transition: max-height .24s cubic-bezier(.22, .61, .36, 1); }
+    .m-nav a svg { transition: transform .18s ease; }
+    .m-nav a[aria-current="page"] svg { transform: translateY(-1px); }
+  }
+  @keyframes mFade { from { opacity: .35; } to { opacity: 1; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .m-nav a, body[data-mobile-section="map"] #fc, .m-plan { transition: none !important; }
+    body.m-enter, body.m-leaving { animation: none !important; opacity: 1 !important; }
+  }
+
+  /* Small phones: tighter gutters, same rhythm. */
+  @media (max-width: 380px) {
+    :root { --m-gutter: 10px; --m-nav-h: 58px; }
+    .m-nav a { font-size: 8.5px; letter-spacing: .08em; }
+    .m-nav a svg { width: 21px; height: 21px; }
+    body[data-mobile-section="map"] #fc[data-snap="peek"] { max-height: 184px; }
+  }
+
+  /* Landscape phone: the sheet must leave the map usable. */
+  @media (max-height: 520px) and (orientation: landscape) {
+    body[data-mobile-section="map"] #fc[data-snap="peek"] { max-height: 150px; }
+    body[data-mobile-section="map"] #fc[data-snap="half"] { max-height: 58dvh; }
+    body[data-mobile-section="map"] #fc[data-snap="full"] { max-height: calc(100dvh - 96px); }
+    .m-nav { padding-top: 2px; }
+    .m-nav a { min-height: 42px; }
+    .m-nav a svg { width: 20px; height: 20px; }
+  }
+}
+
+/* Tablets keep the desktop layout, but the sheet language is phone-only. */
+@media (min-width: 768px) {
+  .m-nav, .m-grip, .m-plan, .m-install { display: none !important; }
+}
+
+@media print {
+  .m-nav, .m-grip, .m-plan { display: none !important; }
+}

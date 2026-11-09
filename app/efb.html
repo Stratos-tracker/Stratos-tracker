@@ -20,8 +20,9 @@
 <!-- The builder is a chart workspace with its own rail and panel rules; the
      tokens and the `e-*` kit still come from efb.css above. -->
 <link rel="stylesheet" href="efb-flightplan.css">
+<link rel="stylesheet" href="mobile.css">
 <script src="js/account/gate.js"></script></head>
-<body class="efb" data-wall="aurora">
+<body class="efb" data-wall="aurora" data-mobile-section="charts">
 
 <!-- The deck. Opening Stratos EFB lands here, like an EFB on a pilot's tablet:
      a grid of apps over the wallpaper, a dock, and a status bar. Each icon opens
@@ -150,5 +151,6 @@
   } catch (_) { /* no service worker support */ }
 </script>
 <script type="module" src="js/efb.js"></script>
+<script type="module" src="js/mobile.js"></script>
 </body>
 </html>
