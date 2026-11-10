@@ -42,6 +42,33 @@ const FIT_MIN_ZOOM = 1;
 const MAX_ZOOM = 13;
 const FOLLOW_ZOOM = 9;
 
+/* The surfaces this chart can be painted with. Each one is a keyless Esri tile
+   service — the same imagery the Flight Deck draws — so a page can show the
+   chart style its own screen uses without a second map implementation. The
+   attribution travels with the style: whatever is drawn says who drew it. */
+const CHART_STYLES = {
+  world: {
+    id: 'world',
+    label: 'Chart',
+    attribution: '© Esri, HERE, Garmin · © OpenStreetMap contributors',
+    tile: (z, x, y, theme) => `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/${theme === 'light' ? 'World_Light_Gray_Base' : 'World_Dark_Gray_Base'}/MapServer/tile/${z}/${y}/${x}`,
+  },
+  satellite: {
+    id: 'satellite',
+    label: 'Satellite',
+    attribution: 'Imagery © Esri, Maxar, Earthstar Geographics',
+    tile: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`,
+  },
+  terrain: {
+    id: 'terrain',
+    label: 'Terrain',
+    attribution: 'Terrain © Esri, USGS, NOAA',
+    tile: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/${z}/${y}/${x}`,
+  },
+};
+
+const chartStyle = id => CHART_STYLES[id] || CHART_STYLES.world;
+
 function lonToX(lon, z) {
   return ((lon + 180) / 360) * 2 ** z;
 }
@@ -219,6 +246,8 @@ export class MiniMap {
        network and no decoder, and a pilot who never asks for imagery or
        terrain never pays for either. */
     this.globeStyleId = earthStyle(options.globeStyle).id;
+    // Which surface the tiles are painted with: Chart, Satellite or Terrain.
+    this.chart = chartStyle(options.chart).id;
     this.earth = null;
     this.painter = null;
     this.globeMovedAt = 0;
@@ -1245,8 +1274,8 @@ export class MiniMap {
     const halfW = this.width / 2, halfH = this.height / 2;
     const left = view.centerX * TILE - halfW - this.marginX();
     const top = view.centerY * TILE - halfH;
-    const style = this.theme();
-    const service = style === 'dark' ? 'World_Dark_Gray_Base' : 'World_Light_Gray_Base';
+    const chart = chartStyle(this.chart);
+    const theme = this.theme();
     const x0 = Math.floor(left / tileSize);
     const x1 = Math.floor((left + this.width) / tileSize);
     const y0 = Math.floor(top / tileSize);
@@ -1256,7 +1285,7 @@ export class MiniMap {
       if (y < 0 || y >= max) continue;
       for (let x = x0; x <= x1; x++) {
         const wrapped = ((x % max) + max) % max;
-        const entry = this.tile(`https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/${service}/MapServer/tile/${z}/${y}/${wrapped}`);
+        const entry = this.tile(chart.tile(z, wrapped, y, theme));
         const sx = x * tileSize - left;
         const sy = y * tileSize - top;
         if (entry.loaded) {
@@ -1302,6 +1331,17 @@ export class MiniMap {
     this.navPoints = Array.isArray(points) ? points : [];
     this.navMeta = meta || null;
     this.draw();
+  }
+
+  /** Repaint the chart with another surface. Tiles are cached per URL, so a
+   *  switch back to a style already seen is instant. */
+  setChart(id) {
+    const style = chartStyle(id);
+    if (style.id === this.chart) return this.chart;
+    this.chart = style.id;
+    this.draw();
+    this.options.onViewChange?.({ chart: true });
+    return this.chart;
   }
 
   setRange(nm) {
@@ -1983,7 +2023,7 @@ export class MiniMap {
     if (this.layers.scale) this.drawScale(view);
 
     if (this.options.attribution && this.layers.tiles) {
-      const label = '© Esri, HERE, Garmin · © OpenStreetMap contributors';
+      const label = chartStyle(this.chart).attribution;
       ctx.font = '10px system-ui, sans-serif';
       const width = ctx.measureText(label).width;
       ctx.fillStyle = 'rgba(0,0,0,.55)';

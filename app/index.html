@@ -1,9 +1,24 @@
 <!DOCTYPE html>
 <html lang="en" data-ui="new"><head><meta name="google-site-verification" content="XKDdOg6JlR51vfE1F6f55J3rZuq3D6lwzNUdK4eiSEo" /><meta charset="utf-8">
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png">
+<script>
+/* Phone Mode is this same Flight Deck, served at /phone by the host. The page
+   still lives in /app/, so that URL gets a base (and the phone manifest) to keep
+   every relative asset and link resolving. Only that URL is affected; the
+   desktop app, /app/ and every other page are untouched. */
+(function () {
+  if (!/^https?:$/.test(location.protocol) || !/^\/phone\/?$/.test(location.pathname)) return;
+  var base = document.createElement('base');
+  base.href = '/app/';
+  document.head.appendChild(base);
+  var manifest = document.querySelector('link[rel="manifest"]');
+  if (manifest) manifest.setAttribute('href', 'manifest-phone.webmanifest');
+  document.documentElement.classList.add('phone-mode');
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Stratos"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="theme-color" content="#0b1118">
-<title>Stratos | X-Plane 12 Flight Tracker and Charts</title>
+<title>Stratos | Flight Tracker for X-Plane 12 &amp; MSFS 2020/2024</title>
 <style>
 :root{--bg:#bcd6e4;--land:#efe9d6;--coast:#5c7b8b;--grid:rgba(40,70,90,.16);--ap:#c2410c;--nav:#0f766e;--route:#6d28d9;--own:#e11d48;--txt:#1b2a33;--ui:rgba(255,253,246,.94);--ui2:#e6e0cd;--mut:#5d6b73;--trf:#1d4ed8;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 :root[data-theme=contrast]{--bg:#000;--land:#0d0d0d;--coast:#fff;--grid:rgba(255,255,255,.3);--ap:#ff0;--nav:#0ff;--route:#f0f;--own:#fff;--txt:#fff;--ui:#000;--ui2:#333;--mut:#ddd;--trf:#7f7;color-scheme:dark}
@@ -332,13 +347,19 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 #wpcard button:disabled{opacity:.4;cursor:not-allowed}
 @media(max-width:520px){#wpcard{width:min(320px,calc(100% - 20px));padding:12px 13px}}
 </style><link rel="stylesheet" href="shell.css">
-<meta name="description" content="Track X-Plane 12 and MSFS flights with Stratos: live maps, route planning, flight logging, replay, landing analytics, weather briefings, and aviation charts.">
-<link rel="canonical" href="https://stratos-tracker-5rh6.vercel.app/app/">
-<meta property="og:title" content="Stratos | X-Plane 12 Flight Tracker and Charts">
+<meta name="description" content="Track your flights in X-Plane 12 and Microsoft Flight Simulator 2020/2024 with Stratos: live maps, flight planning, charts, airport information, weather briefings, logbook and replay.">
+<link rel="canonical" href="https://www.stratos-tracker.com/app/">
+<meta property="og:title" content="Stratos – Free Flight Tracker for X-Plane 12 &amp; MSFS 2020/2024">
 <meta property="og:description" content="Track X-Plane 12 and MSFS flights with Stratos: live maps, route planning, flight logging, replay, landing analytics, weather briefings, and aviation charts.">
-<meta property="og:url" content="https://stratos-tracker-5rh6.vercel.app/app/">
+<meta property="og:url" content="https://www.stratos-tracker.com/app/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Stratos">
+<meta property="og:image" content="https://www.stratos-tracker.com/app/icon-512.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Stratos – Free Flight Tracker for X-Plane 12 &amp; MSFS 2020/2024">
+<meta name="twitter:description" content="Track your flights in X-Plane 12 and Microsoft Flight Simulator 2020/2024 with Stratos: live maps, flight planning, charts, airport information, weather briefings, logbook and replay.">
+<meta name="twitter:image" content="https://www.stratos-tracker.com/app/icon-512.png">
+<meta name="robots" content="index,follow,max-image-preview:large">
 <style>/* ── The chart deck: flight plan and procedures ────────────────────────
    Two collapsible panels around the chart, in the shell's own surface: the
    plan on the left, the procedure deck on the right. They are chrome over the
@@ -3901,7 +3922,10 @@ const rl=rwList(a);h+='<h3 style="margin-top:14px">Runways</h3>'+(rl.length?'<ta
 h+='<h3 style="margin-top:14px">Weather</h3><code>'+a.metar+'</code><div class="m">'+dec(a.metar)+'</div><div class="m">'+mAge(a)+'</div>'+rwTable(a);
 return h+'<div style="margin-top:14px">'+faaHtml(a)+'</div>'}
 $('#cvx').onclick=closeCharts;$('#cvf').onclick=chFit;$('#cvs').onclick=e=>{const p=e.target.dataset&&e.target.dataset.p;if(p)chPage(p)};
-try{if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').then(reg=>{reg.addEventListener('updatefound',()=>{const w=reg.installing;if(!w)return;w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller){const b=document.getElementById('st');if(b){b.textContent='Update ready — reopen Stratos';b.onclick=()=>location.reload()}}})})}).catch(()=>{})}}catch(_){}
+try{if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').then(reg=>{reg.update().catch(()=>{});reg.addEventListener('updatefound',()=>{const w=reg.installing;if(!w)return;w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller){const b=document.getElementById('st');if(b){b.textContent='Update ready — reopen Stratos';b.onclick=()=>location.reload()}}})})}).catch(()=>{});/* A worker that replaces the phone shell has to replace the page with it, or
+the phone keeps the old interface until it is closed by hand. One reload per
+session, so a first install and an update both land without a loop. */
+navigator.serviceWorker.addEventListener('controllerchange',()=>{try{if(sessionStorage.getItem('stratos.sw.reloaded'))return;sessionStorage.setItem('stratos.sw.reloaded','1')}catch(_){}location.reload()})}}catch(_){}
 </script>
 <script type="module">
   import { Track3DView } from './js/efb/track3d.js';
@@ -3982,5 +4006,6 @@ try{if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').t
     } catch (_) { /* publishing is optional; the map is unaffected */ }
   }
 </script><script type="module" src="js/mobile.js"></script>
+<script type="module" src="js/directto-control.js"></script>
 </body>
 </html>

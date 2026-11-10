@@ -785,5 +785,9 @@ test('the globe is the same chart with another projection', () => {
   assert.match(globe, /if \(z < 0\) return null/, 'the far side of the sphere is not drawn');
   assert.match(minimap, /loadGlobeLand\(\)/, 'coastlines are loaded only when a globe is asked for');
   assert.match(minimap, /Natural Earth/, 'and the source is named');
-  assert.doesNotMatch(minimap, /https?:\/\/[^'"]*(imagery|terrain)/i, 'no imagery or terrain service is invented');
+  // Sattellite and terrain surfaces are offered now, but every tile host is the
+  // same key-free Esri service the chart already used; no other provider is
+  // invented to fill the globe or the phone deck.
+  const hosts = [...new Set([...minimap.matchAll(/https?:\/\/([^/'"`]+)/g)].map(match => match[1]))];
+  assert.deepEqual(hosts, ['server.arcgisonline.com'], 'every tile host is the key-free Esri service');
 });

@@ -1054,7 +1054,7 @@ test('map tiles need no API key and credit the provider that serves them', async
     assert.doesNotMatch(text, /OpenStreetMap contributors, CARTO|© OpenStreetMap contributors · © CARTO/, `${name} must credit the provider it actually uses`);
   }
   assert.doesNotMatch(page, /n:'(?:Hybrid|Detailed|Light|Dark|Basic)'/, 'the retired flat styles are not offered');
-  assert.match(minimap, /Canvas\/\$\{service\}\/MapServer\/tile/, 'the replay and preview maps use the same key-free tiles');
+  assert.match(minimap, /Canvas\/\$\{theme === 'light' \? 'World_Light_Gray_Base' : 'World_Dark_Gray_Base'\}\/MapServer\/tile/, 'the replay and preview maps use the same key-free tiles');
   assert.match(minimap, /© Esri, HERE, Garmin · © OpenStreetMap contributors/, 'the minimap credits Esri');
 });
 

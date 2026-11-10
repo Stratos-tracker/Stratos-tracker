@@ -1,4 +1,12 @@
 User-agent: *
 Allow: /
+# Account and verification routes are private workflow pages, not landing pages.
+Disallow: /app/login.html
+Disallow: /app/signup.html
+Disallow: /app/forgot.html
+Disallow: /app/reset.html
+Disallow: /app/verify.html
+Disallow: /app/auth.html
+Disallow: /app/account.html
 
 Sitemap: https://www.stratos-tracker.com/sitemap.xml

@@ -3,6 +3,10 @@
   "functions": {
     "api/procedures.js": { "includeFiles": "navdata/cifp/**" }
   },
+  "rewrites": [
+    { "source": "/phone", "destination": "/app/index.html" },
+    { "source": "/phone/", "destination": "/app/index.html" }
+  ],
   "headers": [
     {
       "source": "/app/sw.js",
@@ -20,6 +24,13 @@
     },
     {
       "source": "/app/manifest-efb.webmanifest",
+      "headers": [
+        { "key": "Content-Type", "value": "application/manifest+json; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=300, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/app/manifest-phone.webmanifest",
       "headers": [
         { "key": "Content-Type", "value": "application/manifest+json; charset=utf-8" },
         { "key": "Cache-Control", "value": "public, max-age=300, must-revalidate" }

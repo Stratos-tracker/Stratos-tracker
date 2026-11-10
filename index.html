@@ -4,10 +4,52 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08151d">
-<meta name="description" content="Stratos is a lightweight flight simulation companion: live map, career logbook, replay, landing analytics, briefings, route planning and secure phone access.">
-<title>Stratos — the flight deck for your sim</title>
+<title>Stratos – Free Flight Tracker for X-Plane 12 &amp; MSFS 2020/2024</title>
+<meta name="description" content="Track your flights in X-Plane 12 and Microsoft Flight Simulator 2020/2024 with Stratos. Explore live flight tracking, interactive maps, flight planning, charts and more.">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<link rel="canonical" href="https://www.stratos-tracker.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Stratos">
+<meta property="og:title" content="Stratos – Free Flight Tracker for X-Plane 12 &amp; MSFS 2020/2024">
+<meta property="og:description" content="Track your flights in X-Plane 12 and Microsoft Flight Simulator 2020/2024 with Stratos. Explore live flight tracking, interactive maps, flight planning, charts and more.">
+<meta property="og:url" content="https://www.stratos-tracker.com/">
+<meta property="og:image" content="https://www.stratos-tracker.com/app/icon-512.png">
+<meta property="og:image:alt" content="Stratos — flight tracker for X-Plane 12 and Microsoft Flight Simulator">
+<meta property="og:locale" content="en_GB">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Stratos – Free Flight Tracker for X-Plane 12 &amp; MSFS 2020/2024">
+<meta name="twitter:description" content="Track your flights in X-Plane 12 and Microsoft Flight Simulator 2020/2024 with Stratos. Explore live flight tracking, interactive maps, flight planning, charts and more.">
+<meta name="twitter:image" content="https://www.stratos-tracker.com/app/icon-512.png">
 <link rel="icon" href="app/icon-192.png">
 <link rel="apple-touch-icon" href="app/icon-180.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Stratos",
+  "alternateName": "Stratos Flight Tracker",
+  "applicationCategory": "SimulationApplication",
+  "applicationSubCategory": "Flight tracking and electronic flight bag",
+  "operatingSystem": "Windows, macOS, Linux, Web",
+  "url": "https://www.stratos-tracker.com/",
+  "description": "Stratos is a free flight tracker and electronic flight bag for X-Plane 12 and Microsoft Flight Simulator 2020/2024: live maps, flight planning with SID, STAR and approach procedures, charts, airport information, weather briefings, logbook, replay and landing analytics.",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "availability": "https://schema.org/InStock"
+  },
+  "featureList": [
+    "Live flight tracking for X-Plane 12 and Microsoft Flight Simulator 2020/2024",
+    "Interactive moving map with airports, navaids and airspace",
+    "Flight planning with SID, STAR and approach procedures",
+    "Aviation charts and airport information",
+    "METAR, TAF and weather briefings",
+    "Career logbook, flight replay and landing analytics",
+    "Phone Mode for touchscreen devices"
+  ]
+}
+</script>
 <style>
 :root{color-scheme:dark;--bg:#08151d;--panel:#0f2029;--panel-2:#132a35;--line:#294754;--text:#e7f0f2;--muted:#91a8b1;--accent:#79c9bb;--warm:#f2b65f;--mono:ui-monospace,SFMono-Regular,Consolas,monospace}
 *{box-sizing:border-box}
@@ -28,7 +70,7 @@ h1{font-size:clamp(42px,6.7vw,76px);letter-spacing:-.055em;line-height:1.01;marg
 h1 span{color:var(--warm)}
 .lead{color:#b9c9d8;font-size:clamp(17px,2.2vw,20px);max-width:620px;margin:0}
 .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:12px;text-decoration:none;font-weight:750;border:1px solid transparent;transition:transform .14s ease,background .14s ease}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:12px;text-decoration:none;font-weight:750;border:1px solid transparent;transition:transform .14s ease,background .14s ease;cursor:pointer;font-size:15px;line-height:1.2}
 .btn:hover{transform:translateY(-1px)}
 .btn:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .primary{background:var(--accent);color:#04212b}
@@ -67,8 +109,31 @@ summary{cursor:pointer;font-weight:650;font-size:14px}
 details p{color:var(--muted);font-size:13px;margin:10px 0 0}
 footer{color:var(--muted);font-size:12px;padding:26px 0 40px;border-top:1px solid var(--line)}
 footer a{color:var(--muted)}
+
+/* ── Two ways to fly: desktop and phone, equal weight ─────────────────── */
+.access{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.access-card{display:flex;flex-direction:column;gap:10px;background:linear-gradient(165deg,rgba(20,43,54,.92),rgba(11,26,34,.96));border:1px solid var(--line);border-radius:18px;padding:22px}
+.access-card .ac-top{display:flex;align-items:center;gap:12px}
+.access-card .ac-icon{display:grid;place-items:center;width:46px;height:46px;border-radius:13px;border:1px solid rgba(121,201,187,.34);background:rgba(121,201,187,.1);color:var(--accent);flex:0 0 auto}
+.access-card .ac-icon svg{width:24px;height:24px}
+.ac-k{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.access-card h2{font-size:22px;margin:0;letter-spacing:-.02em}
+.access-card p{margin:0;font-size:14px;color:var(--muted);line-height:1.5}
+.access-card .ac-list{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 0;padding:0;list-style:none}
+.access-card .ac-list li{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#b9c9d8;background:rgba(8,21,29,.6);border:1px solid rgba(41,71,84,.8);border-radius:6px;padding:3px 7px}
+.access-card .btn{margin-top:auto}
+.access-card .small{margin:6px 0 0}
+
+/* ── Remembered mobile prompt ─────────────────────────────────────────── */
+.mode-prompt{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:40;display:none;gap:14px;align-items:center;flex-wrap:wrap;padding:14px 16px;border-radius:16px;background:rgba(11,26,34,.98);border:1px solid var(--line);box-shadow:0 18px 48px rgba(0,0,0,.55)}
+.mode-prompt[data-open="1"]{display:flex}
+.mode-prompt div:first-child{flex:1 1 220px;min-width:0}
+.mode-prompt b{display:block;font-size:14px}
+.mode-prompt span{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.mode-prompt .mp-actions{display:flex;gap:8px;flex-wrap:wrap}
+.mode-prompt .btn{min-height:40px;padding:0 14px;font-size:13px}
 @media(max-width:900px){.hero{grid-template-columns:1fr;padding-top:24px}.features,.install{grid-template-columns:1fr 1fr}}
-@media(max-width:620px){.features,.install{grid-template-columns:1fr}.nav{font-size:12px}.nav .hide{display:none}.actions .btn{flex:1 1 100%}.mock-route{font-size:26px}}
+@media(max-width:620px){.features,.install,.access{grid-template-columns:1fr}.nav{font-size:12px}.nav .hide{display:none}.actions .btn{flex:1 1 100%}.mock-route{font-size:26px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto;transition:none!important}.btn:hover{transform:none}}
 </style>
 </head>
@@ -76,11 +141,12 @@ footer a{color:var(--muted)}
 <div class="wrap">
 <header>
   <nav class="nav" aria-label="Main">
-    <img src="app/icon-192.png" alt="">
+    <img src="app/icon-192.png" alt="" width="40" height="40">
     <b>STRATOS</b>
     <span class="hide">FLIGHT DECK</span>
     <span class="spacer"></span>
     <a href="app/">Open app</a>
+    <a class="hide" href="#access">Phone mode</a>
     <a class="hide" href="#features">Features</a>
     <a class="hide" href="#install">Install</a>
   </nav>
@@ -89,15 +155,15 @@ footer a{color:var(--muted)}
 <main>
 <div class="hero">
   <div>
-    <div class="eyebrow">Flight simulation companion</div>
+    <div class="eyebrow">Flight tracker &amp; EFB for X-Plane 12 and MSFS</div>
     <h1>Every flight.<br><span>Properly recorded.</span></h1>
-    <p class="lead">A lightweight map, career logbook, replay, landing analysis, briefing and route planner for X-Plane and Microsoft Flight Simulator — with secure access from your iPhone.</p>
+    <p class="lead">A lightweight map, career logbook, replay, landing analysis, briefing and route planner for <b>X-Plane 12</b> and <b>Microsoft Flight Simulator 2020/2024</b> — with a dedicated touchscreen Phone Mode.</p>
     <div class="actions">
       <a class="btn primary" href="app/">Open Stratos <span aria-hidden="true">↗</span></a>
       <a class="btn secondary" id="pc-download" href="/api/download?p=windows">↓ Download for Windows</a>
-      <a class="btn secondary" href="#install">Use on iPhone</a>
+      <a class="btn secondary" href="/phone">Open Phone Mode</a>
     </div>
-    <p class="small" id="download-note">Windows installer · macOS and Linux builds on the tracker · iPhone installs from Safari, no App Store needed</p>
+    <p class="small" id="download-note">Windows installer · macOS and Linux builds on the tracker · Phone Mode installs from your mobile browser, no App Store needed</p>
   </div>
 
   <div class="panel" aria-label="Example of the live flight view">
@@ -117,6 +183,45 @@ footer a{color:var(--muted)}
   </div>
 </div>
 
+<section id="access">
+  <div class="section-head">
+    <h2>Two ways to fly Stratos</h2>
+    <p>The desktop app is the complete flight deck. Phone Mode is a dedicated touchscreen interface for the same account, logbook and flight plan — not the desktop layout squeezed onto a small screen.</p>
+  </div>
+  <div class="access">
+    <article class="access-card" aria-labelledby="access-desktop">
+      <div class="ac-top">
+        <span class="ac-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.6" y="4" width="18.8" height="12.4" rx="1.8"/><path d="M8 20h8M12 16.4V20"/></svg>
+        </span>
+        <div>
+          <span class="ac-k">Desktop</span>
+          <h2 id="access-desktop">Download Stratos</h2>
+        </div>
+      </div>
+      <p>Download Stratos for the complete desktop flight tracking experience.</p>
+      <ul class="ac-list"><li>Windows</li><li>macOS</li><li>Linux</li></ul>
+      <a class="btn primary" href="/api/download?p=windows">↓ Download for Windows</a>
+      <p class="small">Also for <a href="/api/download?p=mac-arm64">macOS (Apple silicon)</a>, <a href="/api/download?p=mac-x64">macOS (Intel)</a> and <a href="/api/download?p=linux-x64">Linux</a>.</p>
+    </article>
+    <article class="access-card" aria-labelledby="access-phone">
+      <div class="ac-top">
+        <span class="ac-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6.6" y="2.4" width="10.8" height="19.2" rx="2.4"/><path d="M10.6 5.2h2.8M12 18.4h.01"/></svg>
+        </span>
+        <div>
+          <span class="ac-k">Phone mode</span>
+          <h2 id="access-phone">Use Stratos on your phone</h2>
+        </div>
+      </div>
+      <p>Access a streamlined, touchscreen-optimized Stratos experience on your smartphone.</p>
+      <ul class="ac-list"><li>iPhone</li><li>Android</li><li>Home screen</li></ul>
+      <a class="btn secondary" href="/phone">Open Phone Mode ↗</a>
+      <p class="small">Same account, logbook and active flight plan. Add it to your home screen for a standalone app.</p>
+    </article>
+  </div>
+</section>
+
 <section id="features">
   <div class="section-head">
     <h2>Built for the way sim pilots actually fly</h2>
@@ -128,14 +233,14 @@ footer a{color:var(--muted)}
     <article class="card"><div class="icon">↺</div><h3>Flight replay</h3><p>Scrub through the recorded track with a moving aircraft, altitude/speed profiles and clear markers for recorded versus interpolated values.</p></article>
     <article class="card"><div class="icon">↘</div><h3>Landing analytics</h3><p>Touchdown rate, ground speed, runway and distance from the threshold where the data supports it — with per-aircraft thresholds.</p></article>
     <article class="card"><div class="icon">☁</div><h3>Briefing &amp; routes</h3><p>Build a route, validate waypoints, import/export PLN, FMS and GPX, then brief weather with source and freshness.</p></article>
-    <article class="card"><div class="icon">▤</div><h3>Phone live view</h3><p>A secure PWA reads telemetry through an outbound relay. No inbound port, no command channel, no App Store account.</p></article>
+    <article class="card"><div class="icon">▤</div><h3>Phone Mode</h3><p>A five-section touchscreen interface — Track, Flight, Map, EFB and More — that reads the same telemetry and flight plan as the desktop deck.</p></article>
   </div>
 </section>
 
 <section id="install">
   <div class="section-head">
     <h2>Install Stratos</h2>
-    <p>The website, Windows app and iPhone app use the same application files, so features stay consistent.</p>
+    <p>The website, desktop app and Phone Mode use the same application files and the same account, so features stay consistent.</p>
   </div>
   <div class="install">
     <article class="card">
@@ -150,14 +255,14 @@ footer a{color:var(--muted)}
       <p class="small">Also for <a href="/api/download?p=mac-arm64">macOS (Apple silicon)</a>, <a href="/api/download?p=mac-x64">macOS (Intel)</a> and <a href="/api/download?p=linux-x64">Linux</a>.</p>
     </article>
     <article class="card">
-      <span class="badge">iPhone</span>
-      <h3 style="margin-top:10px">Add to Home Screen</h3>
+      <span class="badge">Phone</span>
+      <h3 style="margin-top:10px">Phone Mode</h3>
       <ol>
-        <li>Open <a href="app/">Stratos</a> in <b>Safari</b>.</li>
-        <li>Tap <b>Share</b>, then <b>Add to Home Screen</b>.</li>
-        <li>Open the icon and connect it to your PC in <b>Pilot → Settings → Phone access</b>.</li>
+        <li>Open <a href="/phone">Phone Mode</a> on your phone.</li>
+        <li>On iPhone: <b>Share</b> → <b>Add to Home Screen</b>. On Android: menu → <b>Install app</b>.</li>
+        <li>Connect it to your PC in <b>More → Simulator connection</b>.</li>
       </ol>
-      <a class="btn secondary" href="app/">Open in Safari ↗</a>
+      <a class="btn secondary" href="/phone">Open Phone Mode ↗</a>
       <p class="small">Needs HTTPS for installation. Live telemetry needs the relay and the desktop bridge running.</p>
     </article>
     <article class="card">
@@ -175,7 +280,7 @@ footer a{color:var(--muted)}
 
   <details>
     <summary>Simulator setup</summary>
-    <p><b>X-Plane 11/12:</b> Settings → Data Output, enable rows 3, 17 and 20 to UDP port 49003 on the PC running the bridge. <b>MSFS 2020/2024:</b> start a flight; install the optional SimConnect Python package once if available. The bridge reports exactly which source is connected and when telemetry goes stale.</p>
+    <p><b>X-Plane 11/12:</b> Settings → Data Output, enable rows 3, 17 and 20 to UDP port 49003 on the PC running the bridge. <b>Microsoft Flight Simulator 2020/2024:</b> start a flight; install the optional SimConnect Python package once if available. The bridge reports exactly which source is connected and when telemetry goes stale.</p>
   </details>
   <details>
     <summary>Phone relay and privacy</summary>
@@ -185,8 +290,19 @@ footer a{color:var(--muted)}
 </main>
 
 <footer>
-  Stratos is an independent project. Aircraft data comes from third-party public ADS-B sources; airport data from OurAirports (public domain); weather from NOAA Aviation Weather. Map and chart providers keep their own terms. Not for real-world navigation. · <a href="README-DEPLOY.md">Deployment notes</a> · <a href="SOURCES_AND_LICENSING.md">Sources &amp; licensing</a>
+  Stratos is an independent project. Aircraft data comes from third-party public ADS-B sources; airport data from OurAirports (public domain); weather from NOAA Aviation Weather. Map and chart providers keep their own terms. Simulator use only — not for real-world navigation. · <a href="README-DEPLOY.md">Deployment notes</a> · <a href="SOURCES_AND_LICENSING.md">Sources &amp; licensing</a>
 </footer>
+</div>
+
+<div class="mode-prompt" id="mode-prompt" role="dialog" aria-live="polite" aria-label="Phone Mode suggestion">
+  <div>
+    <b>You're using Stratos on a mobile device.</b>
+    <span>Would you like to switch to Phone Mode?</span>
+  </div>
+  <div class="mp-actions">
+    <a class="btn primary" id="mp-switch" href="/phone">Switch to phone mode</a>
+    <button class="btn secondary" id="mp-dismiss" type="button">Continue to desktop</button>
+  </div>
 </div>
 
 <script>
@@ -199,9 +315,41 @@ footer a{color:var(--muted)}
     .then(function (manifest) {
       var version = manifest && manifest.latest && manifest.latest.version;
       if (!version) return;
-      note.textContent = 'Windows installer · version ' + version + ' · macOS and Linux builds on the tracker · iPhone installs from Safari';
+      note.textContent = 'Windows installer · version ' + version + ' · macOS and Linux builds on the tracker · Phone Mode installs from your mobile browser';
     })
     .catch(function () { /* keep the generic note */ });
+})();
+
+/* The phone prompt is an offer, never a redirect. The answer is remembered in
+   one preference the Phone Mode page reads too, so the question is asked once
+   and "switch back to desktop" is possible at any time. */
+(function () {
+  var KEY = 'stratos.mode';
+  var store = {
+    get: function () { try { return localStorage.getItem(KEY) || ''; } catch (_) { return ''; } },
+    set: function (value) { try { localStorage.setItem(KEY, value); } catch (_) { /* private mode */ } }
+  };
+  var prompt = document.getElementById('mode-prompt');
+  var narrow = false;
+  try { narrow = matchMedia('(max-width: 767px)').matches; } catch (_) { /* old browser */ }
+
+  function close() { if (prompt) prompt.removeAttribute('data-open'); }
+
+  if (prompt && narrow && !store.get()) {
+    setTimeout(function () { prompt.setAttribute('data-open', '1'); }, 1200);
+  }
+
+  document.getElementById('mp-switch')?.addEventListener('click', function () { store.set('phone'); });
+  document.getElementById('mp-dismiss')?.addEventListener('click', function () { store.set('desktop'); close(); });
+
+  // Choosing Phone Mode from the access cards is the same preference.
+  document.querySelectorAll('a[href="/phone"]').forEach(function (link) {
+    link.addEventListener('click', function () { store.set('phone'); });
+  });
+  // Downloading the desktop build records the desktop choice as well.
+  document.querySelectorAll('a[href^="/api/download"]').forEach(function (link) {
+    link.addEventListener('click', function () { store.set('desktop'); });
+  });
 })();
 </script>
 </body>

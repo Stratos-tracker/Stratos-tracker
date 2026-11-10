@@ -500,6 +500,12 @@
    layers on the left, follow/track on the right rail and a compass over the
    chart. Phones keep their own bottom-sheet layout. */
 #rose { display: none; }
+/* Phone Mode's map carries the chart, the telemetry and the controls — not the
+   procedure deck or the flight-plan bar. Their published SID/STAR geometry is
+   still drawn on the chart by the procedure layers, and planning lives in the
+   nav (Plan → EFB flight planner) and in the desktop Flight Deck, where the
+   Flight Planning tab still opens this pane. */
+html.phone-mode #procpane, html.phone-mode #planpane { display: none !important; }
 @media (min-width: 768px) {
   html[data-ui="new"] #efbbar { display: none; }
   html[data-ui="new"] #fc,

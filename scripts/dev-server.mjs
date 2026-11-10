@@ -194,8 +194,22 @@ function resolveFile(pathname) {
   return target;
 }
 
+/* Public page routes, so a clean URL works locally exactly as it does on the
+   host. /phone is the landing page's Phone Mode entry point. */
+const PAGE_ALIASES = {
+  // Phone Mode is the Flight Deck itself: the same page, its own iPhone
+  // optimization, and the same map — not a second interface.
+  '/phone': '/index.html',
+  '/phone/': '/index.html',
+};
+
 const server = http.createServer(async (req, res) => {
-  const { pathname } = new URL(req.url, 'http://localhost');
+  const parsed = new URL(req.url, 'http://localhost');
+  let pathname = PAGE_ALIASES[parsed.pathname] || parsed.pathname;
+  // The hosted site serves this directory as /app (the landing page sits beside
+  // it at the root). Matching that here keeps the phone page's /app/ base href
+  // and the tracker's absolute asset paths working in a local browser too.
+  if (pathname.startsWith('/app/')) pathname = pathname.slice(4);
 
   if (TILE_RE.test(pathname)) {
     try {
