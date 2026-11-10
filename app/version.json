@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-10",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.44/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.44/Stratos-Setup.exe",
+      "sha256": "fe00e930c655959059e78bb8453cd271557f1cb49e961b7dd9a79a7c67fbf725",
+      "size": 118767831
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.44/Stratos-2.1.44-mac-arm64.dmg",
+      "sha256": "ca2ef402557ddfaab92e37116fd18467aa5c6b0db33dccadb2f8b3fa654a83ce",
+      "size": 137333267
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.44/Stratos-2.1.44-mac-x64.dmg",
+      "sha256": "e1886ef2499d198e6b97a67e5a02487749ab0129906f3e180209abe838784c00",
+      "size": 142758537
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.44/Stratos-2.1.44-linux-x64.AppImage",
+      "sha256": "5ba6095bda690bfa6e048c2c085ee8b592288f0803ebc62e472be4d6fb283b4a",
+      "size": 158689011
+    }
+  },
   "summary": "The logbook can now import a flight history from Volanta or ELEVATEX, matching columns by meaning and leaving everything the export does not state empty.",
   "reason": "",
   "releaseNotes": [
