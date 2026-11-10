@@ -812,6 +812,9 @@
   /* The desktop's new UI retires the old flight-plan card (#fp) and the flight
      sheet (#fc); the phone shows the same new tracking UI, so they are retired
      here too rather than left lying over the map. */
+  /* A phone is not a PC: the install offer lists desktop installers, so the
+     deck leaves it out rather than covering the chart with .exe downloads. */
+  html.phone-mode #dlOffer, html.phone-mode #dlChip { display: none !important; }
   html.phone-mode #fc, html.phone-mode #fp, html.phone-mode #efbbar,
   html.phone-mode .m-grip, html.phone-mode .m-plan { display: none !important; }
   /* The retired card keeps its "expanded" class, and the desktop rule that hides

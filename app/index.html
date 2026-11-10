@@ -4,16 +4,31 @@
 <script>
 /* Phone Mode is this same Flight Deck, served at /phone by the host. The page
    still lives in /app/, so that URL gets a base (and the phone manifest) to keep
-   every relative asset and link resolving. Only that URL is affected; the
-   desktop app, /app/ and every other page are untouched. */
+   every relative asset and link resolving. Only that URL is affected; /app/ in a
+   desktop window and every other page are untouched.
+
+   The phone's Map tab points back at this file rather than at /phone, so the
+   choice is remembered for the tab: a pilot who opened the deck at /phone and
+   then visited Plan or Flights gets the same deck on the way back. The memory
+   only acts in a phone-width window, and sessionStorage keeps it out of the
+   next visit. */
 (function () {
-  if (!/^https?:$/.test(location.protocol) || !/^\/phone\/?$/.test(location.pathname)) return;
-  var base = document.createElement('base');
-  base.href = '/app/';
-  document.head.appendChild(base);
-  var manifest = document.querySelector('link[rel="manifest"]');
-  if (manifest) manifest.setAttribute('href', 'manifest-phone.webmanifest');
-  document.documentElement.classList.add('phone-mode');
+  var html = document.documentElement;
+  var onPhoneUrl = /^https?:$/.test(location.protocol) && /^\/phone\/?$/.test(location.pathname);
+  var narrow = false;
+  try { narrow = window.matchMedia('(max-width: 767px)').matches; } catch (_) { narrow = window.innerWidth <= 767; }
+  var remembered = false;
+  try { remembered = sessionStorage.getItem('stratos.phoneMode') === '1'; } catch (_) { /* private mode */ }
+
+  if (onPhoneUrl) {
+    var base = document.createElement('base');
+    base.href = '/app/';
+    document.head.appendChild(base);
+    var manifest = document.querySelector('link[rel="manifest"]');
+    if (manifest) manifest.setAttribute('href', 'manifest-phone.webmanifest');
+    try { sessionStorage.setItem('stratos.phoneMode', '1'); } catch (_) { /* private mode */ }
+  }
+  if (onPhoneUrl || (remembered && narrow)) html.classList.add('phone-mode');
 })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
