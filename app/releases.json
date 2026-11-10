@@ -21,6 +21,28 @@
       ],
       "compatibility": [],
       "other": []
+    },
+    "downloads": {
+      "windows": {
+        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.42/Stratos-Setup.exe",
+        "sha256": "a2b9bfac15c280c6c07fcf01e3b77e7278fa3f540523167de2ba76be1b775846",
+        "size": 118749841
+      },
+      "mac-arm64": {
+        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.42/Stratos-2.1.42-mac-arm64.dmg",
+        "sha256": "b2d74757b799b745d428bcae8016741263be53dbbbacdb7f9766e0f62662e597",
+        "size": 137314969
+      },
+      "mac-x64": {
+        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.42/Stratos-2.1.42-mac-x64.dmg",
+        "sha256": "7e08892fef6f08bf8d4a513d36650963251a1cfcc5da6e080d9355772986645f",
+        "size": 142732308
+      },
+      "linux-x64": {
+        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.42/Stratos-2.1.42-linux-x64.AppImage",
+        "sha256": "7105d13526624bdd1cc3d7d88db42df744e9d2502846311fa74af154923f6e43",
+        "size": 158672487
+      }
     }
   },
   "releases": [
@@ -43,6 +65,28 @@
         ],
         "compatibility": [],
         "other": []
+      },
+      "downloads": {
+        "windows": {
+          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.42/Stratos-Setup.exe",
+          "sha256": "a2b9bfac15c280c6c07fcf01e3b77e7278fa3f540523167de2ba76be1b775846",
+          "size": 118749841
+        },
+        "mac-arm64": {
+          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.42/Stratos-2.1.42-mac-arm64.dmg",
+          "sha256": "b2d74757b799b745d428bcae8016741263be53dbbbacdb7f9766e0f62662e597",
+          "size": 137314969
+        },
+        "mac-x64": {
+          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.42/Stratos-2.1.42-mac-x64.dmg",
+          "sha256": "7e08892fef6f08bf8d4a513d36650963251a1cfcc5da6e080d9355772986645f",
+          "size": 142732308
+        },
+        "linux-x64": {
+          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.42/Stratos-2.1.42-linux-x64.AppImage",
+          "sha256": "7105d13526624bdd1cc3d7d88db42df744e9d2502846311fa74af154923f6e43",
+          "size": 158672487
+        }
       }
     },
     {
