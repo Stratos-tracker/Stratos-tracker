@@ -1,35 +1,36 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.1.43",
+  "latestVersion": "2.1.44",
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-10",
   "downloadUrl": "",
   "downloads": {},
-  "summary": "The flat map keeps only the six base styles it can really paint, FAA VFR and IFR charts load at the level that carries chart data when zoomed out, satellite imagery works in local development, and the side-panel toggle is gone.",
+  "summary": "The logbook can now import a flight history from Volanta or ELEVATEX, matching columns by meaning and leaving everything the export does not state empty.",
   "reason": "",
   "releaseNotes": [
-    "Chart tiles are fetched one level above the current view, so VFR, Low IFR and High IFR gain detail as the map is zoomed in instead of staying at a coarse overview.",
-    "FAA VFR, Low IFR and High IFR charts no longer request blank overview tiles when the map is slightly zoomed out; each layer starts at the level that actually carries chart data.",
-    "Satellite imagery loads again in local development: the dev server answers the /tile/ request the page makes over http instead of returning 404.",
-    "The flat map offers six base styles: Satellite, Terrain, World, VFR, Low IFR and High IFR. Basic, Detailed, Light, Dark and Hybrid are retired, and a saved style that no longer exists falls back to Satellite.",
-    "The remove-side-panels control is gone from the map, along with the layout state it saved."
+    "Settings → Data gains Import Volanta / ELEVATEX, which reads a Volanta CSV or JSON export, or the flights.csv from an ELEVATEX export, and merges the flights into the local logbook.",
+    "Re-importing the same export updates the records it already wrote instead of duplicating them, because every imported flight gets a stable id from its route and departure time.",
+    "Columns are matched by meaning, so the two exports' different headers, day-first dates and clock, minute or hours-and-minutes durations are all read correctly.",
+    "The import sits beside the existing backup controls and reports how many flights were added and how many are in the logbook afterwards.",
+    "Only what the export states is imported: landing rate, altitude and track stay empty and the logbook shows them as not measured."
   ],
   "notes": {
-    "features": [],
+    "features": [
+      "Settings → Data gains Import Volanta / ELEVATEX, which reads a Volanta CSV or JSON export, or the flights.csv from an ELEVATEX export, and merges the flights into the local logbook."
+    ],
     "improvements": [
-      "Chart tiles are fetched one level above the current view, so VFR, Low IFR and High IFR gain detail as the map is zoomed in instead of staying at a coarse overview."
+      "Re-importing the same export updates the records it already wrote instead of duplicating them, because every imported flight gets a stable id from its route and departure time.",
+      "Columns are matched by meaning, so the two exports' different headers, day-first dates and clock, minute or hours-and-minutes durations are all read correctly."
     ],
-    "fixes": [
-      "FAA VFR, Low IFR and High IFR charts no longer request blank overview tiles when the map is slightly zoomed out; each layer starts at the level that actually carries chart data.",
-      "Satellite imagery loads again in local development: the dev server answers the /tile/ request the page makes over http instead of returning 404."
-    ],
+    "fixes": [],
     "performance": [],
     "ui": [
-      "The flat map offers six base styles: Satellite, Terrain, World, VFR, Low IFR and High IFR. Basic, Detailed, Light, Dark and Hybrid are retired, and a saved style that no longer exists falls back to Satellite.",
-      "The remove-side-panels control is gone from the map, along with the layout state it saved."
+      "The import sits beside the existing backup controls and reports how many flights were added and how many are in the logbook afterwards."
     ],
-    "compatibility": [],
+    "compatibility": [
+      "Only what the export states is imported: landing rate, altitude and track stay empty and the logbook shows them as not measured."
+    ],
     "other": []
   }
 }
