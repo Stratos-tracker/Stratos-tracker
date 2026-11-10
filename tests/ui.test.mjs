@@ -1629,3 +1629,15 @@ test('the 3D globe draws the selected traffic as an altitude profile and filed r
   assert.match(globe, /ctx\.setLineDash\(\[3, 5\]\)/, 'the aircraft is connected to a ground anchor');
   assert.match(page, /t3d\.setSelectedTraffic\(t3SelectedDetail\(\)\)/, 'the globe receives that geometry on its sync path');
 });
+
+test('tracking labels carry both the callsign and the aircraft type', async () => {
+  const fs = await import('node:fs');
+  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+  const globe = fs.readFileSync(new URL('../app/js/lib/globe3d.js', import.meta.url), 'utf8');
+  assert.match(globe, /function aircraftLabel\(callsign, type\)/, 'one label builder joins callsign and type');
+  assert.match(globe, /aircraftLabel\(id, type\)/, 'every globe traffic label carries its type');
+  assert.match(globe, /aircraftLabel\(meta\.id, meta\.type\)/, 'the selected aircraft label carries its type');
+  assert.match(globe, /type: aircraft\.type \|\| ''/, 'the own-ship marker receives its type');
+  assert.match(page, /type:\(d\.aircraftType\|\|d\.aircraft\|\|d\.type\|\|''\)/, 'the live aircraft type reaches the globe');
+  assert.match(page, /a\.id\+\(a\.type\?' '\+a\.type:''\)/, 'the 2D traffic label carries its type');
+});

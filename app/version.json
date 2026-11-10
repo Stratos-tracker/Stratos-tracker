@@ -1,73 +1,31 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.1.41",
+  "latestVersion": "2.1.42",
   "minimumSupportedVersion": "",
   "mandatory": false,
-  "releaseDate": "2026-11-09",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.41/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.41/Stratos-Setup.exe",
-      "sha256": "e5a58a4a82b1f85538c185a325f4d4ba53a7d53f2514162a7b1e244f3bf128a2",
-      "size": 118747943
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.41/Stratos-2.1.41-mac-arm64.dmg",
-      "sha256": "fe9183f97cbfbdd35e1cc6c50af6d8d26f3a60507224bbc94dcd03ab5e21cff2",
-      "size": 137324579
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.41/Stratos-2.1.41-mac-x64.dmg",
-      "sha256": "0be57cd36102ea2429309f2b3c9dd769eb9cae14901cae20529422ed39e00dbe",
-      "size": 142749686
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.41/Stratos-2.1.41-linux-x64.AppImage",
-      "sha256": "841c5da6905acfb6d104623f00dbd588533b56d1e7d6a3742eb384cda9b60862",
-      "size": 158672374
-    }
-  },
-  "summary": "Selected traffic now has a real 3D altitude path on the Flight Deck globe, with detailed type artwork at the top, a ground shadow beneath, and the live callsign and flight level attached to the aircraft.",
+  "releaseDate": "2026-11-10",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "Live traffic labels now show both the callsign and the aircraft type, so a target is identifiable without opening its card.",
   "reason": "",
   "releaseNotes": [
-    "The selected aircraft's recorded trail now rises from the ground as a translucent 3D altitude curtain, with an altitude-coloured top edge and a faint ground trace.",
-    "The selected aircraft rides at the top of that path as its detailed type silhouette, turned to its live heading with a callsign and flight-level badge.",
-    "The aircraft's surface position remains a subdued detailed shadow inside an amber anchor ring, joined to the airborne marker by a dashed stalk.",
-    "Traffic now uses the detailed aircraft artwork from the chart atlas, with a neutral detailed fallback for types that have no dedicated sprite.",
-    "The selected path includes the aircraft's current position and altitude, so the 3D marker sits on the live target instead of stopping at the last polled sample.",
-    "The ground shadow suppresses its own map label, leaving one callsign on the airborne marker and no duplicate target below.",
-    "The marker, badge and altitude curtain follow the same camera as the globe through pitch, rotation and zoom.",
-    "Selected traffic no longer leaves the callsign and aircraft on the ground while its recorded path is elevated; the airborne marker and ground anchor now separate the two.",
-    "Aircraft types missing from the sprite atlas now use the detailed neutral silhouette rather than the simple legacy shape.",
-    "Traffic icons are cached per aircraft type, and the selected 3D path is redrawn only when the camera or selected samples change.",
-    "The 3D path uses the existing instrument palette: cyan and amber rings, an altitude-coloured edge, and a compact callsign and flight-level badge.",
-    "The 3D path is built only from observed traffic samples; a filed route remains a flat planned line because it carries no observed altitude profile."
+    "The 2D map and 3D globe labels now show callsign, aircraft type and altitude or flight level together.",
+    "The selected aircraft and own-ship marker show the same callsign and type, with the type normalised to an ICAO code.",
+    "Longer 3D labels are width-limited and ellipsized instead of running off the map."
   ],
   "notes": {
     "features": [
-      "The selected aircraft's recorded trail now rises from the ground as a translucent 3D altitude curtain, with an altitude-coloured top edge and a faint ground trace.",
-      "The selected aircraft rides at the top of that path as its detailed type silhouette, turned to its live heading with a callsign and flight-level badge.",
-      "The aircraft's surface position remains a subdued detailed shadow inside an amber anchor ring, joined to the airborne marker by a dashed stalk.",
-      "Traffic now uses the detailed aircraft artwork from the chart atlas, with a neutral detailed fallback for types that have no dedicated sprite."
+      "The 2D map and 3D globe labels now show callsign, aircraft type and altitude or flight level together."
     ],
     "improvements": [
-      "The selected path includes the aircraft's current position and altitude, so the 3D marker sits on the live target instead of stopping at the last polled sample.",
-      "The ground shadow suppresses its own map label, leaving one callsign on the airborne marker and no duplicate target below.",
-      "The marker, badge and altitude curtain follow the same camera as the globe through pitch, rotation and zoom."
+      "The selected aircraft and own-ship marker show the same callsign and type, with the type normalised to an ICAO code."
     ],
-    "fixes": [
-      "Selected traffic no longer leaves the callsign and aircraft on the ground while its recorded path is elevated; the airborne marker and ground anchor now separate the two.",
-      "Aircraft types missing from the sprite atlas now use the detailed neutral silhouette rather than the simple legacy shape."
-    ],
-    "performance": [
-      "Traffic icons are cached per aircraft type, and the selected 3D path is redrawn only when the camera or selected samples change."
-    ],
+    "fixes": [],
+    "performance": [],
     "ui": [
-      "The 3D path uses the existing instrument palette: cyan and amber rings, an altitude-coloured edge, and a compact callsign and flight-level badge."
+      "Longer 3D labels are width-limited and ellipsized instead of running off the map."
     ],
-    "compatibility": [
-      "The 3D path is built only from observed traffic samples; a filed route remains a flat planned line because it carries no observed altitude profile."
-    ],
+    "compatibility": [],
     "other": []
   }
 }

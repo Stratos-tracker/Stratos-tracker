@@ -112,6 +112,29 @@
     return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   }
 
+  /** A short ICAO type for a label, from either a code or a marketing name. */
+  function aircraftTypeLabel(value) {
+    var raw = String(value == null ? '' : value).trim();
+    if (!raw) return '';
+    try {
+      if (window.PHOTO && typeof window.PHOTO.typeCode === 'function') {
+        var code = window.PHOTO.typeCode(raw);
+        if (code) return code;
+      }
+    } catch (_) {}
+    return raw;
+  }
+
+  /** The callsign and aircraft type shown together on every aircraft label. */
+  function aircraftLabel(callsign, type) {
+    var parts = [];
+    var id = String(callsign == null ? '' : callsign).trim();
+    if (id) parts.push(id);
+    var kind = aircraftTypeLabel(type);
+    if (kind) parts.push(kind);
+    return parts.join(' · ');
+  }
+
   function trafficIconKey(type, shadow) {
     return (shadow ? 'traffic-shadow-' : 'traffic-plane-') + (trafficType(type) || 'generic');
   }
@@ -129,10 +152,10 @@
       var hdg = Number(t.hdg);
       if (!Number.isFinite(hdg)) hdg = Number(t.trk);
       if (!Number.isFinite(hdg)) hdg = 0;
-      var label = id;
+      var type = trafficType(t.type || t.aircraft || t.actype || t.model || '');
+      var label = aircraftLabel(id, type);
       if (Number.isFinite(alt)) label += ' ' + Math.round(alt / 100);
       var selectedNow = !!(key && key.toUpperCase() === active);
-      var type = trafficType(t.type || t.aircraft || t.actype || t.model || '');
       features.push({
         type: 'Feature',
         properties: {
@@ -680,7 +703,7 @@
     }
     ctx.restore();
 
-    var label = String(meta.id || '').trim();
+    var label = aircraftLabel(meta.id, meta.type);
     if (label) {
       if (Number.isFinite(Number(meta.alt)) && Number(meta.alt) > 0) {
         label += ' · FL' + String(Math.round(Number(meta.alt) / 100)).padStart(3, '0');
@@ -887,7 +910,8 @@
     var tag = el.querySelector('.g3-tag');
     if (tag) {
       var fl = alt >= 10000 ? 'FL' + String(Math.round(alt / 100)).padStart(3, '0') : Math.round(alt).toLocaleString('en-US') + ' FT';
-      tag.textContent = (this.aircraft.callsign ? this.aircraft.callsign + ' · ' : '') + fl;
+      var who = aircraftLabel(this.aircraft.callsign, this.aircraft.type);
+      tag.textContent = (who ? who + ' · ' : '') + fl;
     }
     var svg = el.querySelector('.g3-head svg');
     if (svg) svg.style.transform = 'rotate(' + (((Number(this.aircraft.hdg) || 0) % 360 + 360) % 360) + 'deg)';
@@ -906,6 +930,7 @@
       hdg: Number(aircraft.hdg),
       trk: Number(aircraft.trk),
       callsign: aircraft.callsign || '',
+      type: aircraft.type || '',
     };
     if (!Number.isFinite(this.aircraft.lat) || !Number.isFinite(this.aircraft.lon)) return;
     this._placeAircraft();

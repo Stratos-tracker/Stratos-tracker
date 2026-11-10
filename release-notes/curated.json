@@ -1,4 +1,22 @@
 {
+  "2.1.42": {
+    "summary": "Live traffic labels now show both the callsign and the aircraft type, so a target is identifiable without opening its card.",
+    "changelog": {
+      "features": [
+        "The 2D map and 3D globe labels now show callsign, aircraft type and altitude or flight level together."
+      ],
+      "improvements": [
+        "The selected aircraft and own-ship marker show the same callsign and type, with the type normalised to an ICAO code."
+      ],
+      "fixes": [],
+      "performance": [],
+      "ui": [
+        "Longer 3D labels are width-limited and ellipsized instead of running off the map."
+      ],
+      "compatibility": [],
+      "other": []
+    }
+  },
   "2.1.41": {
     "summary": "Selected traffic now has a real 3D altitude path on the Flight Deck globe, with detailed type artwork at the top, a ground shadow beneath, and the live callsign and flight level attached to the aircraft.",
     "changelog": {

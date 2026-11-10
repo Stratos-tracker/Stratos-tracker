@@ -486,6 +486,9 @@
   font: 700 9px/1.2 ui-monospace, Menlo, monospace;
   letter-spacing: .03em;
   white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 #p3dctl { bottom: 150px; }
 @media (max-width: 767px) { #p3dctl { bottom: auto; top: 96px; } }
