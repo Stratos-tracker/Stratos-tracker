@@ -1053,8 +1053,7 @@ test('map tiles need no API key and credit the provider that serves them', async
     assert.doesNotMatch(text, /basemaps\.cartocdn\.com/, `${name} must not use a key-requiring tile host`);
     assert.doesNotMatch(text, /OpenStreetMap contributors, CARTO|© OpenStreetMap contributors · © CARTO/, `${name} must credit the provider it actually uses`);
   }
-  assert.match(page, /Canvas\/World_Light_Gray_Base\/MapServer\/tile/, 'the Light style uses the key-free Esri gray canvas');
-  assert.match(page, /Canvas\/World_Dark_Gray_Base\/MapServer\/tile/, 'the Dark style uses the key-free Esri gray canvas');
+  assert.doesNotMatch(page, /n:'(?:Hybrid|Detailed|Light|Dark|Basic)'/, 'the retired flat styles are not offered');
   assert.match(minimap, /Canvas\/\$\{service\}\/MapServer\/tile/, 'the replay and preview maps use the same key-free tiles');
   assert.match(minimap, /© Esri, HERE, Garmin · © OpenStreetMap contributors/, 'the minimap credits Esri');
 });
@@ -1110,6 +1109,18 @@ test('a selected aircraft can be followed and shows its filed airport pair', asy
   assert.match(page, /FILED '\+dep/, 'the reference line is labelled as the filed airport pair');
   assert.match(page, /function filedRoute\(o\)/, 'the full VATSIM route is resolved against loaded nav data');
   assert.match(page, /function trafficHud\(o\)/, 'a tracked VATSIM pilot feeds the telemetry strip');
+});
+
+test('the live tracking strip names the callsign and aircraft type', async () => {
+  const fs = await import('node:fs');
+  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+  assert.match(page, /<span class="tel-pill tel-ident">CALLSIGN <b id="tCS">—<\/b><\/span>/, 'the strip has a callsign readout');
+  assert.match(page, /<span class="tel-pill tel-ident">TYPE <b id="tTY">—<\/b><\/span>/, 'the strip has an aircraft type readout');
+  assert.match(page, /const call=o\?\(o\.id\|\|o\.callsign\|\|'—'\)/, 'a selected target supplies its callsign');
+  assert.match(page, /const kind=o\?\(o\.type\|\|o\.aircraft\|\|'—'\)/, 'a selected target supplies its type');
+  assert.match(page, /tset\('tCS',String\(call\)\.toUpperCase\(\)\)/, 'the strip receives the callsign');
+  assert.match(page, /tset\('tTY',String\(kind\)\.toUpperCase\(\)\)/, 'the strip receives the type');
+  assert.match(page, /d\.aircraftType\|\|d\.aircraft/, 'the simulator aircraft type is used when it is the source');
 });
 
 test('the aircraft card offers a labelled backup of the same airline and type', async () => {
@@ -1556,7 +1567,7 @@ test('the tracker map runs the same globe module and surfaces as the EFB', async
   assert.ok(page.includes(`localStorage.setItem('dl.globe',V.gs)`) && page.includes(`localStorage.getItem('dl.globe')||'vector'`), 'so is the surface');
 
   // The controls, and the sentences that keep the display honest.
-  assert.match(page, /<h3>Projection<\/h3><div id="pj"><\/div>[\s\S]{0,460}id="gwrap" hidden/, 'the settings drawer carries the projection switch');
+  assert.match(page, /<h3>Projection<\/h3><div id="pj"><\/div>[\s\S]{0,900}id="gwrap" hidden/, 'the settings drawer carries the projection switch');
   assert.ok(page.includes('id="bMap3dFlat"'), 'and the flat 3D view is offered beside the globe');
   assert.ok(page.includes('globeStyles().map(s=>'), 'the surface list is the shared table');
   assert.ok(page.includes('id="gReset"') && page.includes('id="gRead"'), 'reset and read-terrain are offered');
@@ -1616,7 +1627,12 @@ test('the 3D globe draws the selected traffic as an altitude profile and filed r
   assert.match(globe, /className = 'g3-flightfx'/, 'the observed trail has a camera-aligned overlay');
   assert.match(globe, /prototype\._drawFlightPath = function/, 'the trail is drawn as an altitude profile');
   assert.match(globe, /Math\.sin\(\(Number\(this\.map\.getPitch\(\)\) \|\| 0\) \* RAD\)/, 'the profile follows the globe camera pitch');
+  assert.match(globe, /var dx = last\.gx - prev\.gx/, 'the selected icon follows the projected trail');
+  assert.match(globe, /heading = Math\.atan2\(dx, -dy\) \/ RAD/, 'the icon points along the path, not the raw compass heading');
   assert.match(globe, /ctx\.createLinearGradient/, 'the path has a vertical curtain');
+  assert.match(globe, /antialias: false/, 'the 3D renderer avoids MSAA cost');
+  assert.match(globe, /this\._interacting \? 120 : 320/, 'the track overlay samples fewer points while moving');
+  assert.match(globe, /this\.map\.on\('movestart'/, 'camera movement switches to the light overlay');
   assert.match(globe, /id: 'selected-route-line'/, 'the filed route has its own globe layer');
   assert.match(globe, /prototype\.setSelectedTraffic = function/, 'the globe accepts selected traffic geometry');
   assert.match(globe, /routeFeatures\(this\.selectedRoute, -1\)/, 'the filed route uses the resolved great-circle legs');
@@ -1625,6 +1641,9 @@ test('the 3D globe draws the selected traffic as an altitude profile and filed r
   assert.match(page, /type:String\(a\.type\|\|a\.actype/, 'the globe receives the aircraft type for detailed artwork');
   assert.match(page, /id:String\(sel\.id\|\|sel\.callsign/, 'the selected path carries its live callsign');
   assert.match(page, /heading:Number\.isFinite\(shdg\)/, 'the selected path carries its live heading');
+  assert.match(page, /if\(force\|\|now-t3RouteAt>500\)/, 'the route GeoJSON is not rebuilt every frame');
+  assert.match(page, /if\(force\|\|acSig!==t3AcSig\)/, 'the own-ship marker only updates when its state changes');
+  assert.match(page, /if\(force\|\|now-t3AirSetAt>1000\)/, 'the airport GeoJSON is not rebuilt every frame');
   assert.match(globe, /planeArtwork\(meta\.type \|\| '', '#fbbf24'\)/, 'the detailed selected aircraft is drawn at the top of the path');
   assert.match(globe, /ctx\.setLineDash\(\[3, 5\]\)/, 'the aircraft is connected to a ground anchor');
   assert.match(page, /t3d\.setSelectedTraffic\(t3SelectedDetail\(\)\)/, 'the globe receives that geometry on its sync path');
@@ -1640,4 +1659,57 @@ test('tracking labels carry both the callsign and the aircraft type', async () =
   assert.match(globe, /type: aircraft\.type \|\| ''/, 'the own-ship marker receives its type');
   assert.match(page, /type:\(d\.aircraftType\|\|d\.aircraft\|\|d\.type\|\|''\)/, 'the live aircraft type reaches the globe');
   assert.match(page, /a\.id\+\(a\.type\?' '\+a\.type:''\)/, 'the 2D traffic label carries its type');
+});
+
+test('low-power 3D turns off terrain and caps pixel density', async () => {
+  const fs = await import('node:fs');
+  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+  const globe = fs.readFileSync(new URL('../app/js/lib/globe3d.js', import.meta.url), 'utf8');
+  assert.match(page, /<input type="checkbox" id="t3low">/, 'Map settings offers the low-power preset');
+  assert.match(page, /function t3Low\(\)/, 'the preference is read from storage');
+  assert.match(page, /lowPower:t3Low\(\)/, 'the existing 3D instance receives the preset');
+  assert.match(page, /localStorage\.setItem\('stratos\.t3low',on\?'1':'0'\)/, 'the choice survives a reload');
+  assert.match(page, /t3d\.setLowPower\(on\)/, 'toggling applies to a running globe');
+  assert.match(globe, /this\.lowPower = !!options\.lowPower/, 'the globe accepts the preset');
+  assert.match(globe, /setTerrain\(this\.lowPower \? null : \{ source: 'dem', exaggeration: 1\.15 \}\)/, 'low power removes terrain and restores it when off');
+  assert.match(globe, /setPixelRatio\(1\)/, 'the render surface is capped at one pixel per CSS pixel');
+  assert.match(globe, /var dpr = this\.lowPower \? 1 : Math\.min\(1\.5, window\.devicePixelRatio \|\| 1\);/, 'the trail overlay follows the same density cap');
+});
+
+test('the map offers real FAA VFR and IFR chart options', async () => {
+  const fs = await import('node:fs');
+  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+  assert.match(page, /vfr:\{n:'VFR',m:12,z:8,a:'FAA VFR Sectional Charts \(public domain\)'\}/, 'the VFR sectional is a map style');
+  assert.match(page, /lowifr:\{n:'Low IFR',m:12,z:8,a:'FAA IFR Enroute Low Altitude Charts \(public domain\)'\}/, 'low IFR is its own style');
+  assert.match(page, /highifr:\{n:'High IFR',m:9,z:7,a:'FAA IFR Enroute High Altitude Charts \(public domain\)'\}/, 'high IFR is its own style');
+  assert.match(page, /VFR_Sectional\/MapServer\/tile\//, 'VFR tiles come from the FAA service');
+  assert.match(page, /IFR_AreaLow\/MapServer\/tile\//, 'low IFR tiles come from the FAA service');
+  assert.match(page, /IFR_High\/MapServer\/tile\//, 'high IFR tiles come from the FAA service');
+  assert.match(page, /if\(MS\[l\]&&MS\[l\]\.z\)t\.i\.crossOrigin='anonymous'/, 'chart images use CORS instead of being blocked as opaque responses');
+  assert.match(page, /const cfg=MS\[l\]\|\|MS\.sat,mz=l=='lab'\?18:cfg\.m,mn=cfg\.z\|\|0/, 'chart styles use their service tile levels');
+  assert.match(page, /mn\?Math\.ceil\(V\.z\+1\)/, 'a chart asks for a level above the view instead of a blank overview level');
+  assert.match(page, /CHART_TILE_CAP=1600,CHART_TILE_CACHE=1700/, 'the chart budget covers ordinary desktop zoom-out');
+  assert.match(page, /if\(mn&&cols\*rows>CHART_TILE_CAP\)return false;/, 'an extreme zoom-out still does not request an unbounded chart tile set');
+  assert.match(page, /FAA raster charts cover the U\.S\. only/, 'the U.S.-only coverage is stated');
+  assert.match(page, /<p class="m" id="msnote" hidden><\/p>/, 'the chart note has a stable place in Map settings');
+  assert.match(page, /if\(MS\[k\]&&MS\[k\]\.z\)\{if\(viewT3\)setT3\(false\);if\(V\.mode==='globe'\)globeMode\('plane'\)\}/, 'a flat chart leaves the sphere and 3D views');
+});
+
+test('the flat map drops retired base styles and the side-panel toggle', async () => {
+  const fs = await import('node:fs');
+  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+  for (const key of ['hyb', 'st', 'lt', 'dk', 'vec']) {
+    assert.ok(!page.includes(key + ':{n:'), `${key} is not a flat map style`);
+  }
+  assert.ok(!page.includes('id="bPanels"'), 'the side-panel toggle is gone');
+  assert.ok(!page.includes('panelsToggle'), 'and so is its handler');
+  assert.match(page, /return MS\[s\]\?s:'sat'/, 'a retired saved style falls back to Satellite');
+});
+
+test('the dev server answers the satellite tile proxy the page asks for', async () => {
+  const fs = await import('node:fs');
+  const server = fs.readFileSync(new URL('../scripts/dev-server.mjs', import.meta.url), 'utf8');
+  assert.ok(server.includes('TILE_RE.test(pathname)'), 'a /tile/ request is routed instead of falling through to a missing file');
+  assert.match(server, /World_Imagery\/MapServer\/tile\/\$\{z\}\/\$\{y\}\/\$\{x\}/, 'Esri is asked for the row before the column');
+  assert.match(server, /res\.setHeader\('Content-Type', tile\.type\)/, 'the tile comes back as an image, not a 404 page');
 });

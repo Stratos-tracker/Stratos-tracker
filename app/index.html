@@ -423,12 +423,11 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 .lay-row button{flex:1}
 .lay-f{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mut)}
 .lay-f select{flex:1;min-width:0;padding:6px 7px;border-radius:4px;border:1px solid var(--ui2);background:var(--ui2);color:var(--txt);font-size:11.5px}
+.lay-check{display:flex;align-items:center;gap:7px;margin:7px 0 0;font-size:11px;color:var(--txt);cursor:pointer}
+.lay-check input{width:14px;height:14px;margin:0;accent-color:var(--acc)}
 .lay-sub{margin:8px 0 5px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
-.lay-wide{width:100%;margin-top:6px;border:1px solid color-mix(in srgb,var(--acc) 38%,transparent);background:color-mix(in srgb,var(--acc) 9%,transparent);color:var(--txt)}
-.lay-wide.on{background:var(--acc);border-color:var(--acc);color:#06161d}
 #lay p.m{font-size:10.5px;line-height:1.45;margin:6px 0 0;max-width:none}
 #lay #gwrap[hidden]{display:none}
-body.panels-hidden .dkpane{display:none!important}
 #fab{gap:8px}
 #fab .fab{width:40px;height:40px;font-size:16px}
 #fc{width:min(336px,calc(100% - 24px));padding:11px 13px}
@@ -486,18 +485,18 @@ body.panels-hidden .dkpane{display:none!important}
 </div><aside id="lay" role="dialog" aria-label="Map settings" aria-hidden="true">
 <header class="lay-h"><b>Map settings</b><button type="button" class="lay-x" id="layX" aria-label="Close settings">&#10005;</button></header>
 <div class="lay-body">
-  <section class="lay-s"><h3>Map display</h3><div id="ms" class="lay-grid"></div>
+  <section class="lay-s"><h3>Map display</h3><div id="ms" class="lay-grid"></div><p class="m" id="msnote" hidden></p>
     <div class="lay-theme"><button type="button" data-theme-set="day">Day</button><button type="button" data-theme-set="night">Night</button><button type="button" data-theme-set="contrast">High contrast</button></div></section>
   <section class="lay-s"><h3>Layers</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="trf" class="on">Traffic</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="trl">Trails</button><button type="button" data-l="grid">Grid</button><button type="button" data-l="wxrain">Rain</button><button type="button" data-l="wxwind">Wind</button><button type="button" data-l="wxturb">Turbulence</button><button type="button" data-l="dn">Day / night</button></div><p class="m">Rain uses animated radar frames from <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a>. Wind and turbulence use Open-Meteo's 10 m wind and gust/CAPE field; the wind layer is animated as streamlines and turbulence is a smoothed estimate. None of it is a PIREP, SIGMET or a substitute for official weather.</p></section>
   <section class="lay-s"><h3>Projection</h3><div id="pj"></div>
-    <div class="lay-grid" id="t3mode"><button type="button" id="bMap3d" aria-pressed="false" title="3D globe with satellite imagery, real terrain and aircraft altitude">3D globe</button><button type="button" id="bMap3dFlat" aria-pressed="false" title="Tilted flat map with real terrain and aircraft altitude">3D flat map</button></div>
+    <div class="lay-grid" id="t3mode"><button type="button" id="bMap3d" aria-pressed="false" title="3D globe with satellite imagery, real terrain and aircraft altitude">3D globe</button><button type="button" id="bMap3dFlat" aria-pressed="false" title="Tilted flat map with real terrain and aircraft altitude">3D flat map</button></div><label class="lay-check" for="t3low"><input type="checkbox" id="t3low"><span>Low-power 3D</span></label><p class="m">Turns off terrain and renders at 1× pixel density for slower GPUs.</p>
     <div id="gwrap" hidden><div class="lay-sub">Globe surface</div><div id="gs"></div><p class="m" id="gn"></p>
       <div class="lay-row"><button type="button" id="gReset" title="Centre the globe on the route again">Reset view</button><button type="button" id="gRead" title="Read terrain elevations around the centre">Read terrain</button></div></div>
     <p class="m">The flat map is the chart tilted over real terrain; the globe adds the Earth's curvature. Both keep the same live aircraft and route.</p></section>
   <section class="lay-s"><h3>Traffic</h3><label class="lay-f"><span>Source</span><select id="trs" aria-label="Traffic source"><option value="vatsim">VATSIM — live pilots</option><option value="adsb">ADS-B — community feeds</option></select></label><p class="m" id="trsnote">Both sources are keyless and free.</p></section>
   <section class="lay-s"><h3>Procedures</h3><div id="dklay" class="lay-chips"><button type="button" data-dk-layer="sid" class="on">SID</button><button type="button" data-dk-layer="star" class="on">STAR</button><button type="button" data-dk-layer="approach" class="on">Approach</button><button type="button" data-dk-layer="missed">Missed</button></div><p class="m" id="dkproctip"></p></section>
   <section class="lay-s"><h3>Workspaces</h3><div id="mwtools"><button id="bLive" type="button">Live tracking</button><button id="bCh" type="button">Charts</button><button id="bWx" type="button">Weather</button><button id="bData" type="button">Data</button><button id="bEfb" type="button" title="Electronic flight bag">Stratos EFB</button></div>
-    <button type="button" id="bPanels" class="lay-wide">Hide side panels</button></section>
+    </section>
   <section class="lay-s"><h3>Go to region</h3><div id="regions" class="lay-chips"></div></section>
 </div></aside>
 
@@ -514,7 +513,7 @@ body.panels-hidden .dkpane{display:none!important}
 <div class="tel-cell tel-wind"><span class="tel-k">WIND</span><b id="tWV">—</b><span class="tel-u">° / kt</span></div>
 </div>
 <div class="tel-route"><b id="tRT">—</b><span class="tel-v"><i>›</i><b id="tNV">—</b></span><span class="tel-v"><b id="tDN">—</b><s>NM</s></span><span class="tel-v">ETE <b id="tET">—</b></span><span class="tel-v">FUEL <b id="tFB">—</b></span></div>
-<div class="tel-status"><span class="tel-clock" id="tUTC">--:--:--Z</span><span class="tel-chr" id="tCHR">CHR --:--</span><span class="tel-pill">PHASE <b id="tPH">—</b></span><span class="tel-pill">SRC <b id="tSRC">—</b></span><span class="tel-pill">OAT <b id="tOT">—</b></span><button class="tel-more" id="telMore" type="button" aria-expanded="false" aria-controls="telExtra"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 10l4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>MORE</button></div>
+<div class="tel-status"><span class="tel-clock" id="tUTC">--:--:--Z</span><span class="tel-chr" id="tCHR">CHR --:--</span><span class="tel-pill tel-ident">CALLSIGN <b id="tCS">—</b></span><span class="tel-pill tel-ident">TYPE <b id="tTY">—</b></span><span class="tel-pill">PHASE <b id="tPH">—</b></span><span class="tel-pill">SRC <b id="tSRC">—</b></span><span class="tel-pill">OAT <b id="tOT">—</b></span><button class="tel-more" id="telMore" type="button" aria-expanded="false" aria-controls="telExtra"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 10l4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>MORE</button></div>
 <div class="tel-extra" id="telExtra"><div><b id="tTA">—</b><span>TAS kt</span></div><div><b id="tTR">—</b><span>TRK° gnd</span></div><div class="tel-bank"><svg viewBox="0 0 46 26" aria-hidden="true"><path d="M3 24 A20 20 0 0 1 43 24" fill="none" stroke="rgba(120,150,175,.35)" stroke-width="1"/><g stroke="rgba(148,163,184,.65)" stroke-width="1"><line x1="23" y1="4" x2="23" y2="7"/><line x1="17.7" y1="4.7" x2="18.4" y2="7.6"/><line x1="13" y1="7" x2="14.6" y2="9.4"/><line x1="9.3" y1="10.6" x2="11.7" y2="12.2"/><line x1="6.4" y1="15" x2="9.3" y2="15.7"/><line x1="28.3" y1="4.7" x2="27.6" y2="7.6"/><line x1="33" y1="7" x2="31.4" y2="9.4"/><line x1="36.7" y1="10.6" x2="34.3" y2="12.2"/><line x1="39.6" y1="15" x2="36.7" y2="15.7"/></g><g id="bankPtr" transform="rotate(0 23 24)"><line x1="23" y1="24" x2="23" y2="7" stroke="#22d3ee" stroke-width="1.6"/><circle cx="23" cy="24" r="1.8" fill="#22d3ee"/></g><path d="M23 0.5 l-2.4 4 h4.8 z" fill="#e8f1fa"/></svg><b id="tBK">—</b><span>BANK</span></div><div><b id="tPG">—</b><span>Progress</span></div><div><b id="tLT">—</b><span>Latitude</span></div><div><b id="tLN">—</b><span>Longitude</span></div><div><b id="tDS">—</b><span>To destination nm</span></div><div><b id="tEt">—</b><span>ETE dest</span></div><div><b id="tEA">—</b><span>ETA Z</span></div></div>
 </div>
 </div>
@@ -740,7 +739,7 @@ return{...(P[m]||P.normal),mode:m}})();
 let deskStatus=null;
 try{if(window.stratosDesktop){window.stratosDesktop.getStatus().then(v=>{deskStatus=v}).catch(()=>{});window.stratosDesktop.onStatus(v=>{deskStatus=v})}}catch(_){}
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-N.length=0;const TRL=new Map(),CH={on:false,pg:'paper',a:null,prev:null},TS={ok:0,err:0},TC=new Map(),MS={sat:{n:'Satellite',m:18,a:'Imagery (c) Esri, Maxar, Earthstar Geographics'},hyb:{n:'Hybrid',m:18,a:'Imagery (c) Esri, Maxar, Earthstar Geographics'},st:{n:'Detailed',m:19,a:'(c) OpenStreetMap contributors'},lt:{n:'Light',m:16,a:'(c) Esri, HERE, Garmin, (c) OpenStreetMap contributors'},dk:{n:'Dark',m:16,a:'(c) Esri, HERE, Garmin, (c) OpenStreetMap contributors'},tr:{n:'Terrain',m:17,a:'(c) OpenStreetMap contributors, SRTM | style (c) OpenTopoMap (CC-BY-SA)'},vec:{n:'Basic',m:18,a:''},world:{n:'World',m:18,a:'Natural Earth (public domain)'}};const live={on:false,d:null,es:null,at:0,seen:0};
+N.length=0;const TRL=new Map(),CH={on:false,pg:'paper',a:null,prev:null},TS={ok:0,err:0},TC=new Map(),MS={sat:{n:'Satellite',m:18,a:'Imagery (c) Esri, Maxar, Earthstar Geographics'},tr:{n:'Terrain',m:17,a:'(c) OpenStreetMap contributors, SRTM | style (c) OpenTopoMap (CC-BY-SA)'},world:{n:'World',m:18,a:'Natural Earth (public domain)'},vfr:{n:'VFR',m:12,z:8,a:'FAA VFR Sectional Charts (public domain)'},lowifr:{n:'Low IFR',m:12,z:8,a:'FAA IFR Enroute Low Altitude Charts (public domain)'},highifr:{n:'High IFR',m:9,z:7,a:'FAA IFR Enroute High Altitude Charts (public domain)'}},CHART_TILE_CAP=1600,CHART_TILE_CACHE=1700;const live={on:false,d:null,es:null,at:0,seen:0};
 const EX=[[[-123,49],[-125,50],[-130,54.5],[-133,58],[-137,59],[-141,60],[-141,69.6],[-135,69],[-128,70],[-115,68.5],[-105,68],[-95,71],[-90,69],[-85,70],[-82,66],[-87,64],[-94,60],[-93,57],[-85,55.5],[-82,53],[-79,51.5],[-79,55],[-77,60],[-70,59],[-65,60],[-61,56],[-56,52],[-60,50],[-65,49.2],[-66,48],[-61,46],[-64,45],[-66,44.5],[-67,45],[-70,47],[-71.5,45],[-75,45],[-79,43.3],[-83,42],[-82.5,45.3],[-84.5,46.5],[-88,48],[-95,49]],[[-59,47.6],[-56,51.6],[-53,47],[-55,46.9]],
 [[-9.5,43],[-9,37],[-6,36.2],[-2,36.7],[0,38.5],[3,42.5],[7,43.7],[9,44.4],[10,44],[12.5,41.5],[16,38],[18.5,40],[16,41.9],[12.5,44.5],[13.7,45.6],[15,44],[19,41.5],[21,39],[23,36.5],[24,38],[23.5,40.5],[26,40.8],[29,41],[28,43.5],[30,45.3],[33,46],[37,47],[40,47.5],[40,56],[40,60.5],[30,60.5],[28,60.5],[23.5,59.2],[21,57],[20,54.5],[18,54.8],[14,54],[10.5,54.3],[8.5,57],[8.2,55],[8.7,54],[7,53.5],[5,53],[4,51.5],[2,51],[1.5,50.2],[-1.5,49.7],[-1.5,48.7],[-4.5,48.5],[-2,47],[-1.2,46],[-1.8,43.5]],
 [[8,58],[5,59],[5,62],[12,66],[18,70],[28,71],[31,70],[30,67],[30,61],[28,60.5],[23,60],[21.5,61],[21.5,63],[25,65.5],[22,65.8],[18,62.5],[17.5,60.5],[19,59.5],[16.5,56.5],[14,55.5],[12.5,56],[11,58],[10.5,59.5]],
@@ -750,7 +749,7 @@ const RL={KSFO:[11870,8650],KOAK:[10520],KSJC:[11000],KSAC:[8600],KRNO:[11002],K
 function pairs(a){const o=[];a.rw.forEach(n=>{if(!o.some(p=>p[0]==n||p[1]==n))o.push([n,(n+17)%36+1])});return o}
 function liveOk(){return live.on&&live.d&&live.d.lat!=null&&live.d.age<3&&performance.now()-live.at<3000}
 const cv=$('#map'),cx=cv.getContext('2d');let W,H,dpr,C={};
-const V={lon:-119.5,lat:38.8,z:6,fol:false,mode:'plane',gz:1,gs:'vector'},L={apt:1,nav:1,trf:1,grid:0,rte:1,procSid:1,procStar:1,procApproach:1,procMissed:0,wxrain:0,wxwind:0,wxturb:0,dn:0,style:(function(){try{return localStorage.getItem('dl.style')||'sat'}catch(e){return'sat'}})()};
+const V={lon:-119.5,lat:38.8,z:6,fol:false,mode:'plane',gz:1,gs:'vector'},L={apt:1,nav:1,trf:1,grid:0,rte:1,procSid:1,procStar:1,procApproach:1,procMissed:0,wxrain:0,wxwind:0,wxturb:0,dn:0,style:(function(){try{const s=localStorage.getItem('dl.style')||'sat';return MS[s]?s:'sat'}catch(e){return'sat'}})()};
 let plan=false,panel=null,sel=null,route=[],trav=0,own={lat:0,lon:0,hdg:0,alt:0,vs:0};
 const MAP_DEFAULTS={color:'#fbbf24',size:1.35,halo:false,trail:true,trailWidth:1};
 function readMapPrefs(){try{const raw=JSON.parse(localStorage.getItem('stratos.mapSettings')||'null')||{};const col=typeof raw.color==='string'&&/^#[0-9a-f]{6}$/i.test(raw.color.trim())?raw.color.trim():MAP_DEFAULTS.color;const size=Number(raw.size);const width=Number(raw.trailWidth);return{color:col,size:Number.isFinite(size)?Math.min(2,Math.max(.7,size)):MAP_DEFAULTS.size,halo:typeof raw.halo==='boolean'?raw.halo:MAP_DEFAULTS.halo,trail:typeof raw.trail==='boolean'?raw.trail:MAP_DEFAULTS.trail,trailWidth:Number.isFinite(width)?Math.min(2,Math.max(.5,width)):MAP_DEFAULTS.trailWidth}}catch(_){return{...MAP_DEFAULTS}}}
@@ -1079,8 +1078,8 @@ function gNote(){
    actually on screen. */
 function globeAttr(){
   const a=$('#attr');if(!a)return;
-  const style=globeStyle(V.gs);
-  const text=V.mode!=='globe'?'© OpenStreetMap contributors · Esri imagery'
+  const style=globeStyle(V.gs),chart=MS[L.style]&&MS[L.style].z?MS[L.style]:null;
+  const text=chart?(chart.a||'FAA aeronautical charts'):V.mode!=='globe'?'© OpenStreetMap contributors · Esri imagery'
     :style.source==='nasa'?'Imagery: Esri, Maxar, Earthstar Geographics · Esri World Imagery'
     :style.source?'Terrain: AWS Open Data Terrain Tiles (Mapzen) · 3DEP/SRTM/GMTED2010/ETOPO1'
     :'Globe outlines: Natural Earth 1:110m (public domain)';
@@ -1714,17 +1713,33 @@ $('#b3d').onclick=()=>set3d(!view3d);
    Separate from the recorded-track view above. It shares the 2D chart's
    centre and zoom, carries the real Esri imagery and AWS/Mapzen relief, and
    is entirely optional: the Flight Deck stays 2D until the pilot asks. */
-let t3d=null,viewT3=false,t3Cached=[],t3AirAt=0,t3AirKey='',t3TrfAt=0,t3SelAt=0;
+let t3d=null,viewT3=false,t3Cached=[],t3AirAt=0,t3AirKey='',t3TrfAt=0,t3SelAt=0,t3RouteAt=0,t3AirSetAt=0,t3AcSig='',t3ViewAt=0;
 let t3mode=(function(){try{return localStorage.getItem('stratos.t3mode')==='flat'?'flat':'globe'}catch(_){return'globe'}})();
-function ensureT3(){if(t3d)return t3d;const Ctor=window.StratosGlobe3D;if(!Ctor)return null;t3d=new Ctor($('#globe3d'),{accent:MP.color,mode:t3mode,onView:v=>{if(!v)return;V.lon=wrapLon(v.lon);V.lat=v.lat;if(Number.isFinite(v.zoom))V.z=Math.max(2.5,Math.min(17.5,v.zoom))},onFollow:f=>{V.fol=!!f;const b=$('#bFol');if(b){b.classList.toggle('on',V.fol);b.setAttribute('aria-pressed',V.fol?'true':'false')}},onTraffic:id=>{selectTrafficById(id)}});window.STRATOS_3D=t3d;return t3d}
+function t3Low(){try{return localStorage.getItem('stratos.t3low')==='1'}catch(_){return false}}
+function ensureT3(){if(t3d)return t3d;const Ctor=window.StratosGlobe3D;if(!Ctor)return null;t3d=new Ctor($('#globe3d'),{accent:MP.color,mode:t3mode,lowPower:t3Low(),onView:v=>{if(!v)return;V.lon=wrapLon(v.lon);V.lat=v.lat;if(Number.isFinite(v.zoom))V.z=Math.max(2.5,Math.min(17.5,v.zoom))},onFollow:f=>{V.fol=!!f;const b=$('#bFol');if(b){b.classList.toggle('on',V.fol);b.setAttribute('aria-pressed',V.fol?'true':'false')}},onTraffic:id=>{selectTrafficById(id)}});window.STRATOS_3D=t3d;return t3d}
 function t3NearAirports(){const key=V.lat.toFixed(1)+','+V.lon.toFixed(1);if(key===t3AirKey&&Date.now()-t3AirAt<5000)return t3Cached;t3AirKey=key;t3AirAt=Date.now();const out=[];for(const a of A){if(a.lat==null||a.lon==null)continue;if(Math.abs(a.lat-V.lat)>7||Math.abs(a.lon-V.lon)>9)continue;out.push(a);if(out.length>=18)break}t3Cached=out;return out}
 function t3Active(){if(route.length<2)return -1;const l=legs();let d=trav,i=0;while(i<l.length-1&&d>l[i]){d-=l[i];i++}return i+1}
 function t3TrafficList(){if(!L.trf)return[];const out=[];T.forEach(a=>{const lat=Number(a.lat),lon=Number(a.lon);if(!Number.isFinite(lat)||!Number.isFinite(lon))return;const alt=a.altKnown===false||a.alt==null?null:Number(a.alt);let hdg=Number(a.hdg);if(!Number.isFinite(hdg))hdg=Number(a.trk);if(!Number.isFinite(hdg))hdg=0;out.push({key:String(a.hx||a.id||''),id:String(a.id||''),lat,lon,alt:Number.isFinite(alt)?alt:null,hdg,type:String(a.type||a.actype||a.model||''),source:a.source||''})});return out}
 function t3SelectedDetail(){if(!sel||sel.k!='trf')return{trail:[],route:[]};const raw=TRL.get(String(sel.hx||sel.id||''))||[];const trail=[];for(const p of raw){const lat=Number(p[0]),lon=Number(p[1]),alt=Number(p[2]),agl=Number(p[4]);if(Number.isFinite(lat)&&Number.isFinite(lon))trail.push({lat,lon,alt:Number.isFinite(alt)?alt:null,agl:Number.isFinite(agl)?agl:null})}const last=trail[trail.length-1],slat=Number(sel.lat),slon=Number(sel.lon),salt=sel.altKnown===false||sel.alt==null?null:Number(sel.alt);if(Number.isFinite(slat)&&Number.isFinite(slon)&&(!last||last.lat!==slat||last.lon!==slon))trail.push({lat:slat,lon:slon,alt:Number.isFinite(salt)?salt:null,agl:Number.isFinite(Number(sel.agl))?Number(sel.agl):null});const route=filedRoute(sel).points.map(p=>({lat:p.lat,lon:p.lon,id:p.id}));const shdg=Number(sel.hdg),strack=Number(sel.trk);return{trail,route,id:String(sel.id||sel.callsign||''),type:String(sel.type||''),heading:Number.isFinite(shdg)?shdg:(Number.isFinite(strack)?strack:null),alt:Number.isFinite(salt)?salt:null}}
-function t3Sync(force){if(!viewT3||!t3d)return;t3d.setView({lat:V.lat,lon:V.lon,zoom:V.z,follow:V.fol,force:!!force});t3d.setRoute(route.map(p=>({lat:p.lat,lon:p.lon,id:p.id})),t3Active());const ok=liveOk(),d=live.d||{};t3d.setAircraft(ok?{lat:own.lat,lon:own.lon,alt:own.alt,hdg:own.hdgMag!=null?own.hdgMag:own.hdg,trk:own.trk,callsign:(d.callsign||d.registration)||'',type:(d.aircraftType||d.aircraft||d.type||'')}:null);t3d.setAirports(t3NearAirports());const active=sel&&sel.k=='trf'?String(sel.hx||sel.id||''):'';const now=Date.now();if((force||now-t3TrfAt>250)&&typeof t3d.setTraffic==='function'){t3TrfAt=now;t3d.setTraffic(t3TrafficList(),active)}if((force||now-t3SelAt>500)&&typeof t3d.setSelectedTraffic==='function'){t3SelAt=now;t3d.setSelectedTraffic(t3SelectedDetail())}}
-function setT3(on,mode){const next=!!on;if(mode==='flat'||mode==='globe'){t3mode=mode;try{localStorage.setItem('stratos.t3mode',mode)}catch(_){}}if(next&&!ensureT3())return;if(next)set3d(false);if(next&&t3d)t3d.setMode(t3mode);viewT3=next;if(viewT3)t3d.show();else t3d.hide();const state=(b,on)=>{if(!b)return;b.classList.toggle('on',!!on);b.setAttribute('aria-pressed',on?'true':'false')};state($('#bMap3d'),viewT3&&t3mode==='globe');state($('#bMap3dFlat'),viewT3&&t3mode==='flat');$('#p3dctl').hidden=!viewT3;const msc=document.getElementById('mapscl');if(msc)msc.style.display=viewT3?'none':'';if(viewT3){setLay(false);V.fol=true;t3d.setFollow(true);const fb=$('#bFol');if(fb){fb.classList.add('on');fb.setAttribute('aria-pressed','true')}t3Sync(true);t3d.resize()}render()}
+function t3Sync(force){
+  if(!viewT3||!t3d)return;
+  const now=Date.now();
+  if(force||now-t3ViewAt>150){t3ViewAt=now;t3d.setView({lat:V.lat,lon:V.lon,zoom:V.z,follow:V.fol,force:!!force})}
+  if(force||now-t3RouteAt>500){t3RouteAt=now;t3d.setRoute(route.map(p=>({lat:p.lat,lon:p.lon,id:p.id})),t3Active())}
+  const ok=liveOk(),d=live.d||{};
+  const ac=ok?{lat:own.lat,lon:own.lon,alt:own.alt,hdg:own.hdgMag!=null?own.hdgMag:own.hdg,trk:own.trk,callsign:(d.callsign||d.registration)||'',type:(d.aircraftType||d.aircraft||d.type||'')}:null;
+  const acSig=ac?[ac.lat,ac.lon,ac.alt,ac.hdg,ac.trk,ac.callsign,ac.type].join('|'):'';
+  if(force||acSig!==t3AcSig){t3AcSig=acSig;t3d.setAircraft(ac)}
+  if(force||now-t3AirSetAt>1000){t3AirSetAt=now;t3d.setAirports(t3NearAirports())}
+  const active=sel&&sel.k=='trf'?String(sel.hx||sel.id||''):'';
+  if((force||now-t3TrfAt>250)&&typeof t3d.setTraffic==='function'){t3TrfAt=now;t3d.setTraffic(t3TrafficList(),active)}
+  if((force||now-t3SelAt>500)&&typeof t3d.setSelectedTraffic==='function'){t3SelAt=now;t3d.setSelectedTraffic(t3SelectedDetail())}
+}
+function setT3(on,mode){const next=!!on;if(mode==='flat'||mode==='globe'){t3mode=mode;try{localStorage.setItem('stratos.t3mode',mode)}catch(_){}}if(next&&!ensureT3())return;if(next)set3d(false);if(next&&t3d)t3d.setMode(t3mode);viewT3=next;if(viewT3)t3d.show();else t3d.hide();const state=(b,on)=>{if(!b)return;b.classList.toggle('on',!!on);b.setAttribute('aria-pressed',on?'true':'false')};state($('#bMap3d'),viewT3&&t3mode==='globe');state($('#bMap3dFlat'),viewT3&&t3mode==='flat');$('#p3dctl').hidden=!viewT3;const low=$('#t3low');if(low)low.checked=t3Low();const msc=document.getElementById('mapscl');if(msc)msc.style.display=viewT3?'none':'';if(viewT3){setLay(false);V.fol=true;t3d.setFollow(true);const fb=$('#bFol');if(fb){fb.classList.add('on');fb.setAttribute('aria-pressed','true')}t3Sync(true);t3d.resize()}render()}
 $('#bMap3d')&&($('#bMap3d').onclick=()=>setT3(!(viewT3&&t3mode==='globe'),'globe'));
 $('#bMap3dFlat')&&($('#bMap3dFlat').onclick=()=>setT3(!(viewT3&&t3mode==='flat'),'flat'));
+const t3low=$('#t3low');
+if(t3low){t3low.checked=t3Low();t3low.onchange=()=>{const on=!!t3low.checked;try{localStorage.setItem('stratos.t3low',on?'1':'0')}catch(_){}if(t3d)t3d.setLowPower(on)}}
 /* One desktop shell. The Volanta deck is the document layout; phones keep
    their separate five-tab and bottom-sheet presentation. */
 /* Compass rose: the card is fixed to the map while the magenta needle follows
@@ -2195,14 +2210,6 @@ const LKEY='stratos.mapLayers';
 document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{L[b.dataset.l]^=1;b.classList.toggle('on',!!L[b.dataset.l]);
   try{localStorage.setItem(LKEY,JSON.stringify({apt:!!L.apt,nav:!!L.nav,trf:!!L.trf,trl:!!L.trl,rte:!!L.rte,grid:!!L.grid,wxrain:!!L.wxrain,wxwind:!!L.wxwind,wxturb:!!L.wxturb,dn:!!L.dn}))}catch(_){}
   render()});
-/* Both chart panels folded away is what a full-screen map means: the map keeps
-   the whole window and one press brings them back. */
-(function panelsToggle(){
-  const b=$('#bPanels');if(!b)return;
-  const sync=()=>{const hidden=document.body.classList.contains('panels-hidden');b.textContent=hidden?'Show side panels':'Hide side panels';b.classList.toggle('on',hidden);b.setAttribute('aria-pressed',hidden?'true':'false')};
-  b.onclick=()=>{document.body.classList.toggle('panels-hidden');sync()};
-  sync()
-})();
 /* Quick regions: a place and the scale it reads at, nothing else. */
 const REGIONS=[['World',18,-12,2.2],['Europe',50,10,4.4],['North America',39,-98,3.7],['South America',-16,-60,3.5],['Africa',4,20,3.3],['Middle East',27,45,4.1],['Asia',34,100,3.3],['Oceania',-25,141,3.5]];
 (function regionsUi(){
@@ -2215,29 +2222,28 @@ const REGIONS=[['World',18,-12,2.2],['Europe',50,10,4.4],['North America',39,-98
 })();
 $('#bMap').onclick=()=>{panel=null;sel=null;tk=false;render()};
 $('#st').onclick=()=>{panel='live';render()};
-function TILED(){if(!RP.tiles)return false;if(CH.on)return CH.pg=='sat'&&!(TS.ok==0&&TS.err>6);return L.style!='vec'&&L.style!='world'&&!(TS.ok==0&&TS.err>6)}
+function TILED(){if(!RP.tiles)return false;if(CH.on)return CH.pg=='sat'&&!(TS.ok==0&&TS.err>6);return L.style!='world'&&!(TS.ok==0&&TS.err>6)}
 /* A globe painted from imagery or terrain is the same situation as a satellite
    chart: labels must be light with a dark halo, and the night marker palette is
    the readable one. An outlines globe is vector land, so it follows the theme. */
 function SAT(){return V.mode==='globe'?globePicture():TILED()}
-function DKM(){return V.mode==='globe'?globePicture():(TILED()&&(L.style=='sat'||L.style=='hyb'||L.style=='dk'))}
-function PVC(){const s=L.style;return !TILED()?C.txt:(s=='sat'||s=='hyb')?'#d8d8d8':s=='dk'?'#a9b4bd':'#4a4f55'}
-function PVA(){const s=L.style;return !TILED()?1:(s=='sat'||s=='hyb')?.45:.92}
-function TWC(){const s=L.style;return !TILED()?C.coast:(s=='sat'||s=='hyb')?'#ffe27a':s=='dk'?'#5d6872':'#8a8f96'}
-function TWA(){const s=L.style;return !TILED()?.75:(s=='sat'||s=='hyb')?.5:.9}
+function DKM(){return V.mode==='globe'?globePicture():(TILED()&&L.style=='sat')}
+function PVC(){const s=L.style;return !TILED()?C.txt:s=='sat'?'#d8d8d8':'#4a4f55'}
+function PVA(){const s=L.style;return !TILED()?1:s=='sat'?.45:.92}
+function TWC(){const s=L.style;return !TILED()?C.coast:s=='sat'?'#ffe27a':'#8a8f96'}
+function TWA(){const s=L.style;return !TILED()?.75:s=='sat'?.5:.9}
 function WHT(){return TILED()?'#fff':C.land}
 function tileUrl(l,z,x,y){const h=location.protocol=='http:',s='abc'[(x+y)%3];
-if(l=='sat'||l=='hyb')return h?'/tile/'+z+'/'+x+'/'+y+'.jpg':'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/'+z+'/'+y+'/'+x;
-if(l=='lab')return 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/'+z+'/'+y+'/'+x;
-if(l=='st')return 'https://'+s+'.tile.openstreetmap.org/'+z+'/'+x+'/'+y+'.png';
-if(l=='lt')return 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/'+z+'/'+y+'/'+x;
-if(l=='dk')return 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/'+z+'/'+y+'/'+x;
+if(l=='sat')return h?'/tile/'+z+'/'+x+'/'+y+'.jpg':'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/'+z+'/'+y+'/'+x;
+if(l=='vfr')return 'https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/VFR_Sectional/MapServer/tile/'+z+'/'+y+'/'+x;
+if(l=='lowifr')return 'https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/IFR_AreaLow/MapServer/tile/'+z+'/'+y+'/'+x;
+if(l=='highifr')return 'https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/IFR_High/MapServer/tile/'+z+'/'+y+'/'+x;
 return 'https://'+s+'.tile.opentopomap.org/'+z+'/'+x+'/'+y+'.png'}
-function tImg(l,z,x,y){const k=l+'/'+z+'/'+x+'/'+y;let t=TC.get(k);if(!t){t={i:new Image(),ok:0,t:0};t.i.onload=()=>{t.ok=1;t.t=performance.now();TS.ok++};t.i.onerror=()=>{TS.err++};t.i.src=tileUrl(l,z,x,y);TC.set(k,t);if(TC.size>600)TC.delete(TC.keys().next().value)}return t}
-function tl(l){const mz=l=='lab'?18:(MS[l]||MS.sat).m,Z=Math.min(mz,Math.max(0,Math.ceil(V.z-.25))),s=256*2**(V.z-Z),c=wpx(V.lon,V.lat),n=2**Z,now=performance.now(),x0=Math.max(0,Math.floor((c[0]-W/2)/s)),x1=Math.min(n-1,Math.floor((c[0]+W/2)/s)),y0=Math.max(0,Math.floor((c[1]-H/2)/s)),y1=Math.min(n-1,Math.floor((c[1]+H/2)/s));
+function tImg(l,z,x,y){const k=l+'/'+z+'/'+x+'/'+y;let t=TC.get(k);if(!t){t={i:new Image(),ok:0,t:0};if(MS[l]&&MS[l].z)t.i.crossOrigin='anonymous';t.i.onload=()=>{t.ok=1;t.t=performance.now();TS.ok++};t.i.onerror=()=>{TS.err++};t.i.src=tileUrl(l,z,x,y);TC.set(k,t);const limit=MS[l]&&MS[l].z?CHART_TILE_CACHE:600;if(TC.size>limit)TC.delete(TC.keys().next().value)}return t}
+function tl(l){const cfg=MS[l]||MS.sat,mz=l=='lab'?18:cfg.m,mn=cfg.z||0,Z=Math.min(mz,Math.max(mn,mn?Math.ceil(V.z+1):Math.ceil(V.z-.25))),s=256*2**(V.z-Z),c=wpx(V.lon,V.lat),n=2**Z,now=performance.now(),x0=Math.max(0,Math.floor((c[0]-W/2)/s)),x1=Math.min(n-1,Math.floor((c[0]+W/2)/s)),y0=Math.max(0,Math.floor((c[1]-H/2)/s)),y1=Math.min(n-1,Math.floor((c[1]+H/2)/s)),cols=x1-x0+1,rows=y1-y0+1;if(mn&&cols*rows>CHART_TILE_CAP)return false;
 for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const dx=x*s-c[0]+W/2,dy=y*s-c[1]+H/2,t=tImg(l,Z,x,y);
-if(Z>0){const p=t.ok&&now-t.t>260?null:tImg(l,Z-1,x>>1,y>>1);if(p&&p.ok)cx.drawImage(p.i,(x&1)*128,(y&1)*128,128,128,dx,dy,s+.5,s+.5)}
-if(t.ok){cx.globalAlpha=Math.min(1,(now-t.t)/220);cx.drawImage(t.i,dx,dy,s+.5,s+.5);cx.globalAlpha=1}}}
+if(Z>mn){const p=t.ok&&now-t.t>260?null:tImg(l,Z-1,x>>1,y>>1);if(p&&p.ok)cx.drawImage(p.i,(x&1)*128,(y&1)*128,128,128,dx,dy,s+.5,s+.5)}
+if(t.ok){cx.globalAlpha=Math.min(1,(now-t.t)/220);cx.drawImage(t.i,dx,dy,s+.5,s+.5);cx.globalAlpha=1}}return true}
 /* World basemap: country outlines, country names, continent names and ocean
    names from the bundled Natural Earth layer. The sheet is drawn into an
    offscreen canvas at a snapped centre and reused, so panning is a blit rather
@@ -2356,9 +2362,9 @@ function buildWorld(g){
     }
   }
 }
-function drawTiles(){const l=L.style;tl(l=='hyb'?'sat':l);if(l=='hyb')tl('lab');const tx=(MS[l]||MS.sat).a||'';cx.font='10px sans-serif';cx.lineWidth=3;cx.strokeStyle='rgba(0,0,0,.65)';cx.strokeText(tx,8,H-84);cx.fillStyle='#fff';cx.fillText(tx,8,H-84)}
-function msUi(){const e=$('#ms');if(!e)return;e.innerHTML=Object.keys(MS).map(k=>'<button data-ms="'+k+'" class="'+(L.style==k?'on':'')+'">'+MS[k].n+'</button>').join('')}
-$('#ms').onclick=e=>{const k=e.target.dataset&&e.target.dataset.ms;if(!k)return;L.style=k;try{localStorage.setItem('dl.style',k)}catch(_){}TS.err=0;msUi()};
+function drawTiles(){const l=L.style,shown=tl(l);const tx=(MS[l]||MS.sat).a||'';cx.font='10px sans-serif';cx.lineWidth=3;cx.strokeStyle='rgba(0,0,0,.65)';cx.strokeText(tx,8,H-84);cx.fillStyle='#fff';cx.fillText(tx,8,H-84);if(!shown){cx.font='600 12px system-ui,sans-serif';cx.textAlign='center';cx.fillStyle='#dbe7f2';cx.fillText('Zoom in to load this chart',W/2,H/2);cx.textAlign='left'}}
+function msUi(){const e=$('#ms');if(!e)return;e.innerHTML=Object.keys(MS).map(k=>'<button data-ms="'+k+'" class="'+(L.style==k?'on':'')+'">'+MS[k].n+'</button>').join('');const note=$('#msnote');if(note){const chart=!!(MS[L.style]&&MS[L.style].z);note.hidden=!chart;note.textContent=chart?'FAA raster charts cover the U.S. only. Zoom in to load the chart where needed.':''}const a=$('#attr');if(a&&!viewT3&&V.mode!=='globe')a.textContent=(MS[L.style]||MS.sat).a||'© OpenStreetMap contributors'}
+$('#ms').onclick=e=>{const k=e.target.dataset&&e.target.dataset.ms;if(!k)return;L.style=k;try{localStorage.setItem('dl.style',k)}catch(_){}if(MS[k]&&MS[k].z){if(viewT3)setT3(false);if(V.mode==='globe')globeMode('plane')}TS.err=0;msUi()};
 msUi();
 /* Flat chart or globe, and what the globe is painted with. The buttons are built
    from the module's own style table, so a surface cannot be offered here that
@@ -2387,7 +2393,7 @@ function restoreGlobe(){
   let mode='plane',surface='vector';
   try{mode=localStorage.getItem('dl.mode')||'plane';surface=localStorage.getItem('dl.globe')||'vector'}catch(_){}
   V.gs=globeStyle(surface).id;
-  if(mode==='globe')globeMode('globe');
+  if(mode==='globe'&&!(MS[L.style]&&MS[L.style].z))globeMode('globe');
   pjUi();gsUi();globeAttr();gNote();
   return true;
 }
@@ -2806,7 +2812,7 @@ function tkts(v){const n=tnum(v);return n==null?'—':Math.round(n).toLocaleStri
 function tfpm(v){const n=tnum(v);if(n==null)return '—';const r=Math.round(n/10)*10;return (r>0?'+':'')+r.toLocaleString('en-US')}
 function drawBank(v){const g=document.getElementById('bankPtr');if(!g)return;const b=tnum(v);const clamped=b==null?0:Math.max(-60,Math.min(60,b));g.setAttribute('transform','rotate('+clamped.toFixed(1)+' 23 24)');tset('tBK',b==null?'—':Math.round(Math.abs(b))+'°'+(b>2?'R':b<-2?'L':''))}
 function efbClock(){const d=new Date();const t=String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0');tset('ebUtc',t+'Z');tset('tUTC',t+':'+String(d.getUTCSeconds()).padStart(2,'0')+'Z')}
-function efbBar(ok){const o=trackedTraffic(),useOwn=!!ok&&!o,d=useOwn?(live.d||{}):{};efbClock();tset('ebCall',o?o.id:(useOwn?(d.callsign||d.registration||'—'):'STRATOS'));tset('ebType',o?(o.type||'—'):(useOwn?(d.aircraftType||d.aircraft||'—'):'No simulator'));tset('ebPhase',o?'—':(useOwn?String(d.flightPhase||d.phase||'—').replace(/_/g,' ').toUpperCase():'OFFLINE'));tset('ebWx',useOwn&&d.windDir!=null&&d.windSpd!=null?tdeg(d.windDir)+' / '+Math.round(Number(d.windSpd))+' KT':'');const link=document.getElementById('ebLink');if(link){const on=!!liveOk()||!!o;link.classList.toggle('on',on);tset('ebLink',on?'LIVE':'NO LINK')}tset('tSRC',o?(o.source==='vatsim'?'VATSIM':o.source==='adsb'?'ADS-B':'TRAFFIC'):(useOwn?(d.src||'simulator'):'—'))}
+function efbBar(ok){const o=trackedTraffic(),useOwn=!!ok&&!o,d=useOwn?(live.d||{}):{};efbClock();const call=o?(o.id||o.callsign||'—'):(useOwn?(d.callsign||d.registration||'—'):'—');const kind=o?(o.type||o.aircraft||'—'):(useOwn?(d.aircraftType||d.aircraft||'—'):'—');tset('tCS',String(call).toUpperCase());tset('tTY',String(kind).toUpperCase());tset('ebCall',o?o.id:(useOwn?(d.callsign||d.registration||'—'):'STRATOS'));tset('ebType',o?(o.type||'—'):(useOwn?(d.aircraftType||d.aircraft||'—'):'No simulator'));tset('ebPhase',o?'—':(useOwn?String(d.flightPhase||d.phase||'—').replace(/_/g,' ').toUpperCase():'OFFLINE'));tset('ebWx',useOwn&&d.windDir!=null&&d.windSpd!=null?tdeg(d.windDir)+' / '+Math.round(Number(d.windSpd))+' KT':'');const link=document.getElementById('ebLink');if(link){const on=!!liveOk()||!!o;link.classList.toggle('on',on);tset('ebLink',on?'LIVE':'NO LINK')}tset('tSRC',o?(o.source==='vatsim'?'VATSIM':o.source==='adsb'?'ADS-B':'TRAFFIC'):(useOwn?(d.src||'simulator'):'—'))}
 /* A selected VATSIM pilot is a real traffic source, not a simulator snapshot.
    The strip is only filled with fields the feed actually carries; IAS, TAS,
    vertical speed and wind stay em dashes. The filed route supplies the next

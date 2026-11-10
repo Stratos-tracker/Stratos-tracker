@@ -250,8 +250,12 @@
     this._fxH = 0;
     this._fxDpr = 1;
     this._fxFrame = 0;
+    this._fxDrawn = false;
+    this._interacting = false;
     this.follow = false;
     this.mode = options.mode === 'flat' ? 'flat' : 'globe';
+    this.lowPower = !!options.lowPower;
+    this._pixelRatioLow = false;
     this.onTraffic = typeof options.onTraffic === 'function' ? options.onTraffic : null;
     this._placed = false;
     this.lon = -95;
@@ -418,7 +422,9 @@
         renderWorldCopies: true,
         minZoom: 1,
         maxZoom: 18,
-        antialias: true,
+        /* Terrain plus MSAA is expensive on integrated graphics. */
+        pixelRatio: this.lowPower ? 1 : (window.devicePixelRatio || 1),
+        antialias: false,
         attributionControl: false,
         fadeDuration: 120,
       });
@@ -433,7 +439,8 @@
     this.map.on('load', function () {
       self.ready = true;
       try { self.map.setProjection({ type: self.mode === 'flat' ? 'mercator' : 'globe' }); } catch (_) {}
-      try { self.map.setTerrain({ source: 'dem', exaggeration: 1.15 }); } catch (_) {}
+      self._applyTerrain();
+      self._applyPixelRatio();
       self._addTrafficIcons();
       if (self.onTraffic) {
         self.map.on('click', 'traffic-plane', function (event) {
@@ -458,7 +465,12 @@
         window.addEventListener('aircraft-atlas-ready', self._onAtlasReady);
       }
     });
-    this.map.on('moveend', function () { self._emit(); });
+    this.map.on('movestart', function () { self._interacting = true; });
+    this.map.on('moveend', function () {
+      self._interacting = false;
+      self._emit();
+      self._queueFx();
+    });
     this.map.on('dragstart', function () {
       self.follow = false;
       if (self.onFollow) self.onFollow(false);
@@ -470,6 +482,8 @@
     var credit = document.createElement('div');
     credit.className = 'g3-credit';
     credit.textContent = 'Imagery: Esri, Maxar · Elevation: AWS Terrain Tiles (Mapzen) · display only, not for navigation';
+    this.credit = credit;
+    this._updateCredit();
     this.el.appendChild(credit);
 
     if (window.ResizeObserver) {
@@ -543,7 +557,7 @@
     if (!this.fx || !this.el) return;
     var width = Math.max(1, Math.round(this.el.clientWidth || 0));
     var height = Math.max(1, Math.round(this.el.clientHeight || 0));
-    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    var dpr = this.lowPower ? 1 : Math.min(1.5, window.devicePixelRatio || 1);
     this._fxW = width;
     this._fxH = height;
     this._fxDpr = dpr;
@@ -552,12 +566,27 @@
     if (this.fx.width !== bw || this.fx.height !== bh) {
       this.fx.width = bw;
       this.fx.height = bh;
+      this._fxDrawn = false;
     }
     this._queueFx();
   };
 
+  StratosGlobe3D.prototype._clearFx = function () {
+    var ctx = this.fxCtx;
+    if (!ctx || !this._fxW || !this._fxH) return;
+    ctx.setTransform(this._fxDpr, 0, 0, this._fxDpr, 0, 0);
+    ctx.clearRect(0, 0, this._fxW, this._fxH);
+  };
+
   StratosGlobe3D.prototype._queueFx = function () {
-    if (!this.fx || this._fxFrame) return;
+    if (!this.fx || this._fxFrame || !this.ready || this.el.hidden) return;
+    if (!this.selectedTrail.length) {
+      if (this._fxDrawn) {
+        this._fxDrawn = false;
+        this._clearFx();
+      }
+      return;
+    }
     var self = this;
     this._fxFrame = window.requestAnimationFrame(function () {
       self._fxFrame = 0;
@@ -574,17 +603,28 @@
    */
   StratosGlobe3D.prototype._drawFlightPath = function () {
     var ctx = this.fxCtx;
-    if (!ctx || !this._fxW || !this._fxH) return;
+    if (!ctx || !this._fxW || !this._fxH || this.el.hidden) return;
     ctx.setTransform(this._fxDpr, 0, 0, this._fxDpr, 0, 0);
     ctx.clearRect(0, 0, this._fxW, this._fxH);
-    if (!this.map || !this.ready || !this.selectedTrail.length) return;
+    if (!this.map || !this.ready || !this.selectedTrail.length) {
+      this._fxDrawn = false;
+      return;
+    }
 
     var pitch = Math.sin((Number(this.map.getPitch()) || 0) * RAD);
     var zoom = this.map.getZoom();
     var scale = 156543.03392 / Math.pow(2, zoom);
+    /* A long trail does not need every recorded fix in the overlay. Sample it
+       down while keeping both ends; the light path below is the only thing
+       drawn while the camera is moving. */
+    var source = this.selectedTrail;
+    var stride = Math.max(1, Math.ceil(source.length / (this._interacting ? 120 : 320)));
+    var samples = [];
+    for (var s = 0; s < source.length; s += stride) samples.push(source[s]);
+    if (samples[samples.length - 1] !== source[source.length - 1]) samples.push(source[source.length - 1]);
     var points = [];
-    for (var i = 0; i < this.selectedTrail.length; i += 1) {
-      var p = this.selectedTrail[i] || {};
+    for (var i = 0; i < samples.length; i += 1) {
+      var p = samples[i] || {};
       var lat = Number(p.lat), lon = Number(p.lon);
       if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) continue;
       var alt = Number(p.alt);
@@ -595,56 +635,70 @@
       var lift = Math.max(0, alt) * FT_TO_M / mpp * pitch;
       points.push({ gx: ground.x, gy: ground.y, tx: ground.x, ty: ground.y - lift, alt: Math.max(0, alt) });
     }
-    if (points.length < 2) return;
+    if (points.length < 2) {
+      this._fxDrawn = false;
+      return;
+    }
 
     ctx.save();
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // The translucent curtain is what makes the profile read as a 3D wall.
-    for (var j = 1; j < points.length; j += 1) {
-      var a = points[j - 1], b = points[j];
-      var ink = altitudeRgb((a.alt + b.alt) * 0.5);
-      var top = Math.min(a.ty, b.ty);
-      var bottom = Math.max(a.gy, b.gy);
-      if (bottom <= top) bottom = top + 1;
-      var fill = ctx.createLinearGradient(0, top, 0, bottom);
-      fill.addColorStop(0, rgba(ink, 0.38));
-      fill.addColorStop(0.55, rgba(ink, 0.14));
-      fill.addColorStop(1, rgba(ink, 0.025));
-      ctx.fillStyle = fill;
+    if (this._interacting) {
+      /* One cheap stroke while the camera is moving. The full altitude curtain
+         returns on moveend, when it can be seen and the frame budget is free. */
       ctx.beginPath();
-      ctx.moveTo(a.gx, a.gy);
-      ctx.lineTo(b.gx, b.gy);
-      ctx.lineTo(b.tx, b.ty);
-      ctx.lineTo(a.tx, a.ty);
-      ctx.closePath();
-      ctx.fill();
-    }
+      ctx.moveTo(points[0].tx, points[0].ty);
+      for (var f = 1; f < points.length; f += 1) ctx.lineTo(points[f].tx, points[f].ty);
+      ctx.strokeStyle = 'rgba(165,243,252,0.92)';
+      ctx.lineWidth = 2.6;
+      ctx.stroke();
+    } else {
+      // The translucent curtain is what makes the profile read as a 3D wall.
+      for (var j = 1; j < points.length; j += 1) {
+        var a = points[j - 1], b = points[j];
+        var ink = altitudeRgb((a.alt + b.alt) * 0.5);
+        var top = Math.min(a.ty, b.ty);
+        var bottom = Math.max(a.gy, b.gy);
+        if (bottom <= top) bottom = top + 1;
+        var fill = ctx.createLinearGradient(0, top, 0, bottom);
+        fill.addColorStop(0, rgba(ink, 0.38));
+        fill.addColorStop(0.55, rgba(ink, 0.14));
+        fill.addColorStop(1, rgba(ink, 0.025));
+        ctx.fillStyle = fill;
+        ctx.beginPath();
+        ctx.moveTo(a.gx, a.gy);
+        ctx.lineTo(b.gx, b.gy);
+        ctx.lineTo(b.tx, b.ty);
+        ctx.lineTo(a.tx, a.ty);
+        ctx.closePath();
+        ctx.fill();
+      }
 
-    // Faint ground trace keeps the track readable when the curtain is steep.
-    ctx.beginPath();
-    ctx.moveTo(points[0].gx, points[0].gy);
-    for (var g = 1; g < points.length; g += 1) ctx.lineTo(points[g].gx, points[g].gy);
-    ctx.setLineDash([4, 6]);
-    ctx.strokeStyle = 'rgba(165,243,252,0.3)';
-    ctx.lineWidth = 1.1;
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Bright altitude-coloured top edge, with a broad low-alpha glow.
-    for (var k = 1; k < points.length; k += 1) {
-      var prev = points[k - 1], cur = points[k];
-      var ink2 = altitudeRgb((prev.alt + cur.alt) * 0.5);
+      // Faint ground trace keeps the track readable when the curtain is steep.
       ctx.beginPath();
-      ctx.moveTo(prev.tx, prev.ty);
-      ctx.lineTo(cur.tx, cur.ty);
-      ctx.strokeStyle = rgba(ink2, 0.2);
-      ctx.lineWidth = 10;
+      ctx.moveTo(points[0].gx, points[0].gy);
+      for (var g = 1; g < points.length; g += 1) ctx.lineTo(points[g].gx, points[g].gy);
+      ctx.setLineDash([4, 6]);
+      ctx.strokeStyle = 'rgba(165,243,252,0.3)';
+      ctx.lineWidth = 1.1;
       ctx.stroke();
-      ctx.strokeStyle = rgba(ink2, 0.98);
-      ctx.lineWidth = 3.2;
-      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Bright altitude-coloured top edge, with a broad low-alpha glow.
+      for (var k = 1; k < points.length; k += 1) {
+        var prev = points[k - 1], cur = points[k];
+        var ink2 = altitudeRgb((prev.alt + cur.alt) * 0.5);
+        ctx.beginPath();
+        ctx.moveTo(prev.tx, prev.ty);
+        ctx.lineTo(cur.tx, cur.ty);
+        ctx.strokeStyle = rgba(ink2, 0.2);
+        ctx.lineWidth = 10;
+        ctx.stroke();
+        ctx.strokeStyle = rgba(ink2, 0.98);
+        ctx.lineWidth = 3.2;
+        ctx.stroke();
+      }
     }
 
     // The selected aircraft rides at the top of its measured altitude path.
@@ -652,11 +706,18 @@
     // chosen in trafficFeatures and the live callsign badge moves here.
     var last = points[points.length - 1];
     var meta = this.selectedMeta || {};
+    /* The 3D camera changes the screen direction of a compass heading, so
+       rotate the selected icon along the projected ground segment it is
+       actually flying on. The heading from the feed is the fallback for a
+       single point or a stationary target. */
     var heading = Number(meta.heading);
-    if (!Number.isFinite(heading)) {
-      var prev = points.length > 1 ? points[points.length - 2] : last;
-      heading = Math.atan2(last.gx - prev.gx, -(last.gy - prev.gy)) / RAD;
+    var prev = points.length > 1 ? points[points.length - 2] : last;
+    var dx = last.gx - prev.gx;
+    var dy = last.gy - prev.gy;
+    if (points.length > 1 && Math.hypot(dx, dy) > 0.5) {
+      heading = Math.atan2(dx, -dy) / RAD;
     }
+    if (!Number.isFinite(heading)) heading = 0;
     heading = ((heading % 360) + 360) % 360;
 
     ctx.save();
@@ -740,6 +801,7 @@
       ctx.restore();
     }
 
+    this._fxDrawn = true;
     ctx.restore();
   };
 
@@ -954,6 +1016,44 @@
     if (this.marker) { this.marker.remove(); this.marker = null; }
     if (this._observer) { this._observer.disconnect(); this._observer = null; }
     if (this.map) { this.map.remove(); this.map = null; }
+  };
+
+  StratosGlobe3D.prototype._applyTerrain = function () {
+    if (!this.map || !this.ready) return;
+    try {
+      this.map.setTerrain(this.lowPower ? null : { source: 'dem', exaggeration: 1.15 });
+    } catch (_) {}
+  };
+
+  StratosGlobe3D.prototype._applyPixelRatio = function () {
+    if (!this.map) return;
+    try {
+      if (this.lowPower) {
+        this.map.setPixelRatio(1);
+        this._pixelRatioLow = true;
+      } else if (this._pixelRatioLow) {
+        this.map.setPixelRatio(window.devicePixelRatio || 1);
+        this._pixelRatioLow = false;
+      }
+    } catch (_) {}
+  };
+
+  StratosGlobe3D.prototype._updateCredit = function () {
+    if (!this.credit) return;
+    this.credit.textContent = 'Imagery: Esri, Maxar · ' +
+      (this.lowPower ? 'low-power: terrain off, 1x pixels' : 'Elevation: AWS Terrain Tiles (Mapzen)') +
+      ' · display only, not for navigation';
+  };
+
+  /** Turn off terrain and cap the 3D render surface at 1x for slower GPUs. */
+  StratosGlobe3D.prototype.setLowPower = function (on) {
+    this.lowPower = !!on;
+    this._applyTerrain();
+    this._applyPixelRatio();
+    this._resizeFx();
+    if (this.map) this.map.resize();
+    this._updateCredit();
+    this._queueFx();
   };
 
   window.StratosGlobe3D = StratosGlobe3D;

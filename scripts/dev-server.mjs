@@ -114,6 +114,54 @@ async function bridgeProcedures(req, res) {
   else res.end(body);
 }
 
+/* Satellite imagery. Over plain http the page asks its own origin for
+   /tile/{z}/{x}/{y}.jpg, the way the packaged bridge answers it; without this
+   route a local preview returned 404 and the satellite style painted nothing.
+   Esri's template takes the row before the column, and a tile is immutable, so
+   a small cache spares the upstream service a second fetch per pan. */
+const TILE_RE = /^\/tile\/(\d+)\/(\d+)\/(\d+)\.jpg$/;
+const TILE_CACHE = new Map();
+const TILE_CACHE_MAX = 400;
+
+async function tileImage(req, res) {
+  const miss = () => {
+    res.statusCode = 404;
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.end('Not found');
+  };
+  const match = TILE_RE.exec(new URL(req.url, 'http://localhost').pathname);
+  if (!match) return miss();
+  const [, z, x, y] = match;
+  const key = z + '/' + x + '/' + y;
+  let tile = TILE_CACHE.get(key);
+  if (!tile) {
+    const upstream = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`;
+    let answer;
+    try {
+      answer = await fetch(upstream, { signal: AbortSignal.timeout(15000) });
+    } catch (_) {
+      return miss();
+    }
+    if (!answer.ok) {
+      if (answer.body) await answer.body.cancel().catch(() => {});
+      return miss();
+    }
+    const type = answer.headers.get('content-type') || '';
+    if (!/^image\//i.test(type)) {
+      if (answer.body) await answer.body.cancel().catch(() => {});
+      return miss();
+    }
+    tile = { body: Buffer.from(await answer.arrayBuffer()), type: type.split(';')[0] };
+    TILE_CACHE.set(key, tile);
+    if (TILE_CACHE.size > TILE_CACHE_MAX) TILE_CACHE.delete(TILE_CACHE.keys().next().value);
+  }
+  res.statusCode = 200;
+  res.setHeader('Content-Type', tile.type);
+  res.setHeader('Cache-Control', 'max-age=604800');
+  if (req.method === 'HEAD') res.end();
+  else res.end(tile.body);
+}
+
 /* The same serverless handlers the hosted site uses, so the EFB's weather,
    charts and airport search work in a local browser too. */
 const ROUTES = {
@@ -148,6 +196,19 @@ function resolveFile(pathname) {
 
 const server = http.createServer(async (req, res) => {
   const { pathname } = new URL(req.url, 'http://localhost');
+
+  if (TILE_RE.test(pathname)) {
+    try {
+      await tileImage(req, res);
+    } catch (_) {
+      if (!res.writableEnded) {
+        res.statusCode = 404;
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.end('Not found');
+      }
+    }
+    return;
+  }
 
   const route = ROUTES[pathname] || null;
   if (route) {

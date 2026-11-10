@@ -375,6 +375,7 @@
   font-size: 9px;
 }
 #tel .tel-pill b { color: #dbe7f2; font-size: 10px; letter-spacing: 0; }
+#tel .tel-ident b { max-width: 14ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #tel .tel-more {
   margin-left: auto;
   display: inline-flex;
