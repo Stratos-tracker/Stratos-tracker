@@ -1,50 +1,33 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.1.42",
+  "latestVersion": "2.1.43",
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-10",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.42/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.42/Stratos-Setup.exe",
-      "sha256": "a2b9bfac15c280c6c07fcf01e3b77e7278fa3f540523167de2ba76be1b775846",
-      "size": 118749841
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.42/Stratos-2.1.42-mac-arm64.dmg",
-      "sha256": "b2d74757b799b745d428bcae8016741263be53dbbbacdb7f9766e0f62662e597",
-      "size": 137314969
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.42/Stratos-2.1.42-mac-x64.dmg",
-      "sha256": "7e08892fef6f08bf8d4a513d36650963251a1cfcc5da6e080d9355772986645f",
-      "size": 142732308
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.42/Stratos-2.1.42-linux-x64.AppImage",
-      "sha256": "7105d13526624bdd1cc3d7d88db42df744e9d2502846311fa74af154923f6e43",
-      "size": 158672487
-    }
-  },
-  "summary": "Live traffic labels now show both the callsign and the aircraft type, so a target is identifiable without opening its card.",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "The flat map keeps only the six base styles it can really paint, FAA VFR and IFR charts load at the level that carries chart data when zoomed out, satellite imagery works in local development, and the side-panel toggle is gone.",
   "reason": "",
   "releaseNotes": [
-    "The 2D map and 3D globe labels now show callsign, aircraft type and altitude or flight level together.",
-    "The selected aircraft and own-ship marker show the same callsign and type, with the type normalised to an ICAO code.",
-    "Longer 3D labels are width-limited and ellipsized instead of running off the map."
+    "Chart tiles are fetched one level above the current view, so VFR, Low IFR and High IFR gain detail as the map is zoomed in instead of staying at a coarse overview.",
+    "FAA VFR, Low IFR and High IFR charts no longer request blank overview tiles when the map is slightly zoomed out; each layer starts at the level that actually carries chart data.",
+    "Satellite imagery loads again in local development: the dev server answers the /tile/ request the page makes over http instead of returning 404.",
+    "The flat map offers six base styles: Satellite, Terrain, World, VFR, Low IFR and High IFR. Basic, Detailed, Light, Dark and Hybrid are retired, and a saved style that no longer exists falls back to Satellite.",
+    "The remove-side-panels control is gone from the map, along with the layout state it saved."
   ],
   "notes": {
-    "features": [
-      "The 2D map and 3D globe labels now show callsign, aircraft type and altitude or flight level together."
-    ],
+    "features": [],
     "improvements": [
-      "The selected aircraft and own-ship marker show the same callsign and type, with the type normalised to an ICAO code."
+      "Chart tiles are fetched one level above the current view, so VFR, Low IFR and High IFR gain detail as the map is zoomed in instead of staying at a coarse overview."
     ],
-    "fixes": [],
+    "fixes": [
+      "FAA VFR, Low IFR and High IFR charts no longer request blank overview tiles when the map is slightly zoomed out; each layer starts at the level that actually carries chart data.",
+      "Satellite imagery loads again in local development: the dev server answers the /tile/ request the page makes over http instead of returning 404."
+    ],
     "performance": [],
     "ui": [
-      "Longer 3D labels are width-limited and ellipsized instead of running off the map."
+      "The flat map offers six base styles: Satellite, Terrain, World, VFR, Low IFR and High IFR. Basic, Detailed, Light, Dark and Hybrid are retired, and a saved style that no longer exists falls back to Satellite.",
+      "The remove-side-panels control is gone from the map, along with the layout state it saved."
     ],
     "compatibility": [],
     "other": []
