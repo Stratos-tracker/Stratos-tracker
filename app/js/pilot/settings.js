@@ -1,5 +1,6 @@
 import { RESOURCE_MODES, detectResourceMode } from '../lib/telemetry.js';
-import { getSetting, setSetting, exportBackup, importBackup, getAllSettings, getFlights, downloadJson } from '../lib/store.js';
+import { getSetting, setSetting, exportBackup, importBackup, getAllSettings, getFlights, downloadJson, mergeFlights } from '../lib/store.js';
+import { readFlightFile } from '../lib/importers.js';
 import {
   bridgeHealth, syncLogbook, relayStatus, pairRelay, unpairRelay,
   relayDevices, revokeRelayDevice, defaultBridgeBase, isHostedPage,
@@ -400,7 +401,9 @@ export async function mount(root, ctx) {
           <div class="btn-row" style="margin-top:10px">
             <button class="btn" id="export-backup">Export backup</button>
             <button class="btn ghost" id="import-backup">Import backup</button>
+            <button class="btn ghost" id="import-flights">Import Volanta / ELEVATEX…</button>
           </div>
+          <p class="help">Reads a Volanta CSV or JSON export, or the flights.csv from an ELEVATEX export. Flights are matched by route and departure time, so importing the same file twice does not duplicate them. Only what the file states is imported: landing rate, altitude and track stay empty.</p>
         </div>
         <div class="card">
           <div class="card-head"><h2>iPhone installation</h2></div>
@@ -599,6 +602,19 @@ export async function mount(root, ctx) {
       } catch (error) { toast(error.message, 'bad'); }
       render();
     }));
+    document.getElementById('import-flights')?.addEventListener('click', async () => {
+      const file = await pickFile('.csv,.json,text/csv,application/json');
+      if (!file) return;
+      try {
+        const flights = readFlightFile(file.name, await file.text());
+        if (!flights.length) throw new Error('No flight with an origin or destination was found in that file.');
+        const result = await mergeFlights(flights);
+        toast(`${result.added} flight${result.added === 1 ? '' : 's'} imported from ${flights[0].source}; ${result.total} in the logbook.`, 'good');
+        await ctx.reload();
+      } catch (error) {
+        toast(`Import failed: ${error.message}`, 'bad');
+      }
+    });
     document.getElementById('export-backup')?.addEventListener('click', async () => {
       const flights = await getFlights();
       const settings = await getAllSettings();
