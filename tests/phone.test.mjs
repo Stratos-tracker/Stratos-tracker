@@ -96,3 +96,10 @@ test('the landing page keeps offering Phone Mode', () => {
   assert.ok((home.match(/href="\/phone"/g) || []).length >= 2, 'the header and the access cards link to it');
   assert.match(home, /Access a streamlined, touchscreen-optimized Stratos experience on your smartphone\./);
 });
+
+test('the phone bar marks the section the page is actually showing', () => {
+  assert.match(mobileJs, /const EFB_ROUTES = \{ '#\/flightplan': 'plan', '#\/charts': 'charts' \}/, 'the EFB routes map to the bar destinations');
+  assert.match(mobileJs, /if \(!document\.body\.classList\.contains\('efb'\)\) return declared;/, 'every other page keeps its declared section');
+  assert.match(mobileJs, /window\.addEventListener\('hashchange', markCurrent\)/, 'the bar follows an EFB route change without a reload');
+  assert.match(mobileJs, /if \(link\.dataset\.mnav === sectionNow\(\)\)/, 'tapping the section already on screen scrolls instead of reloading');
+});

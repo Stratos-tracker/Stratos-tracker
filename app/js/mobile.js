@@ -38,7 +38,17 @@ const ICON = {
   profile: svg('<circle cx="12" cy="8" r="3.6"/><path d="M4.6 20c0-3.7 3.4-6 7.4-6s7.4 2.3 7.4 6"/>'),
 };
 
-const section = document.body.dataset.mobileSection || '';
+/* The EFB is one document carrying three of the bar's destinations, so on that
+   page the current section comes from the route it is showing — #/flightplan is
+   the Plan tab, #/charts is Charts, anything else is the EFB itself — rather
+   than from the fixed attribute. Every other page keeps its own attribute. */
+const EFB_ROUTES = { '#/flightplan': 'plan', '#/charts': 'charts' };
+function sectionNow() {
+  const declared = document.body.dataset.mobileSection || '';
+  if (!document.body.classList.contains('efb')) return declared;
+  return EFB_ROUTES[location.hash || '#/home'] || 'efb';
+}
+const section = sectionNow();
 
 // The chrome is for phones only. A desktop window keeps every byte of its own
 // interface: no nav node, no grip in the flight card, no observers.
@@ -112,6 +122,17 @@ function mountNav() {
   document.body.appendChild(nav);
   document.body.classList.add('has-mnav');
 
+  /* The EFB changes route without a reload, so the bar follows the hash: the
+     same seven links, only which one is marked current changes. */
+  const markCurrent = () => {
+    const now = sectionNow();
+    nav.querySelectorAll('[data-mnav]').forEach(link => {
+      if (link.dataset.mnav === now) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
+  };
+  window.addEventListener('hashchange', markCurrent);
+
   // A tab is a section switch, not a research trip: the next page starts
   // loading on touch, and the current one fades out for a beat. Same-page
   // taps scroll to the top instead of reloading the map.
@@ -119,7 +140,7 @@ function mountNav() {
     const link = event.target.closest('a');
     if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.button > 0) return;
     const href = link.getAttribute('href') || '';
-    if (link.dataset.mnav === section) {
+    if (link.dataset.mnav === sectionNow()) {
       event.preventDefault();
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -134,7 +155,7 @@ function mountNav() {
   // request storm: four documents, once per session.
   const warm = () => {
     for (const item of SECTIONS) {
-      if (item.id === section) continue;
+      if (item.id === sectionNow()) continue;
       const link = document.createElement('link');
       link.rel = 'prefetch';
       link.href = item.href;
