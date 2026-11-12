@@ -1146,9 +1146,16 @@ test('the map draws waypoint symbols over a route line it never rewrites', async
   // the one this test names, and it is painted before any marker. It draws the
   // plan through the sampled, date-line-aware path helper rather than joining
   // projected points, which is what made a Pacific leg sweep the whole chart.
-  const line = 'if(route.length&&!CH.on&&L.rte){cx.save();cx.globalAlpha=.62;cx.strokeStyle=C.route;cx.lineWidth=12;cx.lineCap=\'round\';cx.lineJoin=\'round\';drawPlanLine(routeAhead());cx.restore()';
+  const line = 'if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.strokeStyle=C.route;cx.lineCap=\'round\';cx.lineJoin=\'round\';if(sp.flown.length>1){cx.globalAlpha=.34;cx.lineWidth=12;drawPlanLine(sp.flown)}if(sp.ahead.length>1){cx.globalAlpha=.62;cx.lineWidth=12;drawPlanLine(sp.ahead)}cx.restore()';
   assert.ok(page.includes(line), 'the route line statement is unchanged');
   assert.ok(page.indexOf(line) < page.indexOf('drawRouteMarkers();}'), 'markers are painted after the line');
+  // The whole plan stays on the chart. The legs already flown are dimmed rather
+  // than dropped, so the route cannot eat itself as the flight goes on; and the
+  // recorded trail is painted after the route, so the path actually flown sits
+  // on top of the line it was planned on.
+  assert.match(page, /function routeSplit\(\)\{/, 'the plan is split into flown and remaining legs');
+  assert.match(page, /flown:best>0\?pts\.slice\(0,best\+1\):\[\]/, 'the flown legs are kept rather than discarded');
+  assert.ok(page.indexOf('drawPlanLine(sp.flown)') < page.indexOf('trails();if(L.trf'), 'the recorded trail is painted over the route');
   // That helper is the fix for an oceanic plan: a great circle sampled along its
   // own arc, held continuous across the date line, and stroked again a world
   // over so a leg leaving one edge re-enters at the other.
@@ -1206,7 +1213,7 @@ test('a selected waypoint turns purple without touching the route line', async (
   assert.match(page, /if\(act=='close'\)\{wpIdx=null;/, 'closing the card clears the selection');
   assert.match(page, /if\(e\.key=='Escape'\)\{if\(wpCard\)closeRouteCard\(\);wpIdx=null\}/, 'Escape clears it too');
   // The same statement that paints the line must still be there.
-  assert.match(page, /cx\.globalAlpha=\.62;cx\.strokeStyle=C\.route;cx\.lineWidth=12/, 'the route line is unchanged');
+  assert.match(page, /if\(sp\.ahead\.length>1\)\{cx\.globalAlpha=\.62;cx\.lineWidth=12;drawPlanLine\(sp\.ahead\)\}/, 'the route line is unchanged');
 });
 
 test('the tracking card minimizes to a SID and STAR summary', async () => {
@@ -1338,7 +1345,7 @@ test('published SID and STAR layers come from real data, under the route line', 
   assert.match(page, /const layers=Array\.isArray\(window\.PROCLAYERS\)/, 'it draws only what the deck resolved');
   assert.match(page, /for\(const segment of layer\.segments\)/, 'every published section is its own stroke');
   assert.match(page, /cx\.strokeStyle=color;cx\.globalAlpha=\.32;cx\.lineWidth=11/, 'every procedure path shares the route band width');
-  assert.ok(page.indexOf('drawProcedurePaths();') < page.indexOf('cx.globalAlpha=.62;cx.strokeStyle=C.route;cx.lineWidth=12'), 'procedure paths sit under the route line');
+  assert.ok(page.indexOf('drawProcedurePaths();') < page.indexOf('const sp=routeSplit();'), 'procedure paths sit under the route line');
   const start = page.indexOf('function strokeProcedureSegment(');
   const stop = page.indexOf('function mkPlanLabel(');
   const block = page.slice(start, stop);

@@ -1311,7 +1311,7 @@ if(L.apt&&clusterAirports()){}else if(L.apt)A.forEach(a=>{if(CH.on&&a!==CH.a)ret
 if(V.mode!=='globe'&&V.z>8.5)drawReal(a,x,y);else a.det=false;if(0)pairs(a).forEach(pr=>{const n=pr[0],h=n*10,p=ppn(a.lat)*1.4,dx=Math.sin(h*R)*p,dy=-Math.cos(h*R)*p;cx.strokeStyle=C.ap;cx.lineWidth=Math.max(3,p/9);cx.lineCap='butt';cx.beginPath();cx.moveTo(x-dx,y-dy);cx.lineTo(x+dx,y+dy);cx.stroke()});
 if(a.det){}else if(V.mode!=='globe'&&V.z>8.5){cx.beginPath();cx.arc(x,y,3,0,7);cx.fillStyle=C.land;cx.fill();cx.strokeStyle=C.ap;cx.lineWidth=2.2;cx.stroke()}else mkRing(x,y,mkRz()*.9,mkColor('apt'),1);
 if(lblZ()>(a.x?7:4.8)&&x>-40&&x<W+40&&y>-40&&y<H+40&&!(L.rte&&planTocTod().ids.has(String(a.id).toUpperCase())))mkText(a.id,x+Math.round(mkRz()*.62)-3,y-6,SAT()?(DKM()?'#fff':'#111'):C.txt,12.5,true)});
-drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){cx.save();cx.globalAlpha=.62;cx.strokeStyle=C.route;cx.lineWidth=12;cx.lineCap='round';cx.lineJoin='round';drawPlanLine(routeAhead());cx.restore()
+drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.strokeStyle=C.route;cx.lineCap='round';cx.lineJoin='round';if(sp.flown.length>1){cx.globalAlpha=.34;cx.lineWidth=12;drawPlanLine(sp.flown)}if(sp.ahead.length>1){cx.globalAlpha=.62;cx.lineWidth=12;drawPlanLine(sp.ahead)}cx.restore()
 drawProcedureRouteLine();drawRouteMarkers();}
 trails();if(L.trf&&!CH.on)T.forEach(a=>{const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;drawAircraft(a.type,x,y,a.hdg,C.trf,32);if(lblZ()>6&&x>-40&&x<W+40&&y>-20&&y<H+20)mkText(a.id+(a.type?' '+a.type:'')+' '+Math.round(a.alt/100),x+4,y+4,C.trf,10,false)});
 if(liveOk()){const q=vis(own.lon,own.lat);if(q){const[x,y]=q;if(MP.halo){cx.beginPath();cx.arc(x,y,19+6*MP.size,0,7);cx.strokeStyle=MP.color;cx.globalAlpha=.32;cx.lineWidth=1.5;cx.stroke();cx.globalAlpha=1}drawAircraft(live.d?.type||live.d?.aircraft||live.d?.aircraftType,x,y,(own.trk!=null&&(own.gs||live.d?.gs)>20)?own.trk:own.hdg,MP.color,42*MP.size)}}
@@ -2678,15 +2678,32 @@ function drawDayNight(){
   }
   cx.save();cx.imageSmoothingEnabled=true;cx.drawImage(DN.canvas,0,0,W,H);cx.restore()
 }
-/* While live, the planned line starts at the aircraft and runs to the next
-   waypoint; the flown part is the trail. Keeping the whole line underneath was
-   what made the route look like it came from behind the aircraft. */
+/* While live, a procedure overlay starts at the aircraft and runs to the next
+   fix, so a SID or STAR is not painted twice: once behind the aircraft as part
+   of the flown path, and once as published geometry. The planned route itself
+   is not trimmed this way — routeSplit below keeps every leg on the chart. */
 function routeAhead(){
   const pts=drawnRoutePoints();
   if(!liveOk()||pts.length<2)return pts;
   let best=0, bestD=Infinity;
   for(let i=0;i<pts.length;i++){const d=dist(own,pts[i]);if(d<bestD){bestD=d;best=i}}
   return [{lat:own.lat,lon:own.lon,k:'own'},...pts.slice(best+1)]
+}
+/* The plan is drawn in two parts and is never shortened. The legs already flown
+   stay on the chart, dimmed; the legs still ahead keep the route's own weight.
+   The recorded trail is painted after both, so the flown path reads on top of
+   the route it was flown along. Dropping the passed legs — which is what the
+   route used to do — made the blue line eat itself as the flight went on, and
+   left nothing at all on the approach. */
+function routeSplit(){
+  const pts=drawnRoutePoints();
+  if(!liveOk()||pts.length<2)return {flown:[],ahead:pts};
+  let best=0,bestD=Infinity;
+  for(let i=0;i<pts.length;i++){const d=dist(own,pts[i]);if(d<bestD){bestD=d;best=i}}
+  return {
+    flown:best>0?pts.slice(0,best+1):[],
+    ahead:[{lat:own.lat,lon:own.lon,k:'own'},...pts.slice(best+1)],
+  }
 }
 function routeProg(){let best=1e9,acc=0,at=0;for(let i=0;i<route.length-1;i++){const a=route[i],b=route[i+1],L2=dist(a,b),k=Math.cos(a.lat*R),bx=(b.lon-a.lon)*k*60,by=(b.lat-a.lat)*60,px=(own.lon-a.lon)*k*60,py=(own.lat-a.lat)*60,d2=bx*bx+by*by||1e-9,t=Math.max(0,Math.min(1,(px*bx+py*by)/d2)),dd=Math.hypot(px-bx*t,py-by*t);if(dd<best){best=dd;at=acc+t*L2}acc+=L2}return at}
 
