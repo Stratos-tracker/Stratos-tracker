@@ -523,7 +523,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 <div class="lay-body">
   <section class="lay-s"><h3>Map display</h3><div id="ms" class="lay-grid"></div><p class="m" id="msnote" hidden></p>
     <div class="lay-theme"><button type="button" data-theme-set="day">Day</button><button type="button" data-theme-set="night">Night</button><button type="button" data-theme-set="contrast">High contrast</button></div></section>
-  <section class="lay-s"><h3>Layers</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="trf" class="on">Traffic</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="trl">Trails</button><button type="button" data-l="grid">Grid</button><button type="button" data-l="wxrain">Rain</button><button type="button" data-l="wxwind">Wind</button><button type="button" data-l="wxturb">Turbulence</button><button type="button" data-l="dn">Day / night</button></div><p class="m">Rain uses animated radar frames from <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a>. Wind and turbulence use Open-Meteo's 10 m wind and gust/CAPE field; the wind layer is animated as streamlines and turbulence is a smoothed estimate. None of it is a PIREP, SIGMET or a substitute for official weather.</p></section>
+  <section class="lay-s"><h3>Layers</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="trf" class="on">Traffic</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="trl">Trails</button><button type="button" data-l="grid">Grid</button><button type="button" data-l="wxrain">Rain</button><button type="button" data-l="wxwind">Wind</button><button type="button" data-l="wxturb">Turbulence</button><button type="button" data-l="dn">Day / night</button></div><div id="turbLeg" class="wx-leg" hidden><div class="wx-leg-t">Turbulence estimate</div><div class="wx-leg-bar"></div><div class="wx-leg-l"><span>Smooth</span><span>Light</span><span>Mod</span><span>Severe</span></div><div class="wx-leg-n">Gust spread and CAPE, interpolated — not a PIREP or SIGMET</div></div><p class="m">Rain uses animated radar frames from <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a>. Wind and turbulence use Open-Meteo's 10 m wind and gust/CAPE field; the wind layer is animated as streamlines and turbulence is a smoothed estimate. None of it is a PIREP, SIGMET or a substitute for official weather.</p></section>
   <section class="lay-s"><h3>Projection</h3><div id="pj"></div>
     <div class="lay-grid" id="t3mode"><button type="button" id="bMap3d" aria-pressed="false" title="3D globe with satellite imagery, real terrain and aircraft altitude">3D globe</button><button type="button" id="bMap3dFlat" aria-pressed="false" title="Tilted flat map with real terrain and aircraft altitude">3D flat map</button></div><label class="lay-check" for="t3low"><input type="checkbox" id="t3low"><span>Low-power 3D</span></label><p class="m">Turns off terrain and renders at 1× pixel density for slower GPUs.</p>
     <div id="gwrap" hidden><div class="lay-sub">Globe surface</div><div id="gs"></div><p class="m" id="gn"></p>
@@ -2242,8 +2242,10 @@ const LKEY='stratos.mapLayers';
 (function restoreLayers(){
   try{const s=JSON.parse(localStorage.getItem(LKEY)||'null');if(s&&typeof s==='object')for(const k of ['apt','nav','trf','trl','rte','grid','wxrain','wxwind','wxturb','dn'])if(typeof s[k]==='boolean')L[k]=s[k]?1:0}catch(_){}
   document.querySelectorAll('[data-l]').forEach(b=>b.classList.toggle('on',!!L[b.dataset.l]))
+  turbLegendToggle()
 })();
-document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{L[b.dataset.l]^=1;b.classList.toggle('on',!!L[b.dataset.l]);
+function turbLegendToggle(){const el=$('#turbLeg');if(el)el.hidden=!L.wxturb}
+document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{L[b.dataset.l]^=1;b.classList.toggle('on',!!L[b.dataset.l]);turbLegendToggle();
   try{localStorage.setItem(LKEY,JSON.stringify({apt:!!L.apt,nav:!!L.nav,trf:!!L.trf,trl:!!L.trl,rte:!!L.rte,grid:!!L.grid,wxrain:!!L.wxrain,wxwind:!!L.wxwind,wxturb:!!L.wxturb,dn:!!L.dn}))}catch(_){}
   render()});
 /* Quick regions: a place and the scale it reads at, nothing else. */
@@ -2502,14 +2504,19 @@ function wxFetch(){
 /* Smooth model fields for wind and turbulence. The old point/arrow overlay
    read as a scatter plot; this version samples a real grid, draws streamlines
    in the direction of the wind, and renders a smoothed turbulence heat field. */
-function wxAt(lon,lat){
+function wxAt(lon,lat,eased){
   const b=WX.box,pts=WX.pts;if(!b||!pts.length)return null;
   const cols=WX.cols||7,rows=WX.rows||5;
   const dx=Math.max(1e-6,b.maxLon-b.minLon),dy=Math.max(1e-6,b.maxLat-b.minLat);
   const fx=Math.max(0,Math.min(cols-1,(lon-b.minLon)/dx*(cols-1)));
   const fy=Math.max(0,Math.min(rows-1,(lat-b.minLat)/dy*(rows-1)));
   const i=Math.min(cols-2,Math.floor(fx)),j=Math.min(rows-2,Math.floor(fy));
-  const tx=fx-i,ty=fy-j;
+  /* A coarse 7x5 grid interpolated linearly keeps the corners of each cell
+     visible as steps. An eased blend is only used for the filled field, where a
+     step reads as a badly drawn chart; the wind streamlines keep the linear
+     field, which is what their direction is sampled from. */
+  const s=v=>v*v*(3-2*v);
+  const tx=eased?s(fx-i):fx-i,ty=eased?s(fy-j):fy-j;
   const at=(rr,cc)=>pts[Math.min(rows-1,rr)*cols+Math.min(cols-1,cc)]||{};
   const uv=p=>{const d=(Number(p.dir)||0)*R,v=Number(p.wind)||0;return{u:-v*Math.sin(d),v:-v*Math.cos(d),rain:Number(p.rain)||0,gust:Number(p.gust)||0,cape:Number(p.cape)||0}};
   const a=uv(at(j,i)),b1=uv(at(j,i+1)),c=uv(at(j+1,i)),d=uv(at(j+1,i+1));
@@ -2559,6 +2566,23 @@ function drawModelRain(){
   }
   cx.restore()
 }
+/* Turbulence is estimated, never observed: the model gives 10 m wind, gusts and
+   CAPE on a coarse grid, and the chart is drawn from that field alone. It is
+   painted the way a forecast chart paints a field — a continuous fill on a jet
+   ramp, with a faint isopleth wherever the quantised risk steps, so the hot
+   cores and the calm areas read at a glance instead of as three flat blobs.
+   The ramp is shared with the legend in the layers panel, so the key and the
+   map cannot drift apart. */
+const TURB_RAMP=[[0,'#22d3ee'],[.18,'#2dd4bf'],[.34,'#34d399'],[.48,'#a3e635'],[.6,'#fde047'],[.72,'#fb923c'],[.84,'#ef4444'],[1,'#d946ef']];
+const TURB_STOPS=TURB_RAMP.map(([t,hex])=>[t,[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)]]);
+const TURB_FLOOR=.12;
+function turbInk(risk){
+  const t=Math.min(1,Math.max(0,risk));
+  let i=1;while(i<TURB_STOPS.length-1&&t>TURB_STOPS[i][0])i++;
+  const[t0,c0]=TURB_STOPS[i-1],[t1,c1]=TURB_STOPS[i];
+  const f=Math.min(1,Math.max(0,(t-t0)/((t1-t0)||1)));
+  return[c0[0]+(c1[0]-c0[0])*f,c0[1]+(c1[1]-c0[1])*f,c0[2]+(c1[2]-c0[2])*f]
+}
 function drawTurbulence(){
   if(!WX.pts.length)return;
   const b=WX.box;if(!b)return;
@@ -2571,20 +2595,33 @@ function drawTurbulence(){
     t.clearRect(0,0,cw,ch);
     const img=t.createImageData(cw,ch),d=img.data;
     const dx=Math.max(1e-6,b.maxLon-b.minLon),dy=Math.max(1e-6,b.maxLat-b.minLat);
-    /* Interpolate the whole 7x5 field, not one circle per sample: a continuous
-       raster reads like a weather chart and keeps the low-risk areas quiet. */
+    /* One pass evaluates the field, a second paints it: the painted pass needs
+       its neighbour's band, and the model's own samples are the only source. */
+    const field=new Float32Array(cw*ch);
     for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){
-      const w=wxAt(b.minLon+(x+.5)/cw*dx,b.maxLat-(y+.5)/ch*dy);if(!w)continue;
-      const risk=Math.min(1,Math.max(0,(w.gust-w.speed)/32,w.cape/3400));
-      if(risk<.22)continue;
-      const hot=risk>=.62,warm=risk>=.36;
-      const r=hot?239:warm?249:250,g=hot?68:warm?115:204,bl=hot?68:warm?22:21;
-      const a=Math.round(Math.min(.62,Math.pow((risk-.22)/.78,1.35)*.65)*255),i=(y*cw+x)*4;
-      d[i]=r;d[i+1]=g;d[i+2]=bl;d[i+3]=a
+      const w=wxAt(b.minLon+(x+.5)/cw*dx,b.maxLat-(y+.5)/ch*dy,true);
+      field[y*cw+x]=w?Math.min(1,Math.max(0,(w.gust-w.speed)/32,w.cape/3400)):-1
+    }
+    for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){
+      const idx=y*cw+x,risk=field[idx];
+      if(!(risk>TURB_FLOOR)){d[idx*4+3]=0;continue}
+      const rgb=turbInk(risk),band=Math.floor(risk*8);
+      const left=x>0&&field[idx-1]>TURB_FLOOR?Math.floor(field[idx-1]*8):band;
+      const up=y>0&&field[idx-cw]>TURB_FLOOR?Math.floor(field[idx-cw]*8):band;
+      const edge=band!==left||band!==up;
+      const fade=Math.pow((risk-TURB_FLOOR)/(1-TURB_FLOOR),.8);
+      const k=edge?.78:1;
+      d[idx*4]=Math.round(rgb[0]*k);d[idx*4+1]=Math.round(rgb[1]*k);d[idx*4+2]=Math.round(rgb[2]*k);
+      /* A field this coarse has to read at a glance, so even the first band
+         above the floor is visible on imagery; the ramp keeps it pale rather
+         than loud, and a contour is a step stronger again. */
+      d[idx*4+3]=Math.round(Math.min(1,(edge?.97:.8)*(.22+fade*.78))*235)
     }
     t.putImageData(img,0,0)
   }
-  cx.save();cx.globalAlpha=.9;cx.imageSmoothingEnabled=true;cx.drawImage(TURB.canvas,0,0,W,H);cx.restore()
+  /* The opacity lives in the raster, so the chart and imagery read through the
+     field while a hot core still covers what is under it. */
+  cx.save();cx.globalAlpha=1;cx.imageSmoothingEnabled=true;cx.drawImage(TURB.canvas,0,0,W,H);cx.restore()
 }
 function seedWind(){
   const count=Math.min(620,Math.max(280,Math.round(W*H/2200)));

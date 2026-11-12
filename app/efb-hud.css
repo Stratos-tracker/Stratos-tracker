@@ -168,6 +168,41 @@
   #p3dctl { bottom: auto; top: 96px; }
 }
 
+/* ── Estimated-field legend ──────────────────────────────────────────────
+   The bar is the exact ramp the turbulence raster paints, in the same order,
+   so the key under the layer switches and the field on the chart agree. */
+.wx-leg {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(148, 163, 184, .18);
+}
+.wx-leg[hidden] { display: none; }
+.wx-leg-t {
+  font: 600 9px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #93a6b8;
+  margin-bottom: 6px;
+}
+.wx-leg-bar {
+  height: 8px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #22d3ee 0%, #2dd4bf 18%, #34d399 34%, #a3e635 48%, #fde047 60%, #fb923c 72%, #ef4444 84%, #d946ef 100%);
+}
+.wx-leg-l {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  font: 600 9px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: .06em;
+  color: #7f93a6;
+}
+.wx-leg-n {
+  margin-top: 6px;
+  font: 11px/1.35 system-ui, sans-serif;
+  color: #6f8296;
+}
+
 /* ── Chart scale and north reference ───────────────────────────────────── */
 #mapscl {
   position: absolute;
