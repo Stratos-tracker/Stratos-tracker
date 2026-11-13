@@ -21,7 +21,7 @@ const manifest = JSON.parse(fs.readFileSync(new URL('../app/releases.json', impo
    so a version bump sits on main with no table for a few minutes. The offer and
    endpoint tests below therefore run against the newest release that does carry
    a table — still the published data from the same file — and the last test pins
-   that a release is never left half-filled. */
+   that a release never claims an installer it did not publish. */
 const releases = [manifest.latest, ...manifest.releases].filter(Boolean);
 const newestWithTable = releases.find(release => release.downloads && Object.keys(release.downloads).length) || manifest.latest;
 const published = newestWithTable === manifest.latest ? manifest : { ...manifest, latest: newestWithTable };
@@ -77,7 +77,10 @@ test('the offer lists exactly the installers the published manifest carries', ()
   assert.ok(downloads, 'the manifest on main carries the download table');
   assert.equal(result.version, published.latest.version);
   assert.deepEqual(result.items.map(item => item.key), PLATFORMS.filter(platform => downloads[platform.key]).map(platform => platform.key));
-  assert.equal(result.items.length, 4, 'Windows, both macOS builds and Linux');
+  // Windows and Linux are on every release; macOS is offered only when it was
+  // built, so the count follows the manifest instead of being fixed at four.
+  for (const key of ['windows', 'linux-x64']) assert.ok(downloads[key], `${key} is always published`);
+  assert.equal(result.items.length, Object.keys(downloads).length, 'one entry per published installer');
   for (const item of result.items) {
     assert.equal(item.url, downloadUrl(item.key), `${item.key} uses the site's own link`);
     assert.equal(item.url, `/api/download?p=${item.key}`);
@@ -142,7 +145,7 @@ test('the panel reads the manifest, closes to a Downloads control and reopens', 
   const chip = document.getElementById('dlChip');
   assert.ok(panel, 'the panel is in the page');
   assert.ok(document.getElementById('app').contains(panel), 'it mounts with the map, not over the bar');
-  assert.equal(panel.querySelectorAll('a.dl-btn').length, 4, 'a button for every installer');
+  assert.equal(panel.querySelectorAll('a.dl-btn').length, Object.keys(published.latest.downloads).length, 'a button for every installer');
   assert.match(panel.textContent, /Download Stratos/, 'the offer says what it is');
   assert.match(panel.textContent, /Windows/);
   assert.match(panel.textContent, /Linux/);
@@ -205,7 +208,7 @@ test('a manifest that cannot be read offers a retry that works', async () => {
   retry.dispatchEvent(new window.Event('click'));
   await new Promise(resolve => setTimeout(resolve, 20));
   panel = document.getElementById('dlOffer');
-  assert.equal(panel.querySelectorAll('a.dl-btn').length, 4, 'the retry reads the real installers');
+  assert.equal(panel.querySelectorAll('a.dl-btn').length, Object.keys(published.latest.downloads).length, 'the retry reads the real installers');
   assert.equal(panel.hidden, false);
 });
 
@@ -246,7 +249,7 @@ test('the endpoint rejects what it cannot resolve without inventing a file', asy
   try {
     globalThis.fetch = async () => fakeResponse(published);
     const missing = fakeRes();
-    await handler({ query: { p: 'mac-arm64' }, headers: { host: 'x.test' } }, missing);
+    await handler({ query: { p: 'linux-x64' }, headers: { host: 'x.test' } }, missing);
     // The manifest does carry it, so this one resolves rather than 404s.
     assert.equal(missing.statusCode, 302);
 
@@ -260,18 +263,26 @@ test('the endpoint rejects what it cannot resolve without inventing a file', asy
   }
 });
 
-test('a release carries either a complete download table or none at all', () => {
-  // Half a table is the one thing the site must never show: a version whose
-  // Windows build downloads and whose macOS build does not exist.
-  const expected = PLATFORMS.map(platform => platform.key).sort();
+test('a release carries a complete table for the platforms it was built for', () => {
+  // A version whose Windows build downloads and whose macOS build does not exist
+  // is a broken offer, and so is an entry for a platform that was never built.
+  // Windows and Linux are released every time; macOS is listed only when GitHub
+  // gave the release a macOS runner.
+  const required = ['windows', 'linux-x64'];
+  const optional = ['mac-arm64', 'mac-x64'];
+  const known = new Set(PLATFORMS.map(platform => platform.key));
   for (const release of releases) {
     const table = release.downloads || {};
     const filled = Object.keys(table);
     // No table at all is normal: the releases before the site offered downloads
     // never had one, and the release being built has none until its installers
-    // exist. What must never happen is a table that lists only some of them.
+    // exist.
     if (!filled.length) continue;
-    assert.deepEqual(filled.sort(), expected, `${release.version} lists every installer or none`);
+    for (const key of required) assert.ok(filled.includes(key), `${release.version} carries ${key}`);
+    for (const key of filled) {
+      assert.ok(known.has(key), `${release.version} lists only a platform Stratos builds`);
+      assert.ok(required.includes(key) || optional.includes(key), `${release.version} ${key} is a published platform`);
+    }
     for (const [key, entry] of Object.entries(table)) {
       assert.match(entry.url, /^https:\/\//, `${release.version} ${key} has a web address`);
       assert.match(entry.sha256, /^[0-9a-f]{64}$/, `${release.version} ${key} carries its hash`);
