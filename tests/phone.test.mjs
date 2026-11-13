@@ -74,7 +74,12 @@ test('the service worker opens /phone from the cached deck', () => {
   assert.match(sw, /caches\.match\('index\.html'\)/, 'the phone fallback is the tracker');
   assert.match(sw, /\\\/phone\(\\\.html\)\?\$/, 'a navigation to /phone is still recognised');
   assert.match(sw, /hasLegacyPhoneShell/, 'a worker from the phone-page build is detected and replaced');
-  assert.match(sw, /const CACHE = 'stratos-shell-2\.1\.46-phone'/, 'the cache is versioned for this build');
+  /* The cache name follows the release being built and keeps the phone suffix
+     the legacy-shell detection keys off, so it is read from package.json rather
+     than written out here — a stamp that missed the service worker still fails. */
+  const pkg = JSON.parse(read('package.json'));
+  assert.match(sw, new RegExp(`const CACHE = 'stratos-shell-${pkg.version.replace(/\./g, '\\.')}-phone'`),
+    'the cache is versioned for this build');
   assert.match(sw, /client\.navigate\(client\.url\)/, 'a phone still on the deleted shell is navigated onto the Flight Deck');
 });
 

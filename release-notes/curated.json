@@ -1,4 +1,29 @@
 {
+  "2.1.45": {
+    "summary": "A chart on the map can now be placed with two snapped clicks, then moved, turned and sized by hand. Charts are drawn in their own page scale and re-rendered sharper as you enlarge them, and Airmate joins as a source with the georeferencing it publishes.",
+    "changelog": {
+      "features": [
+        "Align takes two clicks: the chart click snaps to the end of a drawn runway band, the map click to a published threshold, so the pair names the runway ends that placed the sheet.",
+        "One lock replaces the eight nudge arrows: unlocked, drag moves the chart, Shift-drag turns it and Alt-drag sizes it, one screen pixel following the pointer at any zoom.",
+        "Turn and Size sliders set the same corrections to a tenth of a degree and a percent, from 1% to 400%, saved with the placement.",
+        "Airmate joins as a chart source: the catalogue is fetched server-side with the licence key, documents are proxied, and its georeferencing places a plate from metadata alone.",
+        "Charts are measured in the page own points and rendered again at the resolution the screen asks for, so an enlarged plate stays sharp instead of magnifying its pixels."
+      ],
+      "improvements": [
+        "US charts come from the licensed Airmate source; the FAA d-TPP sheets are no longer offered beside it.",
+        "Unlicensed, a US airport names the source its charts need instead of showing a second-best plate.",
+        "The catalogue no longer lets the browser HTTP cache answer with a source that has since changed hands.",
+        "A stored placement survives a change of render resolution, because its points are kept in page coordinates."
+      ],
+      "fixes": [
+        "Dragging a chart at a size other than 100% moved it a fraction of the distance the pointer did.",
+        "Chart labels are anchored at their printed centre and grouped along their own direction, which brought a STAR label fit from 1.6 km to 0.6 km of residual."
+      ],
+      "other": [
+        "Includes the in-cycle work on anchoring the estimated field and the VATSIM ATC layer."
+      ]
+    }
+  },
   "2.1.44": {
     "summary": "The logbook can now import a flight history from Volanta or ELEVATEX, matching columns by meaning and leaving everything the export does not state empty.",
     "changelog": {
@@ -532,23 +557,6 @@
       "ui": [
         "The planner button is now Show on Flight Deck, because the route is already on the map."
       ],
-      "compatibility": [],
-      "other": []
-    }
-  },
-  "2.1.15": {
-    "summary": "Release notes written for readers, and every release now proves its own Windows update path.",
-    "changelog": {
-      "features": [
-        "Release notes can be written by hand for a version and are validated against the same schema the app reads, so an update describes what actually changed instead of repeating commit subjects."
-      ],
-      "improvements": [
-        "Every published release now runs the Windows update test automatically: it installs the previous build, lets it update itself to the new one, and checks the installed version.",
-        "The release manifest also carries the hand-written notes for older versions, so a build that skips several releases still shows the full history."
-      ],
-      "fixes": [],
-      "performance": [],
-      "ui": [],
       "compatibility": [],
       "other": []
     }

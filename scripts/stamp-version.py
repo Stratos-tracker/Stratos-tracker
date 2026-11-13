@@ -20,7 +20,7 @@ TARGETS = [
     # A distinct shell-cache name per release is what tells the service worker
     # a build is an update rather than a first install, so the waiting worker
     # can ask before it takes over.
-    ("app/sw.js", r"(?m)^const CACHE = '[^']*';$", "const CACHE = 'stratos-shell-{version}';"),
+    ("app/sw.js", r"(?m)^const CACHE = '[^']*';$", "const CACHE = 'stratos-shell-{version}-phone';"),
 ]
 
 

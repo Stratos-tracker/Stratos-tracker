@@ -1,57 +1,50 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.1.44",
+  "latestVersion": "2.1.45",
   "minimumSupportedVersion": "",
   "mandatory": false,
-  "releaseDate": "2026-11-10",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.44/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.44/Stratos-Setup.exe",
-      "sha256": "fe00e930c655959059e78bb8453cd271557f1cb49e961b7dd9a79a7c67fbf725",
-      "size": 118767831
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.44/Stratos-2.1.44-mac-arm64.dmg",
-      "sha256": "ca2ef402557ddfaab92e37116fd18467aa5c6b0db33dccadb2f8b3fa654a83ce",
-      "size": 137333267
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.44/Stratos-2.1.44-mac-x64.dmg",
-      "sha256": "e1886ef2499d198e6b97a67e5a02487749ab0129906f3e180209abe838784c00",
-      "size": 142758537
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.44/Stratos-2.1.44-linux-x64.AppImage",
-      "sha256": "5ba6095bda690bfa6e048c2c085ee8b592288f0803ebc62e472be4d6fb283b4a",
-      "size": 158689011
-    }
-  },
-  "summary": "The logbook can now import a flight history from Volanta or ELEVATEX, matching columns by meaning and leaving everything the export does not state empty.",
+  "releaseDate": "2026-11-13",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "A chart on the map can now be placed with two snapped clicks, then moved, turned and sized by hand. Charts are drawn in their own page scale and re-rendered sharper as you enlarge them, and Airmate joins as a source with the georeferencing it publishes.",
   "reason": "",
   "releaseNotes": [
-    "Settings → Data gains Import Volanta / ELEVATEX, which reads a Volanta CSV or JSON export, or the flights.csv from an ELEVATEX export, and merges the flights into the local logbook.",
-    "Re-importing the same export updates the records it already wrote instead of duplicating them, because every imported flight gets a stable id from its route and departure time.",
-    "Columns are matched by meaning, so the two exports' different headers, day-first dates and clock, minute or hours-and-minutes durations are all read correctly.",
-    "The import sits beside the existing backup controls and reports how many flights were added and how many are in the logbook afterwards.",
-    "Only what the export states is imported: landing rate, altitude and track stay empty and the logbook shows them as not measured."
+    "Align takes two clicks: the chart click snaps to the end of a drawn runway band, the map click to a published threshold, so the pair names the runway ends that placed the sheet.",
+    "One lock replaces the eight nudge arrows: unlocked, drag moves the chart, Shift-drag turns it and Alt-drag sizes it, one screen pixel following the pointer at any zoom.",
+    "Turn and Size sliders set the same corrections to a tenth of a degree and a percent, from 1% to 400%, saved with the placement.",
+    "Airmate joins as a chart source: the catalogue is fetched server-side with the licence key, documents are proxied, and its georeferencing places a plate from metadata alone.",
+    "Charts are measured in the page own points and rendered again at the resolution the screen asks for, so an enlarged plate stays sharp instead of magnifying its pixels.",
+    "US charts come from the licensed Airmate source; the FAA d-TPP sheets are no longer offered beside it.",
+    "Unlicensed, a US airport names the source its charts need instead of showing a second-best plate.",
+    "The catalogue no longer lets the browser HTTP cache answer with a source that has since changed hands.",
+    "A stored placement survives a change of render resolution, because its points are kept in page coordinates.",
+    "Dragging a chart at a size other than 100% moved it a fraction of the distance the pointer did.",
+    "Chart labels are anchored at their printed centre and grouped along their own direction, which brought a STAR label fit from 1.6 km to 0.6 km of residual.",
+    "Includes the in-cycle work on anchoring the estimated field and the VATSIM ATC layer."
   ],
   "notes": {
     "features": [
-      "Settings → Data gains Import Volanta / ELEVATEX, which reads a Volanta CSV or JSON export, or the flights.csv from an ELEVATEX export, and merges the flights into the local logbook."
+      "Align takes two clicks: the chart click snaps to the end of a drawn runway band, the map click to a published threshold, so the pair names the runway ends that placed the sheet.",
+      "One lock replaces the eight nudge arrows: unlocked, drag moves the chart, Shift-drag turns it and Alt-drag sizes it, one screen pixel following the pointer at any zoom.",
+      "Turn and Size sliders set the same corrections to a tenth of a degree and a percent, from 1% to 400%, saved with the placement.",
+      "Airmate joins as a chart source: the catalogue is fetched server-side with the licence key, documents are proxied, and its georeferencing places a plate from metadata alone.",
+      "Charts are measured in the page own points and rendered again at the resolution the screen asks for, so an enlarged plate stays sharp instead of magnifying its pixels."
     ],
     "improvements": [
-      "Re-importing the same export updates the records it already wrote instead of duplicating them, because every imported flight gets a stable id from its route and departure time.",
-      "Columns are matched by meaning, so the two exports' different headers, day-first dates and clock, minute or hours-and-minutes durations are all read correctly."
+      "US charts come from the licensed Airmate source; the FAA d-TPP sheets are no longer offered beside it.",
+      "Unlicensed, a US airport names the source its charts need instead of showing a second-best plate.",
+      "The catalogue no longer lets the browser HTTP cache answer with a source that has since changed hands.",
+      "A stored placement survives a change of render resolution, because its points are kept in page coordinates."
     ],
-    "fixes": [],
+    "fixes": [
+      "Dragging a chart at a size other than 100% moved it a fraction of the distance the pointer did.",
+      "Chart labels are anchored at their printed centre and grouped along their own direction, which brought a STAR label fit from 1.6 km to 0.6 km of residual."
+    ],
     "performance": [],
-    "ui": [
-      "The import sits beside the existing backup controls and reports how many flights were added and how many are in the logbook afterwards."
-    ],
-    "compatibility": [
-      "Only what the export states is imported: landing rate, altitude and track stay empty and the logbook shows them as not measured."
-    ],
-    "other": []
+    "ui": [],
+    "compatibility": [],
+    "other": [
+      "Includes the in-cycle work on anchoring the estimated field and the VATSIM ATC layer."
+    ]
   }
 }
