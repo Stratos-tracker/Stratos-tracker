@@ -1746,3 +1746,16 @@ test('the VATSIM ATC layer marks staffed airports and invents no coverage', asyn
   assert.ok(page.includes('atc:!!L.atc'), 'the preference is remembered between sessions');
   assert.ok(page.includes('SimAware TRACON Project') && page.includes('CC BY-SA 4.0'), 'the boundary source is credited as its licence requires');
 });
+
+test('the chart plate sits over the map with the aircraft drawn above it', async () => {
+  const fs = await import('node:fs');
+  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+  assert.ok(page.includes('id="platePlane"'), 'a symbol marks the aircraft above the plate');
+  assert.ok(page.includes('function platePlaneMark()'), 'the symbol is placed in the map projection, not in the chart');
+  assert.ok(page.includes("m.style.transform='translate('"), 'it tracks the aircraft as the map moves');
+  assert.ok(page.includes('platePlaneMark();if(liveOk())'), 'every frame refreshes it');
+  assert.ok(/#plate\{position:absolute;z-index:6;left:50%;top:50%;transform:translate\(-50%,-50%\)/.test(page), 'the plate opens over the map, not docked to an edge');
+  assert.ok(page.includes("el.classList.remove('pl-moved');el.style.left=''"), 'opening it again returns it to the map centre');
+  assert.ok(page.includes("hd.addEventListener('pointerdown'"), 'the header moves the plate along the route');
+  assert.ok(page.includes('not geo-aligned'), 'the frame still says the document is not a georeferenced layer');
+});
