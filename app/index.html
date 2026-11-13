@@ -4370,10 +4370,50 @@ function plateScreen(wx,wy){
   return[wx*k-c[0]+W/2,wy*k-c[1]+H/2]
 }
 /* Chart pixel -> map pixel, as the affine the canvas transform consumes. */
+/* A chart that publishes its own plan-view rectangle needs no fitting at all:
+   the sheet is drawn as the geographic quadrilateral the publisher states, so
+   it is exact at every zoom and can carry a different scale on each axis. */
+function plateApplyGeoref(meta){
+  if(!meta||!PLATE.georef||!PLATE.canvas)return false;
+  const place=PLATE.georef.placementFromGeoref(meta,PLATE.canvas,(lon,lat)=>wpx(lon,lat,0));
+  if(!place.ok){plateHint('This chart publishes georeferencing that cannot be used: '+place.reason+'.');return false}
+  PLATE.align={georef:meta,nudge:{}};plateSave();
+  PLATE.drawable=PLATE.georef.maskInsets(PLATE.canvas,place.insets,(w,h)=>{
+    const c=document.createElement('canvas');c.width=w;c.height=h;return c
+  });
+  PLATE.georefFit=place;PLATE.georefFor=PLATE.align;
+  const n=place.insets.length;
+  plateHint('Placed from the chart\u2019s published georeferencing'+(n?' · '+n+' inset'+(n>1?'s':'')+' excluded':'')+'.');
+  return true
+}
+function plateGeorefPlacement(){
+  const a=PLATE.align,img=PLATE.canvas;
+  if(!a||!a.georef||!img||!PLATE.georef)return null;
+  if(PLATE.georefFor===a&&PLATE.georefFit)return PLATE.georefFit;
+  const place=PLATE.georef.placementFromGeoref(a.georef,img,(lon,lat)=>wpx(lon,lat,0));
+  PLATE.georefFor=a;PLATE.georefFit=place&&place.ok?place:null;
+  return PLATE.georefFit
+}
 function plateAffine(){
-  const img=PLATE.canvas;if(!img||!PLATE.on)return null;
-  const w=img.width,h=img.height,toWorld=plateWorldTransform();
+  const img=PLATE.drawable||PLATE.canvas;if(!img||!PLATE.on)return null;
+  const w=img.width,h=img.height;
+  const place=plateGeorefPlacement();
   let A,B,C;
+  if(place){
+    const m=PLATE.georef.placementAffine(place,img,(wx,wy)=>plateScreen(wx,wy));
+    if(!m)return null;
+    /* A published placement is already right; the pilot's nudge is still
+       applied, about the middle of the sheet, for the odd chart whose print
+       does not match its own metadata. */
+    const n=PLATE.align.nudge||{};
+    const ns=Number(n.scale)||1,nth=(Number(n.rot)||0)*Math.PI/180;
+    if(ns===1&&!nth&&!Number(n.dx)&&!Number(n.dy))return m;
+    const cxs=m.e+m.a*w/2+m.c*h/2,cys=m.f+m.b*w/2+m.d*h/2;
+    const cs=Math.cos(nth)*ns,sn=Math.sin(nth)*ns;
+    return {a:m.a*cs-m.b*sn,b:m.a*sn+m.b*cs,c:m.c*cs-m.d*sn,d:m.c*sn+m.d*cs,
+      e:cxs+(m.e-cxs)*cs-(m.f-cys)*sn+(Number(n.dx)||0),f:cys+(m.e-cxs)*sn+(m.f-cys)*cs+(Number(n.dy)||0),w,h}
+  }
+  const toWorld=plateWorldTransform();
   if(toWorld){
     A=plateScreen(...toWorld(0,0));B=plateScreen(...toWorld(w,0));C=plateScreen(...toWorld(0,h));
   }else{
@@ -4397,7 +4437,7 @@ function drawPlate(){
   cx.globalAlpha=Math.max(0,Math.min(1,PLATE.opacity/100));
   cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';
   cx.transform(m.a,m.b,m.c,m.d,m.e,m.f);
-  cx.drawImage(PLATE.canvas,0,0);
+  cx.drawImage(PLATE.drawable||PLATE.canvas,0,0);
   cx.restore();
   if(!PLATE.align){
     cx.save();
@@ -4446,11 +4486,16 @@ async function plateLoadChart(index){
     const page=await lib.renderChart('/api/chart?'+lib.chartQuery(PLATE.icao,{chart:chosen},entry.cycle),{maxWidth:2200});
     PLATE.canvas=page.canvas;
     PLATE.title=String(chosen.title||chosen.code||'');
+    /* The publisher's own plan-view rectangle, when there is one, places the
+       sheet outright: no fitting, no threshold reading, nothing to nudge. */
+    PLATE.drawable=page.canvas;PLATE.georefFit=null;PLATE.georefFor=null;
+    if(chosen.georef&&plateApplyGeoref(chosen.georef)){draw();plateReveal();return}
     const kept=plateStore()[plateKey()]||null;
     /* A stored placement from an older AIRAC is re-derived: a chart can change
        between cycles, and a fit that no longer holds should not be reused. */
     const stale=kept&&kept.cycle&&entry.cycle&&kept.cycle!==entry.cycle;
     PLATE.align=stale?null:kept;
+    if(PLATE.align&&PLATE.align.georef&&plateApplyGeoref(PLATE.align.georef)){draw();plateReveal();return}
     if(PLATE.align){
       plateHint('Aligned. Raise the opacity until the chart reads against the ground.');
     }else{
@@ -4494,6 +4539,7 @@ async function openPlate(icao,name,choice){
   draw();
   try{
     if(!PLATE.lib)PLATE.lib=await import('./js/lib/plate.js');
+    if(!PLATE.georef)PLATE.georef=await import('./js/lib/georef.js');
     const lib=PLATE.lib;
     const entry=await lib.plateChart(code);
     PLATE.entry=entry;

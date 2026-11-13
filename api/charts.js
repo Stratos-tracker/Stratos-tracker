@@ -13,6 +13,7 @@
 // current. Each source is cached only for its own publication cycle window.
 
 import { FAA_BASE, faaCycle, parseFaaAirport, parseMetafileHeader } from '../app/js/lib/charts.js';
+import { chartGeoref } from '../data/chart-georef.js';
 import {
   eaipAirportPage, eaipForIcao, eaipPdfUrl, franceAirportPageUrl, franceChartUrl, francePdfUrl,
   parseEaipCharts, parseEaipCycleIndex, parseEaipValidity, parseFranceCharts, parseFranceEdition,
@@ -234,6 +235,7 @@ export default async function handler(req, res) {
         category: chart.category,
         icao: chart.icao || icao,
         edition: chart.edition || null,
+        georef: chartGeoref({ source: data.source, icao, pdf: chart.pdf, code: chart.code }),
       })),
     });
     return;
@@ -282,6 +284,7 @@ export default async function handler(req, res) {
       title: record.title,
       pdf: record.pdf,
       amended: record.amended,
+      georef: chartGeoref({ source: 'faa-dtpp', icao, pdf: record.pdf, code: record.code }),
     })),
   });
 }
