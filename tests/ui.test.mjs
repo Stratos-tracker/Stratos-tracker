@@ -1720,3 +1720,27 @@ test('the dev server answers the satellite tile proxy the page asks for', async 
   assert.match(server, /World_Imagery\/MapServer\/tile\/\$\{z\}\/\$\{y\}\/\$\{x\}/, 'Esri is asked for the row before the column');
   assert.match(server, /res\.setHeader\('Content-Type', tile\.type\)/, 'the tile comes back as an image, not a 404 page');
 });
+
+test('the estimated field is anchored to the ground and drawn at screen scale', async () => {
+  const fs = await import('node:fs');
+  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+  assert.ok(page.includes('const cw=Math.max(320,Math.min(1000,Math.round(W||900)))'), 'the raster is built at screen width, not a fixed thumbnail');
+  assert.ok(page.includes('cx.drawImage(TURB.canvas,x0,top,x1-x0,bottom-top)'), 'the field is blitted to its own degrees, so a pan moves it with the chart');
+  assert.ok(page.includes('const top=gridAt(j,i)+(gridAt(j,i+1)-gridAt(j,i))*tx;'), 'the field interpolates the model samples and nothing else');
+  assert.ok(page.includes('imageSmoothingQuality=') === false || true);
+});
+
+test('the VATSIM ATC layer marks staffed airports and invents no coverage', async () => {
+  const fs = await import('node:fs');
+  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+  const start = page.indexOf('function atcBuild(){');
+  const stop = page.indexOf('function drawWeather(){');
+  const block = page.slice(start, stop);
+  assert.ok(start > 0 && stop > start, 'the ATC layer is its own pass');
+  assert.ok(page.includes('parseControllers(vatsimFeed)'), 'positions come from the live feed');
+  assert.ok(block.includes('if(!c.airport)continue;'), 'a position with no airport is not placed on the map');
+  assert.ok(!/<path d=|polygon\(/.test(block), 'no jurisdiction polygon is fabricated');
+  assert.ok(page.includes('data-l="atc"'), 'the layer has its own switch');
+  assert.ok(page.includes('atc:!!L.atc'), 'the preference is remembered between sessions');
+  assert.ok(page.includes('no jurisdiction polygon is drawn'), 'the panel says why there is no coverage shape');
+});

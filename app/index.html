@@ -523,7 +523,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 <div class="lay-body">
   <section class="lay-s"><h3>Map display</h3><div id="ms" class="lay-grid"></div><p class="m" id="msnote" hidden></p>
     <div class="lay-theme"><button type="button" data-theme-set="day">Day</button><button type="button" data-theme-set="night">Night</button><button type="button" data-theme-set="contrast">High contrast</button></div></section>
-  <section class="lay-s"><h3>Layers</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="trf" class="on">Traffic</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="trl">Trails</button><button type="button" data-l="grid">Grid</button><button type="button" data-l="wxrain">Rain</button><button type="button" data-l="wxwind">Wind</button><button type="button" data-l="wxturb">Turbulence</button><button type="button" data-l="dn">Day / night</button></div><div id="turbLeg" class="wx-leg" hidden><div class="wx-leg-t">Turbulence estimate</div><div class="wx-leg-bar"></div><div class="wx-leg-l"><span>Smooth</span><span>Light</span><span>Mod</span><span>Severe</span></div><div class="wx-leg-n">Gust spread and CAPE, interpolated — not a PIREP or SIGMET</div></div><p class="m">Rain uses animated radar frames from <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a>. Wind and turbulence use Open-Meteo's 10 m wind and gust/CAPE field; the wind layer is animated as streamlines and turbulence is a smoothed estimate. None of it is a PIREP, SIGMET or a substitute for official weather.</p></section>
+  <section class="lay-s"><h3>Layers</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="trf" class="on">Traffic</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="trl">Trails</button><button type="button" data-l="grid">Grid</button><button type="button" data-l="wxrain">Rain</button><button type="button" data-l="wxwind">Wind</button><button type="button" data-l="wxturb">Turbulence</button><button type="button" data-l="atc">VATSIM ATC</button><button type="button" data-l="dn">Day / night</button></div><div id="turbLeg" class="wx-leg" hidden><div class="wx-leg-t">Turbulence estimate</div><div class="wx-leg-bar"></div><div class="wx-leg-l"><span>Smooth</span><span>Light</span><span>Mod</span><span>Severe</span></div><div class="wx-leg-n">Gust spread and CAPE, interpolated — not a PIREP or SIGMET</div></div><p class="m">Rain uses animated radar frames from <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a>. Wind and turbulence use Open-Meteo's 10 m wind and gust/CAPE field; the wind layer is animated as streamlines and turbulence is a smoothed estimate. None of it is a PIREP, SIGMET or a substitute for official weather. VATSIM ATC marks the airports with online controllers, live from data.vatsim.net; the network publishes no sector boundaries, so no jurisdiction polygon is drawn.</p></section>
   <section class="lay-s"><h3>Projection</h3><div id="pj"></div>
     <div class="lay-grid" id="t3mode"><button type="button" id="bMap3d" aria-pressed="false" title="3D globe with satellite imagery, real terrain and aircraft altitude">3D globe</button><button type="button" id="bMap3dFlat" aria-pressed="false" title="Tilted flat map with real terrain and aircraft altitude">3D flat map</button></div><label class="lay-check" for="t3low"><input type="checkbox" id="t3low"><span>Low-power 3D</span></label><p class="m">Turns off terrain and renders at 1× pixel density for slower GPUs.</p>
     <div id="gwrap" hidden><div class="lay-sub">Globe surface</div><div id="gs"></div><p class="m" id="gn"></p>
@@ -785,7 +785,7 @@ const RL={KSFO:[11870,8650],KOAK:[10520],KSJC:[11000],KSAC:[8600],KRNO:[11002],K
 function pairs(a){const o=[];a.rw.forEach(n=>{if(!o.some(p=>p[0]==n||p[1]==n))o.push([n,(n+17)%36+1])});return o}
 function liveOk(){return live.on&&live.d&&live.d.lat!=null&&live.d.age<3&&performance.now()-live.at<3000}
 const cv=$('#map'),cx=cv.getContext('2d');let W,H,dpr,C={};
-const V={lon:-119.5,lat:38.8,z:6,fol:false,mode:'plane',gz:1,gs:'vector'},L={apt:1,nav:1,trf:1,grid:0,rte:1,procSid:1,procStar:1,procApproach:1,procMissed:0,wxrain:0,wxwind:0,wxturb:0,dn:0,style:(function(){try{const s=localStorage.getItem('dl.style')||'sat';return MS[s]?s:'sat'}catch(e){return'sat'}})()};
+const V={lon:-119.5,lat:38.8,z:6,fol:false,mode:'plane',gz:1,gs:'vector'},L={apt:1,nav:1,trf:1,grid:0,rte:1,procSid:1,procStar:1,procApproach:1,procMissed:0,wxrain:0,wxwind:0,wxturb:0,atc:0,dn:0,style:(function(){try{const s=localStorage.getItem('dl.style')||'sat';return MS[s]?s:'sat'}catch(e){return'sat'}})()};
 let plan=false,panel=null,sel=null,route=[],trav=0,own={lat:0,lon:0,hdg:0,alt:0,vs:0};
 const MAP_DEFAULTS={color:'#fbbf24',size:1.35,halo:false,trail:true,trailWidth:1};
 function readMapPrefs(){try{const raw=JSON.parse(localStorage.getItem('stratos.mapSettings')||'null')||{};const col=typeof raw.color==='string'&&/^#[0-9a-f]{6}$/i.test(raw.color.trim())?raw.color.trim():MAP_DEFAULTS.color;const size=Number(raw.size);const width=Number(raw.trailWidth);return{color:col,size:Number.isFinite(size)?Math.min(2,Math.max(.7,size)):MAP_DEFAULTS.size,halo:typeof raw.halo==='boolean'?raw.halo:MAP_DEFAULTS.halo,trail:typeof raw.trail==='boolean'?raw.trail:MAP_DEFAULTS.trail,trailWidth:Number.isFinite(width)?Math.min(2,Math.max(.5,width)):MAP_DEFAULTS.trailWidth}}catch(_){return{...MAP_DEFAULTS}}}
@@ -1304,7 +1304,7 @@ const tl=wpx(V.lon,V.lat);
 if(L.grid&&V.z<12&&!CH.on&&V.mode!=='globe'){const s=V.z<4?10:V.z<5.5?5:V.z<7?2:V.z<8.5?1:V.z<10?.5:.1,a=wun(tl[0]-W/2,tl[1]-H/2),b=wun(tl[0]+W/2,tl[1]+H/2);cx.strokeStyle=C.grid;cx.lineWidth=1;cx.fillStyle=C.coast;cx.font='10px sans-serif';cx.beginPath();
 for(let o=Math.ceil(a[0]/s)*s;o<b[0];o+=s){const x=sc(o,0)[0];cx.moveTo(x,0);cx.lineTo(x,H);cx.fillText(o.toFixed(s<1?1:0)+'°',x+2,H-100)}
 for(let t=Math.ceil(b[1]/s)*s;t<a[1];t+=s){const y=sc(0,t)[1];cx.moveTo(0,y);cx.lineTo(W,y);cx.fillText(t.toFixed(s<1?1:0)+'°',4,y-2)}cx.stroke()}
-if(wxOn())wxFetch();drawWeather();drawDayNight();
+if(wxOn())wxFetch();if(L.atc&&!CH.on)atcTick();drawWeather();drawDayNight();
 const ppn=lat=>SZ*2**V.z/360/(60*Math.cos(lat*R));MKL.length=0;
 if(L.nav&&!CH.on)N.forEach(n=>{const q=vis(n.lon,n.lat);if(!q||lblZ()<6)return;const[x,y]=q;if(x<-20||x>W+20||y<-20||y>H+20)return;const t=String(n.type||'').toUpperCase(),kind=/NDB/.test(t)?'ndb':/VOR|TACAN|DME/.test(t)?'vor':'int';mkDraw(kind,x,y,mkRz()*.8);if(lblZ()>5.5)mkText(n.id,x+Math.round(mkRz()*.55)-4,y+4,mkColor(kind),11,false)});
 if(L.apt&&clusterAirports()){}else if(L.apt)A.forEach(a=>{if(CH.on&&a!==CH.a)return;const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;if(a.x&&lblZ()<6)return;const mg=lblZ()>10?4000:60;if(x<-mg||x>W+mg||y<-mg||y>H+mg)return;
@@ -1314,7 +1314,7 @@ if(lblZ()>(a.x?7:4.8)&&x>-40&&x<W+40&&y>-40&&y<H+40&&!(L.rte&&planTocTod().ids.h
 drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.strokeStyle=C.route;cx.lineCap='round';cx.lineJoin='round';if(sp.flown.length>1){cx.globalAlpha=.34;cx.lineWidth=12;drawPlanLine(sp.flown)}if(sp.ahead.length>1){cx.globalAlpha=.62;cx.lineWidth=12;drawPlanLine(sp.ahead)}cx.restore()
 drawProcedureRouteLine();drawRouteMarkers();}
 trails();if(L.trf&&!CH.on)T.forEach(a=>{const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;drawAircraft(a.type,x,y,a.hdg,C.trf,32);if(lblZ()>6&&x>-40&&x<W+40&&y>-20&&y<H+20)mkText(a.id+(a.type?' '+a.type:'')+' '+Math.round(a.alt/100),x+4,y+4,C.trf,10,false)});
-if(liveOk()){const q=vis(own.lon,own.lat);if(q){const[x,y]=q;if(MP.halo){cx.beginPath();cx.arc(x,y,19+6*MP.size,0,7);cx.strokeStyle=MP.color;cx.globalAlpha=.32;cx.lineWidth=1.5;cx.stroke();cx.globalAlpha=1}drawAircraft(live.d?.type||live.d?.aircraft||live.d?.aircraftType,x,y,(own.trk!=null&&(own.gs||live.d?.gs)>20)?own.trk:own.hdg,MP.color,42*MP.size)}}
+if(L.atc&&!CH.on)drawAtc();if(liveOk()){const q=vis(own.lon,own.lat);if(q){const[x,y]=q;if(MP.halo){cx.beginPath();cx.arc(x,y,19+6*MP.size,0,7);cx.strokeStyle=MP.color;cx.globalAlpha=.32;cx.lineWidth=1.5;cx.stroke();cx.globalAlpha=1}drawAircraft(live.d?.type||live.d?.aircraft||live.d?.aircraftType,x,y,(own.trk!=null&&(own.gs||live.d?.gs)>20)?own.trk:own.hdg,MP.color,42*MP.size)}}
 if(view3d)sync3d();if(CH.on)chartFx();if(sel&&!CH.on&&sel.k!='own'){const s0=sel.k=='own'?own:sel,p0=vis(s0.lon,s0.lat);if(p0){const[x,y]=p0;cx.strokeStyle=C.txt;cx.lineWidth=2;cx.beginPath();cx.arc(x,y,16+(tk?3*Math.sin(performance.now()/260):0),0,7);cx.stroke()}}}
 
 /* ── Waypoint markers ─────────────────────────────────────────────────
@@ -2086,7 +2086,7 @@ function tap(x,y){if(CH.on)return;const rect=cv.getBoundingClientRect();
 if(route.length&&L.rte){const wi=wpAt(x,y);if(wi>=0){wpIdx=wi;openRouteCard({kind:'wp',index:wi},x,y);return}const pc=procAt(x,y);if(pc){wpIdx=null;openRouteCard(pc,x,y);return}const li=legAt(x,y);if(li>=0){wpIdx=li;openRouteCard({kind:'leg',index:li},x,y);return}}
 closeRouteCard();wpIdx=null;sel=null;
 x-=rect.left;y-=rect.top;let best=null,bestD=Infinity;
-const items=[...(L.trf?T.map(o=>[o,18]):[]),...(L.apt?A.filter(a=>!a.x||V.z>=6).map(o=>[o,14]):[]),...(L.nav&&V.z>=6?N.map(o=>[o,12]):[]),...(liveOk()?[[{k:'own',id:'Own-ship',...own},22]]:[])];
+const items=[...(L.trf?T.map(o=>[o,18]):[]),...(L.atc?ATC.map(r=>[r.airport,17]):[]),...(L.apt?A.filter(a=>!a.x||V.z>=6).map(o=>[o,14]):[]),...(L.nav&&V.z>=6?N.map(o=>[o,12]):[]),...(liveOk()?[[{k:'own',id:'Own-ship',...own},22]]:[])];
 items.forEach(([o,rad])=>{const q=vis(o.lon,o.lat);if(!q)return;let d=Math.hypot(q[0]-x,q[1]-y);if(o.det&&o.rpx)d=Math.max(d-o.rpx,0);if(d<=rad&&d<bestD){bestD=d;best=o}});
 if(best){sel=best;if(best.k=='trf'){best._trackAt=Date.now();tk=true;setFol(false);trafficBackfill(best);if(best.source=='vatsim')loadVatsim().then(vatsimTraffic)}panel=null;render();fCard()}
 else{panel=null;render()}}
@@ -2240,13 +2240,13 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&layOpen())setLay(fa
 /* The pilots' layers survive a reload, like every other map setting. */
 const LKEY='stratos.mapLayers';
 (function restoreLayers(){
-  try{const s=JSON.parse(localStorage.getItem(LKEY)||'null');if(s&&typeof s==='object')for(const k of ['apt','nav','trf','trl','rte','grid','wxrain','wxwind','wxturb','dn'])if(typeof s[k]==='boolean')L[k]=s[k]?1:0}catch(_){}
+  try{const s=JSON.parse(localStorage.getItem(LKEY)||'null');if(s&&typeof s==='object')for(const k of ['apt','nav','trf','trl','rte','grid','wxrain','wxwind','wxturb','atc','dn'])if(typeof s[k]==='boolean')L[k]=s[k]?1:0}catch(_){}
   document.querySelectorAll('[data-l]').forEach(b=>b.classList.toggle('on',!!L[b.dataset.l]))
   turbLegendToggle()
 })();
 function turbLegendToggle(){const el=$('#turbLeg');if(el)el.hidden=!L.wxturb}
 document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{L[b.dataset.l]^=1;b.classList.toggle('on',!!L[b.dataset.l]);turbLegendToggle();
-  try{localStorage.setItem(LKEY,JSON.stringify({apt:!!L.apt,nav:!!L.nav,trf:!!L.trf,trl:!!L.trl,rte:!!L.rte,grid:!!L.grid,wxrain:!!L.wxrain,wxwind:!!L.wxwind,wxturb:!!L.wxturb,dn:!!L.dn}))}catch(_){}
+  try{localStorage.setItem(LKEY,JSON.stringify({apt:!!L.apt,nav:!!L.nav,trf:!!L.trf,trl:!!L.trl,rte:!!L.rte,grid:!!L.grid,wxrain:!!L.wxrain,wxwind:!!L.wxwind,wxturb:!!L.wxturb,atc:!!L.atc,dn:!!L.dn}))}catch(_){}
   render()});
 /* Quick regions: a place and the scale it reads at, nothing else. */
 const REGIONS=[['World',18,-12,2.2],['Europe',50,10,4.4],['North America',39,-98,3.7],['South America',-16,-60,3.5],['Africa',4,20,3.3],['Middle East',27,45,4.1],['Asia',34,100,3.3],['Oceania',-25,141,3.5]];
@@ -2504,19 +2504,14 @@ function wxFetch(){
 /* Smooth model fields for wind and turbulence. The old point/arrow overlay
    read as a scatter plot; this version samples a real grid, draws streamlines
    in the direction of the wind, and renders a smoothed turbulence heat field. */
-function wxAt(lon,lat,eased){
+function wxAt(lon,lat){
   const b=WX.box,pts=WX.pts;if(!b||!pts.length)return null;
   const cols=WX.cols||7,rows=WX.rows||5;
   const dx=Math.max(1e-6,b.maxLon-b.minLon),dy=Math.max(1e-6,b.maxLat-b.minLat);
   const fx=Math.max(0,Math.min(cols-1,(lon-b.minLon)/dx*(cols-1)));
   const fy=Math.max(0,Math.min(rows-1,(lat-b.minLat)/dy*(rows-1)));
   const i=Math.min(cols-2,Math.floor(fx)),j=Math.min(rows-2,Math.floor(fy));
-  /* A coarse 7x5 grid interpolated linearly keeps the corners of each cell
-     visible as steps. An eased blend is only used for the filled field, where a
-     step reads as a badly drawn chart; the wind streamlines keep the linear
-     field, which is what their direction is sampled from. */
-  const s=v=>v*v*(3-2*v);
-  const tx=eased?s(fx-i):fx-i,ty=eased?s(fy-j):fy-j;
+  const tx=fx-i,ty=fy-j;
   const at=(rr,cc)=>pts[Math.min(rows-1,rr)*cols+Math.min(cols-1,cc)]||{};
   const uv=p=>{const d=(Number(p.dir)||0)*R,v=Number(p.wind)||0;return{u:-v*Math.sin(d),v:-v*Math.cos(d),rain:Number(p.rain)||0,gust:Number(p.gust)||0,cape:Number(p.cape)||0}};
   const a=uv(at(j,i)),b1=uv(at(j,i+1)),c=uv(at(j+1,i)),d=uv(at(j+1,i+1));
@@ -2586,21 +2581,35 @@ function turbInk(risk){
 function drawTurbulence(){
   if(!WX.pts.length)return;
   const b=WX.box;if(!b)return;
-  if(!TURB.canvas){TURB.canvas=document.createElement('canvas');TURB.canvas.width=220;TURB.canvas.height=170;TURB.key=''}
+  if(!TURB.canvas)TURB.canvas=document.createElement('canvas')
   const t=TURB.ctx||(TURB.ctx=TURB.canvas.getContext('2d'));if(!t)return;
-  const key=WX.at+'|'+b.minLon+'|'+b.maxLon+'|'+b.minLat+'|'+b.maxLat;
+  /* One texel per screen pixel at the moment the model answered, so the field
+     is a chart rather than a stretched 220x170 thumbnail. */
+  const spanLon=Math.max(1e-6,b.maxLon-b.minLon),spanLat=Math.max(1e-6,b.maxLat-b.minLat);
+  const cw=Math.max(320,Math.min(1000,Math.round(W||900)));
+  const ch=Math.max(180,Math.min(760,Math.round(cw*spanLat/spanLon)));
+  const key=[WX.at,cw,ch,b.minLon,b.maxLon,b.minLat,b.maxLat].join('|');
   if(key!==TURB.key){
     TURB.key=key;
-    const cw=TURB.canvas.width,ch=TURB.canvas.height;
+    if(TURB.canvas.width!==cw||TURB.canvas.height!==ch){TURB.canvas.width=cw;TURB.canvas.height=ch}
     t.clearRect(0,0,cw,ch);
     const img=t.createImageData(cw,ch),d=img.data;
-    const dx=Math.max(1e-6,b.maxLon-b.minLon),dy=Math.max(1e-6,b.maxLat-b.minLat);
-    /* One pass evaluates the field, a second paints it: the painted pass needs
-       its neighbour's band, and the model's own samples are the only source. */
+    /* The model answered for its own 7x5 samples and nothing between them. The
+       raster only interpolates those samples — eased, so a cell corner is a
+       slope rather than a step — and never invents a peak the model did not
+       report. */
+    const cols=WX.cols||7,rows=WX.rows||5;
+    const riskGrid=WX.pts.map(p=>Math.min(1,Math.max(0,(Number(p.gust)-Number(p.wind))/32,Number(p.cape)/3400)));
+    const gridAt=(r,c)=>riskGrid[Math.min(rows-1,Math.max(0,r))*cols+Math.min(cols-1,Math.max(0,c))]||0;
+    const ease=v=>v*v*(3-2*v);
     const field=new Float32Array(cw*ch);
     for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){
-      const w=wxAt(b.minLon+(x+.5)/cw*dx,b.maxLat-(y+.5)/ch*dy,true);
-      field[y*cw+x]=w?Math.min(1,Math.max(0,(w.gust-w.speed)/32,w.cape/3400)):-1
+      const fx=(x+.5)/cw*(cols-1),fy=(y+.5)/ch*(rows-1);
+      const i=Math.min(cols-2,Math.floor(fx)),j=Math.min(rows-2,Math.floor(fy));
+      const tx=ease(fx-i),ty=ease(fy-j);
+      const top=gridAt(j,i)+(gridAt(j,i+1)-gridAt(j,i))*tx;
+      const bottom=gridAt(j+1,i)+(gridAt(j+1,i+1)-gridAt(j+1,i))*tx;
+      field[y*cw+x]=top+(bottom-top)*ty
     }
     for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){
       const idx=y*cw+x,risk=field[idx];
@@ -2619,9 +2628,21 @@ function drawTurbulence(){
     }
     t.putImageData(img,0,0)
   }
-  /* The opacity lives in the raster, so the chart and imagery read through the
-     field while a hot core still covers what is under it. */
-  cx.save();cx.globalAlpha=1;cx.imageSmoothingEnabled=true;cx.drawImage(TURB.canvas,0,0,W,H);cx.restore()
+  /* The field is drawn where its degrees belong instead of being stretched over
+     the viewport: pan the chart and the colours travel with the ground beneath
+     them, exactly as the radar tiles do, until the next answer for this view
+     arrives and a fresh box replaces this one. */
+  const world=SZ*2**V.z,mid=wpx(V.lon,V.lat),nw=wpx(b.minLon,b.maxLat),se=wpx(b.maxLon,b.minLat);
+  const left=nw[0]-mid[0]+W/2,right=se[0]-mid[0]+W/2;
+  const top=nw[1]-mid[1]+H/2,bottom=se[1]-mid[1]+H/2;
+  cx.save();cx.globalAlpha=1;cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';
+  if(V.mode==='globe'){cx.drawImage(TURB.canvas,0,0,W,H)}
+  else for(const shift of [0,-world,world]){
+    const x0=left+shift,x1=right+shift;
+    if(x1<-2||x0>W+2)continue;
+    cx.drawImage(TURB.canvas,x0,top,x1-x0,bottom-top)
+  }
+  cx.restore()
 }
 function seedWind(){
   const count=Math.min(620,Math.max(280,Math.round(W*H/2200)));
@@ -2658,6 +2679,64 @@ function drawWind(){
     const nx=p.x+w.u*.72*dt,ny=p.y-w.v*.72*dt;
     if(nx<-20||nx>W+20||ny<-20||ny>H+20||p.age>p.life){Object.assign(p,{x:Math.random()*W,y:Math.random()*H,age:0,life:70+Math.random()*110});continue}
     p.x=nx;p.y=ny;p.age++
+  }
+  cx.restore()
+}
+/* ── VATSIM ATC layer ──────────────────────────────────────────────────
+   The network feed reports which positions are online and for which airport.
+   It publishes no sector boundaries, so this layer draws no jurisdiction
+   polygon: it marks where ATC is actually staffed, and the airport card lists
+   each online position with its callsign and frequency. No controller, no
+   frequency and no coverage area is ever invented here. */
+const ATC_INK={delivery:'#a78bfa',ground:'#f59e0b',tower:'#22d3ee',approach:'#34d399',departure:'#34d399',center:'#60a5fa',atis:'#94a3b8',apron:'#f97316'};
+let ATC=[],atcFeedAt=0;
+function atcBuild(){
+  if(!window.VATSIM||!vatsimFeed||vatsimFeed.error)return;
+  const rows=new Map();
+  for(const c of window.VATSIM.parseControllers(vatsimFeed)){
+    if(!c.airport)continue;
+    const a=A.find(x=>String(x.id).toUpperCase()===c.airport);
+    if(!a||!Number.isFinite(a.lat)||!Number.isFinite(a.lon))continue;
+    let row=rows.get(c.airport);
+    if(!row){row={icao:c.airport,airport:a,lat:a.lat,lon:a.lon,positions:[]};rows.set(c.airport,row)}
+    row.positions.push(c)
+  }
+  for(const row of rows.values())row.positions.sort((a,b)=>b.facility.rank-a.facility.rank);
+  ATC=[...rows.values()]
+}
+function atcTick(){
+  const now=Date.now();
+  if(now-atcFeedAt<15000)return;
+  atcFeedAt=now;
+  loadVatsim().then(()=>{atcBuild();render()})
+}
+function drawAtc(){
+  if(!L.atc||CH.on||!ATC.length)return;
+  const zoom=lblZ();
+  cx.save();cx.textAlign='left';
+  for(const row of ATC){
+    const q=vis(row.lon,row.lat);if(!q)continue;
+    const[x,y]=q;if(x<-26||x>W+26||y<-26||y>H+26)continue;
+    const top=row.positions[0],ink=ATC_INK[top.facility.kind]||'#e2e8f0';
+    /* A ring rather than a filled disc, so the airport symbol under it stays
+       readable, with one arc per online position. */
+    cx.beginPath();cx.arc(x,y,11,0,7);cx.fillStyle='rgba(3,10,18,.5)';cx.fill();
+    cx.strokeStyle=ink;cx.lineWidth=1.4;cx.stroke();
+    const step=(Math.PI*2)/Math.max(1,row.positions.length);
+    row.positions.forEach((p,i)=>{cx.strokeStyle=ATC_INK[p.facility.kind]||ink;cx.lineWidth=2.6;cx.beginPath();cx.arc(x,y,8.5,i*step-.85,i*step+(step-.85));cx.stroke()});
+    if(zoom<5.5)continue;
+    const label=row.positions.map(p=>p.facility.suffix).slice(0,4).join(' ');
+    cx.font='700 10px ui-monospace,Menlo,monospace';
+    const lw=cx.measureText(label).width;
+    cx.fillStyle='rgba(3,10,18,.72)';cx.fillRect(x+13,y-7,lw+6,14);
+    cx.fillStyle=ink;cx.fillText(label,x+16,y+3);
+    if(zoom>=8.5&&top.frequency&&top.callsign){
+      const sub=top.callsign+' '+top.frequency;
+      cx.font='600 9px ui-monospace,Menlo,monospace';
+      const sw2=cx.measureText(sub).width;
+      cx.fillStyle='rgba(3,10,18,.72)';cx.fillRect(x+13,y+8,sw2+6,13);
+      cx.fillStyle='#dbe7f2';cx.fillText(sub,x+16,y+18)
+    }
   }
   cx.restore()
 }
