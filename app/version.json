@@ -4,8 +4,19 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-13",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.45/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.45/Stratos-Setup.exe",
+      "sha256": "9964879e78b9bc76baa56cb00dd5d40e334ac88ce29e2f37cfc26a9229099343",
+      "size": 118894239
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.45/Stratos-2.1.45-linux-x64.AppImage",
+      "sha256": "27e2af5532020ff8e71864326bcaeb03e9198be72de67dd901027a9c4150b458",
+      "size": 158827916
+    }
+  },
   "summary": "A chart on the map can now be placed with two snapped clicks, then moved, turned and sized by hand. Charts are drawn in their own page scale and re-rendered sharper as you enlarge them, and Airmate joins as a source with the georeferencing it publishes.",
   "reason": "",
   "releaseNotes": [

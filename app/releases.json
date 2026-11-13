@@ -31,6 +31,18 @@
       "other": [
         "Includes the in-cycle work on anchoring the estimated field and the VATSIM ATC layer."
       ]
+    },
+    "downloads": {
+      "windows": {
+        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.45/Stratos-Setup.exe",
+        "sha256": "9964879e78b9bc76baa56cb00dd5d40e334ac88ce29e2f37cfc26a9229099343",
+        "size": 118894239
+      },
+      "linux-x64": {
+        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.45/Stratos-2.1.45-linux-x64.AppImage",
+        "sha256": "27e2af5532020ff8e71864326bcaeb03e9198be72de67dd901027a9c4150b458",
+        "size": 158827916
+      }
     }
   },
   "releases": [
@@ -63,6 +75,18 @@
         "other": [
           "Includes the in-cycle work on anchoring the estimated field and the VATSIM ATC layer."
         ]
+      },
+      "downloads": {
+        "windows": {
+          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.45/Stratos-Setup.exe",
+          "sha256": "9964879e78b9bc76baa56cb00dd5d40e334ac88ce29e2f37cfc26a9229099343",
+          "size": 118894239
+        },
+        "linux-x64": {
+          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.45/Stratos-2.1.45-linux-x64.AppImage",
+          "sha256": "27e2af5532020ff8e71864326bcaeb03e9198be72de67dd901027a9c4150b458",
+          "size": 158827916
+        }
       }
     },
     {
