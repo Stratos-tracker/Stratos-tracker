@@ -113,6 +113,50 @@ export async function renderChart(url, { maxWidth = 2000, page: pageNumber = 1 }
   return { canvas, width: canvas.width, height: canvas.height, pages: doc.numPages, labels };
 }
 
+function normaliseIdent(value) {
+  return String(value || '').toUpperCase().replace(/^0+(?=\d)/, '');
+}
+
+/**
+ * The points a chart can be placed against, for one airport: every runway end,
+ * indexed by designator, and every waypoint its published procedures name. Both
+ * carry their own coordinates, so a label printed on the document can only be
+ * matched to a point the authority actually publishes.
+ */
+export async function plateReferences(icao) {
+  const code = String(icao || '').toUpperCase();
+  const refs = new Map();
+  const put = (ident, lon, lat, kind) => {
+    const key = normaliseIdent(ident);
+    if (!key || !Number.isFinite(Number(lon)) || !Number.isFinite(Number(lat))) return;
+    if (!refs.has(key)) refs.set(key, { lon: Number(lon), lat: Number(lat), kind });
+  };
+
+  try {
+    const runways = await plateRunways(code);
+    for (const runway of runways.runways || []) {
+      for (const end of runway.ends || []) put(end.ident, end.lon, end.lat, 'runway');
+    }
+  } catch (_) { /* thresholds unavailable: waypoints may still place it */ }
+
+  try {
+    const response = await fetch(`/api/procedures?airport=${encodeURIComponent(code)}`, { headers: { Accept: 'application/json' } });
+    if (response.ok) {
+      const data = await response.json();
+      for (const [ident, end] of Object.entries(data.runways || {})) put(ident, end && end.lon, end && end.lat, 'runway');
+      for (const kind of ['sid', 'star', 'iap']) {
+        for (const procedure of (data.procedures || {})[kind] || []) {
+          for (const transition of procedure.transitions || []) {
+            for (const point of transition.points || []) put(point.id, point.lon, point.lat, 'waypoint');
+          }
+        }
+      }
+    }
+  } catch (_) { /* procedures are only published for the US: the runway ends carry the rest */ }
+
+  return refs;
+}
+
 /** Runway ends for one airport: the designator and its own coordinates. */
 export async function plateRunways(icao) {
   const code = String(icao || '').toUpperCase();

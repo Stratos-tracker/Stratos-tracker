@@ -81,6 +81,9 @@ html{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}textar
 #plate .pl-acts button{width:auto;padding:4px 8px;font:600 10px/1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;background:none;border:1px solid color-mix(in srgb,var(--coast) 40%,transparent);color:var(--mut);cursor:pointer}
 #plate .pl-acts button:hover{color:var(--txt);border-color:var(--acc)}
 #plate #plateX{padding:4px 6px}
+#plate .pl-pick{display:flex;align-items:center;gap:6px;padding:0 10px 8px;font:600 10px/1 system-ui,sans-serif;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}
+#plate .pl-pick select{flex:1;min-width:0;background:var(--ui2);color:var(--txt);border:1px solid color-mix(in srgb,var(--coast) 34%,transparent);border-radius:6px;padding:4px 6px;font:500 11px/1.2 system-ui,sans-serif;text-transform:none;letter-spacing:0}
+#plate .pl-pick select[hidden]{display:none}
 #plate .pl-nudge{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;padding:6px 10px 8px;border-top:1px solid color-mix(in srgb,var(--coast) 20%,transparent)}
 #plate .pl-nudge button{width:auto;padding:4px 0;font:600 11px/1 system-ui,sans-serif;border-radius:6px;background:none;border:1px solid color-mix(in srgb,var(--coast) 34%,transparent);color:var(--mut);cursor:pointer}
 #plate .pl-nudge button:hover{color:var(--txt);border-color:var(--acc)}
@@ -561,7 +564,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 
 <div id="cv"><div class="cvh"><button id="cvx" aria-label="Back">&#8592;</button><div class="cvt"><b id="cvi"></b><span id="cvn"></span><span id="cvm"></span></div><button id="cvf">Fit</button></div><div class="seg" id="cvs"></div></div><div id="ci"></div>
 <div id="chart"></div>
-<div id="plate" hidden aria-label="Chart over the map"><header><b id="plateT">Chart</b><span class="m" id="plateN"></span><label class="pl-op">Opacity<input id="plateO" type="range" min="0" max="100" value="70" aria-label="Chart opacity"></label><span class="pl-acts"><button type="button" id="plateAlign" title="Pick two features on the chart and the same two on the map">Align</button><button type="button" id="plateClear" title="Forget this chart's alignment">Clear</button><button type="button" id="plateX" aria-label="Close the chart">&#10005;</button></span></header><div class="pl-nudge" aria-label="Nudge the plate"><button type="button" data-nudge="left" title="Nudge left">&#8592;</button><button type="button" data-nudge="right" title="Nudge right">&#8594;</button><button type="button" data-nudge="up" title="Nudge up">&#8593;</button><button type="button" data-nudge="down" title="Nudge down">&#8595;</button><button type="button" data-nudge="rot-" title="Rotate anticlockwise">&#8630;</button><button type="button" data-nudge="rot+" title="Rotate clockwise">&#8631;</button><button type="button" data-nudge="smaller" title="Shrink">&#8722;</button><button type="button" data-nudge="bigger" title="Enlarge">+</button></div><p class="pl-note" id="plateHint">Loading the published chart…</p></div><div id="platePick" hidden aria-label="Pick an alignment point"></div>
+<div id="plate" hidden aria-label="Chart over the map"><header><b id="plateT">Chart</b><span class="m" id="plateN"></span><label class="pl-op">Opacity<input id="plateO" type="range" min="0" max="100" value="70" aria-label="Chart opacity"></label><span class="pl-acts"><button type="button" id="plateAlign" title="Pick two features on the chart and the same two on the map">Align</button><button type="button" id="plateClear" title="Forget this chart's alignment">Clear</button><button type="button" id="plateX" aria-label="Close the chart">&#10005;</button></span></header><label class="pl-pick"><span>Chart</span><select id="plateSel" aria-label="Chart to show over the map"></select></label><div class="pl-nudge" aria-label="Nudge the plate"><button type="button" data-nudge="left" title="Nudge left">&#8592;</button><button type="button" data-nudge="right" title="Nudge right">&#8594;</button><button type="button" data-nudge="up" title="Nudge up">&#8593;</button><button type="button" data-nudge="down" title="Nudge down">&#8595;</button><button type="button" data-nudge="rot-" title="Rotate anticlockwise">&#8630;</button><button type="button" data-nudge="rot+" title="Rotate clockwise">&#8631;</button><button type="button" data-nudge="smaller" title="Shrink">&#8722;</button><button type="button" data-nudge="bigger" title="Enlarge">+</button></div><p class="pl-note" id="plateHint">Loading the published chart…</p></div><div id="platePick" hidden aria-label="Pick an alignment point"></div>
 <div id="sheet" class="box"></div>
 <div id="tel" class="box" aria-label="Live flight telemetry">
 <div class="tel-main">
@@ -4202,47 +4205,87 @@ function plateWorldTransform(){
    null when the labels cannot be read with confidence — nothing is invented
    from the airport's position or the chart's size. */
 function plateNormIdent(value){return String(value||'').toUpperCase().replace(/^0+(?=\d)/,'')}
-function plateSuggest(labels,runways){
-  const ends=[];
-  for(const rw of (runways||[]))for(const e of (rw&&rw.ends)||[])ends.push(e);
-  if(ends.length<2||!labels||!labels.length)return null;
-  const want=new Map();
-  for(const e of ends){const k=plateNormIdent(e.ident);if(!want.has(k))want.set(k,e)}
+function plateFit(A,B){
+  const W1=wpx(A.geo[0],A.geo[1],0),W2=wpx(B.geo[0],B.geo[1],0);
+  const dc=[B.chart[0]-A.chart[0],B.chart[1]-A.chart[1]],dw=[W2[0]-W1[0],W2[1]-W1[1]];
+  const cd=Math.hypot(dc[0],dc[1]),wd=Math.hypot(dw[0],dw[1]);
+  if(!cd||!wd)return null;
+  const s=wd/cd,th=Math.atan2(dw[1],dw[0])-Math.atan2(dc[1],dc[0]);
+  const cs=Math.cos(th)*s,sn=Math.sin(th)*s;
+  const f=(x,y)=>{const dx=x-A.chart[0],dy=y-A.chart[1];return[W1[0]+cs*dx-sn*dy,W1[1]+sn*dx+cs*dy]};
+  f.scale=s;
+  return f
+}
+/* One or two readable labels are not a placement: every candidate pair is tried
+   and the one the most other labels agree with wins, so a stray designator in a
+   legend or a table cannot drag the sheet across the map. */
+function plateSuggest(labels,refs){
+  if(!refs||!refs.size||!labels||!labels.length)return null;
   const toks=labels.map(l=>({t:String(l.text||'').trim(),x:l.x,y:l.y}));
   const digits=toks.filter(t=>/^\d$/.test(t.t));
-  const found=[];
+  const cand=[];
   for(const letter of toks){
     if(!/^[LRC]$/.test(letter.t))continue;
     const near=digits
       .filter(d=>Math.abs(d.y-letter.y)<14&&d.x<letter.x+3&&d.x>letter.x-36)
       .sort((a,b)=>a.x-b.x);
     if(!near.length)continue;
-    const candidates=[];
-    candidates.push([near[near.length-1]]);
-    if(near.length>1)candidates.push([near[near.length-2],near[near.length-1]]);
-    for(const run of candidates){
+    const runs=[[near[near.length-1]]];
+    if(near.length>1)runs.push([near[near.length-2],near[near.length-1]]);
+    for(const run of runs){
       const ident=plateNormIdent(run.map(d=>d.t).join('')+letter.t);
-      const end=want.get(ident);
-      if(!end)continue;
+      const ref=refs.get(ident);
+      if(!ref||ref.kind!=='runway')continue;
       const all=[...run,letter];
-      found.push({
-        ident,
-        chart:[all.reduce((s,i)=>s+i.x,0)/all.length,all.reduce((s,i)=>s+i.y,0)/all.length],
-        geo:[Number(end.lon),Number(end.lat)],
-      });
+      cand.push({ident,chart:[all.reduce((s,i)=>s+i.x,0)/all.length,all.reduce((s,i)=>s+i.y,0)/all.length],geo:[ref.lon,ref.lat],kind:'runway'});
       break
     }
   }
-  if(found.length<2)return null;
-  /* The widest separated pair gives the most stable scale and rotation. */
-  let best=null,bestDist=0;
-  for(let i=0;i<found.length;i++)for(let j=i+1;j<found.length;j++){
-    if(found[i].ident===found[j].ident)continue;
-    const d=Math.hypot(found[j].chart[0]-found[i].chart[0],found[j].chart[1]-found[i].chart[1]);
-    if(d>bestDist){bestDist=d;best=[found[i],found[j]]}
+  for(const tok of toks){
+    if(!/^[A-Z0-9]{3,5}$/.test(tok.t))continue;
+    const ref=refs.get(tok.t.toUpperCase());
+    if(!ref||ref.kind==='runway')continue;
+    cand.push({ident:tok.t.toUpperCase(),chart:[tok.x,tok.y],geo:[ref.lon,ref.lat],kind:'waypoint'});
   }
-  if(!best||bestDist<20)return null;
-  return {c1:best[0].chart,g1:best[0].geo,c2:best[1].chart,g2:best[1].geo,suggested:[best[0].ident,best[1].ident],nudge:{}}
+  if(cand.length<2)return null;
+  let bestAny=null,bestRunways=null;
+  const consider=(fit,A,B,inliers,sep)=>{
+    const candidate={A,B,inliers,sep};
+    if(!bestAny||inliers>bestAny.inliers||(inliers===bestAny.inliers&&sep>bestAny.sep))bestAny=candidate;
+    if(A.kind==='runway'&&B.kind==='runway'&&(!bestRunways||inliers>bestRunways.inliers||(inliers===bestRunways.inliers&&sep>bestRunways.sep)))bestRunways=candidate
+  };
+  for(let i=0;i<cand.length;i++)for(let j=i+1;j<cand.length;j++){
+    const A=cand[i],B=cand[j];
+    if(A.ident===B.ident)continue;
+    const sep=Math.hypot(B.chart[0]-A.chart[0],B.chart[1]-A.chart[1]);
+    if(sep<25)continue;
+    const fit=plateFit(A,B);
+    if(!fit)continue;
+    let inliers=2;
+    for(const C of cand){
+      if(C===A||C===B)continue;
+      const w=fit(C.chart[0],C.chart[1]);
+      const target=wpx(C.geo[0],C.geo[1],0);
+      if(Math.hypot(w[0]-target[0],w[1]-target[1])/fit.scale<14)inliers++
+    }
+    consider(fit,A,B,inliers,sep)
+  }
+  /* A fit several labels agree on is the one to trust; failing that, two runway
+     designators at their thresholds still place an airport diagram. */
+  const best=bestAny&&bestAny.inliers>=3?bestAny:bestRunways;
+  if(!best)return null;
+  /* Sanity: the sheet has to be a chart-sized piece of ground, not a continent. */
+  const fit=plateFit(best.A,best.B);
+  const width=PLATE.canvas?PLATE.canvas.width:1000;
+  const lat0=(best.A.geo[1]+best.B.geo[1])/2;
+  const worldPerNm=SZ/360/(60*Math.cos(lat0*R));
+  const sheetNm=fit.scale*width/worldPerNm;
+  if(!(sheetNm>0.2&&sheetNm<800))return null;
+  const idents=[...new Set(cand.filter(c=>{
+    const w=fit(c.chart[0],c.chart[1]);const t=wpx(c.geo[0],c.geo[1],0);
+    return Math.hypot(w[0]-t[0],w[1]-t[1])/fit.scale<14
+  }).map(c=>c.ident))];
+  return {c1:best.A.chart,g1:best.A.geo,c2:best.B.chart,g2:best.B.geo,suggested:idents.slice(0,6),inliers:best.inliers,sheetNm:Math.round(sheetNm*10)/10,nudge:{}}
 }
 /* A world pixel at zoom 0 to where the chart puts it on screen right now. */
 function plateScreen(wx,wy){
@@ -4305,46 +4348,85 @@ function plateReveal(){
   V.lon=midLon;V.lat=midLat;V.z=Math.max(3,Math.min(16,Math.round(zoom*100)/100));
   draw()
 }
-async function openPlate(icao,name){
-  const el=$('#plate');if(!el)return;
-  const code=String(icao||'').toUpperCase();
-  PLATE.on=true;PLATE.icao=code;PLATE.name=name||'';PLATE.title='';PLATE.canvas=null;PLATE.align=null;PLATE.err='';PLATE.busy=true;PLATE.pairs=[];PLATE.pend=null;
-  $('#plateT').textContent=code||'Chart';
-  $('#plateN').textContent=name||'';
-  el.hidden=false;
-  plateHint('Loading the published chart…');
-  draw();
+/* Draw one chart of the airport's catalogue and place it. Any chart can be
+   picked, and each keeps its own alignment. */
+function plateFillList(){
+  const sel=$('#plateSel'),charts=PLATE.charts||[];
+  if(!sel)return;
+  sel.innerHTML=charts.map((c,i)=>'<option value="'+i+'">'+esc((c.code||'')+' · '+(c.title||'Chart'))+'</option>').join('');
+  sel.value=String(PLATE.index||0);
+  sel.hidden=charts.length<2
+}
+async function plateLoadChart(index){
+  const lib=PLATE.lib,entry=PLATE.entry;
+  if(!lib||!entry)return;
+  const charts=PLATE.charts||[];
+  const chosen=charts[index]||entry.chart;
+  PLATE.index=Number(index)||0;
+  PLATE.err='';PLATE.busy=true;
+  plateHint('Loading '+(chosen.title||'the chart')+'…');
   try{
-    const lib=await import('./js/lib/plate.js');
-    const entry=await lib.plateChart(code);
-    const page=await lib.renderChart('/api/chart?'+lib.chartQuery(code,entry,entry.cycle),{maxWidth:2200});
+    const page=await lib.renderChart('/api/chart?'+lib.chartQuery(PLATE.icao,{chart:chosen},entry.cycle),{maxWidth:2200});
     PLATE.canvas=page.canvas;
-    PLATE.title=String((entry.chart&&entry.chart.title)||entry.chart&&entry.chart.code||'');
-    const kept=plateStore()[plateKey()];
-    PLATE.align=kept||null;
+    PLATE.title=String(chosen.title||chosen.code||'');
+    PLATE.align=plateStore()[plateKey()]||null;
     if(PLATE.align){
       plateHint('Aligned. Raise the opacity until the chart reads against the ground.');
     }else{
-      /* Suggest a placement from the runway ends the airport publishes and the
-         designators the document prints, then hand it to the pilot to nudge. */
+      /* Place it without being asked: match what the document prints against
+         the points the airport publishes — runway ends and the procedure's own
+         waypoints — and accept only a fit several labels agree on. */
       let suggestion=null;
       try{
-        const runwayData=await lib.plateRunways(code);
-        suggestion=plateSuggest(page.labels,runwayData.runways);
-      }catch(_){/* no runway data: fall back to a manual alignment */}
+        const refs=await lib.plateReferences(PLATE.icao);
+        suggestion=plateSuggest(page.labels,refs);
+      }catch(_){/* no reference data: the manual pick stays available */}
       if(suggestion){
         PLATE.align=suggestion;plateSave();
-        plateHint('Placed from runway '+suggestion.suggested.join(' / ')+'. Nudge it if the sheet sits a little off the ground.');
+        plateHint('Aligned on '+suggestion.suggested.join(', ')+'. Nudge it if the sheet sits a little off the ground.');
       }else{
-        plateHint('Not aligned yet. Press Align, click a runway end on the chart, then the same end on the map; repeat for a second far-apart feature.');
+        plateHint('The chart could not be placed from its labels. Press Align and pick two matching features.');
       }
     }
+    draw();
+    plateReveal()
   }catch(error){
     PLATE.err=String((error&&error.message)||error);
+    PLATE.canvas=null;
     plateHint('This chart could not be drawn: '+PLATE.err);
+    draw()
   }finally{PLATE.busy=false}
+}
+async function openPlate(icao,name,choice){
+  const el=$('#plate');if(!el)return;
+  const code=String(icao||'').toUpperCase();
+  PLATE.on=true;PLATE.icao=code;PLATE.name=name||'';PLATE.title='';PLATE.canvas=null;PLATE.align=null;PLATE.err='';PLATE.pairs=[];PLATE.pend=null;
+  PLATE.charts=null;PLATE.entry=null;PLATE.index=Number(choice)||0;
+  $('#plateT').textContent=code||'Chart';
+  $('#plateN').textContent=name||'';
+  el.hidden=false;
+  plateHint('Finding the published charts…');
   draw();
-  plateReveal()
+  try{
+    if(!PLATE.lib)PLATE.lib=await import('./js/lib/plate.js');
+    const lib=PLATE.lib;
+    const entry=await lib.plateChart(code);
+    PLATE.entry=entry;
+    PLATE.charts=entry.charts||[entry.chart];
+    /* Default to the sheet the catalogue ranked best — the airport diagram — and
+       leave every other chart one pick away. */
+    if(choice===undefined||choice===null){
+      const wanted=entry.chart;
+      const at=PLATE.charts.findIndex(c=>c&&wanted&&c.code===wanted.code&&c.title===wanted.title);
+      PLATE.index=at>=0?at:0
+    }
+    plateFillList();
+    await plateLoadChart(PLATE.index)
+  }catch(error){
+    PLATE.err=String((error&&error.message)||error);
+    plateHint('No chart could be opened: '+PLATE.err);
+    draw()
+  }
 }
 function closePlate(){
   const el=$('#plate'),pick=$('#platePick');
@@ -4384,6 +4466,7 @@ function platePickAt(x,y){
 (()=>{const el=$('#plate');if(!el)return;
   $('#plateX').onclick=closePlate;
   $('#plateO').oninput=e=>{PLATE.opacity=Number(e.target.value);draw()};
+  $('#plateSel').onchange=e=>{if(PLATE.lib&&PLATE.entry)plateLoadChart(Number(e.target.value))};
   $('#plateAlign').onclick=plateAlignStart;
   $('#plateClear').onclick=()=>{PLATE.align=null;plateSave();plateHint('Alignment cleared. Press Align to place it again.');draw()};
   el.querySelector('.pl-nudge').addEventListener('click',e=>{

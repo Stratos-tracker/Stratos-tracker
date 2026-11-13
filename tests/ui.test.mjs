@@ -1783,10 +1783,12 @@ test('the plate placement is suggested from the runways, never guessed', async (
   const lib = fs.readFileSync(new URL('../app/js/lib/plate.js', import.meta.url), 'utf8');
   const api = fs.readFileSync(new URL('../api/runways.js', import.meta.url), 'utf8');
 
-  assert.ok(page.includes('function plateSuggest(labels,runways)'), 'a suggestion pairs labels with published runway ends');
-  assert.ok(page.includes('const end=want.get(ident)'), 'only a designator the airport publishes is used');
-  assert.ok(page.includes('if(found.length<2)return null'), 'one readable label is not enough to place a sheet');
-  assert.ok(page.includes('if(!best||bestDist<20)return null'), 'two labels too close together do not fix a scale');
+  assert.ok(page.includes('function plateSuggest(labels,refs)'), 'a suggestion pairs printed labels with published points');
+  assert.ok(page.includes('const ref=refs.get(ident)'), 'only a point the authority publishes is used');
+  assert.ok(page.includes('if(cand.length<2)return null'), 'one readable label is not enough to place a sheet');
+  assert.ok(page.includes('bestAny.inliers>=3?bestAny:bestRunways'), 'a fit needs several labels to agree before it is used');
+  assert.ok(page.includes('if(!(sheetNm>0.2&&sheetNm<800))return null'), 'an implausible sheet size is refused rather than applied');
+  assert.ok(page.includes('id="plateSel"') && page.includes('plateLoadChart(Number(e.target.value))'), 'any chart in the catalogue can be shown over the map');
   assert.ok(lib.includes('page.getTextContent()'), 'the designators come from the document itself');
   assert.ok(lib.includes("export async function plateRunways"), 'threshold coordinates come from the airport data');
   assert.ok(api.includes('runways.csv') && api.includes('le_latitude_deg'), 'thresholds are the published runway ends');
