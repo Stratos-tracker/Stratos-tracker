@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Chart runway detection</title>
+<style>
+  body { margin: 0; background: #0b1220; color: #dbe4f0; font: 12px/1.5 ui-monospace, Menlo, monospace; }
+  #bar { padding: 8px 10px; display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+  #report { white-space: pre; color: #9fb3c8; }
+  #wrap { position: relative; width: 1162px; }
+  #ct { display: block; width: 1162px; }
+  #hit { position: absolute; left: 0; top: 0; }
+  b { color: #7dd3fc; }
+</style>
+</head>
+<body>
+<div id="bar"><span id="status">loading…</span><span id="report"></span></div>
+<div id="wrap"><canvas id="ct"></canvas><canvas id="hit"></canvas></div>
+<script type="module">
+import { plateChart, chartQuery, renderChart, runwayStrokes, runwayThresholdPairs } from '../js/lib/plate.js';
+
+const params = new URLSearchParams(location.search);
+const icao = (params.get('icao') || 'KJFK').toUpperCase();
+const entry = await plateChart(icao);
+const chosen = entry.chart;
+const page = await renderChart('/api/chart?' + chartQuery(icao, { chart: chosen }, entry.cycle), { maxWidth: 2200 });
+
+const ct = document.getElementById('ct'), hit = document.getElementById('hit');
+ct.width = page.canvas.width; ct.height = page.canvas.height;
+hit.width = ct.width; hit.height = ct.height;
+ct.getContext('2d').drawImage(page.canvas, 0, 0);
+
+const t0 = performance.now();
+const strokes = runwayStrokes(page.canvas, {
+  minFraction: Number(params.get('min') || 0.18),
+});
+const ms = Math.round(performance.now() - t0);
+
+const rw = await (await fetch('/api/runways?icao=' + icao)).json();
+const match = runwayThresholdPairs(strokes, rw.runways || []);
+
+const hx = hit.getContext('2d');
+hx.clearRect(0, 0, hit.width, hit.height);
+hx.lineCap = 'round';
+for (const s of strokes.slice(0, 24)) {
+  hx.strokeStyle = 'rgba(239,68,68,.85)';
+  hx.lineWidth = 2;
+  hx.beginPath(); hx.moveTo(s.a[0], s.a[1]); hx.lineTo(s.b[0], s.b[1]); hx.stroke();
+  hx.fillStyle = 'rgba(239,68,68,.9)';
+  hx.beginPath(); hx.arc(s.a[0], s.a[1], 4, 0, 7); hx.fill();
+  hx.beginPath(); hx.arc(s.b[0], s.b[1], 4, 0, 7); hx.fill();
+}
+if (match) {
+  /* The published runways pushed back onto the chart through the fit, so a
+     wrong pairing shows up as blue lines that miss the drawn runways. */
+  hx.strokeStyle = '#38bdf8';
+  hx.lineWidth = 3;
+  hx.font = '14px ui-monospace, monospace';
+  hx.fillStyle = '#7dd3fc';
+  for (const pr of match.pairs) {
+    const lon = pr.lon, lat = pr.lat;
+    // chart point already; draw a dot and label
+    hx.beginPath(); hx.arc(pr.chart[0], pr.chart[1], 6, 0, 7); hx.stroke();
+    hx.fillText(lat.toFixed(4) + ',' + lon.toFixed(4), pr.chart[0] + 8, pr.chart[1] - 6);
+  }
+}
+
+document.getElementById('status').textContent = icao + ' · ' + (chosen.title || chosen.code);
+document.getElementById('report').innerHTML =
+  'strokes <b>' + strokes.length + '</b> in ' + ms + ' ms\n' +
+  'top: ' + strokes.slice(0, 6).map(s => Math.round(s.length) + 'px@' + Math.round(((s.angle * 180 / Math.PI) % 180 + 180) % 180) + '°').join('  ') + '\n' +
+  (match
+    ? 'MATCH <b>' + match.idents.join(', ') + '</b> residual ' + (match.residualNm * 1852).toFixed(0) + ' m  pts ' + match.pairs.length
+    : 'no runway pairing found');
+document.title = 'ready';
+window.dbg = { strokes, match, ms };
+console.log(JSON.stringify({
+  strokes: strokes.length,
+  ms,
+  top: strokes.slice(0, 8).map(s => ({ len: Math.round(s.length), deg: Math.round(((s.angle * 180 / Math.PI) % 180 + 180) % 180) })),
+  match: match && { idents: match.idents, residualM: Math.round(match.residualNm * 1852), pts: match.pairs.length },
+}));
+</script>
+</body>
+</html>
