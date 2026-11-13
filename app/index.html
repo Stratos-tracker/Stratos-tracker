@@ -564,7 +564,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 
 <div id="cv"><div class="cvh"><button id="cvx" aria-label="Back">&#8592;</button><div class="cvt"><b id="cvi"></b><span id="cvn"></span><span id="cvm"></span></div><button id="cvf">Fit</button></div><div class="seg" id="cvs"></div></div><div id="ci"></div>
 <div id="chart"></div>
-<div id="plate" hidden aria-label="Chart over the map"><header><b id="plateT">Chart</b><span class="m" id="plateN"></span><label class="pl-op">Opacity<input id="plateO" type="range" min="0" max="100" value="70" aria-label="Chart opacity"></label><span class="pl-acts"><button type="button" id="plateAlign" title="Pick two features on the chart and the same two on the map">Align</button><button type="button" id="plateClear" title="Forget this chart's alignment">Clear</button><button type="button" id="plateX" aria-label="Close the chart">&#10005;</button></span></header><label class="pl-pick"><span>Chart</span><select id="plateSel" aria-label="Chart to show over the map"></select></label><div class="pl-nudge" aria-label="Nudge the plate"><button type="button" data-nudge="left" title="Nudge left">&#8592;</button><button type="button" data-nudge="right" title="Nudge right">&#8594;</button><button type="button" data-nudge="up" title="Nudge up">&#8593;</button><button type="button" data-nudge="down" title="Nudge down">&#8595;</button><button type="button" data-nudge="rot-" title="Rotate anticlockwise">&#8630;</button><button type="button" data-nudge="rot+" title="Rotate clockwise">&#8631;</button><button type="button" data-nudge="smaller" title="Shrink">&#8722;</button><button type="button" data-nudge="bigger" title="Enlarge">+</button></div><p class="pl-note" id="plateHint">Loading the published chart…</p></div><div id="platePick" hidden aria-label="Pick an alignment point"></div>
+<div id="plate" hidden aria-label="Chart over the map"><header><b id="plateT">Chart</b><span class="m" id="plateN"></span><label class="pl-op">Opacity<input id="plateO" type="range" min="0" max="100" value="70" aria-label="Chart opacity"></label><span class="pl-acts"><button type="button" id="plateAlign" title="Pick two features on the chart and the same two on the map">Align</button><button type="button" id="plateClear" title="Forget this chart's alignment">Clear</button><button type="button" id="plateX" aria-label="Close the chart">&#10005;</button></span></header><label class="pl-op" style="padding:0 10px 8px"><input id="plateShow" type="checkbox" checked aria-label="Show the chart on the map">Show</label><label class="pl-pick"><span>Chart</span><select id="plateSel" aria-label="Chart to show over the map"></select></label><div class="pl-nudge" aria-label="Nudge the plate"><button type="button" data-nudge="left" title="Nudge left">&#8592;</button><button type="button" data-nudge="right" title="Nudge right">&#8594;</button><button type="button" data-nudge="up" title="Nudge up">&#8593;</button><button type="button" data-nudge="down" title="Nudge down">&#8595;</button><button type="button" data-nudge="rot-" title="Rotate anticlockwise">&#8630;</button><button type="button" data-nudge="rot+" title="Rotate clockwise">&#8631;</button><button type="button" data-nudge="smaller" title="Shrink">&#8722;</button><button type="button" data-nudge="bigger" title="Enlarge">+</button></div><p class="pl-note" id="plateHint">Loading the published chart…</p></div><div id="platePick" hidden aria-label="Pick an alignment point"></div>
 <div id="sheet" class="box"></div>
 <div id="tel" class="box" aria-label="Live flight telemetry">
 <div class="tel-main">
@@ -4159,7 +4159,7 @@ function openChartsPage(icao){location.href='pilot.html#charts'+(icao?'?icao='+e
    on the map. Two pairs define scale, rotation and position, which is stored
    per airport and chart. Nothing is inferred from a chart the pilot has not
    placed, and until then the plate is drawn centred and labelled unaligned. */
-const PLATE={on:false,icao:'',name:'',title:'',canvas:null,opacity:70,align:null,pend:null,pairs:[],err:'',busy:false};
+const PLATE={on:false,visible:true,icao:'',name:'',title:'',canvas:null,opacity:70,align:null,pend:null,pairs:[],err:'',busy:false};
 function plateKey(){return (PLATE.icao||'')+'|'+(PLATE.title||'')}
 function plateStore(){
   try{return JSON.parse(localStorage.getItem('stratos.plateAlign')||'{}')||{}}catch(_){return {}}
@@ -4281,11 +4281,45 @@ function plateSuggest(labels,refs){
   const worldPerNm=SZ/360/(60*Math.cos(lat0*R));
   const sheetNm=fit.scale*width/worldPerNm;
   if(!(sheetNm>0.2&&sheetNm<800))return null;
-  const idents=[...new Set(cand.filter(c=>{
+  /* Scale extrapolated from a short baseline is not a placement: the two
+     reference points must span a real part of the sheet, or every pixel of
+     label offset is multiplied across the rest of it. */
+  const sepNm=Math.hypot(
+    (best.B.geo[1]-best.A.geo[1])*60,
+    (best.B.geo[0]-best.A.geo[0])*60*Math.cos(lat0*R)
+  );
+  if(sepNm<sheetNm*0.08)return null;
+
+  /* Validate against every label that agreed, and say how far off the fit leaves
+     them. A print is only so accurate and a chart symbol has size, so the
+     tolerance follows the sheet's own scale: a hundredth of its width, never
+     tighter than 120 m and never looser than 900 m. */
+  const fitted=cand.filter(c=>{
     const w=fit(c.chart[0],c.chart[1]);const t=wpx(c.geo[0],c.geo[1],0);
     return Math.hypot(w[0]-t[0],w[1]-t[1])/fit.scale<14
-  }).map(c=>c.ident))];
-  return {c1:best.A.chart,g1:best.A.geo,c2:best.B.chart,g2:best.B.geo,suggested:idents.slice(0,6),inliers:best.inliers,sheetNm:Math.round(sheetNm*10)/10,nudge:{}}
+  });
+  const pxPerMetre=worldPerNm/1852;
+  const errors=fitted
+    .filter(c=>c!==best.A&&c!==best.B)
+    .map(c=>{
+      const w=fit(c.chart[0],c.chart[1]);const t=wpx(c.geo[0],c.geo[1],0);
+      return Math.hypot(w[0]-t[0],w[1]-t[1])/pxPerMetre
+    })
+    .sort((a,b)=>a-b);
+  const medianM=errors.length?errors[Math.floor(errors.length/2)]:0;
+  const maxM=errors.length?errors[errors.length-1]:0;
+  /* Two percent of the sheet: an ident is printed beside its fix, not on it, so
+     a few pixels of offset are expected at every scale, while a wrong fit runs
+     to many percent of the sheet. */
+  const toleranceM=Math.max(200,Math.min(3000,sheetNm*1852*0.02));
+  if(errors.length&&medianM>toleranceM)return null;
+  const idents=[...new Set(fitted.map(c=>c.ident))];
+  return {
+    c1:best.A.chart,g1:best.A.geo,c2:best.B.chart,g2:best.A.kind==='runway'&&best.B.kind==='runway'?best.B.geo:best.B.geo,
+    suggested:idents.slice(0,6),inliers:best.inliers,
+    sheetNm:Math.round(sheetNm*10)/10,nudge:{},
+    valid:{points:fitted.length,medianM:Math.round(medianM),maxM:Math.round(maxM),toleranceM:Math.round(toleranceM)},
+  }
 }
 /* A world pixel at zoom 0 to where the chart puts it on screen right now. */
 function plateScreen(wx,wy){
@@ -4314,7 +4348,7 @@ function plateInvert(m,x,y){
   return[(m.d*dx-m.c*dy)/det,(m.a*dy-m.b*dx)/det]
 }
 function drawPlate(){
-  if(!PLATE.on||!PLATE.canvas)return;
+  if(!PLATE.on||!PLATE.visible||!PLATE.canvas)return;
   const m=plateAffine();if(!m)return;
   cx.save();
   cx.globalAlpha=Math.max(0,Math.min(1,PLATE.opacity/100));
@@ -4369,7 +4403,11 @@ async function plateLoadChart(index){
     const page=await lib.renderChart('/api/chart?'+lib.chartQuery(PLATE.icao,{chart:chosen},entry.cycle),{maxWidth:2200});
     PLATE.canvas=page.canvas;
     PLATE.title=String(chosen.title||chosen.code||'');
-    PLATE.align=plateStore()[plateKey()]||null;
+    const kept=plateStore()[plateKey()]||null;
+    /* A stored placement from an older AIRAC is re-derived: a chart can change
+       between cycles, and a fit that no longer holds should not be reused. */
+    const stale=kept&&kept.cycle&&entry.cycle&&kept.cycle!==entry.cycle;
+    PLATE.align=stale?null:kept;
     if(PLATE.align){
       plateHint('Aligned. Raise the opacity until the chart reads against the ground.');
     }else{
@@ -4382,8 +4420,11 @@ async function plateLoadChart(index){
         suggestion=plateSuggest(page.labels,refs);
       }catch(_){/* no reference data: the manual pick stays available */}
       if(suggestion){
+        suggestion.cycle=PLATE.entry&&PLATE.entry.cycle||'';
         PLATE.align=suggestion;plateSave();
-        plateHint('Aligned on '+suggestion.suggested.join(', ')+'. Nudge it if the sheet sits a little off the ground.');
+        const v=suggestion.valid;
+        plateHint('Aligned on '+suggestion.suggested.join(', ')
+          +(v&&v.points>2?' · '+v.points+' fixes, ±'+v.medianM+' m':v?' · '+v.points+' fixes (not independently checked)':'')+'.');
       }else{
         plateHint('The chart could not be placed from its labels. Press Align and pick two matching features.');
       }
@@ -4401,7 +4442,8 @@ async function openPlate(icao,name,choice){
   const el=$('#plate');if(!el)return;
   const code=String(icao||'').toUpperCase();
   PLATE.on=true;PLATE.icao=code;PLATE.name=name||'';PLATE.title='';PLATE.canvas=null;PLATE.align=null;PLATE.err='';PLATE.pairs=[];PLATE.pend=null;
-  PLATE.charts=null;PLATE.entry=null;PLATE.index=Number(choice)||0;
+  PLATE.charts=null;PLATE.entry=null;PLATE.index=Number(choice)||0;PLATE.visible=true;
+  const showBox=$('#plateShow');if(showBox)showBox.checked=true;
   $('#plateT').textContent=code||'Chart';
   $('#plateN').textContent=name||'';
   el.hidden=false;
@@ -4467,6 +4509,7 @@ function platePickAt(x,y){
   $('#plateX').onclick=closePlate;
   $('#plateO').oninput=e=>{PLATE.opacity=Number(e.target.value);draw()};
   $('#plateSel').onchange=e=>{if(PLATE.lib&&PLATE.entry)plateLoadChart(Number(e.target.value))};
+  $('#plateShow').onchange=e=>{PLATE.visible=e.target.checked;draw()};
   $('#plateAlign').onclick=plateAlignStart;
   $('#plateClear').onclick=()=>{PLATE.align=null;plateSave();plateHint('Alignment cleared. Press Align to place it again.');draw()};
   el.querySelector('.pl-nudge').addEventListener('click',e=>{

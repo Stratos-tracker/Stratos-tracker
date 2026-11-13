@@ -144,7 +144,7 @@ export async function plateReferences(icao) {
     if (response.ok) {
       const data = await response.json();
       for (const [ident, end] of Object.entries(data.runways || {})) put(ident, end && end.lon, end && end.lat, 'runway');
-      for (const kind of ['sid', 'star', 'iap']) {
+      for (const kind of ['sid', 'star', 'approach', 'iap']) {
         for (const procedure of (data.procedures || {})[kind] || []) {
           for (const transition of procedure.transitions || []) {
             for (const point of transition.points || []) put(point.id, point.lon, point.lat, 'waypoint');
