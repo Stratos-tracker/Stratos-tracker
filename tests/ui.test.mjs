@@ -1799,6 +1799,9 @@ test('the plate placement is suggested from the runways, never guessed', async (
   assert.ok(page.includes('plateAffine'), 'the nudge feeds the same affine the plate is drawn with');
   assert.ok(page.includes('id="plateLock"'), 'the sheet has one lock instead of a row of arrow buttons');
   assert.ok(!page.includes('data-nudge='), 'the arrow buttons are gone');
+  assert.ok(page.includes('id="plateTurn"'), 'the sheet can be turned without a pair of buttons');
+  assert.ok(page.includes("plateDrag.mode==='rot'"), 'shift-drag turns the sheet about its middle');
+  assert.ok(page.includes('n.rot=Math.round(v*10)/10'), 'the turn is stored with the placement');
 });
 
 test('an unlocked chart is dragged, a locked one stays put', async () => {

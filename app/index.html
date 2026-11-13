@@ -565,7 +565,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 
 <div id="cv"><div class="cvh"><button id="cvx" aria-label="Back">&#8592;</button><div class="cvt"><b id="cvi"></b><span id="cvn"></span><span id="cvm"></span></div><button id="cvf">Fit</button></div><div class="seg" id="cvs"></div></div><div id="ci"></div>
 <div id="chart"></div>
-<div id="plate" hidden aria-label="Chart over the map"><header><b id="plateT">Chart</b><span class="m" id="plateN"></span><label class="pl-op">Opacity<input id="plateO" type="range" min="0" max="100" value="70" aria-label="Chart opacity"></label><span class="pl-acts"><button type="button" id="plateAlign" title="Pick two runway ends on the chart and the same thresholds on the map">Align</button><button type="button" id="plateClear" title="Forget this chart's alignment">Clear</button><button type="button" id="plateX" aria-label="Close the chart">&#10005;</button></span></header><label class="pl-op" style="padding:0 10px 8px"><input id="plateShow" type="checkbox" checked aria-label="Show the chart on the map">Show</label><label class="pl-pick"><span>Chart</span><select id="plateSel" aria-label="Chart to show over the map"></select></label><div class="pl-lock"><button type="button" id="plateLock" aria-pressed="false" title="Unlock to drag the chart over the map">&#128274; Locked</button></div><p class="pl-note" id="plateHint">Loading the published chart…</p></div><div id="platePick" hidden aria-label="Pick an alignment point"></div>
+<div id="plate" hidden aria-label="Chart over the map"><header><b id="plateT">Chart</b><span class="m" id="plateN"></span><label class="pl-op">Opacity<input id="plateO" type="range" min="0" max="100" value="70" aria-label="Chart opacity"></label><span class="pl-acts"><button type="button" id="plateAlign" title="Pick two runway ends on the chart and the same thresholds on the map">Align</button><button type="button" id="plateClear" title="Forget this chart's alignment">Clear</button><button type="button" id="plateX" aria-label="Close the chart">&#10005;</button></span></header><label class="pl-op" style="padding:0 10px 8px"><input id="plateShow" type="checkbox" checked aria-label="Show the chart on the map">Show</label><label class="pl-pick"><span>Chart</span><select id="plateSel" aria-label="Chart to show over the map"></select></label><div class="pl-lock"><button type="button" id="plateLock" aria-pressed="false" title="Unlock to drag the chart over the map">&#128274; Locked</button></div><label class="pl-op" style="padding:0 10px 8px">Turn<input id="plateTurn" type="range" min="-180" max="180" step="0.5" value="0" aria-label="Turn the chart clockwise"></label><p class="pl-note" id="plateHint">Loading the published chart…</p></div><div id="platePick" hidden aria-label="Pick an alignment point"></div>
 <div id="sheet" class="box"></div>
 <div id="tel" class="box" aria-label="Live flight telemetry">
 <div class="tel-main">
@@ -4166,6 +4166,7 @@ function plateStore(){
   try{return JSON.parse(localStorage.getItem('stratos.plateAlign')||'{}')||{}}catch(_){return {}}
 }
 function plateSave(){
+  if(typeof plateSyncTurn==='function')plateSyncTurn();
   const all=plateStore();
   if(PLATE.align)all[plateKey()]=PLATE.align;else delete all[plateKey()];
   try{localStorage.setItem('stratos.plateAlign',JSON.stringify(all))}catch(_){}
@@ -4512,6 +4513,7 @@ async function plateLoadChart(index){
        between cycles, and a fit that no longer holds should not be reused. */
     const stale=kept&&kept.cycle&&entry.cycle&&kept.cycle!==entry.cycle;
     PLATE.align=stale?null:kept;
+    plateSyncTurn();
     if(PLATE.align&&PLATE.align.georef&&plateApplyGeoref(PLATE.align.georef)){draw();plateReveal();return}
     if(PLATE.align){
       plateHint('Aligned. Raise the opacity until the chart reads against the ground.');
@@ -4598,8 +4600,29 @@ function plateSetLocked(locked,quiet){
   }
   if(!quiet)plateHint(locked
     ? (PLATE.align?'Chart locked in place.':'Chart locked.')
-    : 'Unlocked \u2014 drag the chart over the map to line it up, then lock it again.');
+    : 'Unlocked \u2014 drag the chart to move it, Shift-drag to turn it.');
   draw()
+}
+/* Turning is the same stored nudge the drag writes, in degrees clockwise about
+   the middle of the sheet, so a chart whose print is a degree or two out can be
+   corrected without touching the two points that placed it. */
+function plateTurn(deg){
+  if(!PLATE.align)return false;
+  const n=PLATE.align.nudge||(PLATE.align.nudge={});
+  let v=Number(deg);
+  if(!isFinite(v))return false;
+  /* Keep it readable rather than letting it spin on: -180 and 180 are the same. */
+  v=((v+180)%360+360)%360-180;
+  n.rot=Math.round(v*10)/10;
+  plateSyncTurn();
+  draw();
+  return true
+}
+function plateSyncTurn(){
+  const s=$('#plateTurn');
+  if(!s||document.activeElement===s)return;
+  const n=PLATE.align&&PLATE.align.nudge||{};
+  s.value=String(Math.round((Number(n.rot)||0)*2)/2)
 }
 function platePointer(e){
   const r=cv.getBoundingClientRect();
@@ -4614,13 +4637,27 @@ cv.addEventListener('pointerdown',e=>{
   if(c[0]<0||c[1]<0||c[0]>m.w||c[1]>m.h)return;
   e.preventDefault();e.stopPropagation();
   try{cv.setPointerCapture(e.pointerId)}catch(_){}
-  plateDrag={id:e.pointerId,x,y}
+  /* Shift turns the sheet about its middle instead of moving it. */
+  const cx=m.e+m.a*m.w/2+m.c*m.h/2,cy=m.f+m.b*m.w/2+m.d*m.h/2;
+  plateDrag=e.shiftKey
+    ? {id:e.pointerId,x,y,mode:'rot',cx,cy,ang:Math.atan2(y-cy,x-cx)}
+    : {id:e.pointerId,x,y,mode:'move'}
 },{capture:true});
 cv.addEventListener('pointermove',e=>{
   if(!plateDrag||e.pointerId!==plateDrag.id)return;
   const m=plateAffine();
   if(!m)return;
   const[x,y]=platePointer(e);
+  if(plateDrag.mode==='rot'){
+    const ang=Math.atan2(y-plateDrag.cy,x-plateDrag.cx);
+    let d=(ang-plateDrag.ang)*180/Math.PI;
+    if(d>180)d-=360;if(d<-180)d+=360;
+    plateDrag.ang=ang;
+    const n=PLATE.align.nudge||(PLATE.align.nudge={});
+    plateTurn((Number(n.rot)||0)+d);
+    e.preventDefault();e.stopPropagation();
+    return
+  }
   const dx=x-plateDrag.x,dy=y-plateDrag.y;
   plateDrag.x=x;plateDrag.y=y;
   /* The nudge is carried to the screen as a plain translation of the sheet, so
@@ -4741,6 +4778,15 @@ function plateNearestEnd(x,y,m){
   $('#plateShow').onchange=e=>{PLATE.visible=e.target.checked;draw()};
   $('#plateAlign').onclick=plateAlignStart;
   $('#plateClear').onclick=()=>{PLATE.align=null;plateSave();plateHint('Alignment cleared. Press Align to place it again.');draw()};
+  const turn=$('#plateTurn');
+  if(turn){
+    turn.oninput=e=>{
+      if(plateTurn(Number(e.target.value)))return;
+      e.target.value='0';
+      plateHint('Press Align first: there is no placement to turn yet.')
+    };
+    turn.onchange=()=>plateSave()
+  }
   const lockBtn=$('#plateLock');
   if(lockBtn)lockBtn.onclick=()=>{
     if(!PLATE.align){plateHint('Press Align first: there is no placement to move yet.');return}
