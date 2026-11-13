@@ -17,6 +17,7 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import traffic from '../api/traffic.js';
+import sectors from '../api/sectors.js';
 import photo from '../api/photo.js';
 import weather from '../api/weather.js';
 import winds from '../api/winds.js';
@@ -167,6 +168,7 @@ async function tileImage(req, res) {
 const ROUTES = {
   '/procedures.json': bridgeProcedures,
   '/api/traffic': trafficApi,
+  '/api/sectors': adapt(sectors),
   '/api/photo': photoApi,
   '/api/weather': adapt(weather),
   '/api/winds': adapt(winds),

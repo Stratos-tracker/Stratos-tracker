@@ -65,6 +65,21 @@ code,pre{font:12px ui-monospace,Consolas,monospace;background:var(--ui2);padding
 textarea{width:100%;height:150px;box-sizing:border-box;background:var(--ui2);color:var(--txt);border:0;border-radius:6px;font:12px ui-monospace,monospace}
 html{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}textarea,input{-webkit-user-select:text;user-select:text}button{min-height:36px}
 #chart{position:absolute;inset:0;background:var(--bg);z-index:5;display:none;overflow:auto;padding:10px}#chart svg{width:100%;max-height:60vh;display:block}
+/* A plate over the map. The licensed sources publish documents without corner
+   coordinates, so this is a floating window, never a warped overlay: the route
+   and the aircraft stay visible beside it, and the frame says what it is. */
+#plate{position:absolute;z-index:6;right:14px;top:58px;width:min(620px,47vw);height:min(72vh,660px);min-width:320px;min-height:260px;display:flex;flex-direction:column;background:#08111a;border:1px solid color-mix(in srgb,var(--coast) 55%,transparent);border-radius:14px;box-shadow:0 22px 60px rgba(0,0,0,.5);overflow:hidden;resize:both}
+#plate[hidden]{display:none}
+#plate header{display:flex;align-items:center;gap:10px;padding:8px 10px;background:color-mix(in srgb,var(--surface) 88%,transparent);border-bottom:1px solid color-mix(in srgb,var(--coast) 32%,transparent);font:600 12px/1 system-ui,sans-serif}
+#plate header b{color:var(--txt);letter-spacing:.04em}
+#plate header .m{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+#plate .pl-op{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}
+#plate .pl-op input{width:74px;accent-color:var(--acc)}
+#plate #plateX{width:24px;height:24px;display:grid;place-items:center;padding:0;border-radius:6px;background:none;border:1px solid color-mix(in srgb,var(--coast) 40%,transparent);color:var(--mut);cursor:pointer}
+#plate #plateX:hover{color:var(--txt);border-color:var(--acc)}
+#plate iframe{flex:1;width:100%;border:0;background:#050b11;display:block}
+#plate .pl-note{margin:0;padding:5px 10px;font:10px/1.3 system-ui,sans-serif;color:var(--mut);background:#050b11;border-top:1px solid color-mix(in srgb,var(--coast) 24%,transparent)}
+@media (max-width:767px){#plate{inset:52px 8px 92px;right:8px;left:8px;top:52px;width:auto;height:auto;resize:none}}
 @media(max-width:420px){#tel b{font-size:13px}#tel span{font-size:10px}#sb{padding:0 12px}#q{padding:12px 0;font-size:16px}#fab{right:8px;top:8px;gap:7px}.fab{width:42px;height:42px}#res{left:8px;right:8px}#sheet{left:8px;right:8px;bottom:72px;max-height:min(48dvh,420px);padding:12px;border-radius:16px}#tabs{padding-bottom:max(7px,env(safe-area-inset-bottom));}button{padding:8px 10px}}
 :root{--acc:#2563eb}:root[data-theme=contrast]{--acc:#fde047}
 html,body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif}
@@ -523,7 +538,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 <div class="lay-body">
   <section class="lay-s"><h3>Map display</h3><div id="ms" class="lay-grid"></div><p class="m" id="msnote" hidden></p>
     <div class="lay-theme"><button type="button" data-theme-set="day">Day</button><button type="button" data-theme-set="night">Night</button><button type="button" data-theme-set="contrast">High contrast</button></div></section>
-  <section class="lay-s"><h3>Layers</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="trf" class="on">Traffic</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="trl">Trails</button><button type="button" data-l="grid">Grid</button><button type="button" data-l="wxrain">Rain</button><button type="button" data-l="wxwind">Wind</button><button type="button" data-l="wxturb">Turbulence</button><button type="button" data-l="atc">VATSIM ATC</button><button type="button" data-l="dn">Day / night</button></div><div id="turbLeg" class="wx-leg" hidden><div class="wx-leg-t">Turbulence estimate</div><div class="wx-leg-bar"></div><div class="wx-leg-l"><span>Smooth</span><span>Light</span><span>Mod</span><span>Severe</span></div><div class="wx-leg-n">Gust spread and CAPE, interpolated — not a PIREP or SIGMET</div></div><p class="m">Rain uses animated radar frames from <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a>. Wind and turbulence use Open-Meteo's 10 m wind and gust/CAPE field; the wind layer is animated as streamlines and turbulence is a smoothed estimate. None of it is a PIREP, SIGMET or a substitute for official weather. VATSIM ATC marks the airports with online controllers, live from data.vatsim.net; the network publishes no sector boundaries, so no jurisdiction polygon is drawn.</p></section>
+  <section class="lay-s"><h3>Layers</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="trf" class="on">Traffic</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="trl">Trails</button><button type="button" data-l="grid">Grid</button><button type="button" data-l="wxrain">Rain</button><button type="button" data-l="wxwind">Wind</button><button type="button" data-l="wxturb">Turbulence</button><button type="button" data-l="atc">VATSIM ATC</button><button type="button" data-l="dn">Day / night</button></div><div id="turbLeg" class="wx-leg" hidden><div class="wx-leg-t">Turbulence estimate</div><div class="wx-leg-bar"></div><div class="wx-leg-l"><span>Smooth</span><span>Light</span><span>Mod</span><span>Severe</span></div><div class="wx-leg-n">Gust spread and CAPE, interpolated — not a PIREP or SIGMET</div></div><p class="m">Rain uses animated radar frames from <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a>. Wind and turbulence use Open-Meteo's 10 m wind and gust/CAPE field; the wind layer is animated as streamlines and turbulence is a smoothed estimate. None of it is a PIREP, SIGMET or a substitute for official weather. VATSIM ATC marks the airports with online controllers, live from data.vatsim.net. Approach and departure jurisdiction comes from the <a href="https://github.com/vatsimnetwork/simaware-tracon-project" target="_blank" rel="noopener">SimAware TRACON Project</a> (CC BY-SA 4.0) and is drawn only while that prefix is online; centre sectors have no boundary in the network feed, so no shape is invented for them.</p></section>
   <section class="lay-s"><h3>Projection</h3><div id="pj"></div>
     <div class="lay-grid" id="t3mode"><button type="button" id="bMap3d" aria-pressed="false" title="3D globe with satellite imagery, real terrain and aircraft altitude">3D globe</button><button type="button" id="bMap3dFlat" aria-pressed="false" title="Tilted flat map with real terrain and aircraft altitude">3D flat map</button></div><label class="lay-check" for="t3low"><input type="checkbox" id="t3low"><span>Low-power 3D</span></label><p class="m">Turns off terrain and renders at 1× pixel density for slower GPUs.</p>
     <div id="gwrap" hidden><div class="lay-sub">Globe surface</div><div id="gs"></div><p class="m" id="gn"></p>
@@ -538,6 +553,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 
 <div id="cv"><div class="cvh"><button id="cvx" aria-label="Back">&#8592;</button><div class="cvt"><b id="cvi"></b><span id="cvn"></span><span id="cvm"></span></div><button id="cvf">Fit</button></div><div class="seg" id="cvs"></div></div><div id="ci"></div>
 <div id="chart"></div>
+<div id="plate" hidden aria-label="Chart over the map"><header><b id="plateT">Chart</b><span class="m" id="plateN"></span><label class="pl-op">Opacity<input id="plateO" type="range" min="35" max="100" value="100" aria-label="Chart opacity"></label><button type="button" id="plateX" aria-label="Close the chart">&#10005;</button></header><iframe id="plateF" title="Chart plate" src="about:blank"></iframe><p class="pl-note">Plate window · not geo-aligned: this source publishes no corner coordinates for the chart.</p></div>
 <div id="sheet" class="box"></div>
 <div id="tel" class="box" aria-label="Live flight telemetry">
 <div class="tel-main">
@@ -1314,7 +1330,7 @@ if(lblZ()>(a.x?7:4.8)&&x>-40&&x<W+40&&y>-40&&y<H+40&&!(L.rte&&planTocTod().ids.h
 drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.strokeStyle=C.route;cx.lineCap='round';cx.lineJoin='round';if(sp.flown.length>1){cx.globalAlpha=.34;cx.lineWidth=12;drawPlanLine(sp.flown)}if(sp.ahead.length>1){cx.globalAlpha=.62;cx.lineWidth=12;drawPlanLine(sp.ahead)}cx.restore()
 drawProcedureRouteLine();drawRouteMarkers();}
 trails();if(L.trf&&!CH.on)T.forEach(a=>{const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;drawAircraft(a.type,x,y,a.hdg,C.trf,32);if(lblZ()>6&&x>-40&&x<W+40&&y>-20&&y<H+20)mkText(a.id+(a.type?' '+a.type:'')+' '+Math.round(a.alt/100),x+4,y+4,C.trf,10,false)});
-if(L.atc&&!CH.on)drawAtc();if(liveOk()){const q=vis(own.lon,own.lat);if(q){const[x,y]=q;if(MP.halo){cx.beginPath();cx.arc(x,y,19+6*MP.size,0,7);cx.strokeStyle=MP.color;cx.globalAlpha=.32;cx.lineWidth=1.5;cx.stroke();cx.globalAlpha=1}drawAircraft(live.d?.type||live.d?.aircraft||live.d?.aircraftType,x,y,(own.trk!=null&&(own.gs||live.d?.gs)>20)?own.trk:own.hdg,MP.color,42*MP.size)}}
+if(L.atc&&!CH.on){drawTracon();drawAtc()}if(liveOk()){const q=vis(own.lon,own.lat);if(q){const[x,y]=q;if(MP.halo){cx.beginPath();cx.arc(x,y,19+6*MP.size,0,7);cx.strokeStyle=MP.color;cx.globalAlpha=.32;cx.lineWidth=1.5;cx.stroke();cx.globalAlpha=1}drawAircraft(live.d?.type||live.d?.aircraft||live.d?.aircraftType,x,y,(own.trk!=null&&(own.gs||live.d?.gs)>20)?own.trk:own.hdg,MP.color,42*MP.size)}}
 if(view3d)sync3d();if(CH.on)chartFx();if(sel&&!CH.on&&sel.k!='own'){const s0=sel.k=='own'?own:sel,p0=vis(s0.lon,s0.lat);if(p0){const[x,y]=p0;cx.strokeStyle=C.txt;cx.lineWidth=2;cx.beginPath();cx.arc(x,y,16+(tk?3*Math.sin(performance.now()/260):0),0,7);cx.stroke()}}}
 
 /* ── Waypoint markers ─────────────────────────────────────────────────
@@ -2689,7 +2705,77 @@ function drawWind(){
    each online position with its callsign and frequency. No controller, no
    frequency and no coverage area is ever invented here. */
 const ATC_INK={delivery:'#a78bfa',ground:'#f59e0b',tower:'#22d3ee',approach:'#34d399',departure:'#34d399',center:'#60a5fa',atis:'#94a3b8',apron:'#f97316'};
-let ATC=[],atcFeedAt=0;
+let ATC=[],ATCPOS=[],atcFeedAt=0;
+/* ── TRACON jurisdiction ─────────────────────────────────────────────────
+   The SimAware TRACON Project publishes one MultiPolygon per approach or
+   departure facility, keyed by the callsign prefixes that own it (CC BY-SA
+   4.0, credited in the layers panel). A shape is drawn only for a prefix the
+   feed reports online right now, so a controller who disconnects loses the
+   shape on the next cycle and nothing is ever shown for an absent position.
+   No polygon is derived from a callsign that the dataset does not name. */
+const TRACON={url:'/api/sectors',geo:null,busy:false,err:'',byPrefix:new Map()};
+function traconIndex(geo){
+  const byPrefix=new Map();
+  for(const f of (geo&&geo.features)||[]){
+    const props=(f&&f.properties)||{};
+    for(const raw of [].concat(props.prefix||[])){
+      const key=String(raw||'').toUpperCase();if(!key)continue;
+      if(!byPrefix.has(key))byPrefix.set(key,[]);
+      byPrefix.get(key).push(f)
+    }
+  }
+  return byPrefix
+}
+function traconLoad(){
+  if(TRACON.geo||TRACON.busy)return;
+  /* The dataset is a GitHub release asset with no CORS headers, so it is read
+     through the site's own fixed-target route; a file:// copy has no server and
+     says so instead of drawing nothing silently. */
+  if(location.protocol==='file:'){TRACON.err='Sector boundaries need the hosted app or the bridge';return}
+  TRACON.busy=true;
+  fetch(TRACON.url,{cache:'no-store'})
+    .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+    .then(geo=>{TRACON.geo=geo;TRACON.byPrefix=traconIndex(geo);TRACON.err=''})
+    .catch(e=>{TRACON.err=e.message||'unavailable'})
+    .finally(()=>{TRACON.busy=false;render()})
+}
+function atcPrefixOf(callsign){
+  const parts=String(callsign||'').toUpperCase().split('_');
+  return parts.length>1?parts.slice(0,-1).join('_'):''
+}
+function drawTracon(){
+  if(!L.atc||CH.on||!TRACON.geo)return;
+  const shown=new Map();
+  for(const c of ATCPOS){
+    const kind=c.facility.kind;
+    if(kind!=='approach'&&kind!=='departure')continue;
+    const prefix=atcPrefixOf(c.callsign);
+    if(!prefix||!TRACON.byPrefix.has(prefix))continue;
+    if(!shown.has(prefix))shown.set(prefix,c)
+  }
+  if(!shown.size)return;
+  cx.save();
+  for(const [prefix] of shown){
+    for(const f of TRACON.byPrefix.get(prefix)||[]){
+      const geom=f&&f.geometry;if(!geom)continue;
+      const polys=geom.type==='Polygon'?[geom.coordinates]:geom.type==='MultiPolygon'?geom.coordinates:[];
+      cx.beginPath();
+      for(const poly of polys)for(const ring of poly){
+        let started=false;
+        for(const point of ring){
+          const lon=Number(point[0]),lat=Number(point[1]);
+          if(!Number.isFinite(lon)||!Number.isFinite(lat))continue;
+          const[x,y]=sc(lon,lat);
+          if(!started){cx.moveTo(x,y);started=true}else cx.lineTo(x,y)
+        }
+        if(started)cx.closePath()
+      }
+      cx.fillStyle='rgba(52,211,153,.16)';cx.fill('evenodd');
+      cx.strokeStyle='rgba(52,211,153,.72)';cx.lineWidth=1.4;cx.stroke()
+    }
+  }
+  cx.restore()
+}
 function atcBuild(){
   if(!window.VATSIM||!vatsimFeed||vatsimFeed.error)return;
   const rows=new Map();
@@ -2702,13 +2788,17 @@ function atcBuild(){
     row.positions.push(c)
   }
   for(const row of rows.values())row.positions.sort((a,b)=>b.facility.rank-a.facility.rank);
-  ATC=[...rows.values()]
+  ATC=[...rows.values()];
+  ATCPOS=window.VATSIM.parseControllers(vatsimFeed)
 }
 function atcTick(){
   const now=Date.now();
-  if(now-atcFeedAt<15000)return;
+  /* Fifteen seconds is the feed's own cadence. While nothing has been built
+     yet the layer retries quickly: the feed parser is a module and may not be
+     on window in the frame that first asks for it. */
+  if(now-atcFeedAt<(ATCPOS.length?15000:3000))return;
   atcFeedAt=now;
-  loadVatsim().then(()=>{atcBuild();render()})
+  loadVatsim().then(()=>{atcBuild();traconLoad();render()})
 }
 function drawAtc(){
   if(!L.atc||CH.on||!ATC.length)return;
@@ -4042,8 +4132,30 @@ function fpTick(){const n=performance.now();if(n-fpTickAt<900)return;fpTickAt=n;
   });
 })();
 /* The native Charts workspace owns chart viewing now. */
-function chartLauncherHtml(a){const id=(a&&a.id)||'';const url='pilot.html#charts'+(id?'?icao='+encodeURIComponent(id):'');let h='<div style="margin-top:12px"><b>'+esc(id)+'</b> <span class="m">'+esc((a&&a.name)||'')+'</span></div>';h+='<div class="m" style="margin-top:8px">Official terminal procedures open in the integrated Charts workspace: zoom, pan, fit, pages and full screen, without leaving Stratos.</div><div class="row" style="margin-top:10px"><a href="'+url+'"><button class="on">Open Charts'+(id?' for '+esc(id):'')+'</button></a></div>';return h}
+function chartLauncherHtml(a){const id=(a&&a.id)||'';const url='pilot.html#charts'+(id?'?icao='+encodeURIComponent(id):'');let h='<div style="margin-top:12px"><b>'+esc(id)+'</b> <span class="m">'+esc((a&&a.name)||'')+'</span></div>';h+='<div class="m" style="margin-top:8px">Official terminal procedures open in the integrated Charts workspace: zoom, pan, fit, pages and full screen, without leaving Stratos.</div><div class="row" style="margin-top:10px"><a href="'+url+'"><button class="on">Open Charts'+(id?' for '+esc(id):'')+'</button></a><button type="button" data-plate="'+esc(id)+'" data-plate-name="'+esc((a&&a.name)||'')+'" title="Show this airport\'s chart in a window over the map">Show over map</button></div>';return h}
 function openChartsPage(icao){location.href='pilot.html#charts'+(icao?'?icao='+encodeURIComponent(icao):'')}
+/* ── Chart over the map ──────────────────────────────────────────────────
+   The published charts are documents, not georeferenced layers: no source in
+   the catalogue supplies corner coordinates, so warping a plate onto the chart
+   would mean inventing an alignment. This instead puts the real document, from
+   the real viewer, in a floating window at the pilot's chosen opacity, and
+   says so in the frame. The route and the aircraft stay visible beside it. */
+function openPlate(icao,name){
+  const el=$('#plate'),f=$('#plateF');if(!el||!f)return;
+  const code=String(icao||'').toUpperCase();
+  $('#plateT').textContent=code||'Chart';
+  $('#plateN').textContent=name||'';
+  f.style.opacity='1';$('#plateO').value='100';
+  f.src='pilot.html#charts'+(code?'?icao='+encodeURIComponent(code)+'&embed=1':'?embed=1');
+  el.hidden=false
+}
+function closePlate(){const el=$('#plate'),f=$('#plateF');if(!el)return;el.hidden=true;if(f)f.src='about:blank'}
+(()=>{const el=$('#plate');if(!el)return;
+  $('#plateX').onclick=closePlate;
+  $('#plateO').oninput=e=>{$('#plateF').style.opacity=String(Number(e.target.value)/100)};
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-plate]');if(!b)return;openPlate(b.dataset.plate,b.dataset.plateName||'')});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!el.hidden&&!document.querySelector('#plate:hover'))closePlate()});
+})();
 function openTaxiChart(a){openChartsPage((a||sel||CH.a||{}).id||'')}
 function cfHtml(a){return chartLauncherHtml(a)}
 function faaHtml(a){return chartLauncherHtml(a)}

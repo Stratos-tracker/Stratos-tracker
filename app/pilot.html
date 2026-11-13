@@ -17,6 +17,31 @@
 <link rel="stylesheet" href="shell.css">
 <link rel="stylesheet" href="mobile.css">
 <title>Pilot · Stratos</title>
+<style>
+  /* Embedded as a plate over the map (index.html loads this page with
+     embed=1): the chart viewer keeps the whole window, the pilot chrome goes. */
+  html[data-embed] #appbar, html[data-embed] .subnav { display: none !important; }
+  html[data-embed] body { background: #050b11; }
+  html[data-embed] .shell { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+  html[data-embed] .page { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+  html[data-embed] #view { padding: 0 !important; }
+</style>
+<script>
+  /* The chart route puts its parameters in the hash (pilot.html#charts?icao=…),
+     so the embed flag is read from there as well as from the query string. */
+  (function () {
+    function sync() {
+      try {
+        var hash = location.hash || '';
+        var raw = hash.indexOf('?') >= 0 ? hash.slice(hash.indexOf('?') + 1) : location.search.slice(1);
+        if (new URLSearchParams(raw).get('embed') === '1') document.documentElement.dataset.embed = '1';
+        else delete document.documentElement.dataset.embed;
+      } catch (_) { /* an unreadable URL simply stays a normal page */ }
+    }
+    sync();
+    window.addEventListener('hashchange', sync);
+  })();
+</script>
 <script src="js/account/gate.js"></script></head>
 <body data-mobile-section="profile">
 <div class="shell">

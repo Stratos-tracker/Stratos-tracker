@@ -1733,14 +1733,16 @@ test('the estimated field is anchored to the ground and drawn at screen scale', 
 test('the VATSIM ATC layer marks staffed airports and invents no coverage', async () => {
   const fs = await import('node:fs');
   const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
-  const start = page.indexOf('function atcBuild(){');
+  const start = page.indexOf('const ATC_INK=');
   const stop = page.indexOf('function drawWeather(){');
   const block = page.slice(start, stop);
   assert.ok(start > 0 && stop > start, 'the ATC layer is its own pass');
   assert.ok(page.includes('parseControllers(vatsimFeed)'), 'positions come from the live feed');
   assert.ok(block.includes('if(!c.airport)continue;'), 'a position with no airport is not placed on the map');
-  assert.ok(!/<path d=|polygon\(/.test(block), 'no jurisdiction polygon is fabricated');
+  assert.ok(block.includes('TRACON.byPrefix.has(prefix)'), 'a shape is drawn only for a prefix the published dataset names');
+  assert.ok(block.includes("if(kind!=='approach'&&kind!=='departure')continue;"), 'only approach and departure facilities claim published jurisdiction');
+  assert.ok(block.includes('for(const c of ATCPOS)'), 'the shapes follow the live controller list, so a disconnect removes one');
   assert.ok(page.includes('data-l="atc"'), 'the layer has its own switch');
   assert.ok(page.includes('atc:!!L.atc'), 'the preference is remembered between sessions');
-  assert.ok(page.includes('no jurisdiction polygon is drawn'), 'the panel says why there is no coverage shape');
+  assert.ok(page.includes('SimAware TRACON Project') && page.includes('CC BY-SA 4.0'), 'the boundary source is credited as its licence requires');
 });
