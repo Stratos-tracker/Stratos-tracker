@@ -103,9 +103,22 @@ export async function renderChart(url, { maxWidth = 2000, page: pageNumber = 1 }
       const text = String((item && item.str) || '').trim();
       const transform = item && item.transform;
       if (!text || !transform) continue;
-      const [x, y] = viewport.convertToViewportPoint(transform[4], transform[5]);
+      const [x0, y0] = viewport.convertToViewportPoint(transform[4], transform[5]);
+      if (!Number.isFinite(x0) || !Number.isFinite(y0)) continue;
+      /* Charts print designators along the runway, so the label's own direction
+         matters both for grouping its glyphs and for finding where it sits: the
+         reported point is the glyph origin, and the printed designator's centre
+         is half its advance along that direction. */
+      const a = Number(transform[0]) || 0;
+      const b = Number(transform[1]) || 0;
+      const length = Math.hypot(a, b) || 1;
+      const ux = a / length;
+      const uy = b / length;
+      const advance = Math.abs(Number(item.width) || 0) * (viewport.scale || 1);
+      const x = x0 + (ux * advance) / 2;
+      const y = y0 - (uy * advance) / 2;
       if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
-      labels.push({ text, x, y });
+      labels.push({ text, x, y, angle: Math.atan2(-uy, ux), advance });
       if (labels.length > 6000) break;
     }
   } catch (_) { /* a document without a text layer simply suggests nothing */ }

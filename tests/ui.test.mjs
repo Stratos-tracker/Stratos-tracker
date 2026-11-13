@@ -1786,7 +1786,8 @@ test('the plate placement is suggested from the runways, never guessed', async (
   assert.ok(page.includes('function plateSuggest(labels,refs)'), 'a suggestion pairs printed labels with published points');
   assert.ok(page.includes('const ref=refs.get(ident)'), 'only a point the authority publishes is used');
   assert.ok(page.includes('if(cand.length<2)return null'), 'one readable label is not enough to place a sheet');
-  assert.ok(page.includes('bestAny.inliers>=3?bestAny:bestRunways'), 'a fit needs several labels to agree before it is used');
+  assert.ok(page.includes('bestAny.inliers>=3?bestAny:null'), 'a fit needs three labels to agree before it is used');
+  assert.ok(page.includes('if(inliers.length<3)return null'), 'two labels are not enough to place a sheet');
   assert.ok(page.includes('if(!(sheetNm>0.2&&sheetNm<800))return null'), 'an implausible sheet size is refused rather than applied');
   assert.ok(page.includes('id="plateSel"') && page.includes('plateLoadChart(Number(e.target.value))'), 'any chart in the catalogue can be shown over the map');
   assert.ok(lib.includes('page.getTextContent()'), 'the designators come from the document itself');
