@@ -1797,7 +1797,22 @@ test('the plate placement is suggested from the runways, never guessed', async (
 
   // The pilot's correction is applied to the placement, not baked into the points.
   assert.ok(page.includes('plateAffine'), 'the nudge feeds the same affine the plate is drawn with');
-  assert.ok(page.includes('data-nudge="left"') && page.includes('data-nudge="rot+"') && page.includes('data-nudge="bigger"'), 'the sheet can be nudged, turned and sized');
+  assert.ok(page.includes('id="plateLock"'), 'the sheet has one lock instead of a row of arrow buttons');
+  assert.ok(!page.includes('data-nudge='), 'the arrow buttons are gone');
+});
+
+test('an unlocked chart is dragged, a locked one stays put', async () => {
+  const fs = await import('node:fs');
+  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+
+  assert.ok(page.includes('function plateSetLocked(locked,quiet)'), 'one control locks and unlocks the sheet');
+  assert.ok(page.includes("aria-pressed") && page.includes('&#128274; Locked'), 'the lock states which mode it is in');
+  assert.ok(page.includes("PLATE.locked||!PLATE.align||PLATE.picking)return"), 'a locked sheet, or no placement, leaves the map alone');
+  assert.ok(page.includes('e.preventDefault();e.stopPropagation();'), 'a drag on the sheet does not pan the map underneath it');
+  /* The drag is stored as chart pixels, so the correction means the same thing
+     at every zoom and is saved with the placement. */
+  assert.ok(page.includes('n.dx=(Number(n.dx)||0)+dx/sx'), 'the drag is carried into chart pixels by the sheet\u2019s own scale');
+  assert.match(page, /plateDrag=null;\s*plateSave\(\)/, 'the correction is saved once the drag ends');
 });
 
 test('two clicks land on real thresholds, not on wherever the hand was', async () => {

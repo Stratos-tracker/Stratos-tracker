@@ -84,9 +84,10 @@ html{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}textar
 #plate .pl-pick{display:flex;align-items:center;gap:6px;padding:0 10px 8px;font:600 10px/1 system-ui,sans-serif;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}
 #plate .pl-pick select{flex:1;min-width:0;background:var(--ui2);color:var(--txt);border:1px solid color-mix(in srgb,var(--coast) 34%,transparent);border-radius:6px;padding:4px 6px;font:500 11px/1.2 system-ui,sans-serif;text-transform:none;letter-spacing:0}
 #plate .pl-pick select[hidden]{display:none}
-#plate .pl-nudge{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;padding:6px 10px 8px;border-top:1px solid color-mix(in srgb,var(--coast) 20%,transparent)}
-#plate .pl-nudge button{width:auto;padding:4px 0;font:600 11px/1 system-ui,sans-serif;border-radius:6px;background:none;border:1px solid color-mix(in srgb,var(--coast) 34%,transparent);color:var(--mut);cursor:pointer}
-#plate .pl-nudge button:hover{color:var(--txt);border-color:var(--acc)}
+#plate .pl-lock{display:flex;gap:6px;padding:6px 10px 8px;border-top:1px solid color-mix(in srgb,var(--coast) 20%,transparent)}
+#plate .pl-lock button{flex:1;padding:6px 0;font:600 11px/1 system-ui,sans-serif;border-radius:6px;background:none;border:1px solid color-mix(in srgb,var(--coast) 34%,transparent);color:var(--mut);cursor:pointer}
+#plate .pl-lock button:hover{color:var(--txt);border-color:var(--acc)}
+#plate .pl-lock button[aria-pressed="true"]{color:var(--acc);border-color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,transparent)}
 #plate .pl-note{margin:0;padding:6px 10px;font:10.5px/1.35 system-ui,sans-serif;color:var(--mut);border-top:1px solid color-mix(in srgb,var(--coast) 24%,transparent)}
 #platePick{position:absolute;inset:0;z-index:9;cursor:crosshair;background:rgba(56,189,248,.03)}
 #platePick[hidden]{display:none}
@@ -564,7 +565,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 
 <div id="cv"><div class="cvh"><button id="cvx" aria-label="Back">&#8592;</button><div class="cvt"><b id="cvi"></b><span id="cvn"></span><span id="cvm"></span></div><button id="cvf">Fit</button></div><div class="seg" id="cvs"></div></div><div id="ci"></div>
 <div id="chart"></div>
-<div id="plate" hidden aria-label="Chart over the map"><header><b id="plateT">Chart</b><span class="m" id="plateN"></span><label class="pl-op">Opacity<input id="plateO" type="range" min="0" max="100" value="70" aria-label="Chart opacity"></label><span class="pl-acts"><button type="button" id="plateAlign" title="Pick two runway ends on the chart and the same thresholds on the map">Align</button><button type="button" id="plateClear" title="Forget this chart's alignment">Clear</button><button type="button" id="plateX" aria-label="Close the chart">&#10005;</button></span></header><label class="pl-op" style="padding:0 10px 8px"><input id="plateShow" type="checkbox" checked aria-label="Show the chart on the map">Show</label><label class="pl-pick"><span>Chart</span><select id="plateSel" aria-label="Chart to show over the map"></select></label><div class="pl-nudge" aria-label="Nudge the plate"><button type="button" data-nudge="left" title="Nudge left">&#8592;</button><button type="button" data-nudge="right" title="Nudge right">&#8594;</button><button type="button" data-nudge="up" title="Nudge up">&#8593;</button><button type="button" data-nudge="down" title="Nudge down">&#8595;</button><button type="button" data-nudge="rot-" title="Rotate anticlockwise">&#8630;</button><button type="button" data-nudge="rot+" title="Rotate clockwise">&#8631;</button><button type="button" data-nudge="smaller" title="Shrink">&#8722;</button><button type="button" data-nudge="bigger" title="Enlarge">+</button></div><p class="pl-note" id="plateHint">Loading the published chart…</p></div><div id="platePick" hidden aria-label="Pick an alignment point"></div>
+<div id="plate" hidden aria-label="Chart over the map"><header><b id="plateT">Chart</b><span class="m" id="plateN"></span><label class="pl-op">Opacity<input id="plateO" type="range" min="0" max="100" value="70" aria-label="Chart opacity"></label><span class="pl-acts"><button type="button" id="plateAlign" title="Pick two runway ends on the chart and the same thresholds on the map">Align</button><button type="button" id="plateClear" title="Forget this chart's alignment">Clear</button><button type="button" id="plateX" aria-label="Close the chart">&#10005;</button></span></header><label class="pl-op" style="padding:0 10px 8px"><input id="plateShow" type="checkbox" checked aria-label="Show the chart on the map">Show</label><label class="pl-pick"><span>Chart</span><select id="plateSel" aria-label="Chart to show over the map"></select></label><div class="pl-lock"><button type="button" id="plateLock" aria-pressed="false" title="Unlock to drag the chart over the map">&#128274; Locked</button></div><p class="pl-note" id="plateHint">Loading the published chart…</p></div><div id="platePick" hidden aria-label="Pick an alignment point"></div>
 <div id="sheet" class="box"></div>
 <div id="tel" class="box" aria-label="Live flight telemetry">
 <div class="tel-main">
@@ -4410,8 +4411,12 @@ function plateAffine(){
     if(ns===1&&!nth&&!Number(n.dx)&&!Number(n.dy))return m;
     const cxs=m.e+m.a*w/2+m.c*h/2,cys=m.f+m.b*w/2+m.d*h/2;
     const cs=Math.cos(nth)*ns,sn=Math.sin(nth)*ns;
+    /* The nudge is in chart pixels, so it is carried through the same affine
+       the sheet is drawn with rather than added to the screen directly. */
+    const ndx=Number(n.dx)||0,ndy=Number(n.dy)||0;
     return {a:m.a*cs-m.b*sn,b:m.a*sn+m.b*cs,c:m.c*cs-m.d*sn,d:m.c*sn+m.d*cs,
-      e:cxs+(m.e-cxs)*cs-(m.f-cys)*sn+(Number(n.dx)||0),f:cys+(m.e-cxs)*sn+(m.f-cys)*cs+(Number(n.dy)||0),w,h}
+      e:cxs+(m.e-cxs)*cs-(m.f-cys)*sn+m.a*ndx+m.c*ndy,
+      f:cys+(m.e-cxs)*sn+(m.f-cys)*cs+m.b*ndx+m.d*ndy,w,h}
   }
   const toWorld=plateWorldTransform();
   if(toWorld){
@@ -4543,6 +4548,7 @@ async function openPlate(icao,name,choice){
   const code=String(icao||'').toUpperCase();
   PLATE.on=true;PLATE.icao=code;PLATE.name=name||'';PLATE.title='';PLATE.canvas=null;PLATE.align=null;PLATE.err='';PLATE.pairs=[];PLATE.pend=null;
   PLATE.pendEnd=null;PLATE.mark=null;PLATE.picking=false;PLATE.ends=null;PLATE.endsFor=null;PLATE.thresholds=null;
+  plateSetLocked(true,true);
   PLATE.charts=null;PLATE.entry=null;PLATE.index=Number(choice)||0;PLATE.visible=true;
   const showBox=$('#plateShow');if(showBox)showBox.checked=true;
   $('#plateT').textContent=code||'Chart';
@@ -4579,6 +4585,61 @@ function closePlate(){
   el.hidden=true;if(pick)pick.hidden=true;
   draw()
 }
+/* Locked, the chart stays where it was placed while the map is panned.
+   Unlocked, the pointer drags the sheet itself: the movement is stored as the
+   chart-pixel nudge the panel used to offer as arrow buttons, so a correction
+   keeps its size at every zoom and survives a reload. */
+function plateSetLocked(locked,quiet){
+  PLATE.locked=!!locked;
+  const b=$('#plateLock');
+  if(b){
+    b.setAttribute('aria-pressed',locked?'false':'true');
+    b.innerHTML=locked?'&#128274; Locked':'&#128275; Dragging'
+  }
+  if(!quiet)plateHint(locked
+    ? (PLATE.align?'Chart locked in place.':'Chart locked.')
+    : 'Unlocked \u2014 drag the chart over the map to line it up, then lock it again.');
+  draw()
+}
+function platePointer(e){
+  const r=cv.getBoundingClientRect();
+  return[e.clientX-r.left,e.clientY-r.top]
+}
+let plateDrag=null;
+cv.addEventListener('pointerdown',e=>{
+  if(!PLATE.on||!PLATE.visible||PLATE.locked||!PLATE.align||PLATE.picking)return;
+  const[x,y]=platePointer(e),m=plateAffine();
+  if(!m)return;
+  const c=plateInvert(m,x,y);
+  if(c[0]<0||c[1]<0||c[0]>m.w||c[1]>m.h)return;
+  e.preventDefault();e.stopPropagation();
+  try{cv.setPointerCapture(e.pointerId)}catch(_){}
+  plateDrag={id:e.pointerId,x,y}
+},{capture:true});
+cv.addEventListener('pointermove',e=>{
+  if(!plateDrag||e.pointerId!==plateDrag.id)return;
+  const m=plateAffine();
+  if(!m)return;
+  const[x,y]=platePointer(e);
+  const dx=x-plateDrag.x,dy=y-plateDrag.y;
+  plateDrag.x=x;plateDrag.y=y;
+  /* The nudge is carried to the screen as a plain translation of the sheet, so
+     one screen pixel of drag is one chart pixel divided by the sheet's own
+     scale. Anything else would make the chart slide away from the pointer. */
+  const sx=Math.hypot(m.a,m.b)||1,sy=Math.hypot(m.c,m.d)||sx;
+  const n=PLATE.align.nudge||(PLATE.align.nudge={});
+  n.dx=(Number(n.dx)||0)+dx/sx;
+  n.dy=(Number(n.dy)||0)+dy/sy;
+  e.preventDefault();e.stopPropagation();
+  draw()
+},{capture:true});
+const plateDragEnd=e=>{
+  if(!plateDrag||e.pointerId!==plateDrag.id)return;
+  plateDrag=null;
+  plateSave()
+};
+cv.addEventListener('pointerup',plateDragEnd,{capture:true});
+cv.addEventListener('pointercancel',plateDragEnd,{capture:true});
 function plateAlignStart(){
   if(!PLATE.canvas){plateHint('The chart has not loaded yet.');return}
   PLATE.align=null;PLATE.pairs=[];PLATE.pend=null;PLATE.pendEnd=null;PLATE.mark=null;PLATE.picking=true;
@@ -4680,25 +4741,11 @@ function plateNearestEnd(x,y,m){
   $('#plateShow').onchange=e=>{PLATE.visible=e.target.checked;draw()};
   $('#plateAlign').onclick=plateAlignStart;
   $('#plateClear').onclick=()=>{PLATE.align=null;plateSave();plateHint('Alignment cleared. Press Align to place it again.');draw()};
-  el.querySelector('.pl-nudge').addEventListener('click',e=>{
-    const b=e.target.closest('[data-nudge]');if(!b||!PLATE.align)return;
-    const n=PLATE.align.nudge||{};
-    /* One percent of the sheet per press: fine enough to line a runway end up,
-       big enough to see, and the same correction at every zoom. */
-    const step=Math.max(4,(PLATE.canvas?PLATE.canvas.width:1000)*0.01);
-    switch(b.dataset.nudge){
-      case 'left':n.dx=(n.dx||0)-step;break;
-      case 'right':n.dx=(n.dx||0)+step;break;
-      case 'up':n.dy=(n.dy||0)-step;break;
-      case 'down':n.dy=(n.dy||0)+step;break;
-      case 'rot-':n.rot=(n.rot||0)-1;break;
-      case 'rot+':n.rot=(n.rot||0)+1;break;
-      case 'smaller':n.scale=(n.scale||1)*0.98;break;
-      case 'bigger':n.scale=(n.scale||1)*1.02;break;
-      default:return
-    }
-    PLATE.align.nudge=n;plateSave();draw()
-  });
+  const lockBtn=$('#plateLock');
+  if(lockBtn)lockBtn.onclick=()=>{
+    if(!PLATE.align){plateHint('Press Align first: there is no placement to move yet.');return}
+    plateSetLocked(!PLATE.locked)
+  };
   const pick=$('#platePick');
   if(pick)pick.addEventListener('pointerdown',e=>{
     e.preventDefault();
