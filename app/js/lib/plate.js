@@ -62,6 +62,10 @@ export async function plateChart(icao) {
 export function chartQuery(icao, entry, cycle) {
   const chart = (entry && entry.chart) || entry || {};
   const code = String(icao || '').toUpperCase();
+  /* A source that serves its documents through an address of its own names it
+     directly (Airmate's licensed catalogue does); the proxy re-checks that
+     address against that source's own rules before fetching anything. */
+  if (chart.url) return String(chart.url).replace(/^\/api\/chart\?/, '');
   if (chart.source === 'austrocontrol-eaip') {
     return `source=austrocontrol&icao=${encodeURIComponent(code)}`
       + `&cycle=${encodeURIComponent(chart.cycle || cycle || '')}&pdf=${encodeURIComponent(chart.pdf || '')}`;
@@ -311,7 +315,7 @@ export function runwayThresholdPairs(strokes, runways, options = {}) {
 }
 
 /** Render page one of a document to a canvas at a resolution the map can zoom. */
-export async function renderChart(url, { maxWidth = 2000, page: pageNumber = 1 } = {}) {
+export async function renderChart(url, { maxWidth = 2000, page: pageNumber = 1, labels: wantLabels = true, scale: wantScale = 0 } = {}) {
   const pdfjs = await loadPdfjs();
   const doc = await pdfjs.getDocument({
     url,
@@ -319,7 +323,12 @@ export async function renderChart(url, { maxWidth = 2000, page: pageNumber = 1 }
   }).promise;
   const page = await doc.getPage(Math.max(1, Math.min(pageNumber, doc.numPages)));
   const base = page.getViewport({ scale: 1 });
-  const scale = Math.max(1, Math.min(3, maxWidth / base.width));
+  /* The sheet is described in its own page points, whatever resolution it is
+     rasterised at, so the caller can draw it at any size and ask for more
+     pixels later without anything moving. */
+  const scale = wantScale
+    ? Math.max(1, Math.min(9, wantScale))
+    : Math.max(1, Math.min(3, maxWidth / base.width));
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(viewport.width);
@@ -334,7 +343,7 @@ export async function renderChart(url, { maxWidth = 2000, page: pageNumber = 1 }
      ends the airport publishes — read from the chart, never inferred from the
      airport's position or the chart's size. */
   const labels = [];
-  try {
+  if (wantLabels) try {
     const content = await page.getTextContent();
     for (const item of content.items) {
       const text = String((item && item.str) || '').trim();
@@ -360,7 +369,16 @@ export async function renderChart(url, { maxWidth = 2000, page: pageNumber = 1 }
     }
   } catch (_) { /* a document without a text layer simply suggests nothing */ }
 
-  return { canvas, width: canvas.width, height: canvas.height, pages: doc.numPages, labels };
+  return {
+    canvas,
+    width: canvas.width,
+    height: canvas.height,
+    pages: doc.numPages,
+    labels,
+    pixelScale: scale,
+    pageWidth: base.width,
+    pageHeight: base.height,
+  };
 }
 
 function normaliseIdent(value) {

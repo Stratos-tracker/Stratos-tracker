@@ -1835,3 +1835,23 @@ test('two clicks land on real thresholds, not on wherever the hand was', async (
   assert.ok(page.includes("Aligned '+names.join(' and ')"), 'the pilot is told which thresholds placed the sheet');
   assert.ok(page.includes('PLATE.picking=true'), 'the picking mode is explicit, so the markers can be drawn');
 });
+
+test('the sheet is described in page points, so it can be rendered again sharper', async () => {
+  const fs = await import('node:fs');
+  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+  const lib = fs.readFileSync(new URL('../app/js/lib/plate.js', import.meta.url), 'utf8');
+
+  assert.ok(lib.includes('pageWidth: base.width'), 'the renderer reports the page size in points');
+  assert.ok(lib.includes('Math.min(9, wantScale)'), 'a page can be rasterised well beyond three times its points');
+  assert.ok(lib.includes('labels: wantLabels = true'), 'a re-render can skip reading the text again');
+  assert.ok(page.includes('function plateUnit()'), 'rendered pixels convert to page points in one place');
+  assert.ok(lib.includes('page.getViewport({ scale: 1 })') && page.includes('pageW=Number(page.pageWidth)'), 'the page size is kept with the chart');
+  assert.ok(page.includes('cx.drawImage(PLATE.drawable||PLATE.canvas,0,0,m.w,m.h)'), 'the page is drawn at its own size, not its pixel size');
+  assert.ok(page.includes('const w=plateW(),h=plateH();'), 'the placement is solved in page points');
+  assert.ok(page.includes('out.push([s.a[0]*u,s.a[1]*u],[s.b[0]*u,s.b[1]*u])'), 'the picked runway ends are page points too');
+  assert.ok(page.includes('async function plateDetailRaise()'), 'the sheet is rendered again when the screen outgrows it');
+  assert.ok(page.includes('if(plateDetailTimer)return;'), 'the redraw loop cannot keep postponing the sharper render');
+  assert.ok(page.includes('if(need<c.width*1.4||wantScale<=c.width/plateW()*1.3)return'), 'it only re-renders when the screen really outgrows the sheet');
+  assert.ok(page.includes('const wantScale=Math.min(5,need/plateW())'), 'the extra pixels are capped to what a device has to hold');
+  assert.ok(page.includes('if(kept&&kept.v!==2)kept=null'), 'points stored in old rendered pixels are dropped, not misapplied');
+});

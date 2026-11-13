@@ -4162,13 +4162,20 @@ function openChartsPage(icao){location.href='pilot.html#charts'+(icao?'?icao='+e
    placed, and until then the plate is drawn centred and labelled unaligned. */
 const PLATE={on:false,visible:true,icao:'',name:'',title:'',canvas:null,opacity:70,align:null,pend:null,pairs:[],err:'',busy:false};
 function plateKey(){return (PLATE.icao||'')+'|'+(PLATE.title||'')}
+/* Everything about the sheet is measured in its own page points, not in the
+   pixels it happens to be rendered with: the page can be rasterised again at a
+   higher resolution for a zoomed map or a big screen without moving a stored
+   point or changing a placement. */
+function plateW(){return PLATE.pageW||(PLATE.canvas?PLATE.canvas.width:0)}
+function plateH(){return PLATE.pageH||(PLATE.canvas?PLATE.canvas.height:0)}
+function plateUnit(){return PLATE.canvas&&PLATE.pageW?PLATE.pageW/PLATE.canvas.width:1}
 function plateStore(){
   try{return JSON.parse(localStorage.getItem('stratos.plateAlign')||'{}')||{}}catch(_){return {}}
 }
 function plateSave(){
   if(typeof plateSyncTurn==='function')plateSyncTurn();
   const all=plateStore();
-  if(PLATE.align)all[plateKey()]=PLATE.align;else delete all[plateKey()];
+  if(PLATE.align){PLATE.align.v=2;all[plateKey()]=PLATE.align}else delete all[plateKey()];
   try{localStorage.setItem('stratos.plateAlign',JSON.stringify(all))}catch(_){}
 }
 function plateHint(text){const el=$('#plateHint');if(el)el.textContent=text}
@@ -4332,7 +4339,7 @@ function plateSuggest(labels,refs){
   if(!fit||inliers.length<2)return null;
   if(inliers.length<3)return null;
 
-  const width=PLATE.canvas?PLATE.canvas.width:1000;
+  const width=plateW()||1000;
   const lat0=inliers.reduce((s,c)=>s+c.geo[1],0)/inliers.length;
   const worldPerNm=SZ/360/(60*Math.cos(lat0*R));
   const sheetNm=fit.scale*width/worldPerNm;
@@ -4359,8 +4366,11 @@ function plateSuggest(labels,refs){
   const sepNm=Math.hypot((gB[1]-gA[1])*60,(gB[0]-gA[0])*60*Math.cos(lat0*R));
   if(sepNm<sheetNm*0.08)return null;
 
+  /* The labels were read in rendered pixels; the anchors are stored in page
+     points, so a later render at another resolution still means the same place. */
+  const u=plateUnit();
   return {
-    c1:A.chart,g1:gA,c2:B.chart,g2:gB,
+    c1:[A.chart[0]*u,A.chart[1]*u],g1:gA,c2:[B.chart[0]*u,B.chart[1]*u],g2:gB,
     suggested:[...new Set(inliers.map(c=>c.ident))].slice(0,6),
     inliers:inliers.length,sheetNm:Math.round(sheetNm*10)/10,nudge:{},
     valid:{points:inliers.length,medianM:Math.round(medianM),maxM:Math.round(maxM),toleranceM:Math.round(toleranceM)},
@@ -4380,6 +4390,10 @@ function plateApplyGeoref(meta){
   const place=PLATE.georef.placementFromGeoref(meta,PLATE.canvas,(lon,lat)=>wpx(lon,lat,0));
   if(!place.ok){plateHint('This chart publishes georeferencing that cannot be used: '+place.reason+'.');return false}
   PLATE.align={georef:meta,nudge:{}};plateSave();
+  /* The metadata names pixels of the sheet it was published against, so this
+     path keeps the rendered page as its own coordinate space and is not
+     re-rendered at another resolution. */
+  PLATE.pageW=PLATE.canvas.width;PLATE.pageH=PLATE.canvas.height;
   PLATE.drawable=PLATE.georef.maskInsets(PLATE.canvas,place.insets,(w,h)=>{
     const c=document.createElement('canvas');c.width=w;c.height=h;return c
   });
@@ -4398,7 +4412,7 @@ function plateGeorefPlacement(){
 }
 function plateAffine(){
   const img=PLATE.drawable||PLATE.canvas;if(!img||!PLATE.on)return null;
-  const w=img.width,h=img.height;
+  const w=plateW(),h=plateH();
   const place=plateGeorefPlacement();
   let A,B,C;
   if(place){
@@ -4447,7 +4461,7 @@ function drawPlate(){
   cx.globalAlpha=Math.max(0,Math.min(1,PLATE.opacity/100));
   cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';
   cx.transform(m.a,m.b,m.c,m.d,m.e,m.f);
-  cx.drawImage(PLATE.drawable||PLATE.canvas,0,0);
+  cx.drawImage(PLATE.drawable||PLATE.canvas,0,0,m.w,m.h);
   cx.restore();
   /* While picking, show the runway ends a click will snap to, so the two
      clicks land on the chart's own thresholds. */
@@ -4461,6 +4475,10 @@ function drawPlate(){
     if(PLATE.pend)ring([m.e+m.a*PLATE.pend[0]+m.c*PLATE.pend[1],m.f+m.b*PLATE.pend[0]+m.d*PLATE.pend[1]],'rgba(56,189,248,.95)',8);
     if(PLATE.mark)ring(plateScreen(...wpx(PLATE.mark.lon,PLATE.mark.lat,0)),'rgba(250,204,21,.95)',8)
   }
+  /* Drawn larger than the page was rendered, the sheet is rasterised again at
+     the size the screen is asking for, so it reads as sharply on a big screen
+     at 200% as it does at 100% on a phone. */
+  plateDetailSoon();
   if(!PLATE.align){
     cx.save();
     cx.strokeStyle='rgba(148,163,184,.75)';cx.lineWidth=1;cx.setLineDash([7,5]);
@@ -4473,13 +4491,42 @@ function drawPlate(){
     cx.restore()
   }
 }
+let plateDetailTimer=0,plateDetailBusy=false;
+/* The map redraws every frame, so this has to be a one-shot rather than a
+   debounce: a timer reset on every frame would never be allowed to fire. */
+function plateDetailSoon(){
+  if(plateDetailTimer)return;
+  plateDetailTimer=setTimeout(()=>{plateDetailTimer=0;plateDetailRaise()},650)
+}
+async function plateDetailRaise(){
+  if(plateDetailBusy||PLATE.busy||!PLATE.on||!PLATE.visible||!PLATE.url||PLATE.georefFit)return;
+  const c=PLATE.canvas;
+  if(!c||!PLATE.lib||!PLATE.lib.renderChart)return;
+  const m=plateAffine();if(!m)return;
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  const need=Math.round(Math.hypot(m.a,m.b)*dpr*plateW());
+  /* The page is redrawn once at a step the screen actually asks for, not in a
+     loop up the scales: past five times the sheet's own points the pixels cost
+     more memory and render time than the sharpness is worth on a moving map. */
+  const wantScale=Math.min(5,need/plateW());
+  if(need<c.width*1.4||wantScale<=c.width/plateW()*1.3)return;
+  plateDetailBusy=true;
+  try{
+    const page=await PLATE.lib.renderChart(PLATE.url,{scale:wantScale,labels:false});
+    if(page&&page.canvas&&Math.abs((Number(page.pageWidth)||0)-plateW())<1.5){
+      PLATE.canvas=page.canvas;PLATE.drawable=page.canvas;
+      PLATE.ends=null;PLATE.endsFor=null;draw()
+    }
+  }catch(_){/* the sheet already drawn stays wrapped over the ground */}
+  plateDetailBusy=false
+}
 /* A georeferenced airport diagram is a few miles wide: at a continental zoom it
    is a speck. When it opens off-screen or too small to read, bring the map to
    it once, at the size the chart is meant to be read at. */
 function plateReveal(){
   const a=PLATE.align;if(!a||!PLATE.canvas)return;
   const m=plateAffine();if(!m)return;
-  const widthPx=Math.hypot(m.a,m.b)*PLATE.canvas.width;
+  const widthPx=Math.hypot(m.a,m.b)*plateW();
   if(widthPx>=160)return;
   const midLon=(Number(a.g1[0])+Number(a.g2[0]))/2,midLat=(Number(a.g1[1])+Number(a.g2[1]))/2;
   const want=Math.min(W,H)*0.55;
@@ -4505,14 +4552,20 @@ async function plateLoadChart(index){
   PLATE.err='';PLATE.busy=true;
   plateHint('Loading '+(chosen.title||'the chart')+'…');
   try{
-    const page=await lib.renderChart('/api/chart?'+lib.chartQuery(PLATE.icao,{chart:chosen},entry.cycle),{maxWidth:2200});
+    PLATE.url='/api/chart?'+lib.chartQuery(PLATE.icao,{chart:chosen},entry.cycle);
+    const page=await lib.renderChart(PLATE.url,{maxWidth:2400});
     PLATE.canvas=page.canvas;
+    PLATE.pageW=Number(page.pageWidth)||page.canvas.width;
+    PLATE.pageH=Number(page.pageHeight)||page.canvas.height;
     PLATE.title=String(chosen.title||chosen.code||'');
     /* The publisher's own plan-view rectangle, when there is one, places the
        sheet outright: no fitting, no threshold reading, nothing to nudge. */
     PLATE.drawable=page.canvas;PLATE.georefFit=null;PLATE.georefFor=null;
     if(chosen.georef&&plateApplyGeoref(chosen.georef)){draw();plateReveal();return}
-    const kept=plateStore()[plateKey()]||null;
+    let kept=plateStore()[plateKey()]||null;
+    /* Older records measured their points in rendered pixels, which no longer
+       name the same place on the page; they are dropped rather than misapplied. */
+    if(kept&&kept.v!==2)kept=null;
     /* A stored placement from an older AIRAC is re-derived: a chart can change
        between cycles, and a fit that no longer holds should not be reused. */
     const stale=kept&&kept.cycle&&entry.cycle&&kept.cycle!==entry.cycle;
@@ -4554,6 +4607,7 @@ async function openPlate(icao,name,choice){
   const code=String(icao||'').toUpperCase();
   PLATE.on=true;PLATE.icao=code;PLATE.name=name||'';PLATE.title='';PLATE.canvas=null;PLATE.align=null;PLATE.err='';PLATE.pairs=[];PLATE.pend=null;
   PLATE.pendEnd=null;PLATE.mark=null;PLATE.picking=false;PLATE.ends=null;PLATE.endsFor=null;PLATE.thresholds=null;
+  PLATE.pageW=null;PLATE.pageH=null;PLATE.url='';PLATE.georefFit=null;
   plateSetLocked(true,true);
   PLATE.charts=null;PLATE.entry=null;PLATE.index=Number(choice)||0;PLATE.visible=true;
   const showBox=$('#plateShow');if(showBox)showBox.checked=true;
@@ -4729,7 +4783,8 @@ function plateChartEnds(){
   try{
     /* The longest strokes are the runways; the short ones are taxiways and
        labels, which are not thresholds anyone would pick. */
-    for(const s of PLATE.lib.runwayStrokes(c).slice(0,24))out.push(s.a,s.b)
+    const u=plateUnit();
+    for(const s of PLATE.lib.runwayStrokes(c).slice(0,24))out.push([s.a[0]*u,s.a[1]*u],[s.b[0]*u,s.b[1]*u])
   }catch(_){out=[]}
   PLATE.ends=out;PLATE.endsFor=c;
   return out
