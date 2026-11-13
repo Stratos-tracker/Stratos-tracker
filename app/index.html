@@ -65,27 +65,26 @@ code,pre{font:12px ui-monospace,Consolas,monospace;background:var(--ui2);padding
 textarea{width:100%;height:150px;box-sizing:border-box;background:var(--ui2);color:var(--txt);border:0;border-radius:6px;font:12px ui-monospace,monospace}
 html{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}textarea,input{-webkit-user-select:text;user-select:text}button{min-height:36px}
 #chart{position:absolute;inset:0;background:var(--bg);z-index:5;display:none;overflow:auto;padding:10px}#chart svg{width:100%;max-height:60vh;display:block}
-/* A plate over the map. The licensed sources publish documents without corner
-   coordinates, so this is a floating window, never a warped overlay: the route
-   and the aircraft stay visible beside it, and the frame says what it is. */
-#plate{position:absolute;z-index:6;left:50%;top:50%;transform:translate(-50%,-50%);width:min(760px,62vw);height:min(74vh,700px);min-width:320px;min-height:260px;display:flex;flex-direction:column;background:#08111a;border:1px solid color-mix(in srgb,var(--coast) 55%,transparent);border-radius:14px;box-shadow:0 22px 60px rgba(0,0,0,.55);overflow:hidden;resize:both}
+/* The plate is a chart layer, not a window: its document is drawn on the map in
+   map space, so the route and the aircraft pass over it. The sources publish no
+   corner coordinates, so the placement is the pilot's own alignment (two picked
+   reference points); before that it is drawn centred and says so. The panel is
+   reduced to its controls. */
+#plate{position:absolute;z-index:8;left:12px;bottom:92px;width:min(360px,calc(100% - 24px));display:flex;flex-direction:column;background:color-mix(in srgb,var(--surface) 94%,transparent);border:1px solid color-mix(in srgb,var(--coast) 48%,transparent);border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.5);overflow:hidden;backdrop-filter:blur(10px)}
 #plate[hidden]{display:none}
-#plate.pl-moved{transform:none}
-/* The pilot's own symbol is painted above the plate, in the map's own frame, so
-   the aircraft stays readable while the chart is over it. It marks where the
-   aircraft is over the map beneath the window, not a point on the chart. */
-#platePlane{position:absolute;z-index:7;left:0;top:0;pointer-events:none;will-change:transform;filter:drop-shadow(0 0 7px rgba(56,189,248,.85))}
-#platePlane[hidden]{display:none}
-#plate header{cursor:move;touch-action:none;display:flex;align-items:center;gap:10px;padding:8px 10px;background:color-mix(in srgb,var(--surface) 88%,transparent);border-bottom:1px solid color-mix(in srgb,var(--coast) 32%,transparent);font:600 12px/1 system-ui,sans-serif}
+#plate header{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:8px 10px;font:600 12px/1 system-ui,sans-serif}
 #plate header b{color:var(--txt);letter-spacing:.04em}
-#plate header .m{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+#plate header .m{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--mut)}
 #plate .pl-op{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}
-#plate .pl-op input{width:74px;accent-color:var(--acc)}
-#plate #plateX{width:24px;height:24px;display:grid;place-items:center;padding:0;border-radius:6px;background:none;border:1px solid color-mix(in srgb,var(--coast) 40%,transparent);color:var(--mut);cursor:pointer}
-#plate #plateX:hover{color:var(--txt);border-color:var(--acc)}
-#plate iframe{flex:1;width:100%;border:0;background:#050b11;display:block}
-#plate .pl-note{margin:0;padding:5px 10px;font:10px/1.3 system-ui,sans-serif;color:var(--mut);background:#050b11;border-top:1px solid color-mix(in srgb,var(--coast) 24%,transparent)}
-@media (max-width:767px){#plate,#plate.pl-moved{inset:52px 8px 92px;right:8px;left:8px;top:52px;width:auto;height:auto;resize:none;transform:none}}
+#plate .pl-op input{width:96px;accent-color:var(--acc)}
+#plate .pl-acts{display:flex;gap:6px;margin-left:auto}
+#plate .pl-acts button{width:auto;padding:4px 8px;font:600 10px/1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;background:none;border:1px solid color-mix(in srgb,var(--coast) 40%,transparent);color:var(--mut);cursor:pointer}
+#plate .pl-acts button:hover{color:var(--txt);border-color:var(--acc)}
+#plate #plateX{padding:4px 6px}
+#plate .pl-note{margin:0;padding:6px 10px;font:10.5px/1.35 system-ui,sans-serif;color:var(--mut);border-top:1px solid color-mix(in srgb,var(--coast) 24%,transparent)}
+#platePick{position:absolute;inset:0;z-index:9;cursor:crosshair;background:rgba(56,189,248,.03)}
+#platePick[hidden]{display:none}
+@media (max-width:767px){#plate{left:8px;right:8px;bottom:84px;width:auto}}
 @media(max-width:420px){#tel b{font-size:13px}#tel span{font-size:10px}#sb{padding:0 12px}#q{padding:12px 0;font-size:16px}#fab{right:8px;top:8px;gap:7px}.fab{width:42px;height:42px}#res{left:8px;right:8px}#sheet{left:8px;right:8px;bottom:72px;max-height:min(48dvh,420px);padding:12px;border-radius:16px}#tabs{padding-bottom:max(7px,env(safe-area-inset-bottom));}button{padding:8px 10px}}
 :root{--acc:#2563eb}:root[data-theme=contrast]{--acc:#fde047}
 html,body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif}
@@ -559,7 +558,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 
 <div id="cv"><div class="cvh"><button id="cvx" aria-label="Back">&#8592;</button><div class="cvt"><b id="cvi"></b><span id="cvn"></span><span id="cvm"></span></div><button id="cvf">Fit</button></div><div class="seg" id="cvs"></div></div><div id="ci"></div>
 <div id="chart"></div>
-<div id="plate" hidden aria-label="Chart over the map"><header><b id="plateT">Chart</b><span class="m" id="plateN"></span><label class="pl-op">Opacity<input id="plateO" type="range" min="35" max="100" value="100" aria-label="Chart opacity"></label><button type="button" id="plateX" aria-label="Close the chart">&#10005;</button></header><iframe id="plateF" title="Chart plate" src="about:blank"></iframe><p class="pl-note">Drag the header to place the plate over the route · not geo-aligned: this source publishes no corner coordinates, so the chart cannot be warped onto the map.</p></div><div id="platePlane" hidden aria-hidden="true"><svg width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="12.5" fill="rgba(8,17,26,.6)" stroke="rgba(56,189,248,.9)" stroke-width="1.5"/><path d="M14 4.5l5 15.5-5-3.4-5 3.4z" fill="#38bdf8" stroke="#e0f2fe" stroke-width="1" stroke-linejoin="round"/></svg></div>
+<div id="plate" hidden aria-label="Chart over the map"><header><b id="plateT">Chart</b><span class="m" id="plateN"></span><label class="pl-op">Opacity<input id="plateO" type="range" min="0" max="100" value="70" aria-label="Chart opacity"></label><span class="pl-acts"><button type="button" id="plateAlign" title="Pick two features on the chart and the same two on the map">Align</button><button type="button" id="plateClear" title="Forget this chart's alignment">Clear</button><button type="button" id="plateX" aria-label="Close the chart">&#10005;</button></span></header><p class="pl-note" id="plateHint">Loading the published chart…</p></div><div id="platePick" hidden aria-label="Pick an alignment point"></div>
 <div id="sheet" class="box"></div>
 <div id="tel" class="box" aria-label="Live flight telemetry">
 <div class="tel-main">
@@ -1333,10 +1332,10 @@ if(L.apt&&clusterAirports()){}else if(L.apt)A.forEach(a=>{if(CH.on&&a!==CH.a)ret
 if(V.mode!=='globe'&&V.z>8.5)drawReal(a,x,y);else a.det=false;if(0)pairs(a).forEach(pr=>{const n=pr[0],h=n*10,p=ppn(a.lat)*1.4,dx=Math.sin(h*R)*p,dy=-Math.cos(h*R)*p;cx.strokeStyle=C.ap;cx.lineWidth=Math.max(3,p/9);cx.lineCap='butt';cx.beginPath();cx.moveTo(x-dx,y-dy);cx.lineTo(x+dx,y+dy);cx.stroke()});
 if(a.det){}else if(V.mode!=='globe'&&V.z>8.5){cx.beginPath();cx.arc(x,y,3,0,7);cx.fillStyle=C.land;cx.fill();cx.strokeStyle=C.ap;cx.lineWidth=2.2;cx.stroke()}else mkRing(x,y,mkRz()*.9,mkColor('apt'),1);
 if(lblZ()>(a.x?7:4.8)&&x>-40&&x<W+40&&y>-40&&y<H+40&&!(L.rte&&planTocTod().ids.has(String(a.id).toUpperCase())))mkText(a.id,x+Math.round(mkRz()*.62)-3,y-6,SAT()?(DKM()?'#fff':'#111'):C.txt,12.5,true)});
-drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.strokeStyle=C.route;cx.lineCap='round';cx.lineJoin='round';if(sp.flown.length>1){cx.globalAlpha=.34;cx.lineWidth=12;drawPlanLine(sp.flown)}if(sp.ahead.length>1){cx.globalAlpha=.62;cx.lineWidth=12;drawPlanLine(sp.ahead)}cx.restore()
+drawPlate();drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.strokeStyle=C.route;cx.lineCap='round';cx.lineJoin='round';if(sp.flown.length>1){cx.globalAlpha=.34;cx.lineWidth=12;drawPlanLine(sp.flown)}if(sp.ahead.length>1){cx.globalAlpha=.62;cx.lineWidth=12;drawPlanLine(sp.ahead)}cx.restore()
 drawProcedureRouteLine();drawRouteMarkers();}
 trails();if(L.trf&&!CH.on)T.forEach(a=>{const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;drawAircraft(a.type,x,y,a.hdg,C.trf,32);if(lblZ()>6&&x>-40&&x<W+40&&y>-20&&y<H+20)mkText(a.id+(a.type?' '+a.type:'')+' '+Math.round(a.alt/100),x+4,y+4,C.trf,10,false)});
-if(L.atc&&!CH.on){drawTracon();drawAtc()}platePlaneMark();if(liveOk()){const q=vis(own.lon,own.lat);if(q){const[x,y]=q;if(MP.halo){cx.beginPath();cx.arc(x,y,19+6*MP.size,0,7);cx.strokeStyle=MP.color;cx.globalAlpha=.32;cx.lineWidth=1.5;cx.stroke();cx.globalAlpha=1}drawAircraft(live.d?.type||live.d?.aircraft||live.d?.aircraftType,x,y,(own.trk!=null&&(own.gs||live.d?.gs)>20)?own.trk:own.hdg,MP.color,42*MP.size)}}
+if(L.atc&&!CH.on){drawTracon();drawAtc()}if(liveOk()){const q=vis(own.lon,own.lat);if(q){const[x,y]=q;if(MP.halo){cx.beginPath();cx.arc(x,y,19+6*MP.size,0,7);cx.strokeStyle=MP.color;cx.globalAlpha=.32;cx.lineWidth=1.5;cx.stroke();cx.globalAlpha=1}drawAircraft(live.d?.type||live.d?.aircraft||live.d?.aircraftType,x,y,(own.trk!=null&&(own.gs||live.d?.gs)>20)?own.trk:own.hdg,MP.color,42*MP.size)}}
 if(view3d)sync3d();if(CH.on)chartFx();if(sel&&!CH.on&&sel.k!='own'){const s0=sel.k=='own'?own:sel,p0=vis(s0.lon,s0.lat);if(p0){const[x,y]=p0;cx.strokeStyle=C.txt;cx.lineWidth=2;cx.beginPath();cx.arc(x,y,16+(tk?3*Math.sin(performance.now()/260):0),0,7);cx.stroke()}}}
 
 /* ── Waypoint markers ─────────────────────────────────────────────────
@@ -4146,61 +4145,165 @@ function openChartsPage(icao){location.href='pilot.html#charts'+(icao?'?icao='+e
    would mean inventing an alignment. This instead puts the real document, from
    the real viewer, in a floating window at the pilot's chosen opacity, and
    says so in the frame. The route and the aircraft stay visible beside it. */
-function openPlate(icao,name){
-  const el=$('#plate'),f=$('#plateF');if(!el||!f)return;
+/* ── Chart plate, georeferenced by the pilot ───────────────────────────────
+   The document is drawn on the map in map space, so the route, the traffic and
+   the aircraft pass over it. The authorities publish plates without corner
+   coordinates, so the placement comes from two reference points the pilot
+   picks: a feature on the chart (a runway end, a navaid) and the same feature
+   on the map. Two pairs define scale, rotation and position, which is stored
+   per airport and chart. Nothing is inferred from a chart the pilot has not
+   placed, and until then the plate is drawn centred and labelled unaligned. */
+const PLATE={on:false,icao:'',name:'',title:'',canvas:null,opacity:70,align:null,pend:null,pairs:[],err:'',busy:false};
+function plateKey(){return (PLATE.icao||'')+'|'+(PLATE.title||'')}
+function plateStore(){
+  try{return JSON.parse(localStorage.getItem('stratos.plateAlign')||'{}')||{}}catch(_){return {}}
+}
+function plateSave(){
+  const all=plateStore();
+  if(PLATE.align)all[plateKey()]=PLATE.align;else delete all[plateKey()];
+  try{localStorage.setItem('stratos.plateAlign',JSON.stringify(all))}catch(_){}
+}
+function plateHint(text){const el=$('#plateHint');if(el)el.textContent=text}
+/* Chart pixel -> world pixel, as a similarity solved from the two picked pairs
+   in the map's own projection. Mercator is what the chart under the plate is
+   drawn in, so solving there keeps the plate glued to the ground through every
+   zoom and pan instead of drifting away from it as the latitude scale grows. */
+function plateWorldTransform(){
+  const a=PLATE.align;if(!a)return null;
+  const W1=wpx(Number(a.g1[0]),Number(a.g1[1]),0),W2=wpx(Number(a.g2[0]),Number(a.g2[1]),0);
+  const dc=[a.c2[0]-a.c1[0],a.c2[1]-a.c1[1]],dw=[W2[0]-W1[0],W2[1]-W1[1]];
+  const cd=Math.hypot(dc[0],dc[1]),wd=Math.hypot(dw[0],dw[1]);
+  if(!cd||!wd)return null;
+  const s=wd/cd,th=Math.atan2(dw[1],dw[0])-Math.atan2(dc[1],dc[0]);
+  const cs=Math.cos(th)*s,sn=Math.sin(th)*s;
+  return (x,y)=>{
+    const dx=x-a.c1[0],dy=y-a.c1[1];
+    return[W1[0]+cs*dx-sn*dy,W1[1]+sn*dx+cs*dy]
+  }
+}
+/* A world pixel at zoom 0 to where the chart puts it on screen right now. */
+function plateScreen(wx,wy){
+  const k=2**V.z,c=wpx(V.lon,V.lat,V.z);
+  return[wx*k-c[0]+W/2,wy*k-c[1]+H/2]
+}
+/* Chart pixel -> map pixel, as the affine the canvas transform consumes. */
+function plateAffine(){
+  const img=PLATE.canvas;if(!img||!PLATE.on)return null;
+  const w=img.width,h=img.height,toWorld=plateWorldTransform();
+  let A,B,C;
+  if(toWorld){
+    A=plateScreen(...toWorld(0,0));B=plateScreen(...toWorld(w,0));C=plateScreen(...toWorld(0,h));
+  }else{
+    /* Unaligned: a readable size in the middle of the map, where the route is. */
+    const dw=Math.min(W*0.62,900),sc=dw/w;
+    A=[Math.round(W/2-dw/2),Math.round(H/2-(h*sc)/2)];
+    B=[A[0]+dw,A[1]];C=[A[0],A[1]+h*sc]
+  }
+  return {a:(B[0]-A[0])/w,b:(B[1]-A[1])/w,c:(C[0]-A[0])/h,d:(C[1]-A[1])/h,e:A[0],f:A[1],w,h}
+}
+function plateInvert(m,x,y){
+  const det=m.a*m.d-m.b*m.c;
+  if(!det)return[0,0];
+  const dx=x-m.e,dy=y-m.f;
+  return[(m.d*dx-m.c*dy)/det,(m.a*dy-m.b*dx)/det]
+}
+function drawPlate(){
+  if(!PLATE.on||!PLATE.canvas)return;
+  const m=plateAffine();if(!m)return;
+  cx.save();
+  cx.globalAlpha=Math.max(0,Math.min(1,PLATE.opacity/100));
+  cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';
+  cx.transform(m.a,m.b,m.c,m.d,m.e,m.f);
+  cx.drawImage(PLATE.canvas,0,0);
+  cx.restore();
+  if(!PLATE.align){
+    cx.save();
+    cx.strokeStyle='rgba(148,163,184,.75)';cx.lineWidth=1;cx.setLineDash([7,5]);
+    cx.beginPath();
+    cx.moveTo(m.e,m.f);
+    cx.lineTo(m.e+m.a*m.w,m.f+m.b*m.w);
+    cx.lineTo(m.e+m.c*m.h,m.f+m.d*m.h);
+    cx.lineTo(m.e+m.a*m.w+m.c*m.h,m.f+m.b*m.w+m.d*m.h);
+    cx.closePath();cx.stroke();
+    cx.restore()
+  }
+}
+async function openPlate(icao,name){
+  const el=$('#plate');if(!el)return;
   const code=String(icao||'').toUpperCase();
+  PLATE.on=true;PLATE.icao=code;PLATE.name=name||'';PLATE.title='';PLATE.canvas=null;PLATE.align=null;PLATE.err='';PLATE.busy=true;PLATE.pairs=[];PLATE.pend=null;
   $('#plateT').textContent=code||'Chart';
   $('#plateN').textContent=name||'';
-  f.style.opacity='1';$('#plateO').value='100';
-  f.src='pilot.html#charts'+(code?'?icao='+encodeURIComponent(code)+'&embed=1':'?embed=1');
-  /* It opens over the middle of the map, which is where the route and the
-     aircraft are, rather than docked to an edge; the header then drags it. */
-  el.classList.remove('pl-moved');el.style.left='';el.style.top='';
-  el.hidden=false;platePlaneMark()
+  el.hidden=false;
+  plateHint('Loading the published chart…');
+  draw();
+  try{
+    const lib=await import('./js/lib/plate.js');
+    const entry=await lib.plateChart(code);
+    const page=await lib.renderChart('/api/chart?'+lib.chartQuery(code,entry,entry.cycle),{maxWidth:2200});
+    PLATE.canvas=page.canvas;
+    PLATE.title=String((entry.chart&&entry.chart.title)||entry.chart&&entry.chart.code||'');
+    const kept=plateStore()[plateKey()];
+    PLATE.align=kept||null;
+    plateHint(PLATE.align
+      ?'Aligned. Raise the opacity until the chart reads against the ground.'
+      :'Not aligned yet. Press Align, click a runway end on the chart, then the same end on the map; repeat for a second far-apart feature.');
+  }catch(error){
+    PLATE.err=String((error&&error.message)||error);
+    plateHint('This chart could not be drawn: '+PLATE.err);
+  }finally{PLATE.busy=false}
+  draw()
 }
 function closePlate(){
-  const el=$('#plate'),f=$('#plateF');if(!el)return;
-  el.hidden=true;if(f)f.src='about:blank';
-  const m=$('#platePlane');if(m)m.hidden=true
+  const el=$('#plate'),pick=$('#platePick');
+  if(!el)return;
+  PLATE.on=false;PLATE.pairs=[];PLATE.pend=null;
+  el.hidden=true;if(pick)pick.hidden=true;
+  draw()
 }
-/* Own ship above the plate: same projection as the map, so it sits exactly over
-   the aircraft's position and turns with the track. */
-function platePlaneMark(){
-  const m=$('#platePlane'),el=$('#plate');
-  if(!m)return;
-  if(!el||el.hidden||!liveOk()){m.hidden=true;return}
-  const q=vis(own.lon,own.lat);
-  if(!q){m.hidden=true;return}
-  /* vis() gives a point on the canvas; the mark is placed in the plate's own
-     containing block, which can sit at a different origin (the panel rail). */
-  const cv=document.getElementById('map'),box=m.offsetParent;
-  let dx=0,dy=0;
-  if(cv&&box){const a=cv.getBoundingClientRect(),b=box.getBoundingClientRect();dx=a.left-b.left;dy=a.top-b.top}
-  m.hidden=false;
-  m.style.transform='translate('+(q[0]+dx-14)+'px,'+(q[1]+dy-14)+'px) rotate('+Math.round(Number(own.trk)||0)+'deg)'
+function plateAlignStart(){
+  if(!PLATE.canvas){plateHint('The chart has not loaded yet.');return}
+  PLATE.align=null;PLATE.pairs=[];PLATE.pend=null;
+  const pick=$('#platePick');if(pick)pick.hidden=false;
+  plateHint('Click a feature on the chart — a runway end works well.');
+  draw()
+}
+function platePickAt(x,y){
+  if(PLATE.pend){
+    const geo=unvis(x,y);
+    if(!geo){plateHint('That point is not on the map.');return}
+    PLATE.pairs.push({c:PLATE.pend,g:geo});PLATE.pend=null;
+    if(PLATE.pairs.length>=2){
+      const[p,q]=PLATE.pairs;
+      PLATE.align={c1:p.c,g1:p.g,c2:q.c,g2:q.g};
+      PLATE.pairs=[];
+      const pick=$('#platePick');if(pick)pick.hidden=true;
+      plateSave();
+      plateHint('Aligned to the map. Drag the opacity slider to see the ground through the chart.');
+    }else plateHint('Second point: click a far-apart feature on the chart, then the same feature on the map.');
+    draw();return
+  }
+  const m=plateAffine();if(!m)return;
+  const chart=plateInvert(m,x,y);
+  if(chart[0]<0||chart[1]<0||chart[0]>m.w||chart[1]>m.h){plateHint('That is outside the chart. Click on the chart itself.');return}
+  PLATE.pend=chart;
+  plateHint('Now click the same feature on the map.');
 }
 (()=>{const el=$('#plate');if(!el)return;
   $('#plateX').onclick=closePlate;
-  $('#plateO').oninput=e=>{$('#plateF').style.opacity=String(Number(e.target.value)/100)};
-  const hd=el.querySelector('header');
-  hd.addEventListener('pointerdown',e=>{
-    if(e.target.closest('button,input'))return;
+  $('#plateO').oninput=e=>{PLATE.opacity=Number(e.target.value);draw()};
+  $('#plateAlign').onclick=plateAlignStart;
+  $('#plateClear').onclick=()=>{PLATE.align=null;plateSave();plateHint('Alignment cleared. Press Align to place it again.');draw()};
+  const pick=$('#platePick');
+  if(pick)pick.addEventListener('pointerdown',e=>{
     e.preventDefault();
-    const r=el.getBoundingClientRect();
-    el.classList.add('pl-moved');
-    el.style.left=r.left+'px';el.style.top=r.top+'px';
-    el.style.width=r.width+'px';el.style.height=r.height+'px';
-    const ox=e.clientX-r.left,oy=e.clientY-r.top;
-    try{hd.setPointerCapture(e.pointerId)}catch(_){/* synthetic pointer: drag still works */}
-    const move=ev=>{
-      el.style.left=Math.max(0,Math.min(innerWidth-r.width,ev.clientX-ox))+'px';
-      el.style.top=Math.max(0,Math.min(innerHeight-r.height,ev.clientY-oy))+'px'
-    };
-    const up=()=>{hd.removeEventListener('pointermove',move);hd.removeEventListener('pointerup',up)};
-    hd.addEventListener('pointermove',move);hd.addEventListener('pointerup',up)
+    const cv=document.getElementById('map'),r=cv.getBoundingClientRect();
+    const dpr=1;
+    platePickAt((e.clientX-r.left)*dpr,(e.clientY-r.top)*dpr)
   });
   document.addEventListener('click',e=>{const b=e.target.closest('[data-plate]');if(!b)return;openPlate(b.dataset.plate,b.dataset.plateName||'')});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!el.hidden&&!document.querySelector('#plate:hover'))closePlate()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!el.hidden&&!$('#platePick').hidden){$('#platePick').hidden=true;PLATE.pend=null;plateHint('Alignment cancelled.')}
+    else if(e.key==='Escape'&&!el.hidden&&!document.querySelector('#plate:hover'))closePlate()});
 })();
 function openTaxiChart(a){openChartsPage((a||sel||CH.a||{}).id||'')}
 function cfHtml(a){return chartLauncherHtml(a)}

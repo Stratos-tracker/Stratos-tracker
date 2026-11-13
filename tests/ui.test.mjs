@@ -1747,15 +1747,32 @@ test('the VATSIM ATC layer marks staffed airports and invents no coverage', asyn
   assert.ok(page.includes('SimAware TRACON Project') && page.includes('CC BY-SA 4.0'), 'the boundary source is credited as its licence requires');
 });
 
-test('the chart plate sits over the map with the aircraft drawn above it', async () => {
+test('the chart plate is a map layer, placed by the pilot', async () => {
   const fs = await import('node:fs');
   const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
-  assert.ok(page.includes('id="platePlane"'), 'a symbol marks the aircraft above the plate');
-  assert.ok(page.includes('function platePlaneMark()'), 'the symbol is placed in the map projection, not in the chart');
-  assert.ok(page.includes("m.style.transform='translate('"), 'it tracks the aircraft as the map moves');
-  assert.ok(page.includes('platePlaneMark();if(liveOk())'), 'every frame refreshes it');
-  assert.ok(/#plate\{position:absolute;z-index:6;left:50%;top:50%;transform:translate\(-50%,-50%\)/.test(page), 'the plate opens over the map, not docked to an edge');
-  assert.ok(page.includes("el.classList.remove('pl-moved');el.style.left=''"), 'opening it again returns it to the map centre');
-  assert.ok(page.includes("hd.addEventListener('pointerdown'"), 'the header moves the plate along the route');
-  assert.ok(page.includes('not geo-aligned'), 'the frame still says the document is not a georeferenced layer');
+  const lib = fs.readFileSync(new URL('../app/js/lib/plate.js', import.meta.url), 'utf8');
+
+  // The document is drawn on the map, under the route and the aircraft, so a
+  // chart never hides the traffic it is meant to be read against.
+  assert.ok(page.includes('function drawPlate(){'), 'the plate has its own map pass');
+  const order = page.indexOf('drawPlate();drawSelectedAircraftRoute()');
+  assert.ok(order > 0, 'the plate is painted before the route, so the route reads over it');
+  assert.ok(page.indexOf("if(L.atc&&!CH.on){drawTracon();drawAtc()}if(liveOk())") > order, 'the aircraft is painted after the plate');
+
+  // Alignment is the pilot's own, solved from two picked reference points in
+  // the projection the chart below it uses.
+  assert.ok(page.includes('function plateWorldTransform()'), 'placement is solved from the picked pairs');
+  assert.ok(page.includes('wpx(Number(a.g1[0]),Number(a.g1[1]),0)'), 'it is solved in the map projection, so it holds through zoom and pan');
+  assert.ok(page.includes('const chart=plateInvert(m,x,y)'), 'the chart point is taken from the document, not guessed from the airport');
+  assert.ok(page.includes("localStorage.setItem('stratos.plateAlign'"), 'an alignment is remembered per chart');
+  assert.ok(!/Math\.random|heuristic|guess/i.test(page.slice(page.indexOf('function plateWorldTransform()'), page.indexOf('function platePickAt'))), 'no placement is invented');
+
+  // Transparency is the pilot's, from clear to transparent.
+  assert.ok(/id="plateO" type="range" min="0" max="100"/.test(page), 'the opacity range reaches fully transparent');
+  assert.ok(page.includes('PLATE.opacity=Number(e.target.value)'), 'the slider drives the drawn alpha');
+  assert.ok(page.includes('cx.globalAlpha=Math.max(0,Math.min(1,PLATE.opacity/100))'), 'the plate is composited at that alpha');
+
+  // The document comes from the authority, rendered locally.
+  assert.ok(lib.includes('/api/charts?icao='), 'the catalogue is the authority\'s, not a bundled copy');
+  assert.ok(lib.includes('pdf.min.mjs'), 'the document is rendered here, so it can be placed on the map');
 });
