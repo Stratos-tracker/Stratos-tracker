@@ -564,7 +564,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 
 <div id="cv"><div class="cvh"><button id="cvx" aria-label="Back">&#8592;</button><div class="cvt"><b id="cvi"></b><span id="cvn"></span><span id="cvm"></span></div><button id="cvf">Fit</button></div><div class="seg" id="cvs"></div></div><div id="ci"></div>
 <div id="chart"></div>
-<div id="plate" hidden aria-label="Chart over the map"><header><b id="plateT">Chart</b><span class="m" id="plateN"></span><label class="pl-op">Opacity<input id="plateO" type="range" min="0" max="100" value="70" aria-label="Chart opacity"></label><span class="pl-acts"><button type="button" id="plateAlign" title="Pick two features on the chart and the same two on the map">Align</button><button type="button" id="plateClear" title="Forget this chart's alignment">Clear</button><button type="button" id="plateX" aria-label="Close the chart">&#10005;</button></span></header><label class="pl-op" style="padding:0 10px 8px"><input id="plateShow" type="checkbox" checked aria-label="Show the chart on the map">Show</label><label class="pl-pick"><span>Chart</span><select id="plateSel" aria-label="Chart to show over the map"></select></label><div class="pl-nudge" aria-label="Nudge the plate"><button type="button" data-nudge="left" title="Nudge left">&#8592;</button><button type="button" data-nudge="right" title="Nudge right">&#8594;</button><button type="button" data-nudge="up" title="Nudge up">&#8593;</button><button type="button" data-nudge="down" title="Nudge down">&#8595;</button><button type="button" data-nudge="rot-" title="Rotate anticlockwise">&#8630;</button><button type="button" data-nudge="rot+" title="Rotate clockwise">&#8631;</button><button type="button" data-nudge="smaller" title="Shrink">&#8722;</button><button type="button" data-nudge="bigger" title="Enlarge">+</button></div><p class="pl-note" id="plateHint">Loading the published chart…</p></div><div id="platePick" hidden aria-label="Pick an alignment point"></div>
+<div id="plate" hidden aria-label="Chart over the map"><header><b id="plateT">Chart</b><span class="m" id="plateN"></span><label class="pl-op">Opacity<input id="plateO" type="range" min="0" max="100" value="70" aria-label="Chart opacity"></label><span class="pl-acts"><button type="button" id="plateAlign" title="Pick two runway ends on the chart and the same thresholds on the map">Align</button><button type="button" id="plateClear" title="Forget this chart's alignment">Clear</button><button type="button" id="plateX" aria-label="Close the chart">&#10005;</button></span></header><label class="pl-op" style="padding:0 10px 8px"><input id="plateShow" type="checkbox" checked aria-label="Show the chart on the map">Show</label><label class="pl-pick"><span>Chart</span><select id="plateSel" aria-label="Chart to show over the map"></select></label><div class="pl-nudge" aria-label="Nudge the plate"><button type="button" data-nudge="left" title="Nudge left">&#8592;</button><button type="button" data-nudge="right" title="Nudge right">&#8594;</button><button type="button" data-nudge="up" title="Nudge up">&#8593;</button><button type="button" data-nudge="down" title="Nudge down">&#8595;</button><button type="button" data-nudge="rot-" title="Rotate anticlockwise">&#8630;</button><button type="button" data-nudge="rot+" title="Rotate clockwise">&#8631;</button><button type="button" data-nudge="smaller" title="Shrink">&#8722;</button><button type="button" data-nudge="bigger" title="Enlarge">+</button></div><p class="pl-note" id="plateHint">Loading the published chart…</p></div><div id="platePick" hidden aria-label="Pick an alignment point"></div>
 <div id="sheet" class="box"></div>
 <div id="tel" class="box" aria-label="Live flight telemetry">
 <div class="tel-main">
@@ -4439,6 +4439,18 @@ function drawPlate(){
   cx.transform(m.a,m.b,m.c,m.d,m.e,m.f);
   cx.drawImage(PLATE.drawable||PLATE.canvas,0,0);
   cx.restore();
+  /* While picking, show the runway ends a click will snap to, so the two
+     clicks land on the chart's own thresholds. */
+  if(PLATE.picking){
+    const ring=(p,color,r)=>{cx.save();cx.strokeStyle=color;cx.lineWidth=2;cx.beginPath();cx.arc(p[0],p[1],r,0,7);cx.stroke();cx.restore()};
+    cx.save();cx.fillStyle='rgba(56,189,248,.6)';
+    for(const e of plateChartEnds()){
+      cx.beginPath();cx.arc(m.e+m.a*e[0]+m.c*e[1],m.f+m.b*e[0]+m.d*e[1],3,0,7);cx.fill()
+    }
+    cx.restore();
+    if(PLATE.pend)ring([m.e+m.a*PLATE.pend[0]+m.c*PLATE.pend[1],m.f+m.b*PLATE.pend[0]+m.d*PLATE.pend[1]],'rgba(56,189,248,.95)',8);
+    if(PLATE.mark)ring(plateScreen(...wpx(PLATE.mark.lon,PLATE.mark.lat,0)),'rgba(250,204,21,.95)',8)
+  }
   if(!PLATE.align){
     cx.save();
     cx.strokeStyle='rgba(148,163,184,.75)';cx.lineWidth=1;cx.setLineDash([7,5]);
@@ -4530,6 +4542,7 @@ async function openPlate(icao,name,choice){
   const el=$('#plate');if(!el)return;
   const code=String(icao||'').toUpperCase();
   PLATE.on=true;PLATE.icao=code;PLATE.name=name||'';PLATE.title='';PLATE.canvas=null;PLATE.align=null;PLATE.err='';PLATE.pairs=[];PLATE.pend=null;
+  PLATE.pendEnd=null;PLATE.mark=null;PLATE.picking=false;PLATE.ends=null;PLATE.endsFor=null;PLATE.thresholds=null;
   PLATE.charts=null;PLATE.entry=null;PLATE.index=Number(choice)||0;PLATE.visible=true;
   const showBox=$('#plateShow');if(showBox)showBox.checked=true;
   $('#plateT').textContent=code||'Chart';
@@ -4562,37 +4575,103 @@ async function openPlate(icao,name,choice){
 function closePlate(){
   const el=$('#plate'),pick=$('#platePick');
   if(!el)return;
-  PLATE.on=false;PLATE.pairs=[];PLATE.pend=null;
+  PLATE.on=false;PLATE.pairs=[];PLATE.pend=null;PLATE.pendEnd=null;PLATE.mark=null;PLATE.picking=false;
   el.hidden=true;if(pick)pick.hidden=true;
   draw()
 }
 function plateAlignStart(){
   if(!PLATE.canvas){plateHint('The chart has not loaded yet.');return}
-  PLATE.align=null;PLATE.pairs=[];PLATE.pend=null;
+  PLATE.align=null;PLATE.pairs=[];PLATE.pend=null;PLATE.pendEnd=null;PLATE.mark=null;PLATE.picking=true;
+  plateThresholds();
   const pick=$('#platePick');if(pick)pick.hidden=false;
-  plateHint('Click a feature on the chart — a runway end works well.');
+  plateHint('Click a runway end on the chart, then the same threshold on the map. Two thresholds place it.');
   draw()
 }
+/* The ends of the runway bands the chart draws, in chart pixels. These are the
+   features a threshold pick is snapped to, so the pilot clicks "the end of 4L"
+   rather than a pixel they have to judge. */
+function plateChartEnds(){
+  const c=PLATE.canvas;
+  if(!c||!PLATE.lib||!PLATE.lib.runwayStrokes)return [];
+  if(PLATE.ends&&PLATE.endsFor===c)return PLATE.ends;
+  let out=[];
+  try{
+    /* The longest strokes are the runways; the short ones are taxiways and
+       labels, which are not thresholds anyone would pick. */
+    for(const s of PLATE.lib.runwayStrokes(c).slice(0,24))out.push(s.a,s.b)
+  }catch(_){out=[]}
+  PLATE.ends=out;PLATE.endsFor=c;
+  return out
+}
+/* Published thresholds, for snapping the map-side click to a real runway end. */
+function plateThresholds(){
+  if(PLATE.thresholds)return PLATE.thresholds;
+  PLATE.thresholds=[];
+  fetch('/api/runways?icao='+encodeURIComponent(PLATE.icao||'')).then(r=>r.ok?r.json():null).then(d=>{
+    if(!d||!d.runways)return;
+    PLATE.thresholds=d.runways.filter(r=>!r.closed&&r.ends).flatMap(r=>r.ends.map(e=>({ident:e.ident,lat:e.lat,lon:e.lon})))
+  }).catch(()=>{});
+  return PLATE.thresholds
+}
+/* Nearest candidate to a screen click, within a radius the eye can judge. */
+function plateSnapClick(x,y,items,radius,place){
+  let best=null;
+  for(const item of items){
+    const p=place(item);
+    if(!p||!isFinite(p[0])||!isFinite(p[1]))continue;
+    const d=Math.hypot(p[0]-x,p[1]-y);
+    if(d<=radius&&(!best||d<best.d))best={item,p,d}
+  }
+  return best
+}
+/* Two clicks place a chart: one on a drawn runway end, one on the threshold it
+   is, and both are snapped so the pair lands on real features rather than on
+   however steady the hand was. */
 function platePickAt(x,y){
   if(PLATE.pend){
     const geo=unvis(x,y);
     if(!geo){plateHint('That point is not on the map.');return}
-    PLATE.pairs.push({c:PLATE.pend,g:geo});PLATE.pend=null;
+    const hit=plateSnapClick(x,y,plateThresholds(),22,t=>plateScreen(...wpx(t.lon,t.lat,0)));
+    const g=hit?[hit.item.lon,hit.item.lat]:geo;
+    if(hit)PLATE.mark={lon:hit.item.lon,lat:hit.item.lat};
+    const label=hit?hit.item.ident:(PLATE.pendEnd&&PLATE.pendEnd.label)||'';
+    PLATE.pairs.push({c:PLATE.pend,g,label});PLATE.pend=null;
     if(PLATE.pairs.length>=2){
       const[p,q]=PLATE.pairs;
       PLATE.align={c1:p.c,g1:p.g,c2:q.c,g2:q.g};
-      PLATE.pairs=[];
+      PLATE.pairs=[];PLATE.mark=null;PLATE.picking=false;
       const pick=$('#platePick');if(pick)pick.hidden=true;
       plateSave();
-      plateHint('Aligned to the map. Drag the opacity slider to see the ground through the chart.');
-    }else plateHint('Second point: click a far-apart feature on the chart, then the same feature on the map.');
+      const names=[p.label,q.label].filter(Boolean);
+      plateHint(names.length===2
+        ? 'Aligned '+names.join(' and ')+'. Nudge it if the chart\u2019s print sits a little off its thresholds.'
+        : 'Aligned to the map. Drag the opacity slider to see the ground through the chart.');
+    }else{
+      plateHint('Second threshold: click its runway end on the chart, then the same one on the map.')
+    }
     draw();return
   }
   const m=plateAffine();if(!m)return;
   const chart=plateInvert(m,x,y);
   if(chart[0]<0||chart[1]<0||chart[0]>m.w||chart[1]>m.h){plateHint('That is outside the chart. Click on the chart itself.');return}
-  PLATE.pend=chart;
-  plateHint('Now click the same feature on the map.');
+  const near=plateNearestEnd(x,y,m);
+  PLATE.pend=near?near.end:chart;
+  PLATE.pendEnd=near?{end:near.end}:null;
+  plateHint(near
+    ? 'Runway end picked. Now click that same threshold on the map.'
+    : 'Point picked. Now click the same feature on the map.');
+  draw()
+}
+/* The drawn runway end nearest a screen click, with the distance in screen px. */
+function plateNearestEnd(x,y,m){
+  const ends=plateChartEnds();
+  let best=null;
+  for(const end of ends){
+    const px=m.e+m.a*end[0]+m.c*end[1],py=m.f+m.b*end[0]+m.d*end[1];
+    const d=Math.hypot(px-x,py-y);
+    if(d<=14&&(!best||d<best.d))best={end,d};
+  }
+  return best
 }
 (()=>{const el=$('#plate');if(!el)return;
   $('#plateX').onclick=closePlate;

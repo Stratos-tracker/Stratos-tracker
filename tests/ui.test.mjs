@@ -1799,3 +1799,17 @@ test('the plate placement is suggested from the runways, never guessed', async (
   assert.ok(page.includes('plateAffine'), 'the nudge feeds the same affine the plate is drawn with');
   assert.ok(page.includes('data-nudge="left"') && page.includes('data-nudge="rot+"') && page.includes('data-nudge="bigger"'), 'the sheet can be nudged, turned and sized');
 });
+
+test('two clicks land on real thresholds, not on wherever the hand was', async () => {
+  const fs = await import('node:fs');
+  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+
+  assert.ok(page.includes('function plateChartEnds()'), 'the chart\u2019s drawn runway ends are the picking candidates');
+  assert.ok(page.includes('PLATE.lib.runwayStrokes(c).slice(0,24)'), 'the long drawn strokes are the runways, not the taxiways');
+  assert.ok(page.includes('function plateThresholds()') && page.includes("fetch('/api/runways?icao='"), 'the map side snaps to published thresholds');
+  assert.ok(page.includes('function plateNearestEnd('), 'a chart click snaps to the nearest drawn end');
+  assert.ok(page.includes('plateSnapClick(x,y,plateThresholds(),22'), 'a map click snaps to the nearest threshold within reach');
+  assert.ok(page.includes("const g=hit?[hit.item.lon,hit.item.lat]:geo"), 'the published coordinates of the snapped threshold are what gets stored');
+  assert.ok(page.includes("Aligned '+names.join(' and ')"), 'the pilot is told which thresholds placed the sheet');
+  assert.ok(page.includes('PLATE.picking=true'), 'the picking mode is explicit, so the markers can be drawn');
+});
