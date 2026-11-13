@@ -13,6 +13,7 @@
 // No other URL, header or credential is forwarded.
 
 import { EAIP_SOURCES, franceChartUrl, francePdfUrl, isEaipPdfName } from '../app/js/lib/eaip.js';
+import { airmateDocument } from './airmate.js';
 
 const ALLOWED_FILE = /^[A-Z0-9]{1,12}\.PDF$/;
 const ALLOWED_CYCLE = /^\d{4}$/;
@@ -71,6 +72,14 @@ export function documentUrl(query) {
     // caller, so a chart cannot be fetched from another aerodrome's folder.
     const url = pdf ? franceChartUrl(provider, edition, icao, pdf) : francePdfUrl(provider, edition, icao);
     return url ? { url, credit: provider.attribution } : null;
+  }
+  if (source === 'airmate') {
+    // The caller names an airport and a document; the address comes from the
+    // catalogue Airmate returned, never from the query string.
+    const icao = String(query.icao || '').trim().toUpperCase();
+    const doc = String(query.doc || '').trim().toUpperCase();
+    if (!ALLOWED_ICAO.test(icao) || !/^[A-Z0-9][A-Z0-9-]{0,11}$/.test(doc)) return null;
+    return airmateDocument(icao, doc);
   }
   const cycle = String((query && query.cycle) || '').trim();
   const file = String((query && query.file) || '').trim().toUpperCase();

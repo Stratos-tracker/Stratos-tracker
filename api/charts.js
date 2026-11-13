@@ -14,6 +14,7 @@
 
 import { FAA_BASE, faaCycle, parseFaaAirport, parseMetafileHeader } from '../app/js/lib/charts.js';
 import { chartGeoref } from '../data/chart-georef.js';
+import { airmateDocuments } from './airmate.js';
 import {
   eaipAirportPage, eaipForIcao, eaipPdfUrl, franceAirportPageUrl, franceChartUrl, francePdfUrl,
   parseEaipCharts, parseEaipCycleIndex, parseEaipValidity, parseFranceCharts, parseFranceEdition,
@@ -190,6 +191,36 @@ export default async function handler(req, res) {
   if (!/^[A-Z0-9]{3,5}$/.test(icao)) {
     res.setHeader('Cache-Control', 'no-store');
     res.status(400).json({ error: 'A 3-5 character airport identifier is required.' });
+    return;
+  }
+
+  /* Airmate first when it is licensed: it is the only source that also
+     publishes the calibration, so its charts can be placed on the map without
+     the pilot having to line them up. Unlicensed, it answers null and the free
+     authorities below carry on exactly as before. */
+  const airmate = await airmateDocuments(icao);
+  if (airmate) {
+    res.setHeader('Cache-Control', 'public, s-maxage=21600, stale-while-revalidate=3600');
+    res.status(200).json({
+      source: 'airmate',
+      sourceName: 'Airmate AIP',
+      license: airmate.licensed,
+      attribution: airmate.licensed,
+      cycle: airmate.cycle,
+      effective: airmate.effective,
+      expires: airmate.expires,
+      checkedAt: Date.now(),
+      icao,
+      charts: airmate.charts.map(chart => ({
+        code: chart.code,
+        title: chart.title,
+        category: chart.category,
+        icao,
+        // The proxy address, not Airmate's: the document is resolved server-side.
+        url: `/api/chart?source=airmate&icao=${encodeURIComponent(icao)}&doc=${encodeURIComponent(chart.code)}`,
+        georef: chart.georef || chartGeoref({ source: 'airmate', icao, pdf: chart.code, code: chart.code }),
+      })),
+    });
     return;
   }
 
