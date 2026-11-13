@@ -179,3 +179,63 @@ test('airmate: the app asks the proxy by airport and document, never by URL', ()
   assert.ok(lib.includes("if (chart.url) return String(chart.url).replace("), 'the app follows the address the catalogue gives');
   assert.ok(AIRMATE_ATTRIBUTION.includes('Airmate'), 'the credit names the publisher');
 });
+
+const META = `<?xml version="1.0" encoding="utf-8"?>
+<digital_tpp cycle="2610" from_edate="0901Z  10/01/26" to_edate="0901Z  10/29/26">
+  <state_code ID="NY" state_fullname="NEW YORK">
+    <city_name ID="NEW YORK" volume="NE-2">
+      <airport_name ID="JOHN F KENNEDY INTL" military="N" apt_ident="JFK" icao_ident="KJFK" alnum="1234">
+        <record>
+          <chart_code>APD</chart_code>
+          <chart_name>AIRPORT DIAGRAM</chart_name>
+          <pdf_name>00610AD.PDF</pdf_name>
+          <amdtdate></amdtdate>
+        </record>
+      </airport_name>
+    </city_name>
+  </state_code>
+</digital_tpp>`;
+
+function fakeRes() {
+  return {
+    code: 0,
+    body: null,
+    headers: {},
+    setHeader(key, value) { this.headers[key] = value },
+    status(code) { this.code = code; return this },
+    json(body) { this.body = body; return this },
+  };
+}
+
+test('airmate: the old US plates are no longer served in its place', async () => {
+  const { default: handler } = await import('../api/charts.js');
+  const saved = { url: process.env.AIRMATE_AIP_URL, key: process.env.AIRMATE_API_KEY, legacy: process.env.US_LEGACY_FAA };
+  delete process.env.AIRMATE_AIP_URL;
+  delete process.env.AIRMATE_API_KEY;
+  delete process.env.US_LEGACY_FAA;
+  airmateForget();
+
+  // Unlicensed: US airports say so, and show no other publisher's plates.
+  const res = fakeRes();
+  await handler({ query: { icao: 'KJFK' } }, res);
+  assert.equal(res.code, 503);
+  assert.equal(res.body.sourceRequired, true);
+  assert.equal(res.body.source, 'airmate');
+  assert.deepEqual(res.body.charts, [], 'no second-best plates stand in for the licensed ones');
+  assert.match(res.body.message, /Airmate/);
+
+  // The transition switch still reaches the old publication, unimpaired.
+  process.env.US_LEGACY_FAA = '1';
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({ ok: true, status: 200, text: async () => META });
+  const legacy = fakeRes();
+  await handler({ query: { icao: 'KJFK' } }, legacy);
+  globalThis.fetch = realFetch;
+  assert.equal(legacy.code, 200);
+  assert.equal(legacy.body.source, 'faa-dtpp');
+  assert.deepEqual(legacy.body.charts.map(c => c.code), ['APD']);
+
+  if (saved.url === undefined) delete process.env.AIRMATE_AIP_URL; else process.env.AIRMATE_AIP_URL = saved.url;
+  if (saved.key === undefined) delete process.env.AIRMATE_API_KEY; else process.env.AIRMATE_API_KEY = saved.key;
+  if (saved.legacy === undefined) delete process.env.US_LEGACY_FAA; else process.env.US_LEGACY_FAA = saved.legacy;
+});

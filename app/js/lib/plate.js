@@ -30,8 +30,21 @@ export async function plateCatalogue(icao) {
   if (!/^[A-Z0-9]{3,5}$/.test(code)) throw new Error('not an airport code');
   const hit = catalogueCache.get(code);
   if (hit && Date.now() - hit.at < CATALOGUE_CACHE_MS) return hit.data;
-  const response = await fetch(`/api/charts?icao=${encodeURIComponent(code)}`, { headers: { Accept: 'application/json' } });
-  if (!response.ok) throw new Error(`catalogue returned ${response.status}`);
+  /* Small JSON, cached in memory here: the HTTP cache is bypassed so a source
+     that has just changed hands cannot keep answering from yesterday's plates. */
+  const response = await fetch(`/api/charts?icao=${encodeURIComponent(code)}`,
+    { headers: { Accept: 'application/json' }, cache: 'no-store' });
+  if (!response.ok) {
+    /* The source's own sentence explains it better than a status code: a
+       licensed source that is not configured is not the same as an airport
+       without charts. */
+    let detail = '';
+    try {
+      const body = await response.json();
+      detail = String((body && body.message) || '').trim();
+    } catch (_) { /* a body that is not JSON leaves the status to speak */ }
+    throw new Error(detail || `catalogue returned ${response.status}`);
+  }
   const data = await response.json();
   catalogueCache.set(code, { at: Date.now(), data });
   return data;
