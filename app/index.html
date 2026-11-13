@@ -565,7 +565,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 
 <div id="cv"><div class="cvh"><button id="cvx" aria-label="Back">&#8592;</button><div class="cvt"><b id="cvi"></b><span id="cvn"></span><span id="cvm"></span></div><button id="cvf">Fit</button></div><div class="seg" id="cvs"></div></div><div id="ci"></div>
 <div id="chart"></div>
-<div id="plate" hidden aria-label="Chart over the map"><header><b id="plateT">Chart</b><span class="m" id="plateN"></span><label class="pl-op">Opacity<input id="plateO" type="range" min="0" max="100" value="70" aria-label="Chart opacity"></label><span class="pl-acts"><button type="button" id="plateAlign" title="Pick two runway ends on the chart and the same thresholds on the map">Align</button><button type="button" id="plateClear" title="Forget this chart's alignment">Clear</button><button type="button" id="plateX" aria-label="Close the chart">&#10005;</button></span></header><label class="pl-op" style="padding:0 10px 8px"><input id="plateShow" type="checkbox" checked aria-label="Show the chart on the map">Show</label><label class="pl-pick"><span>Chart</span><select id="plateSel" aria-label="Chart to show over the map"></select></label><div class="pl-lock"><button type="button" id="plateLock" aria-pressed="false" title="Unlock to drag the chart over the map">&#128274; Locked</button></div><label class="pl-op" style="padding:0 10px 8px">Turn<input id="plateTurn" type="range" min="-180" max="180" step="0.5" value="0" aria-label="Turn the chart clockwise"></label><p class="pl-note" id="plateHint">Loading the published chart…</p></div><div id="platePick" hidden aria-label="Pick an alignment point"></div>
+<div id="plate" hidden aria-label="Chart over the map"><header><b id="plateT">Chart</b><span class="m" id="plateN"></span><label class="pl-op">Opacity<input id="plateO" type="range" min="0" max="100" value="70" aria-label="Chart opacity"></label><span class="pl-acts"><button type="button" id="plateAlign" title="Pick two runway ends on the chart and the same thresholds on the map">Align</button><button type="button" id="plateClear" title="Forget this chart's alignment">Clear</button><button type="button" id="plateX" aria-label="Close the chart">&#10005;</button></span></header><label class="pl-op" style="padding:0 10px 8px"><input id="plateShow" type="checkbox" checked aria-label="Show the chart on the map">Show</label><label class="pl-pick"><span>Chart</span><select id="plateSel" aria-label="Chart to show over the map"></select></label><div class="pl-lock"><button type="button" id="plateLock" aria-pressed="false" title="Unlock to drag the chart over the map">&#128274; Locked</button></div><label class="pl-op" style="padding:0 10px 8px">Turn<input id="plateTurn" type="range" min="-180" max="180" step="0.5" value="0" aria-label="Turn the chart clockwise"></label><label class="pl-op" style="padding:0 10px 8px">Size<input id="plateSize" type="range" min="25" max="400" step="1" value="100" aria-label="Chart size as a percentage"></label><p class="pl-note" id="plateHint">Loading the published chart…</p></div><div id="platePick" hidden aria-label="Pick an alignment point"></div>
 <div id="sheet" class="box"></div>
 <div id="tel" class="box" aria-label="Live flight telemetry">
 <div class="tel-main">
@@ -4412,12 +4412,16 @@ function plateAffine(){
     if(ns===1&&!nth&&!Number(n.dx)&&!Number(n.dy))return m;
     const cxs=m.e+m.a*w/2+m.c*h/2,cys=m.f+m.b*w/2+m.d*h/2;
     const cs=Math.cos(nth)*ns,sn=Math.sin(nth)*ns;
-    /* The nudge is in chart pixels, so it is carried through the same affine
-       the sheet is drawn with rather than added to the screen directly. */
+    /* The nudge is in chart pixels and moves the sheet a pixel of screen for a
+       pixel of chart, whichever way the sheet is turned or sized — the same
+       rule the fitted placement follows, so a drag means the same thing on
+       both. The scale is taken back out because it has already moved the
+       sheet's own corners. */
     const ndx=Number(n.dx)||0,ndy=Number(n.dy)||0;
+    const bx=(Math.hypot(m.a,m.b)||1)/ns,by=(Math.hypot(m.c,m.d)||1)/ns;
     return {a:m.a*cs-m.b*sn,b:m.a*sn+m.b*cs,c:m.c*cs-m.d*sn,d:m.c*sn+m.d*cs,
-      e:cxs+(m.e-cxs)*cs-(m.f-cys)*sn+m.a*ndx+m.c*ndy,
-      f:cys+(m.e-cxs)*sn+(m.f-cys)*cs+m.b*ndx+m.d*ndy,w,h}
+      e:cxs+(m.e-cxs)*cs-(m.f-cys)*sn+bx*ndx,
+      f:cys+(m.e-cxs)*sn+(m.f-cys)*cs+by*ndy,w,h}
   }
   const toWorld=plateWorldTransform();
   if(toWorld){
@@ -4600,7 +4604,7 @@ function plateSetLocked(locked,quiet){
   }
   if(!quiet)plateHint(locked
     ? (PLATE.align?'Chart locked in place.':'Chart locked.')
-    : 'Unlocked \u2014 drag the chart to move it, Shift-drag to turn it.');
+    : 'Unlocked \u2014 drag to move, Shift-drag to turn, Alt-drag to size.');
   draw()
 }
 /* Turning is the same stored nudge the drag writes, in degrees clockwise about
@@ -4618,11 +4622,25 @@ function plateTurn(deg){
   draw();
   return true
 }
+/* Sizing is the third stored nudge: a percentage of the placed sheet, about
+   its middle, for a chart drawn at the wrong scale or a print that does not
+   match its own size. */
+function plateScale(pct){
+  if(!PLATE.align)return false;
+  const n=PLATE.align.nudge||(PLATE.align.nudge={});
+  const v=Number(pct);
+  if(!isFinite(v))return false;
+  n.scale=Math.min(4,Math.max(.25,Math.round(v)/100));
+  plateSyncTurn();
+  draw();
+  return true
+}
 function plateSyncTurn(){
-  const s=$('#plateTurn');
-  if(!s||document.activeElement===s)return;
   const n=PLATE.align&&PLATE.align.nudge||{};
-  s.value=String(Math.round((Number(n.rot)||0)*2)/2)
+  const s=$('#plateTurn');
+  if(s&&document.activeElement!==s)s.value=String(Math.round((Number(n.rot)||0)*2)/2);
+  const z=$('#plateSize');
+  if(z&&document.activeElement!==z)z.value=String(Math.round((Number(n.scale)||1)*100))
 }
 function platePointer(e){
   const r=cv.getBoundingClientRect();
@@ -4637,17 +4655,27 @@ cv.addEventListener('pointerdown',e=>{
   if(c[0]<0||c[1]<0||c[0]>m.w||c[1]>m.h)return;
   e.preventDefault();e.stopPropagation();
   try{cv.setPointerCapture(e.pointerId)}catch(_){}
-  /* Shift turns the sheet about its middle instead of moving it. */
+  /* Shift turns the sheet about its middle instead of moving it; Alt sizes it
+     by how far the pointer is from that middle. */
   const cx=m.e+m.a*m.w/2+m.c*m.h/2,cy=m.f+m.b*m.w/2+m.d*m.h/2;
-  plateDrag=e.shiftKey
-    ? {id:e.pointerId,x,y,mode:'rot',cx,cy,ang:Math.atan2(y-cy,x-cx)}
-    : {id:e.pointerId,x,y,mode:'move'}
+  const n=PLATE.align.nudge||{};
+  plateDrag=e.altKey
+    ? {id:e.pointerId,x,y,mode:'scale',cx,cy,d0:Math.hypot(x-cx,y-cy),s0:Number(n.scale)||1}
+    : e.shiftKey
+      ? {id:e.pointerId,x,y,mode:'rot',cx,cy,ang:Math.atan2(y-cy,x-cx)}
+      : {id:e.pointerId,x,y,mode:'move'}
 },{capture:true});
 cv.addEventListener('pointermove',e=>{
   if(!plateDrag||e.pointerId!==plateDrag.id)return;
   const m=plateAffine();
   if(!m)return;
   const[x,y]=platePointer(e);
+  if(plateDrag.mode==='scale'){
+    const d=Math.hypot(x-plateDrag.cx,y-plateDrag.cy);
+    if(plateDrag.d0>6)plateScale(plateDrag.s0*(d/plateDrag.d0)*100);
+    e.preventDefault();e.stopPropagation();
+    return
+  }
   if(plateDrag.mode==='rot'){
     const ang=Math.atan2(y-plateDrag.cy,x-plateDrag.cx);
     let d=(ang-plateDrag.ang)*180/Math.PI;
@@ -4663,8 +4691,11 @@ cv.addEventListener('pointermove',e=>{
   /* The nudge is carried to the screen as a plain translation of the sheet, so
      one screen pixel of drag is one chart pixel divided by the sheet's own
      scale. Anything else would make the chart slide away from the pointer. */
-  const sx=Math.hypot(m.a,m.b)||1,sy=Math.hypot(m.c,m.d)||sx;
+  /* The sheet's drawn size already includes its own size nudge, and the nudge
+     offsets are not multiplied by it, so that factor comes back out here. */
   const n=PLATE.align.nudge||(PLATE.align.nudge={});
+  const ns=Number(n.scale)||1;
+  const sx=(Math.hypot(m.a,m.b)||ns)/ns,sy=(Math.hypot(m.c,m.d)||sx*ns)/ns;
   n.dx=(Number(n.dx)||0)+dx/sx;
   n.dy=(Number(n.dy)||0)+dy/sy;
   e.preventDefault();e.stopPropagation();
@@ -4778,6 +4809,15 @@ function plateNearestEnd(x,y,m){
   $('#plateShow').onchange=e=>{PLATE.visible=e.target.checked;draw()};
   $('#plateAlign').onclick=plateAlignStart;
   $('#plateClear').onclick=()=>{PLATE.align=null;plateSave();plateHint('Alignment cleared. Press Align to place it again.');draw()};
+  const size=$('#plateSize');
+  if(size){
+    size.oninput=e=>{
+      if(plateScale(Number(e.target.value)))return;
+      e.target.value='100';
+      plateHint('Press Align first: there is no placement to size yet.')
+    };
+    size.onchange=()=>plateSave()
+  }
   const turn=$('#plateTurn');
   if(turn){
     turn.oninput=e=>{
