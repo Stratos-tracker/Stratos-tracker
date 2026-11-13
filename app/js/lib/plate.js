@@ -91,5 +91,32 @@ export async function renderChart(url, { maxWidth = 2000, page: pageNumber = 1 }
   context.fillStyle = '#fff';
   context.fillRect(0, 0, canvas.width, canvas.height);
   await page.render({ canvasContext: context, viewport }).promise;
-  return { canvas, width: canvas.width, height: canvas.height, pages: doc.numPages };
+
+  /* Every label the document itself prints, with the canvas point it sits on.
+     The runway designators are what the suggestion matches against the runway
+     ends the airport publishes — read from the chart, never inferred from the
+     airport's position or the chart's size. */
+  const labels = [];
+  try {
+    const content = await page.getTextContent();
+    for (const item of content.items) {
+      const text = String((item && item.str) || '').trim();
+      const transform = item && item.transform;
+      if (!text || !transform) continue;
+      const [x, y] = viewport.convertToViewportPoint(transform[4], transform[5]);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+      labels.push({ text, x, y });
+      if (labels.length > 6000) break;
+    }
+  } catch (_) { /* a document without a text layer simply suggests nothing */ }
+
+  return { canvas, width: canvas.width, height: canvas.height, pages: doc.numPages, labels };
+}
+
+/** Runway ends for one airport: the designator and its own coordinates. */
+export async function plateRunways(icao) {
+  const code = String(icao || '').toUpperCase();
+  const response = await fetch(`/api/runways?icao=${encodeURIComponent(code)}`, { headers: { Accept: 'application/json' } });
+  if (!response.ok) throw new Error(`runway data returned ${response.status}`);
+  return await response.json();
 }

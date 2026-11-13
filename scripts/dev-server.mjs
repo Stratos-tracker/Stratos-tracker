@@ -18,6 +18,7 @@ import fsp from 'node:fs/promises';
 import path from 'node:path';
 import traffic from '../api/traffic.js';
 import sectors from '../api/sectors.js';
+import runways from '../api/runways.js';
 import photo from '../api/photo.js';
 import weather from '../api/weather.js';
 import winds from '../api/winds.js';
@@ -169,6 +170,7 @@ const ROUTES = {
   '/procedures.json': bridgeProcedures,
   '/api/traffic': trafficApi,
   '/api/sectors': adapt(sectors),
+  '/api/runways': adapt(runways),
   '/api/photo': photoApi,
   '/api/weather': adapt(weather),
   '/api/winds': adapt(winds),

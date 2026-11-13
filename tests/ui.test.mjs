@@ -1776,3 +1776,23 @@ test('the chart plate is a map layer, placed by the pilot', async () => {
   assert.ok(lib.includes('/api/charts?icao='), 'the catalogue is the authority\'s, not a bundled copy');
   assert.ok(lib.includes('pdf.min.mjs'), 'the document is rendered here, so it can be placed on the map');
 });
+
+test('the plate placement is suggested from the runways, never guessed', async () => {
+  const fs = await import('node:fs');
+  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+  const lib = fs.readFileSync(new URL('../app/js/lib/plate.js', import.meta.url), 'utf8');
+  const api = fs.readFileSync(new URL('../api/runways.js', import.meta.url), 'utf8');
+
+  assert.ok(page.includes('function plateSuggest(labels,runways)'), 'a suggestion pairs labels with published runway ends');
+  assert.ok(page.includes('const end=want.get(ident)'), 'only a designator the airport publishes is used');
+  assert.ok(page.includes('if(found.length<2)return null'), 'one readable label is not enough to place a sheet');
+  assert.ok(page.includes('if(!best||bestDist<20)return null'), 'two labels too close together do not fix a scale');
+  assert.ok(lib.includes('page.getTextContent()'), 'the designators come from the document itself');
+  assert.ok(lib.includes("export async function plateRunways"), 'threshold coordinates come from the airport data');
+  assert.ok(api.includes('runways.csv') && api.includes('le_latitude_deg'), 'thresholds are the published runway ends');
+  assert.ok(page.includes('function plateReveal()'), 'a georeferenced diagram too small to read is brought into view once');
+
+  // The pilot's correction is applied to the placement, not baked into the points.
+  assert.ok(page.includes('plateAffine'), 'the nudge feeds the same affine the plate is drawn with');
+  assert.ok(page.includes('data-nudge="left"') && page.includes('data-nudge="rot+"') && page.includes('data-nudge="bigger"'), 'the sheet can be nudged, turned and sized');
+});
