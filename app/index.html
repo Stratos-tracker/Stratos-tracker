@@ -565,7 +565,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 
 <div id="cv"><div class="cvh"><button id="cvx" aria-label="Back">&#8592;</button><div class="cvt"><b id="cvi"></b><span id="cvn"></span><span id="cvm"></span></div><button id="cvf">Fit</button></div><div class="seg" id="cvs"></div></div><div id="ci"></div>
 <div id="chart"></div>
-<div id="plate" hidden aria-label="Chart over the map"><header><b id="plateT">Chart</b><span class="m" id="plateN"></span><label class="pl-op">Opacity<input id="plateO" type="range" min="0" max="100" value="70" aria-label="Chart opacity"></label><span class="pl-acts"><button type="button" id="plateAlign" title="Pick two runway ends on the chart and the same thresholds on the map">Align</button><button type="button" id="plateClear" title="Forget this chart's alignment">Clear</button><button type="button" id="plateX" aria-label="Close the chart">&#10005;</button></span></header><label class="pl-op" style="padding:0 10px 8px"><input id="plateShow" type="checkbox" checked aria-label="Show the chart on the map">Show</label><label class="pl-pick"><span>Chart</span><select id="plateSel" aria-label="Chart to show over the map"></select></label><div class="pl-lock"><button type="button" id="plateLock" aria-pressed="false" title="Unlock to drag the chart over the map">&#128274; Locked</button></div><label class="pl-op" style="padding:0 10px 8px">Turn<input id="plateTurn" type="range" min="-180" max="180" step="0.5" value="0" aria-label="Turn the chart clockwise"></label><label class="pl-op" style="padding:0 10px 8px">Size<input id="plateSize" type="range" min="25" max="400" step="1" value="100" aria-label="Chart size as a percentage"></label><p class="pl-note" id="plateHint">Loading the published chart…</p></div><div id="platePick" hidden aria-label="Pick an alignment point"></div>
+<div id="plate" hidden aria-label="Chart over the map"><header><b id="plateT">Chart</b><span class="m" id="plateN"></span><label class="pl-op">Opacity<input id="plateO" type="range" min="0" max="100" value="70" aria-label="Chart opacity"></label><span class="pl-acts"><button type="button" id="plateAlign" title="Pick two runway ends on the chart and the same thresholds on the map">Align</button><button type="button" id="plateClear" title="Forget this chart's alignment">Clear</button><button type="button" id="plateX" aria-label="Close the chart">&#10005;</button></span></header><label class="pl-op" style="padding:0 10px 8px"><input id="plateShow" type="checkbox" checked aria-label="Show the chart on the map">Show</label><label class="pl-pick"><span>Chart</span><select id="plateSel" aria-label="Chart to show over the map"></select></label><div class="pl-lock"><button type="button" id="plateLock" aria-pressed="false" title="Unlock to drag the chart over the map">&#128274; Locked</button></div><label class="pl-op" style="padding:0 10px 8px">Turn<input id="plateTurn" type="range" min="-180" max="180" step="0.5" value="0" aria-label="Turn the chart clockwise"></label><label class="pl-op" style="padding:0 10px 8px">Size<input id="plateSize" type="range" min="1" max="400" step="1" value="100" aria-label="Chart size as a percentage"></label><p class="pl-note" id="plateHint">Loading the published chart…</p></div><div id="platePick" hidden aria-label="Pick an alignment point"></div>
 <div id="sheet" class="box"></div>
 <div id="tel" class="box" aria-label="Live flight telemetry">
 <div class="tel-main">
@@ -4630,7 +4630,9 @@ function plateScale(pct){
   const n=PLATE.align.nudge||(PLATE.align.nudge={});
   const v=Number(pct);
   if(!isFinite(v))return false;
-  n.scale=Math.min(4,Math.max(.25,Math.round(v)/100));
+  /* A sheet can come out an order of magnitude too big when the fit was poor,
+     so the floor is a hundredth rather than a quarter. */
+  n.scale=Math.min(4,Math.max(.01,Math.round(v)/100));
   plateSyncTurn();
   draw();
   return true

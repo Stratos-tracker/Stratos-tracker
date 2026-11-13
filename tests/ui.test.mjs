@@ -1804,7 +1804,8 @@ test('the plate placement is suggested from the runways, never guessed', async (
   assert.ok(page.includes('n.rot=Math.round(v*10)/10'), 'the turn is stored with the placement');
   assert.ok(page.includes('id="plateSize"'), 'the sheet can be sized from the panel as well');
   assert.ok(page.includes("plateDrag.mode==='scale'"), 'alt-drag sizes the sheet about its middle');
-  assert.ok(page.includes('n.scale=Math.min(4,Math.max(.25,Math.round(v)/100))'), 'the size is kept within a sane range');
+  assert.ok(page.includes('n.scale=Math.min(4,Math.max(.01,Math.round(v)/100))'), 'the size can go down to a hundredth of the placement');
+  assert.ok(page.includes('id="plateSize" type="range" min="1"'), 'the size control reaches that small');
 });
 
 test('an unlocked chart is dragged, a locked one stays put', async () => {
