@@ -5,6 +5,8 @@
 //   node scripts/check-release.mjs 2.2.0           # a specific release
 //   node scripts/check-release.mjs 2.2.0 --draft   # a draft, before it is published
 //   node scripts/check-release.mjs 2.2.0 --deep    # also read the Windows version resource
+//   node scripts/check-release.mjs 2.2.0 --allow-missing=mac-arm64,mac-x64
+//                                                  # a release built without those platforms
 //
 // For Windows, macOS (arm64 and x64) and Linux it checks that the installer and
 // the update files are attached, that GitHub's digest and the published bytes
@@ -20,6 +22,17 @@ import yaml from 'js-yaml';
 const args = process.argv.slice(2);
 const draftMode = args.includes('--draft');
 const deep = args.includes('--deep');
+// A platform named here is not expected in the release at all. Nothing else is
+// relaxed: the platforms that were built still have to be attached, complete
+// and described by the manifest, and the manifest may not claim the missing one.
+const ALLOW_MISSING_PREFIX = '--allow-missing=';
+const allowMissing = new Set(
+  (args.find(arg => arg.startsWith(ALLOW_MISSING_PREFIX)) || '')
+    .slice(ALLOW_MISSING_PREFIX.length)
+    .split(',')
+    .map(key => key.trim())
+    .filter(Boolean)
+);
 const positional = args.filter(arg => !arg.startsWith('--'));
 
 const REPO = 'Stratos-tracker/Stratos-tracker';
@@ -101,7 +114,8 @@ const byName = new Map((release.assets || []).map(asset => [asset.name, asset]))
 // from version.json and installed by running the published installer, so feeds,
 // update ZIPs, blockmaps, checksum sidecars and copies of the notes or manifest
 // are deliberately absent; GitHub publishes the digests itself.
-const required = new Set(PLATFORMS.map(platform => platform.installer));
+const required = new Set(PLATFORMS.filter(platform => !allowMissing.has(platform.key)).map(platform => platform.installer));
+if (allowMissing.size) console.log(`  note this release was built without: ${[...allowMissing].join(', ')}`);
 
 let attached = 0;
 for (const name of required) {
@@ -149,6 +163,7 @@ if (!latest) {
     const entry = latest.downloads?.[platform.key];
     const asset = byName.get(platform.installer);
     if (!entry) {
+      if (allowMissing.has(platform.key)) continue;
       fail(`manifest has no ${platform.key} download`);
       continue;
     }

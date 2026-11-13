@@ -563,8 +563,15 @@ export function downloadFor(release, platform = platformKey()) {
   const downloads = (release && release.downloads) || {};
   const direct = platform && downloads[platform] && downloads[platform].url;
   if (direct) return direct;
-  const fallback = downloads.any || downloads.windows;
-  return (fallback && fallback.url) || '';
+  // A generic address (downloadUrl) serves anyone. Another platform's installer
+  // must never stand in for a missing one: a Mac handed the Windows setup is a
+  // broken update, not a fallback, so a platform that is known and has no
+  // installer of its own is told there is nothing yet. Only when the platform
+  // cannot be identified at all does the Windows installer act as the default.
+  const generic = downloads.any;
+  if (generic && generic.url) return generic.url;
+  if (!platform) return (downloads.windows && downloads.windows.url) || '';
+  return '';
 }
 
 export function formatBytes(bytes) {

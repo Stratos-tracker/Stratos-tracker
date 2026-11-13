@@ -9,7 +9,16 @@ function installDom() {
   globalThis.HTMLElement = window.HTMLElement;
   globalThis.Event = window.Event;
   globalThis.CustomEvent = window.CustomEvent;
-  Object.defineProperty(globalThis, 'navigator', { value: window.navigator, configurable: true });
+  // Pin the platform: these tests are a desktop build, and the installer offered
+  // must be the one for this machine rather than the Linux browser linkedom
+  // reports. Its navigator answers userAgent from a prototype that cannot be
+  // overwritten, so the page gets a navigator of its own that inherits the rest.
+  const desktopNavigator = Object.create(window.navigator);
+  Object.defineProperty(desktopNavigator, 'userAgent', {
+    configurable: true,
+    value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Stratos/2.1.15',
+  });
+  Object.defineProperty(globalThis, 'navigator', { value: desktopNavigator, configurable: true });
   Object.defineProperty(globalThis, 'location', {
     value: { protocol: 'http:', hostname: 'localhost', href: 'http://localhost/app/pilot.html', reload() {} },
     configurable: true,

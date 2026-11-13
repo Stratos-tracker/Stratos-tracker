@@ -139,7 +139,8 @@ test('a packaged build can update itself from the GitHub releases', () => {
   // published installer, so the release page carries installers only.
   assert.doesNotMatch(workflow, /dist\/latest\.yml/, 'updater feeds are no longer attached');
   assert.doesNotMatch(workflow, /dist\/\*\.(blockmap|sha256)/, 'no blockmaps or checksum sidecars are attached');
-  assert.match(workflow, /gh release create "\$TAG" --draft[\s\S]{0,400}dist\/Stratos-Setup\.exe dist\/\*\.dmg dist\/\*\.AppImage/, 'the release attaches one installer per platform');
+  assert.match(workflow, /ASSETS=\(dist\/Stratos-Setup\.exe\)[\s\S]{0,200}dist\/\*\.AppImage dist\/\*\.dmg/, 'the release attaches one installer per platform it built');
+  assert.match(workflow, /gh release create "\$TAG" --draft[\s\S]{0,400}"\$\{ASSETS\[@\]\}"/, 'only the built installers are attached');
   assert.match(workflow, /cp dist\/version\.json app\/version\.json/, 'version.json is published on main for the startup check');
   assert.match(workflow, /release-notes\.mjs --version|release-notes\.mjs \"\$\{ARGS/, 'the release generates its own notes and manifest');
   assert.match(workflow, /cp dist\/releases\.json app\/releases\.json/, 'the manifest is recorded on main, where the site serves it');

@@ -30,6 +30,11 @@ on:
         description: 'Why a critical update is required (required for critical)'
         type: string
         required: false
+      skip_macos:
+        description: 'Release Windows and Linux only (for when GitHub offers no macOS runner)'
+        type: choice
+        options: ['false', 'true']
+        default: 'false'
 
 permissions:
   contents: write
@@ -248,6 +253,11 @@ jobs:
   build-mac:
     name: Build macOS ${{ matrix.arch }}
     needs: [plan, test]
+    # A release can go out without macOS when GitHub has no macOS runner to give
+    # (the job is cancelled after fifteen minutes in the queue). The publish job
+    # then checks only the platforms that were built and the manifest carries no
+    # installer for the ones that were not, so no Mac is offered a Windows setup.
+    if: needs.plan.outputs.release == 'true' && inputs.skip_macos != 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -368,7 +378,9 @@ jobs:
     # The update-smoke workflow looks for a successful job with this exact name.
     name: Publish release
     needs: [plan, build-windows, build-mac, build-linux]
-    if: needs.plan.outputs.release == 'true'
+    # always() keeps a deliberately skipped macOS build from cancelling the
+    # release; the result checks still stop a release whose builds failed.
+    if: always() && needs.plan.outputs.release == 'true' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ needs.plan.outputs.version }}
@@ -435,9 +447,30 @@ jobs:
           MIRROR_BASE: ${{ steps.mirror.outputs.base }}
         run: |
           set -euo pipefail
-          for name in Stratos-Setup.exe "Stratos-${VERSION}-mac-arm64.dmg" "Stratos-${VERSION}-mac-x64.dmg" "Stratos-${VERSION}-linux-x64.AppImage"; do
-            test -s "dist/$name" || { echo "::error::$name is missing from the build output"; exit 1; }
+          # Windows and Linux must be built. A macOS build that never ran is
+          # recorded, left out of the download table, and reported to
+          # check-release, which then does not expect those assets.
+          MISSING=""
+          for pair in "windows:Stratos-Setup.exe" \
+                      "mac-arm64:Stratos-${VERSION}-mac-arm64.dmg" \
+                      "mac-x64:Stratos-${VERSION}-mac-x64.dmg" \
+                      "linux-x64:Stratos-${VERSION}-linux-x64.AppImage"; do
+            key="${pair%%:*}"
+            name="${pair#*:}"
+            if [ -s "dist/$name" ]; then continue; fi
+            if [ "$key" = mac-arm64 ] || [ "$key" = mac-x64 ]; then
+              MISSING="${MISSING:+$MISSING,}$key"
+            else
+              echo "::error::$name is missing from the build output"
+              exit 1
+            fi
           done
+          if [ -n "$MISSING" ]; then
+            echo "::warning::this release carries no installer for: $MISSING"
+            echo "### No installer for $MISSING" >> "$GITHUB_STEP_SUMMARY"
+            echo "The macOS build did not run, so this release is Windows and Linux only." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "ALLOW_MISSING=$MISSING" >> "$GITHUB_ENV"
           BASE="${MIRROR_BASE:-https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}}"
           add() {
             jq -n --arg key "$1" \
@@ -448,8 +481,8 @@ jobs:
           }
           : > dist/downloads.jsonl
           add windows Stratos-Setup.exe
-          add mac-arm64 "Stratos-${VERSION}-mac-arm64.dmg"
-          add mac-x64 "Stratos-${VERSION}-mac-x64.dmg"
+          if [ -s "dist/Stratos-${VERSION}-mac-arm64.dmg" ]; then add mac-arm64 "Stratos-${VERSION}-mac-arm64.dmg"; fi
+          if [ -s "dist/Stratos-${VERSION}-mac-x64.dmg" ]; then add mac-x64 "Stratos-${VERSION}-mac-x64.dmg"; fi
           add linux-x64 "Stratos-${VERSION}-linux-x64.AppImage"
           jq -s add dist/downloads.jsonl > dist/downloads.json
           cat dist/downloads.json
@@ -485,19 +518,25 @@ jobs:
           # from version.json and installed by running the published installer,
           # so updater feeds, update ZIPs, blockmaps, checksum sidecars and copies
           # of the notes or the manifest are no longer attached.
+          # Only the files that were actually built are attached; a DMG glob that
+          # matches nothing would be passed to gh as a literal path and fail.
+          ASSETS=(dist/Stratos-Setup.exe)
+          for extra in dist/*.AppImage dist/*.dmg; do
+            if [ -f "$extra" ]; then ASSETS+=("$extra"); fi
+          done
           gh release create "$TAG" --draft --target "$GITHUB_SHA" --title "Stratos $VERSION" --notes-file dist/release-notes.md \
-            dist/Stratos-Setup.exe dist/*.dmg dist/*.AppImage
+            "${ASSETS[@]}"
 
       - name: Check the draft against every platform
         env:
           R2_PUBLIC_BASE: ${{ vars.R2_PUBLIC_BASE || 'https://downloads.stratos-tracker.com' }}
-        run: node scripts/check-release.mjs "$VERSION" --draft
+        run: node scripts/check-release.mjs "$VERSION" --draft ${ALLOW_MISSING:+--allow-missing="$ALLOW_MISSING"}
 
       - name: Publish and confirm the live release
         run: |
           set -euo pipefail
           gh release edit "$TAG" --draft=false
-          node scripts/check-release.mjs "$VERSION"
+          node scripts/check-release.mjs "$VERSION" ${ALLOW_MISSING:+--allow-missing="$ALLOW_MISSING"}
           echo "- Published $TAG" >> "$GITHUB_STEP_SUMMARY"
 
       # The website is built from main and serves app/releases.json from its own

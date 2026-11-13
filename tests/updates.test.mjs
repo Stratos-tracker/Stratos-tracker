@@ -529,7 +529,14 @@ test('version.json drives the same update decision as the full manifest', async 
   assert.equal(offline.state, 'error');
   assert.equal(offline.release, null);
 
-  assert.match(downloadFor(raw), /Stratos-Setup\.exe$/, 'the Windows installer is offered to Windows');
+  assert.match(downloadFor(raw, 'windows'), /Stratos-Setup\.exe$/, 'the Windows installer is offered to Windows');
+  // A release built without macOS must not hand a Mac the Windows setup: with no
+  // macOS installer published the answer is "nothing yet", not another platform.
+  assert.equal(
+    downloadFor({ downloads: { windows: { url: 'https://example.test/Stratos-Setup.exe' } } }, 'mac-arm64'),
+    '',
+    'a missing platform installer is never substituted',
+  );
   assert.equal(platformKey({ userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }), 'windows');
   assert.equal(platformKey({ userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' }), 'mac-x64');
   assert.equal(platformKey({ userAgent: 'Mozilla/5.0 (Macintosh; arm64 Mac OS X 14_0)' }), 'mac-arm64');
