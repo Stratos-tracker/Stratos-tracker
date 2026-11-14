@@ -1,0 +1,80 @@
+/* Stratos design tokens: the one palette and scale every page uses.
+   The Flight Deck pages read them through stratos-ui.css; the EFB links this
+   file directly and aliases its --efb-* names to these. Themes are switched
+   with data-theme on <html> (stored as dl.theme): night (default), day and
+   contrast. */
+
+:root {
+  --bg:#0a1421;
+  --land:#101d2b;
+  --coast:#2c3f55;
+  --grid:rgba(150,180,215,.12);
+  --ap:#e7b36c;
+  --nav:#86bdb1;
+  --route:#e7b36c;
+  --own:#df827a;
+  --txt:#e4ecf5;
+  --ui:#0d1927;
+  --ui2:#132132;
+  --mut:#8b9db3;
+  --trf:#9dc0e0;
+  --acc:#38bdf8;
+  --red:#df827a;
+  --grn:#5ec99a;
+  --warn:#e7b36c;
+  --mag:#9fb0d8;
+  --line:rgba(140,170,205,.16);
+  --focus:#e7b36c;
+  color-scheme:dark;
+  font-family:"Segoe UI Variable Text","Bahnschrift","Segoe UI",system-ui,sans-serif;
+  font-synthesis:none;
+}
+:root[data-theme="day"] {
+  --bg:#e7ecf2; --land:#f2f5f8; --coast:#a9b8c7; --grid:rgba(54,78,76,.14);
+  --ap:#9a5f20; --nav:#276f66; --route:#a76820; --own:#ac5550;
+  --txt:#16222e; --ui:#f7f9fb; --ui2:#e8eef5; --mut:#5d6f82;
+  --trf:#2c5d84; --acc:#1f6fb8; --red:#a33d3a; --grn:#2f7d55;
+  --warn:#915711; --mag:#715884; --line:rgba(46,70,100,.18); --focus:#9a5f20;
+  color-scheme:light;
+}
+:root[data-theme="night"] {
+  --bg:#0a1421; --land:#101d2b; --coast:#2c3f55; --grid:rgba(150,180,215,.12);
+  --ap:#e7b36c; --nav:#86bdb1; --route:#e7b36c; --own:#df827a;
+  --txt:#e4ecf5; --ui:#0d1927; --ui2:#132132; --mut:#8b9db3;
+  --trf:#9dc0e0; --acc:#38bdf8; --red:#df827a; --grn:#5ec99a;
+  --warn:#e7b36c; --mag:#9fb0d8; --line:rgba(140,170,205,.16); --focus:#e7b36c;
+  color-scheme:dark;
+}
+:root[data-theme="contrast"] {
+  --bg:#000; --land:#080808; --coast:#fff; --grid:rgba(255,255,255,.36);
+  --ap:#ff0; --nav:#0ff; --route:#ff0; --own:#fff;
+  --txt:#fff; --ui:#000; --ui2:#171717; --mut:#e6e6e6;
+  --trf:#7f7; --acc:#ff0; --red:#ff7777; --grn:#7f7;
+  --warn:#ff0; --mag:#f7f; --line:rgba(255,255,255,.55); --focus:#ff0;
+  color-scheme:dark;
+}
+
+:root {
+  /* Spacing: 4px base, 8 steps. Use these instead of ad-hoc pixel gaps. */
+  --s-space-1:4px;  --s-space-2:8px;  --s-space-3:12px; --s-space-4:16px;
+  --s-space-5:20px; --s-space-6:24px; --s-space-7:32px; --s-space-8:48px;
+  /* Radii: one small, one default, one large, one pill. */
+  --s-radius-xs:2px; --s-radius-sm:4px; --s-radius-md:6px; --s-radius-lg:10px; --s-radius-pill:999px;
+  /* Elevation: two levels only, kept subtle so panels stay flat over the map. */
+  --s-elev-1:0 2px 8px rgba(0,0,0,.14);
+  --s-elev-2:0 12px 30px rgba(0,0,0,.24);
+  /* Type scale, 1.18 ratio. */
+  --s-fs-2xs:10px; --s-fs-xs:11px; --s-fs-sm:12px; --s-fs-md:14px;
+  --s-fs-lg:16px; --s-fs-xl:20px; --s-fs-2xl:28px; --s-fs-3xl:36px;
+  --s-lh-tight:1.15; --s-lh-body:1.5;
+  /* Motion: two durations, one ease. Nothing longer than 160ms. */
+  --s-dur-1:90ms; --s-dur-2:160ms; --s-ease:cubic-bezier(.2,.7,.3,1);
+  --s-hairline:1px solid var(--line);
+}
+
+:root {
+  /* One type family for every surface: Bahnschrift is a DIN, the face of
+     cockpit labels; Segoe UI Variable carries the body text. */
+  --s-font:"Segoe UI Variable Text","Bahnschrift","Segoe UI",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --s-font-mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
+}

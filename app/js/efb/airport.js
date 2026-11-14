@@ -1,7 +1,8 @@
 /* EFB · Airport Information.
  *
- * Elevation, runways, frequencies and published procedures for one airport,
- * from the bridge's OurAirports directory and the simulator navigation data.
+ * Elevation, runways, frequencies, published procedures and ILS/localizer
+ * facilities for one airport, from the bridge's OurAirports directory and the
+ * simulator navigation data.
  * NOTAMs are the one thing Stratos cannot fetch from a verified free source, so
  * the card says exactly that and links to the official services instead of
  * inventing a notice.
@@ -36,6 +37,8 @@ export async function mount(root, ctx) {
   let procedures = null;
   let proceduresError = '';
   let proceduresBusy = false;
+  let ils = null;
+  let ilsError = '';
   let destroyed = false;
   let ground = null;
   let groundCode = '';
@@ -101,11 +104,11 @@ export async function mount(root, ctx) {
           <td>${esc(row.id)}</td>
           <td class="num">${row.lengthFt ? `${row.lengthFt.toLocaleString('en-US')} ft` : '—'}</td>
           <td class="num">${row.widthFt ? `${row.widthFt} ft` : '—'}</td>
-          <td class="num">${Math.round(row.heading)}°</td>
+          <td class="num">${String(Math.round(row.heading) % 360 || 360).padStart(3, '0')}°</td>
           <td>${esc(runwaySurface(row))}</td>
         </tr>`).join('')}</tbody>
       </table>
-      <div class="e-small e-faint" style="margin-top:8px">${runways.some(r => r.verified) ? 'Dimensions from the bridge runway database (OurAirports).' : 'Runway orientation derives from the designator; lengths come from the airport snapshot where available.'}</div>
+      <div class="e-small e-faint" style="margin-top:8px">${runways.some(r => r.verified) ? 'OurAirports' : 'Headings from designators · OurAirports'}</div>
     </div>`;
   }
 
@@ -120,23 +123,47 @@ export async function mount(root, ctx) {
   }
 
   function proceduresCard() {
-    const groups = ['SID', 'STAR', 'APPROACH'];
+    // The bridge and the bundled dataset key procedures in lower case.
+    const groups = ['sid', 'star', 'approach'];
     return `<div class="e-card"><h3>Published procedures <span class="e-spacer"></span>${procedures && procedures.cycle ? `<span class="e-badge">${esc(procedures.cycle)}</span>` : ''}</h3>
       ${proceduresBusy ? '<div class="e-loading"><i></i>Reading the navigation data…</div>' : ''}
       ${!proceduresBusy && proceduresError ? `<div class="e-notice warn">${esc(proceduresError)}</div>` : ''}
       ${procedures && procedures.ok ? groups.map(kind => {
         const list = (procedures.procedures && procedures.procedures[kind]) || [];
         if (!list.length) return '';
-        return `<div style="margin-bottom:10px"><div class="e-label">${kind}</div>
+        return `<div style="margin-bottom:10px"><div class="e-label">${kind.toUpperCase()}</div>
           <div class="e-row" style="margin-top:5px">${list.slice(0, 28).map(row => `<span class="e-badge">${esc(row.id)}</span>`).join('')}${list.length > 28 ? `<span class="e-badge">+${list.length - 28}</span>` : ''}</div></div>`;
       }).join('') || '<div class="e-small e-muted">The navigation data holds no procedures for this airport.</div>' : ''}
       <div class="e-small e-faint">${procedures && procedures.source ? `Source: ${esc(procedures.source)}${procedures.cycle ? ` · cycle ${esc(procedures.cycle)}` : ''}` : 'Published procedures load from the simulator navigation data when the bridge is running on this PC.'}</div>
     </div>`;
   }
 
+  function ilsCard() {
+    const planned = String(planRunway() || '').toUpperCase();
+    const rows = ils && Array.isArray(ils.ils) ? ils.ils : [];
+    let content;
+    if (ilsError) content = `<div class="e-notice warn"><div>${esc(ilsError)}</div></div>`;
+    else if (!ils) content = '<div class="e-loading"><i></i>Reading the localizers…</div>';
+    else if (!ils.simulatorNavData) content = '<div class="e-small e-muted">No X-Plane 12 nav data on this PC · ILS needs X-Plane 12</div>';
+    else if (!rows.length) content = `<div class="e-small e-muted">The navigation data lists no ILS or localizer at ${esc(icao)}.</div>`;
+    else content = `<table class="e-table"><thead><tr><th>Rwy</th><th>Type</th><th>Ident</th><th>Freq</th><th>Course</th><th>GS</th><th>DME</th></tr></thead><tbody>
+        ${rows.map(row => `<tr${row.runway === planned ? ' style="background:rgba(34,211,238,.10)"' : ''}>
+          <td><b>${esc(row.runway)}</b>${row.runway === planned ? ' <span class="e-badge accent">plan</span>' : ''}</td>
+          <td>${esc(String(row.type).replace(/^ILS CAT /, 'CAT '))}</td><td><b>${esc(row.ident)}</b></td>
+          <td>${esc(Number(row.freqMHz).toFixed(2))}</td>
+          <td>${esc(String(row.courseMag).padStart(3, '0'))}°M <span class="e-faint">${esc(String(Math.round(row.courseTrue) % 360 || 360).padStart(3, '0'))}°T</span></td>
+          <td>${row.glideSlopeDeg != null ? `${esc(Number(row.glideSlopeDeg).toFixed(2))}°` : '<span class="e-faint">none</span>'}</td>
+          <td>${row.dme ? 'Yes' : '—'}</td></tr>`).join('')}
+      </tbody></table>`;
+    return `<div class="e-card"><h3>ILS and localizers <span class="e-spacer"></span>${ils && ils.cycle ? `<span class="e-badge">${esc(ils.cycle)}</span>` : ''}</h3>
+      ${content}
+      <div class="e-small e-faint" style="margin-top:8px">${ils && ils.source ? `Source: ${esc(ils.source)}${ils.cycle ? ` · cycle ${esc(ils.cycle)}` : ''}. ` : ''}Confirm against the approach chart</div>
+    </div>`;
+  }
+
   function notamCard() {
     return `<div class="e-card"><h3>NOTAMs</h3>
-      <div class="e-notice warn"><div><b>Not available in Stratos</b><br>No verified free NOTAM source is configured in this build, so no NOTAM is shown. This page will not invent a closure, restriction or navaid outage.</div></div>
+      <div class="e-notice warn"><div><b>NOTAMs not available</b><br>Check the official AIS before flight.</div></div>
       <div class="e-row" style="margin-top:10px">
         <a class="e-btn small" href="https://www.faa.gov/air_traffic/flight_info/aeronav/notams/" target="_blank" rel="noopener">FAA NOTAM search ↗</a>
         <a class="e-btn small" href="https://www.eurocontrol.int/" target="_blank" rel="noopener">Eurocontrol AIS ↗</a>
@@ -210,8 +237,9 @@ export async function mount(root, ctx) {
       </div>
       <div class="e-grid two" style="margin-bottom:12px">${runwaysCard()}${frequenciesCard()}</div>
       <div style="margin-bottom:12px">${proceduresCard()}</div>
+      <div style="margin-bottom:12px">${ilsCard()}</div>
       ${notamCard()}
-      <div class="e-small e-faint" style="margin:14px 2px 0">Airport data: OurAirports (public domain). Procedures: the simulator navigation data. Confirm operational information against the current AIP.</div>`;
+      <div class="e-small e-faint" style="margin:14px 2px 0">OurAirports · simulator CIFP · not for real-world navigation</div>`;
     // The chart host lives outside this markup, so it survives a re-render.
     ensureGround();
   }
@@ -219,27 +247,55 @@ export async function mount(root, ctx) {
   async function loadProcedures(code) {
     procedures = null;
     proceduresError = '';
+    proceduresBusy = true;
+    render();
+    // The simulator's own data through the bridge first; without the bridge (or
+    // with no simulator data on it), the FAA CIFP dataset Stratos ships (US airports).
+    let fallback = isHostedPage();
+    if (!fallback) {
+      try {
+        const response = await fetch(`${defaultBridgeBase().replace(/\/+$/, '')}/procedures.json?airport=${encodeURIComponent(code)}`, { credentials: 'include', cache: 'no-store' });
+        const payload = await response.json().catch(() => ({}));
+        if (response.ok) procedures = payload;
+        else if (response.status === 503) fallback = true;
+        else proceduresError = payload.error || `The navigation data answered ${response.status}.`;
+      } catch (_) {
+        fallback = true;
+      }
+    }
+    if (fallback) {
+      try {
+        const response = await fetch(`/api/procedures?airport=${encodeURIComponent(code)}`, { cache: 'no-store' });
+        const payload = await response.json().catch(() => ({}));
+        if (response.ok && payload.ok) procedures = payload;
+        else proceduresError = `Bridge offline · ${payload.error || 'no bundled procedures for this airport'}`.trim();
+      } catch (_) {
+        proceduresError = 'Bridge offline · procedures unavailable';
+      }
+    }
+    if (destroyed || code !== (airport && airport.id)) return;
+    proceduresBusy = false;
+    render();
+  }
+
+  async function loadIls(code) {
+    ils = null;
+    ilsError = '';
     if (isHostedPage()) {
-      proceduresError = 'The simulator navigation data is only reachable through the bridge on the PC running the simulator. Chart documents are in the Charts app.';
+      ilsError = 'ILS facilities are read from the simulator navigation data, through the bridge on the PC running the simulator.';
       render();
       return;
     }
-    proceduresBusy = true;
-    render();
     try {
-      const response = await fetch(`${defaultBridgeBase().replace(/\/+$/, '')}/procedures.json?airport=${encodeURIComponent(code)}`, { credentials: 'include', cache: 'no-store' });
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        proceduresError = response.status === 503
-          ? (payload.error || 'No navigation data is installed: point Stratos at X-Plane or load the bundled dataset.')
-          : (payload.error || `The navigation data answered ${response.status}.`);
-      } else {
-        procedures = await response.json();
-      }
-    } catch (fetchError) {
-      proceduresError = `The navigation data could not be reached (${fetchError.message}).`;
+      const response = await fetch(`${defaultBridgeBase().replace(/\/+$/, '')}/navdata/ils?icao=${encodeURIComponent(code)}`, { credentials: 'include', cache: 'no-store' });
+      const payload = await response.json().catch(() => ({}));
+      if (destroyed || code !== (airport && airport.id)) return;
+      if (!response.ok) ilsError = payload.error || `The navigation data answered ${response.status}.`;
+      else ils = payload;
+    } catch (_) {
+      if (destroyed) return;
+      ilsError = 'Bridge offline · start the Stratos bridge for ILS data';
     }
-    proceduresBusy = false;
     render();
   }
 
@@ -265,6 +321,7 @@ export async function mount(root, ctx) {
     }
     render();
     loadProcedures(airport.id);
+    loadIls(airport.id);
   }
 
   /* search */

@@ -561,3 +561,31 @@ test('the airline dresses the whole bag, with a preview and a manual override', 
   assert.match(settings, /ctx\.setPrefs\(\{ airlineMode: 'manual', airline: pick \}\)/, 'manual writes both mode and airline');
   assert.match(settings, /No SimBrief plan is stored/, 'a missing plan is explained, not guessed around');
 });
+
+test('EFB weather: statute-mile visibility is not shown as 0 m', async () => {
+  const { fmtVisibility } = await import('../app/js/efb/common.js');
+  const { parseMetar } = await import('../app/js/lib/routeweather.js');
+  // Real KSFO observation: 10SM leaves the metric field null.
+  const decoded = parseMetar('KSFO 132256Z 28016KT 10SM FEW017 FEW045 SCT100 SCT150 16/11 A2961');
+  assert.equal(fmtVisibility(decoded), '10 SM');
+  assert.equal(fmtVisibility(parseMetar('EGLL 132250Z 24012KT 9999 FEW030 12/08 Q1012')), '10 km or more');
+  assert.equal(fmtVisibility(parseMetar('LFPG 132250Z 24012KT 0800 FG VV002 08/08 Q1012')), '800 m');
+  assert.equal(fmtVisibility({ visibilityM: null, visibilitySm: null }), '—');
+});
+
+test('the Airport page reads procedures under the keys the navigation data uses', async () => {
+  const { readFileSync } = await import('node:fs');
+  const root = new URL('..', import.meta.url);
+  const sample = JSON.parse(readFileSync(new URL('navdata/cifp/KSEA.json', root), 'utf8'));
+  const keys = Object.keys(sample.procedures).sort();
+  assert.deepEqual(keys, ['approach', 'sid', 'star']);
+  const page = readFileSync(new URL('app/js/efb/airport.js', root), 'utf8');
+  assert.ok(page.includes(`const groups = ['sid', 'star', 'approach'];`), 'airport.js looks procedures up by the same keys');
+});
+
+test('opening the same app with a different query remounts it', () => {
+  const shell = fs.readFileSync(new URL('../app/js/efb.js', import.meta.url), 'utf8');
+  assert.ok(shell.includes('if (state.app === app.id && state.query === query) return;'),
+    'an app is skipped only when both the app and its query are unchanged');
+  assert.ok(shell.includes('state.query = query;'), 'the open query is remembered');
+});

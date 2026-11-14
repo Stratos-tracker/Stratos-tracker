@@ -16,6 +16,10 @@
 <meta name="apple-mobile-web-app-title" content="Stratos EFB">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Stratos EFB</title>
+<!-- The Flight Deck's theme, applied before first paint. The bag is night-first:
+     Day keeps the Night palette until the EFB's own surfaces have a light set. -->
+<script>try{var t=localStorage.getItem('dl.theme');document.documentElement.dataset.theme=t==='contrast'?'contrast':'night'}catch(e){}</script>
+<link rel="stylesheet" href="tokens.css">
 <link rel="stylesheet" href="efb.css">
 <!-- The builder is a chart workspace with its own rail and panel rules; the
      tokens and the `e-*` kit still come from efb.css above. -->

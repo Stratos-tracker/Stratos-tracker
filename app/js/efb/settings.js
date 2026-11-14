@@ -274,7 +274,7 @@ export async function mount(root, ctx) {
               <button class="e-btn small" type="button" data-check-bridge>Check bridge</button>
               <a class="e-btn small ghost" href="pilot.html#settings">Phone relay settings ↗</a>
             </div>
-            <div class="e-small e-faint" style="margin-top:8px">The EFB reads the bridge directly on this PC. A hosted page needs the relay, configured in the tracker's Settings.</div>
+            <div class="e-small e-faint" style="margin-top:8px">Local bridge on this PC · hosted page uses the relay</div>
           </div>
 
           <div class="e-card" style="margin-top:12px">
@@ -284,7 +284,7 @@ export async function mount(root, ctx) {
               <dt>Charts</dt><dd>FAA d-TPP (public domain)</dd>
               <dt>Other regions</dt><dd>Official publisher links only</dd>
             </dl>
-            <div class="e-small e-faint" style="margin-top:6px">No alternative weather provider is configured, so none is offered. Integrated charts cover the FAA's publications; elsewhere Stratos links the publisher instead of scraping it.</div>
+            <div class="e-small e-faint" style="margin-top:6px">Weather: NOAA · charts: FAA, publisher links elsewhere</div>
             <div class="set-row" style="margin-top:8px">
               <div class="set-main"><b>Chart cache</b><span>${cacheBusy ? 'Measuring…' : cacheBytes == null ? 'Measure the documents stored for offline use.' : `${bytesLabel(cacheBytes)} stored on this device.`}</span></div>
               <div class="set-control">
@@ -303,7 +303,7 @@ export async function mount(root, ctx) {
               <dt>Tracker</dt><dd><a href="index.html">Flight Deck</a> · <a href="logbook.html">Logbook</a> · <a href="discover.html">Explore</a></dd>
               <dt>Data</dt><dd style="font-weight:500;text-align:right">SimBrief plans, NOAA weather, OurAirports, FAA d-TPP, VATSIM/ADS-B traffic, the simulator through the bridge</dd>
             </dl>
-            <div class="e-notice" style="margin-top:10px">Simulator companion. Performance figures are only shown from a dataset you import; nothing here is approved for real-world flight.</div>
+            <div class="e-notice" style="margin-top:10px">Simulator use only · not for real-world flight</div>
             <div class="e-row" style="margin-top:10px">
               <button class="e-btn small ghost" type="button" data-reset-prefs>Reset EFB preferences</button>
             </div>

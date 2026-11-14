@@ -193,6 +193,7 @@ export async function mount(root, ctx) {
       tint: chartTheme === 'night' ? 'rgba(6, 10, 18, .42)' : null,
       ownSymbol: 'aircraft',
       pannable: true,
+      smooth: true,
       // The credit is permanent in the footer under the chart, so the canvas
       // does not draw a second, overlapping copy of it.
       attribution: false,
@@ -701,7 +702,7 @@ export async function mount(root, ctx) {
     }
     if (t) {
       map.options.ownLabel = `${fmtFl(t.alt)} ${TREND(t.vs) === 'climbing' ? '▲' : TREND(t.vs) === 'descending' ? '▼' : ''}`.trim();
-      map.setPosition({ lat: t.lat, lon: t.lon, alt: t.alt }, t.hdg);
+      map.setPosition({ lat: t.lat, lon: t.lon, alt: t.alt, gs: t.gs, trk: t.trk }, t.hdg);
       map.setRouteState(stateNow);
     }
   }

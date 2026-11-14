@@ -471,7 +471,7 @@ test('a shared STAR/approach fix joins without a vector and mismatched runways a
 
   const src = fs.readFileSync(new URL('../app/js/efb/flightplan.js', import.meta.url), 'utf8');
   assert.match(src, /procedureCard\('approach'\)/, 'the EFB exposes approach selection');
-  assert.match(src, /An approach is never guessed/, 'and says that SimBrief omission is not guessed');
+  assert.match(src, /Choose the approach here if the plan names none/, 'and says a SimBrief omission is chosen, not guessed');
 });
 
 /* ── fuel ────────────────────────────────────────────────────────────── */

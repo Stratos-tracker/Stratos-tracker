@@ -77,7 +77,9 @@ export async function mount(root, ctx) {
       const d = durationMinutes(flight);
       if (d != null) minutes += d;
       if (Number.isFinite(Number(flight.distanceNm))) nm += Number(flight.distanceNm);
-      if (flight.landing && Number.isFinite(Number(flight.landing.vsFpm))) landings += 1;
+      // Same value the Landing column shows; Number(null) is 0, so a missing rate must not count.
+      const vs = flight.landing && flight.landing.vsFpm != null ? flight.landing.vsFpm : flight.landingVS;
+      if (vs != null && Number.isFinite(Number(vs))) landings += 1;
     }
     return { minutes, nm, landings, count: rows.length };
   }
@@ -139,7 +141,7 @@ export async function mount(root, ctx) {
       <div id="log-detail-host">${renderDetail(selected)}</div>
       ${loading ? '<div class="e-loading"><i></i>Reading the logbook…</div>'
         : error ? `<div class="e-notice bad">${esc(error)}</div>`
-        : !flights.length ? `<div class="e-empty"><b>No flights recorded yet</b><p>Flights appear here when the bridge records one, or when the tracker syncs its logbook. Stratos does not invent a flight to fill the space.</p><a class="e-btn small" href="index.html">Open the Flight Deck</a></div>`
+        : !flights.length ? `<div class="e-empty"><b>No flights recorded yet</b><p>Flights appear here once the bridge records one.</p><a class="e-btn small" href="index.html">Open the Flight Deck</a></div>`
         : !rows.length ? '<div class="e-empty"><b>Nothing matches</b><p>Clear the search or choose another year.</p></div>'
         : `<div class="e-card" style="padding:6px 12px 8px;overflow-x:auto">
             <table class="e-table">

@@ -56,7 +56,7 @@ function procedureCards(summary) {
 function routeTable(summary) {
   const route = summary.route;
   if (!route.waypoints.length) {
-    return `<div class="e-empty"><b>No route waypoints</b><p>The imported plan carries no navlog and the Flight Deck has no route loaded, so there is no leg-by-leg table to show.</p></div>`;
+    return `<div class="e-empty"><b>No route waypoints</b><p>No navlog in this plan.</p></div>`;
   }
   const rows = route.waypoints.map(point => `<tr>
       <td>${esc(point.id)}${point.name && point.name !== point.id ? `<div class="e-small e-faint">${esc(point.name)}</div>` : ''}</td>
@@ -125,7 +125,7 @@ function ofpDocument(summary) {
   if (summary.ofpDocumentUrl) {
     const safe = esc(summary.ofpDocumentUrl);
     return `<div class="e-card"><h3>Operational flight plan <em>published PDF</em></h3>
-      <p class="e-small e-muted" style="margin:0 0 10px">SimBrief published this plan as a PDF. It opens in a new tab, where your browser's own PDF viewer can print or save it.</p>
+      <p class="e-small e-muted" style="margin:0 0 10px">OFP PDF · opens in a new tab</p>
       <div class="e-row">
         <a class="e-btn primary" href="${safe}" target="_blank" rel="noopener">Open the OFP PDF ↗</a>
         <button class="e-btn" type="button" data-copy="${safe}">Copy link</button>
@@ -134,7 +134,7 @@ function ofpDocument(summary) {
     </div>`;
   }
   return `<div class="e-card"><h3>Operational flight plan</h3>
-    <div class="e-notice warn">This plan did not include a published PDF or the formatted OFP text. SimBrief only generates those when the plan has been built with an OFP format selected — rebuild the plan in SimBrief, then refresh here.</div></div>`;
+    <div class="e-notice warn">No OFP document in this plan · rebuild it in SimBrief with an OFP format, then refresh.</div></div>`;
 }
 
 function emptyState(plan, ctx) {
@@ -142,7 +142,7 @@ function emptyState(plan, ctx) {
   return `<div class="e-grid two">
     <div class="e-card">
       <h3>Import your SimBrief plan</h3>
-      <p class="e-small e-muted" style="margin-top:0">The EFB reads the same stored plan as the Flight Deck, so you only load it once. Your Pilot ID is kept on this device.</p>
+      <p class="e-small e-muted" style="margin-top:0">Shared with the Flight Deck · Pilot ID stored on this device</p>
       <div class="e-field" style="margin-top:10px">
         <label for="efb-simbrief">SimBrief Pilot ID or username</label>
         <input class="e-input" id="efb-simbrief" value="${esc(id)}" autocomplete="off" spellcheck="false" placeholder="e.g. 123456">

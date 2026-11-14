@@ -1436,31 +1436,113 @@ def load_airports():
         log("Airport download failed (bundled airports still work): %s" % exc)
 
 
+def osm_elements(payload):
+    """Overpass elements -> [aeroway, ref, [[lat, lon], ...]]; a holding-position node is one point."""
+    result = []
+    for element in payload.get("elements", []):
+        tags = element.get("tags") or {}
+        if not tags.get("aeroway"):
+            continue
+        if element.get("type") == "way" and element.get("geometry"):
+            points = [[point["lat"], point["lon"]] for point in element["geometry"]]
+        elif element.get("type") == "node" and "lat" in element and "lon" in element:
+            points = [[element["lat"], element["lon"]]]
+        else:
+            continue
+        result.append([tags["aeroway"], tags.get("ref", ""), points])
+    return result
+
+
 def osm_airfield(ident, lat, lon):
-    """Runways/taxiways/aprons from OpenStreetMap (ODbL), cached on disk."""
-    path = os.path.join(OSMDIR, re.sub(r"\W", "", ident) + ".json")
+    """Runways/taxiways/aprons/holding points from OpenStreetMap (ODbL), cached on disk."""
+    # .v2: caches written before holding points were fetched lack them, so refetch once.
+    path = os.path.join(OSMDIR, re.sub(r"\W", "", ident) + ".v2.json")
     try:
         with open(path, "r", encoding="utf-8") as f:
             return f.read()
     except OSError:
         pass
-    query = ('[out:json][timeout:30];(way["aeroway"~"^(runway|taxiway|taxilane|apron|terminal)$"]'
-             '(around:5000,%f,%f););out geom;' % (lat, lon))
-    request = urllib.request.Request(
-        "https://overpass-api.de/api/interpreter",
-        data=urllib.parse.urlencode({"data": query}).encode(),
-        headers={"User-Agent": "Stratos-Bridge/%s" % VERSION})
-    with urllib.request.urlopen(request, timeout=60) as response:
-        payload = json.load(response)
-    result = [[element["tags"]["aeroway"], element["tags"].get("ref", ""),
-               [[point["lat"], point["lon"]] for point in element["geometry"]]]
-              for element in payload.get("elements", [])
-              if element.get("type") == "way" and element.get("geometry")]
+    query = ('[out:json][timeout:30];(way["aeroway"~"^(runway|taxiway|taxilane|apron|terminal|holding_position)$"]'
+             '(around:5000,%f,%f);node["aeroway"="holding_position"](around:5000,%f,%f););out geom;'
+             % (lat, lon, lat, lon))
+    result = overpass_query(query)
     text = json.dumps(result)
-    os.makedirs(OSMDIR, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(text)
+    if result:  # an empty answer is not cached, so a later fetch can still find data
+        os.makedirs(OSMDIR, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(text)
     return text
+
+
+# Same public instances the tracker's map falls back through, in order.
+OVERPASS_MIRRORS = (
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.private.coffee/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass.openstreetmap.fr/api/interpreter",
+)
+
+
+def overpass_query(query, mirrors=OVERPASS_MIRRORS, timeout=30):
+    """First mirror that answers; raises the last error when none does."""
+    error = RuntimeError("no Overpass mirror configured")
+    for url in mirrors:
+        request = urllib.request.Request(
+            url, data=urllib.parse.urlencode({"data": query}).encode(),
+            headers={"User-Agent": "Stratos-Bridge/%s" % VERSION})
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                payload = json.load(response)
+        except Exception as exc:  # HTTP 429/502/504, timeouts, bad JSON
+            error = exc
+            log("Overpass %s failed: %s" % (urllib.parse.urlparse(url).hostname, exc))
+            continue
+        # A timed-out query still answers 200, with a remark and no elements.
+        if payload.get("remark") and not payload.get("elements"):
+            error = RuntimeError(payload["remark"])
+            log("Overpass %s: %s" % (urllib.parse.urlparse(url).hostname, payload["remark"]))
+            continue
+        return osm_elements(payload)
+    raise error
+
+
+# Same feeds as app/js/lib/sigmets.js SIGMET_FEEDS; passed through, interpreted by that module.
+SIGMET_FEEDS = {
+    "airsigmet": "https://aviationweather.gov/api/data/airsigmet?format=json",
+    "isigmet": "https://aviationweather.gov/api/data/isigmet?format=json",
+    "gairmet": "https://aviationweather.gov/api/data/gairmet?format=json&fore=0",
+}
+SIGMET_CACHE = {"at": 0, "payload": None}
+SIGMET_LOCK = threading.Lock()
+
+
+def sigmet_feeds(fetch=None):
+    """{airsigmet, isigmet, gairmet} as NOAA lists; a failed feed is None with its error."""
+    with SIGMET_LOCK:
+        if SIGMET_CACHE["payload"] and time.time() - SIGMET_CACHE["at"] < 300:
+            return SIGMET_CACHE["payload"]
+
+    def default_fetch(url):
+        request = urllib.request.Request(url, headers={"User-Agent": "Stratos-Bridge/%s" % VERSION, "Accept": "application/json"})
+        with urllib.request.urlopen(request, timeout=15) as response:
+            return json.load(response)
+    fetch = fetch or default_fetch
+    payload = {"fetchedAt": int(time.time() * 1000), "source": "NOAA Aviation Weather Center", "errors": {}}
+    for name, url in SIGMET_FEEDS.items():
+        try:
+            data = fetch(url)
+            if not isinstance(data, list):
+                raise ValueError("unexpected shape")
+            payload[name] = data
+        except Exception as exc:
+            payload[name] = None
+            payload["errors"][name] = str(exc)[:160]
+    if any(payload[name] is not None for name in SIGMET_FEEDS):
+        with SIGMET_LOCK:
+            SIGMET_CACHE.update(at=time.time(), payload=payload)
+    else:
+        payload["error"] = "NOAA advisories are unreachable right now."
+    return payload
 
 
 def faa_cycle(back=0):
@@ -2364,8 +2446,23 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/navdata/status":
             self.send_json(nav_near.status())
             return
+        if path == "/navdata/enroute":
+            q = urllib.parse.parse_qs(parsed.query)
+            self.send_json(nav_near.enroute(q.get("lat", [""])[0], q.get("lon", [""])[0],
+                                            q.get("nm", ["80"])[0], q.get("level", ["low"])[0]))
+            return
+        if path == "/navdata/ils":
+            code = re.sub(r"[^A-Za-z0-9]", "", urllib.parse.parse_qs(parsed.query).get("icao", [""])[0])[:5]
+            if not code:
+                self.send_json({"error": "An airport identifier is required."}, 400)
+                return
+            self.send_json(nav_near.ils(code))
+            return
         if path == "/weather":
             self.handle_weather(parsed)
+            return
+        if path == "/sigmets":
+            self.send_json(sigmet_feeds())
             return
         if path == "/cabin":
             self.send_json(CABIN.state())

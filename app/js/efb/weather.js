@@ -6,15 +6,16 @@
  * use the airport's published runway headings where the directory has them.
  *
  * Staleness is shown, not hidden: every card stamps its observation and its
- * source. Winds aloft are the NOAA FD table. SIGMETs are not included because no
- * verified free source is configured; the card says so and links to the official
- * service instead of inventing one.
+ * source. Winds aloft are the NOAA FD table. SIGMETs (US and international) and
+ * US G-AIRMETs come from the NOAA AWC data API, filtered to the planned route
+ * or, without a plan, to the station's surroundings.
  */
 
 import {
-  airportByCode, airportRunways, esc, fmtAge, fmtFt, fmtUtc, fmtVisibility,
-  searchAirports, weatherFor, windsAloft,
+  advisories, airportByCode, airportRunways, esc, fmtAge, fmtFt, fmtUtc, fmtVisibility,
+  plannedRouteFromOfp, searchAirports, weatherFor, windsAloft,
 } from './common.js';
+import { advisoriesNear } from '../lib/sigmets.js';
 import { parseMetar } from '../lib/routeweather.js';
 import { decodeTaf } from '../lib/taf.js';
 import { windComponents } from '../lib/aircraftperformance.js';
@@ -50,6 +51,8 @@ export async function mount(root, ctx) {
   let winds = null;
   let windsFcst = '06';
   let windsBusy = false;
+  let hazards = null;
+  const routePoints = plannedRouteFromOfp(ofp);
 
   root.innerHTML = `
     <div class="e-row" style="margin-bottom:10px">
@@ -196,10 +199,37 @@ export async function mount(root, ctx) {
     </div>`;
   }
 
+  const levelText = ft => (ft == null ? null : ft === 0 ? 'SFC' : ft >= 18000 ? `FL${String(Math.round(ft / 100)).padStart(3, '0')}` : fmtFt(ft));
+
   function hazardsCard() {
+    const onRoute = routePoints.length > 1;
+    const here = airport && Number.isFinite(airport.lat) && Number.isFinite(airport.lon) ? [{ lat: airport.lat, lon: airport.lon }] : [];
+    const scope = onRoute ? 'along the planned route (±25 NM)' : here.length ? `within 50 NM of ${esc(icao)}` : '';
+    let content;
+    if (!hazards) content = '<div class="e-loading"><i></i>Reading SIGMETs and G-AIRMETs…</div>';
+    else if (hazards.error) content = `<div class="e-notice warn"><div>${esc(hazards.error)} Check the official source.</div></div>`;
+    else if (!scope) content = '<div class="e-small e-muted">This station has no position, so advisories cannot be matched to it.</div>';
+    else {
+      const near = onRoute ? advisoriesNear(hazards.items, routePoints, 25) : advisoriesNear(hazards.items, here, 50);
+      const rows = near.map(item => {
+        const base = levelText(item.baseFt);
+        const top = levelText(item.topFt);
+        const levels = base && top ? `${base}–${top}` : top ? `to ${top}` : base ? `from ${base}` : 'levels not stated';
+        const tone = /SIGMET/.test(item.kind) ? 'bad' : 'warn';
+        return `<div class="e-notice ${tone}" style="margin-top:8px"><div>
+          <b>${esc(item.kind)} · ${esc(item.label)}</b><br>
+          <span class="e-small">${esc(item.area)} · ${esc(levels)}${item.toMs ? ` · until ${esc(fmtUtc(item.toMs))}` : ''}</span>
+          ${item.raw ? `<details style="margin-top:6px"><summary class="e-small">Raw text</summary><pre class="e-small" style="white-space:pre-wrap;margin:6px 0 0">${esc(item.raw)}</pre></details>` : ''}
+        </div></div>`;
+      }).join('');
+      content = `${near.length
+        ? rows
+        : `<div class="e-notice good"><div>No active SIGMET or G-AIRMET ${scope}.</div></div>`}
+        <div class="e-small e-faint" style="margin-top:8px">${hazards.items.length} active advisories in the feed · ${scope} · NOAA AWC, fetched ${esc(fmtAge(hazards.fetchedAt))}${hazards.missing.length ? ` · unavailable: ${esc(hazards.missing.join(', '))}` : ''}. G-AIRMETs: US only.</div>`;
+    }
     return `<div class="e-card">
       <h3>SIGMETs and advisories</h3>
-      <div class="e-notice"><div>No verified free SIGMET feed is configured in this build, so none are shown. Stratos will not invent an advisory. Check the official source for your airspace before flight.</div></div>
+      ${content}
       <div class="e-row" style="margin-top:10px">
         <a class="e-btn small" href="https://aviationweather.gov/airsigmet/" target="_blank" rel="noopener">NOAA airsigmet ↗</a>
         <a class="e-btn small" href="https://www.eurocontrol.int/" target="_blank" rel="noopener">Eurocontrol ↗</a>
@@ -220,12 +250,12 @@ export async function mount(root, ctx) {
       return;
     }
     if (!record) {
-      body.innerHTML = `<div class="e-empty"><b>Search for a station</b><p>Weather is fetched from NOAA for one airport at a time. Departure, destination and alternate are one tap away above.</p></div>`;
+      body.innerHTML = `<div class="e-empty"><b>Search for a station</b><p>Enter an ICAO code, or tap departure, destination or alternate above.</p></div>`;
       return;
     }
     ctx.setSubtitle(station || (airport && airport.name) || icao);
     body.innerHTML = `${metarCard()}${tafCard()}${windsCard()}${hazardsCard()}
-      <div class="e-small e-faint" style="margin:14px 2px 0">Observations and forecasts are NOAA Aviation Weather Center data. Not for real-world flight.</div>`;
+      <div class="e-small e-faint" style="margin:14px 2px 0">NOAA Aviation Weather Center · not for real-world flight</div>`;
     body.querySelector('#wx-runway')?.addEventListener('change', event => {
       runway = event.target.value;
       render();
@@ -276,6 +306,14 @@ export async function mount(root, ctx) {
     if (airport) station = airport.name || station;
     render();
     loadWinds();
+    loadHazards();
+  }
+
+  async function loadHazards() {
+    const result = await advisories();
+    if (destroyed) return;
+    hazards = result;
+    render();
   }
 
   /* station search */

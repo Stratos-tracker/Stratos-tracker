@@ -28,7 +28,7 @@ const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c =>
 
 const state = {
   dep: '', arr: '', airac: '', sid: '', sidTrans: '', depRwy: '', star: '', starTrans: '', arrRwy: '',
-  approach: '', approachTrans: '', approachRwy: '', planOpen: true, procOpen: true,
+  approach: '', approachTrans: '', approachRwy: '', planOpen: true, procOpen: false,
 };
 
 const CACHE = new Map();
@@ -51,10 +51,11 @@ function loadState() {
       }
     }
   } catch (_) { /* a bad saved selection is simply replaced by the plan's */ }
-  if (typeof window !== 'undefined' && window.innerWidth < 900) {
-    if (!localStorage.getItem(KEY)) { state.planOpen = false; state.procOpen = false; }
-  }
+  // A phone or narrow window opens on a clear map, whatever was left open.
+  if (narrow()) { state.planOpen = false; state.procOpen = false; }
 }
+
+const narrow = () => typeof window !== 'undefined' && window.innerWidth <= 900;
 
 function saveState() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (_) { /* storage is optional */ }
@@ -369,7 +370,12 @@ function render() {
   plan.classList.toggle('open', state.planOpen);
   proc.classList.toggle('open', state.procOpen);
   const host = $('#app');
-  if (host) host.classList.toggle('dk-plan-open', state.planOpen && window.innerWidth >= 901);
+  if (host) {
+    host.classList.toggle('dk-plan-open', state.planOpen && !narrow());
+    // On a narrow screen an open panel is a bottom sheet: the floating flight
+    // plan card steps aside so nothing stacks over the map.
+    host.classList.toggle('dk-sheet-open', narrow() && (state.planOpen || state.procOpen));
+  }
   if (state.planOpen) {
     const title = plan.querySelector('.dk-head b');
     if (title) title.textContent = 'Flight plan';
@@ -414,6 +420,10 @@ function onPaneClick(event) {
     const side = toggle.dataset.dkToggle;
     if (side === 'plan') state.planOpen = !state.planOpen;
     else state.procOpen = !state.procOpen;
+    // Narrow screens have room for one sheet: opening one closes the other.
+    if (narrow() && state.planOpen && state.procOpen) {
+      if (side === 'plan') state.procOpen = false; else state.planOpen = false;
+    }
     saveState();
     render();
     return;

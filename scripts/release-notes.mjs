@@ -473,11 +473,14 @@ function main() {
     process.exit(2);
   }
 
-  const from = arg('from') || (() => {
-    try { return git(['describe', '--tags', '--abbrev=0', `${version === 'HEAD' ? 'HEAD' : 'HEAD'}^`]); } catch (_) { return ''; }
-  })();
-  const to = arg('to', 'HEAD');
-  const commits = commitsBetween(from && from !== `v${version}` ? from : '', to);
+  // Commit history is read only when there are no curated notes, so a curated
+  // release can be prepared from a checkout without git history.
+  const commitsSince = () => {
+    const from = arg('from') || (() => {
+      try { return git(['describe', '--tags', '--abbrev=0', `${version === 'HEAD' ? 'HEAD' : 'HEAD'}^`]); } catch (_) { return ''; }
+    })();
+    return commitsBetween(from && from !== `v${version}` ? from : '', arg('to', 'HEAD'));
+  };
   let curated = null;
   if (!has('no-curated')) {
     try {
@@ -488,7 +491,7 @@ function main() {
     }
     if (curated) console.log(`using curated notes for ${version}`);
   }
-  const changelog = curated ? curated.changelog : buildChangelog(commits);
+  const changelog = curated ? curated.changelog : buildChangelog(commitsSince());
 
   const existing = readManifest(arg('manifest', MANIFEST));
   const previous = existing.releases?.find(item => item.version === version) || {};

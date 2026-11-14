@@ -84,6 +84,25 @@ class LandingAnalysisTests(unittest.TestCase):
         self.assertTrue(runway["estimated"])
         self.assertTrue(result["estimated"]["runway"])
 
+    def test_runway_direction_follows_heading_late_in_the_rollout(self):
+        # Landing on 27 (east end, heading 270), sampled near the 09 threshold at the end of the roll.
+        runway = addon.match_runway(AIRPORTS, 37.0, -122.017, 270)
+        self.assertEqual(runway["threshold"], "27")
+        self.assertTrue(runway["headingAligned"])
+        self.assertGreater(runway["distanceFromThresholdFt"], 6000)
+
+    def test_touchdown_point_is_first_wheel_contact(self):
+        base = 1_700_000_000_000
+        samples = [{"lat": 37.0, "lon": -121.985 + i * 0.0002, "alt": 40 - i * 2, "agl": 10 - i * 2,
+                    "gs": 135, "hdg": 270, "vs": -240, "t": base + i * 250} for i in range(6)]
+        samples[-1]["lon"] = -121.99   # wheel contact, ~1,400 ft past the 27 threshold
+        result = addon._analyse_landing(
+            telemetry(lat=37.0, lon=-122.015, alt=30, agl=0, gs=55, hdg=270), AIRPORTS,
+            samples, touchdown_t=samples[-1]["t"])
+        self.assertEqual(result["runway"]["threshold"], "27")
+        self.assertLess(result["runway"]["distanceFromThresholdFt"], 3000)
+        self.assertEqual(result["lon"], -121.99)
+
     def test_no_runway_when_far_away(self):
         result = addon._analyse_landing(
             telemetry(lat=38.0, lon=-121.0, alt=10, agl=0, gs=110, hdg=90), AIRPORTS)
@@ -148,6 +167,34 @@ class FlightLifecycleTests(unittest.TestCase):
             self.assertEqual(record["depAirport"], "KAAA")
             self.assertEqual(record["arrAirport"], "KAAA")
             self.assertIsNotNone(record["landing"]["runway"])
+        finally:
+            patcher.stop()
+
+    def test_landing_rate_survives_a_long_rollout_at_simulator_rates(self):
+        # 10 Hz telemetry: 300 fpm final descent, wheel contact, then 16 s of rollout (160 samples)
+        # before ground speed drops below LANDED_SPEED_KT. The 40-sample window used to lose every
+        # approach sample by then and report no landing rate at all.
+        clock = {"t": 1_700_000_000_000}
+        patcher = unittest.mock.patch.object(addon, "_now_ms", side_effect=lambda: clock["t"])
+        patcher.start()
+        try:
+            feed = lambda **kw: addon.process_telemetry_for_logbook(telemetry(lon=-122.01, **kw), AIRPORTS)
+            feed(gs=0)
+            feed(gs=15)
+            feed(gs=150, agl=2000, alt=2030)
+            alt = 130.0
+            while alt > 30:                                   # agl from 100 ft down to wheel contact
+                clock["t"] += 100
+                alt = max(30.0, alt - 300 / 600)              # 300 fpm at 10 Hz
+                feed(gs=135, agl=alt - 30, alt=alt, vs=-300)
+            for step in range(160):                           # rollout from 135 kt to below 60 kt
+                clock["t"] += 100
+                feed(gs=135 - step * 0.5, agl=0, alt=30, vs=0)
+            self.assertEqual(addon.get_flight_phase(), "LANDED")
+            with addon._fs_lock:
+                landing = addon._flight_state["flight"]["landing"]
+            self.assertEqual(landing["vsSource"], "derived from recorded altitude")
+            self.assertAlmostEqual(landing["vsFpm"], -300, delta=5)
         finally:
             patcher.stop()
 
@@ -825,3 +872,174 @@ class AircraftPhotoTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class OsmHoldingPointTests(unittest.TestCase):
+    def test_holding_nodes_become_single_point_entries_beside_ways(self):
+        payload = {"elements": [
+            {"type": "way", "tags": {"aeroway": "taxiway", "ref": "A"},
+             "geometry": [{"lat": 51.0, "lon": 0.0}, {"lat": 51.001, "lon": 0.0}]},
+            {"type": "node", "lat": 51.0005, "lon": 0.0, "tags": {"aeroway": "holding_position", "ref": "A1"}},
+            {"type": "node", "lat": 51.0, "lon": 0.0},                       # untagged vertex
+            {"type": "way", "tags": {"aeroway": "taxiway"}},                # no geometry
+        ]}
+        self.assertEqual(bridge.osm_elements(payload), [
+            ["taxiway", "A", [[51.0, 0.0], [51.001, 0.0]]],
+            ["holding_position", "A1", [[51.0005, 0.0]]],
+        ])
+
+
+class OverpassMirrorTests(unittest.TestCase):
+    WAY = {"type": "way", "tags": {"aeroway": "taxiway", "ref": "A"},
+           "geometry": [{"lat": 51.0, "lon": 0.0}, {"lat": 51.001, "lon": 0.0}]}
+
+    def run_with(self, answers):
+        """answers: one per mirror tried; an Exception is raised, a dict is the JSON body."""
+        import io
+        from unittest import mock
+        asked = []
+
+        def fake(request, timeout=None):
+            asked.append(request.full_url)
+            answer = answers[len(asked) - 1]
+            if isinstance(answer, Exception):
+                raise answer
+            return io.BytesIO(json.dumps(answer).encode())
+        with mock.patch.object(bridge.urllib.request, "urlopen", fake), mock.patch.object(bridge, "log"):
+            try:
+                return bridge.overpass_query("q", mirrors=("https://a/i", "https://b/i", "https://c/i")), asked
+            except Exception as exc:
+                return exc, asked
+
+    def test_a_failing_mirror_falls_through_to_the_next(self):
+        result, asked = self.run_with([OSError("502 Bad Gateway"), {"elements": [self.WAY]}])
+        self.assertEqual(asked, ["https://a/i", "https://b/i"])
+        self.assertEqual(result, [["taxiway", "A", [[51.0, 0.0], [51.001, 0.0]]]])
+
+    def test_a_timed_out_query_remark_is_a_failure_not_an_empty_airfield(self):
+        result, asked = self.run_with([{"elements": [], "remark": "runtime error: timeout"}, {"elements": [self.WAY]}])
+        self.assertEqual(len(asked), 2)
+        self.assertEqual(len(result), 1)
+
+    def test_when_every_mirror_fails_the_last_error_is_raised(self):
+        result, asked = self.run_with([OSError("a"), OSError("b"), OSError("c")])
+        self.assertEqual(len(asked), 3)
+        self.assertIsInstance(result, OSError)
+        self.assertEqual(str(result), "c")
+
+    def test_an_empty_answer_is_returned_but_not_cached(self):
+        from unittest import mock
+        with mock.patch.object(bridge, "overpass_query", return_value=[]):
+            self.assertEqual(bridge.osm_airfield("ZZZZ", 1.0, 2.0), "[]")
+        self.assertFalse(os.path.exists(os.path.join(bridge.OSMDIR, "ZZZZ.v2.json")))
+        with mock.patch.object(bridge, "overpass_query", return_value=[["taxiway", "A", [[1, 2], [1, 3]]]]):
+            bridge.osm_airfield("ZZZZ", 1.0, 2.0)
+        self.assertTrue(os.path.exists(os.path.join(bridge.OSMDIR, "ZZZZ.v2.json")))
+
+
+class SigmetFeedTests(unittest.TestCase):
+    def setUp(self):
+        bridge.SIGMET_CACHE.update(at=0, payload=None)
+
+    def test_feeds_are_passed_through_and_a_failed_one_is_named(self):
+        def fetch(url):
+            if "isigmet" in url:
+                raise OSError("504 Gateway Timeout")
+            return [{"hazard": "TURB"}]
+        payload = bridge.sigmet_feeds(fetch)
+        self.assertEqual(payload["airsigmet"], [{"hazard": "TURB"}])
+        self.assertIsNone(payload["isigmet"])
+        self.assertIn("isigmet", payload["errors"])
+        self.assertNotIn("error", payload)
+        # cached: a second call does not fetch
+        self.assertIs(bridge.sigmet_feeds(lambda url: self.fail("fetched again")), payload)
+
+    def test_all_failing_is_an_error_and_is_not_cached(self):
+        def fetch(url):
+            raise OSError("down")
+        payload = bridge.sigmet_feeds(fetch)
+        self.assertIn("error", payload)
+        self.assertIsNone(bridge.SIGMET_CACHE["payload"])
+
+    def test_a_non_list_answer_counts_as_a_failure(self):
+        payload = bridge.sigmet_feeds(lambda url: {"error": "bad request"})
+        self.assertIn("error", payload)
+
+
+class IlsNavDataTests(unittest.TestCase):
+    # Real X-Plane 12 earth_nav.dat (1200) lines, cycle 2610.
+    LINES = [
+        " 4  47.465077778 -122.307738889      355    11030    18 123840.343 ISEA KSEA K1 34R ILS-cat-II",
+        " 6  47.434277778 -122.306394444      355    11030    18 275000.343 ISEA KSEA K1 34R GS",
+        "12  47.434333333 -122.306300000      369    11030    25      0.000 ISEA KSEA K1 SEATTLE-TACOMA INTL DME-ILS",
+        " 4  51.477697222   -0.426961111       79    11030    18  31769.709  IAA EGLL EG 09L ILS-cat-III",
+        " 6  51.478750000   -0.480675000       79    11030    18 300089.709  IAA EGLL EG 09L GS",
+        " 4  51.477697222   -0.426961111       79    11090    18  31769.709  IAA EGLL EG 09L ILS-cat-III",  # older duplicate
+        " 5  47.26 11.30 1900 10970 18 23469.000 OEJ LOWI LO 08 LOC",
+        " 4  1 2 3 bad 18 0 X Y Z 01 ILS",                                                                     # malformed
+    ]
+
+    def setUp(self):
+        import stratos_navdata
+        self.nav = stratos_navdata
+
+    def test_localizer_glide_slope_and_dme_are_decoded_and_joined(self):
+        table = self.nav.ils_from_rows([line.split() for line in self.LINES])
+        sea = table["KSEA"][0]
+        self.assertEqual((sea["runway"], sea["ident"], sea["freqMHz"]), ("34R", "ISEA", 110.3))
+        self.assertEqual(sea["courseMag"], 344)
+        self.assertAlmostEqual(sea["courseTrue"], 0.34, places=2)
+        self.assertEqual(sea["glideSlopeDeg"], 2.75)
+        self.assertTrue(sea["dme"])
+        self.assertEqual(sea["type"], "ILS CAT II")
+
+    def test_first_copy_wins_and_a_lone_localizer_has_no_glide_slope(self):
+        table = self.nav.ils_from_rows([line.split() for line in self.LINES])
+        lhr = table["EGLL"]
+        self.assertEqual(len(lhr), 1)
+        self.assertEqual((lhr[0]["freqMHz"], lhr[0]["courseMag"], lhr[0]["glideSlopeDeg"]), (110.3, 88, 3.0))
+        self.assertFalse(lhr[0]["dme"])
+        lowi = table["LOWI"][0]
+        self.assertEqual((lowi["type"], lowi["glideSlopeDeg"], lowi["courseMag"]), ("LOC", None, 65))
+        self.assertNotIn("Y", table)
+
+
+class EnrouteNavDataTests(unittest.TestCase):
+    def setUp(self):
+        import stratos_navdata
+        self.nav = stratos_navdata
+
+    def test_airway_legs_resolve_both_ends_by_ident_region_and_type(self):
+        lookup = {("AALIX", "K1", "fix"): (48.504414, -121.756347), ("BAALE", "K1", "fix"): (48.445161, -121.415667),
+                  ("SEA", "K1", "nav"): (47.435, -122.31)}
+        lines = [
+            "AALIX K1 11 BAALE K1 11 N 1  85 175 T332",          # real line, both fixes known
+            "SEA K1 3 AALIX K1 11 N 2 180 450 J5-J12",            # VHF navaid to fix, high, two names
+            "AALIX K1 11 NOWHR K1 11 N 1  85 175 V1",             # unknown end: skipped, never guessed
+            "garbage",
+        ]
+        legs = self.nav.parse_airways(lines, lookup)
+        self.assertEqual(len(legs), 2)
+        self.assertEqual((legs[0]["names"], legs[0]["level"], legs[0]["baseFl"]), (["T332"], "low", 85))
+        self.assertEqual(legs[0]["a"], ["AALIX", 48.504414, -121.756347])
+        self.assertEqual((legs[1]["names"], legs[1]["level"]), (["J5", "J12"], "high"))
+
+    def test_openair_polygons_keep_chart_classes_only(self):
+        lines = ["AC D", "AN WILLIAM P GWINN", "AL GND", "AH 2500 MSL",
+                 "DP 26:50:47 N 080:16:49 W", "DP 26:50:24 N 080:21:49 W", "DP 26:58:58 N 080:20:08 W", "",
+                 "AC A", "AN AUCKLAND OCA/A", "AL 24500 MSL", "AH 60000 MSL",
+                 "DP 59:59:59 S 163:00:00 E", "DP 59:59:59 S 174:00:00 E", "DP 63:44:18 S 179:59:59 W"]
+        areas = self.nav.parse_airspace(lines)
+        self.assertEqual(len(areas), 1)
+        area = areas[0]
+        self.assertEqual((area["class"], area["name"], area["upper"]), ("D", "WILLIAM P GWINN", "2500 MSL"))
+        self.assertAlmostEqual(area["points"][0][0], 26.84639, places=4)
+        self.assertAlmostEqual(area["points"][0][1], -80.28028, places=4)
+        self.assertEqual(self.nav._openair_coord("59:59:59 S 163:00:00 E")[1], 163.0)
+
+    def test_mora_rows_fill_thirty_cells_eastward_and_skip_unpublished(self):
+        mora = self.nav.parse_mora(["I", "1150 Version", "+27 +060 " + " ".join(["000"] * 26) + " 311 310 050 UNK"])
+        self.assertEqual(mora[(27, 86)], 311)   # Everest's cell: 31,100 ft, above the 29,032 ft summit
+        self.assertEqual(mora[(27, 87)], 310)
+        self.assertNotIn((27, 60), mora)        # 000 is not published
+        self.assertNotIn((27, 89), mora)        # nor is a non-number

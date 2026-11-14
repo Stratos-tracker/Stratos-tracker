@@ -461,6 +461,20 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 /* The aircraft and flight-plan cards keep their place on the chart, moved
    clear of the plan panel rather than drawn underneath it. */
 @media(min-width:901px){#app.dk-plan-open #fc,#app.dk-plan-open #fp{left:322px}}
+@media(max-width:900px){#app.dk-sheet-open #fc,#app.dk-sheet-open #fp{display:none}}
+.wxlegend{position:absolute;right:12px;bottom:34px;z-index:3;display:flex;gap:16px;align-items:flex-start;max-width:calc(100% - 24px);padding:9px 12px 8px;border-radius:12px;background:color-mix(in srgb,var(--surface,#0d141c) 92%,transparent);border:1px solid color-mix(in srgb,var(--coast) 44%,transparent);box-shadow:var(--sh-2);font:11px/1.3 system-ui,sans-serif;color:var(--txt)}
+.wxlegend[hidden]{display:none}
+.wxlegend .wl{min-width:168px}
+.wxlegend .wl-t{display:flex;align-items:center;gap:6px;font-weight:700;letter-spacing:.02em;margin-bottom:5px}
+.wxlegend .wl-t span{font-weight:500;color:var(--mut)}
+.wxlegend select{margin-left:auto;font:inherit;font-weight:700;padding:1px 4px;border-radius:6px;border:1px solid color-mix(in srgb,var(--coast) 50%,transparent);background:var(--ui2);color:var(--txt)}
+.wxlegend .wl-bar{height:8px;border-radius:4px}
+.wxlegend .wl-l{display:flex;justify-content:space-between;margin-top:3px;font-size:10px;color:var(--mut);font-variant-numeric:tabular-nums}
+.wxlegend .wl-keys{display:flex;gap:10px}
+.wxlegend .wl-keys i{display:inline-block;width:16px;height:0;border-top:2.4px dashed;margin-right:4px;vertical-align:middle}
+.wxlegend .wl-keys span:last-child i{border-top-style:solid}
+.wxlegend .wl-s{margin-top:4px;font-size:9.5px;color:var(--mut)}
+@media(max-width:900px){.wxlegend{top:calc(100px + env(safe-area-inset-top,0px));bottom:auto;left:8px;right:62px;flex-wrap:wrap;gap:10px}.wxlegend .wl{flex:1;min-width:140px}}
 @media(max-width:900px){.dkpane{top:auto;bottom:76px;left:8px;right:8px;width:auto;max-height:44vh}.dk-left{left:8px}.dk-right{right:8px;width:auto}.dk-wps{max-height:26vh}}
 /* ── The settings drawer, and a map that can take the whole window ──── */
 #lay{right:68px;top:64px;width:min(320px,calc(100vw - 92px));max-height:min(74dvh,calc(100dvh - 132px));padding:0;overflow:hidden;display:none;flex-direction:column;border-radius:10px;background:var(--ui);border:1px solid var(--ui2);box-shadow:0 16px 40px rgba(0,0,0,.4)}
@@ -550,7 +564,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 <div class="lay-body">
   <section class="lay-s"><h3>Map display</h3><div id="ms" class="lay-grid"></div><p class="m" id="msnote" hidden></p>
     <div class="lay-theme"><button type="button" data-theme-set="day">Day</button><button type="button" data-theme-set="night">Night</button><button type="button" data-theme-set="contrast">High contrast</button></div></section>
-  <section class="lay-s"><h3>Layers</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="trf" class="on">Traffic</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="trl">Trails</button><button type="button" data-l="grid">Grid</button><button type="button" data-l="wxrain">Rain</button><button type="button" data-l="wxwind">Wind</button><button type="button" data-l="wxturb">Turbulence</button><button type="button" data-l="atc">VATSIM ATC</button><button type="button" data-l="dn">Day / night</button></div><div id="turbLeg" class="wx-leg" hidden><div class="wx-leg-t">Turbulence estimate</div><div class="wx-leg-bar"></div><div class="wx-leg-l"><span>Smooth</span><span>Light</span><span>Mod</span><span>Severe</span></div><div class="wx-leg-n">Gust spread and CAPE, interpolated — not a PIREP or SIGMET</div></div><p class="m">Rain uses animated radar frames from <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a>. Wind and turbulence use Open-Meteo's 10 m wind and gust/CAPE field; the wind layer is animated as streamlines and turbulence is a smoothed estimate. None of it is a PIREP, SIGMET or a substitute for official weather. VATSIM ATC marks the airports with online controllers, live from data.vatsim.net. Approach and departure jurisdiction comes from the <a href="https://github.com/vatsimnetwork/simaware-tracon-project" target="_blank" rel="noopener">SimAware TRACON Project</a> (CC BY-SA 4.0) and is drawn only while that prefix is online; centre sectors have no boundary in the network feed, so no shape is invented for them.</p></section>
+  <section class="lay-s"><h3>Layers</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="trf" class="on">Traffic</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="trl">Trails</button><button type="button" data-l="grid">Grid</button><button type="button" data-l="wxrain">Rain</button><button type="button" data-l="wxwind">Wind</button><button type="button" data-l="wxturb">Turbulence</button><button type="button" data-l="wxsig">SIGMETs</button><button type="button" data-l="ifrlo">IFR Low</button><button type="button" data-l="ifrhi">IFR High</button><button type="button" data-l="atc">VATSIM ATC</button><button type="button" data-l="dn">Day / night</button></div><p class="m">Rain <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a> · wind, turbulence Open-Meteo (estimate) · SIGMETs NOAA AWC · ATC data.vatsim.net, <a href="https://github.com/vatsimnetwork/simaware-tracon-project" target="_blank" rel="noopener">SimAware TRACON Project</a> (CC BY-SA 4.0)</p></section>
   <section class="lay-s"><h3>Projection</h3><div id="pj"></div>
     <div class="lay-grid" id="t3mode"><button type="button" id="bMap3d" aria-pressed="false" title="3D globe with satellite imagery, real terrain and aircraft altitude">3D globe</button><button type="button" id="bMap3dFlat" aria-pressed="false" title="Tilted flat map with real terrain and aircraft altitude">3D flat map</button></div><label class="lay-check" for="t3low"><input type="checkbox" id="t3low"><span>Low-power 3D</span></label><p class="m">Turns off terrain and renders at 1× pixel density for slower GPUs.</p>
     <div id="gwrap" hidden><div class="lay-sub">Globe surface</div><div id="gs"></div><p class="m" id="gn"></p>
@@ -622,6 +636,13 @@ window.aircraftIcon = aircraftIcon;
 import * as GLOBE from './js/lib/globeview.js';
 import { EARTH_STYLES, GIBS, TERRAIN, GlobeRaster, earthStyle, EarthView } from './js/lib/earthview.js';
 window.STRATOS_GLOBE = { ...GLOBE, EARTH_STYLES, GIBS, TERRAIN, earthStyle, EarthView, GlobeRaster };
+import * as OWNSMOOTH from './js/lib/ownsmooth.js';
+window.STRATOS_OWNSMOOTH = OWNSMOOTH;
+import * as SIGMETS from './js/lib/sigmets.js';
+window.STRATOS_SIGMETS = SIGMETS;
+import * as UPPERWX from './js/lib/upperwx.js';
+window.STRATOS_UPPERWX = UPPERWX;
+window.dispatchEvent(new Event('stratos-upperwx-ready'));
 window.dispatchEvent(new Event('stratos-globe-ready'));
 </script>
 
@@ -813,7 +834,7 @@ const RL={KSFO:[11870,8650],KOAK:[10520],KSJC:[11000],KSAC:[8600],KRNO:[11002],K
 function pairs(a){const o=[];a.rw.forEach(n=>{if(!o.some(p=>p[0]==n||p[1]==n))o.push([n,(n+17)%36+1])});return o}
 function liveOk(){return live.on&&live.d&&live.d.lat!=null&&live.d.age<3&&performance.now()-live.at<3000}
 const cv=$('#map'),cx=cv.getContext('2d');let W,H,dpr,C={};
-const V={lon:-119.5,lat:38.8,z:6,fol:false,mode:'plane',gz:1,gs:'vector'},L={apt:1,nav:1,trf:1,grid:0,rte:1,procSid:1,procStar:1,procApproach:1,procMissed:0,wxrain:0,wxwind:0,wxturb:0,atc:0,dn:0,style:(function(){try{const s=localStorage.getItem('dl.style')||'sat';return MS[s]?s:'sat'}catch(e){return'sat'}})()};
+const V={lon:-119.5,lat:38.8,z:6,fol:false,mode:'plane',gz:1,gs:'vector'},L={apt:1,nav:1,trf:1,grid:0,rte:1,procSid:1,procStar:1,procApproach:1,procMissed:0,wxrain:0,wxwind:0,wxturb:0,wxsig:0,ifrlo:0,ifrhi:0,atc:0,dn:0,style:(function(){try{const s=localStorage.getItem('dl.style')||'sat';return MS[s]?s:'sat'}catch(e){return'sat'}})()};
 let plan=false,panel=null,sel=null,route=[],trav=0,own={lat:0,lon:0,hdg:0,alt:0,vs:0};
 const MAP_DEFAULTS={color:'#fbbf24',size:1.35,halo:false,trail:true,trailWidth:1};
 function readMapPrefs(){try{const raw=JSON.parse(localStorage.getItem('stratos.mapSettings')||'null')||{};const col=typeof raw.color==='string'&&/^#[0-9a-f]{6}$/i.test(raw.color.trim())?raw.color.trim():MAP_DEFAULTS.color;const size=Number(raw.size);const width=Number(raw.trailWidth);return{color:col,size:Number.isFinite(size)?Math.min(2,Math.max(.7,size)):MAP_DEFAULTS.size,halo:typeof raw.halo==='boolean'?raw.halo:MAP_DEFAULTS.halo,trail:typeof raw.trail==='boolean'?raw.trail:MAP_DEFAULTS.trail,trailWidth:Number.isFinite(width)?Math.min(2,Math.max(.5,width)):MAP_DEFAULTS.trailWidth}}catch(_){return{...MAP_DEFAULTS}}}
@@ -1332,7 +1353,7 @@ const tl=wpx(V.lon,V.lat);
 if(L.grid&&V.z<12&&!CH.on&&V.mode!=='globe'){const s=V.z<4?10:V.z<5.5?5:V.z<7?2:V.z<8.5?1:V.z<10?.5:.1,a=wun(tl[0]-W/2,tl[1]-H/2),b=wun(tl[0]+W/2,tl[1]+H/2);cx.strokeStyle=C.grid;cx.lineWidth=1;cx.fillStyle=C.coast;cx.font='10px sans-serif';cx.beginPath();
 for(let o=Math.ceil(a[0]/s)*s;o<b[0];o+=s){const x=sc(o,0)[0];cx.moveTo(x,0);cx.lineTo(x,H);cx.fillText(o.toFixed(s<1?1:0)+'°',x+2,H-100)}
 for(let t=Math.ceil(b[1]/s)*s;t<a[1];t+=s){const y=sc(0,t)[1];cx.moveTo(0,y);cx.lineTo(W,y);cx.fillText(t.toFixed(s<1?1:0)+'°',4,y-2)}cx.stroke()}
-if(wxOn())wxFetch();if(L.atc&&!CH.on)atcTick();drawWeather();drawDayNight();
+if(L.atc&&!CH.on)atcTick();drawWeather();drawDayNight();
 const ppn=lat=>SZ*2**V.z/360/(60*Math.cos(lat*R));MKL.length=0;
 if(L.nav&&!CH.on)N.forEach(n=>{const q=vis(n.lon,n.lat);if(!q||lblZ()<6)return;const[x,y]=q;if(x<-20||x>W+20||y<-20||y>H+20)return;const t=String(n.type||'').toUpperCase(),kind=/NDB/.test(t)?'ndb':/VOR|TACAN|DME/.test(t)?'vor':'int';mkDraw(kind,x,y,mkRz()*.8);if(lblZ()>5.5)mkText(n.id,x+Math.round(mkRz()*.55)-4,y+4,mkColor(kind),11,false)});
 if(L.apt&&clusterAirports()){}else if(L.apt)A.forEach(a=>{if(CH.on&&a!==CH.a)return;const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;if(a.x&&lblZ()<6)return;const mg=lblZ()>10?4000:60;if(x<-mg||x>W+mg||y<-mg||y>H+mg)return;
@@ -2268,13 +2289,17 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&layOpen())setLay(fa
 /* The pilots' layers survive a reload, like every other map setting. */
 const LKEY='stratos.mapLayers';
 (function restoreLayers(){
-  try{const s=JSON.parse(localStorage.getItem(LKEY)||'null');if(s&&typeof s==='object')for(const k of ['apt','nav','trf','trl','rte','grid','wxrain','wxwind','wxturb','atc','dn'])if(typeof s[k]==='boolean')L[k]=s[k]?1:0}catch(_){}
+  try{const s=JSON.parse(localStorage.getItem(LKEY)||'null');if(s&&typeof s==='object')for(const k of ['apt','nav','trf','trl','rte','grid','wxrain','wxwind','wxturb','wxsig','ifrlo','ifrhi','atc','dn'])if(typeof s[k]==='boolean')L[k]=s[k]?1:0}catch(_){}
   document.querySelectorAll('[data-l]').forEach(b=>b.classList.toggle('on',!!L[b.dataset.l]))
   turbLegendToggle()
 })();
-function turbLegendToggle(){const el=$('#turbLeg');if(el)el.hidden=!L.wxturb}
-document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{L[b.dataset.l]^=1;b.classList.toggle('on',!!L[b.dataset.l]);turbLegendToggle();
-  try{localStorage.setItem(LKEY,JSON.stringify({apt:!!L.apt,nav:!!L.nav,trf:!!L.trf,trl:!!L.trl,rte:!!L.rte,grid:!!L.grid,wxrain:!!L.wxrain,wxwind:!!L.wxwind,wxturb:!!L.wxturb,atc:!!L.atc,dn:!!L.dn}))}catch(_){}
+function turbLegendToggle(){updateWxLegend()}
+addEventListener('stratos-upperwx-ready',()=>updateWxLegend());
+document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{L[b.dataset.l]^=1;
+  // IFR Low and IFR High are two views of one chart: one at a time.
+  const other={ifrlo:'ifrhi',ifrhi:'ifrlo'}[b.dataset.l];if(other&&L[b.dataset.l]){L[other]=0;const ob=document.querySelector('[data-l="'+other+'"]');if(ob)ob.classList.remove('on');IFR.key=''}
+  b.classList.toggle('on',!!L[b.dataset.l]);turbLegendToggle();
+  try{localStorage.setItem(LKEY,JSON.stringify({apt:!!L.apt,nav:!!L.nav,trf:!!L.trf,trl:!!L.trl,rte:!!L.rte,grid:!!L.grid,wxrain:!!L.wxrain,wxwind:!!L.wxwind,wxturb:!!L.wxturb,wxsig:!!L.wxsig,ifrlo:!!L.ifrlo,ifrhi:!!L.ifrhi,atc:!!L.atc,dn:!!L.dn}))}catch(_){}
   render()});
 /* Quick regions: a place and the scale it reads at, nothing else. */
 const REGIONS=[['World',18,-12,2.2],['Europe',50,10,4.4],['North America',39,-98,3.7],['South America',-16,-60,3.5],['Africa',4,20,3.3],['Middle East',27,45,4.1],['Asia',34,100,3.3],['Oceania',-25,141,3.5]];
@@ -2477,10 +2502,9 @@ var fcS='',aTab='info';
 /* Weather and the terminator are model/solar overlays, never aeronautical
    warnings. The grid is fetched for the current view and cached for ten
    minutes; every value is labelled in the layer panel. */
-const WX={key:'',at:0,pts:[],busy:false,err:'',box:null,cols:7,rows:5,pending:'',settle:0,failAt:0};
+const WX={key:'',at:0,grid:null,busy:false,err:'',pending:'',settle:0,failAt:0,fl:(function(){try{return Number(localStorage.getItem('stratos.wxLevel'))||340}catch(_){return 340}})()};
 const RADAR={host:'',frames:[],at:0,busy:false,err:'',tiles:new Map()};
-const WIND={parts:[],last:0,key:''};
-const TURB={canvas:null,key:''};
+const FIELD={};
 const DN={canvas:null,ctx:null,img:null,key:'',at:0};
 function wxOn(){return !!(L.wxrain||L.wxwind||L.wxturb)}
 function normLon(lon){const v=((Number(lon)+180)%360+360)%360-180;return v===-180?180:v}
@@ -2499,54 +2523,25 @@ function wxView(){
   const minLat=Math.max(-80,Math.min(a[1],b[1])),maxLat=Math.min(80,Math.max(a[1],b[1]));
   return{minLon,maxLon,minLat,maxLat}
 }
-function wxPoints(){
-  const b=wxView(),pts=[];
-  const cols=7,rows=5;
-  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
-    const f=c/(cols-1),g=r/(rows-1);
-    pts.push([b.minLat+(b.maxLat-b.minLat)*g,b.minLon+(b.maxLon-b.minLon)*f])
-  }
-  pts.box=b;pts.cols=cols;pts.rows=rows;return pts
-}
+/* Upper-air grid for the jet stream and turbulence (js/lib/upperwx.js):
+   Open-Meteo pressure-level winds and heights over the view, current hour. */
 function wxFetch(){
-  if(!wxOn()||WX.busy)return;
-  const key=V.mode==='globe'?'globe':[V.lon.toFixed(2),V.lat.toFixed(2),V.z.toFixed(1),W,H].join('|');
+  const U=window.STRATOS_UPPERWX;
+  if(!U||!(L.wxwind||L.wxturb)||WX.busy)return;
+  const key=V.mode==='globe'?'globe|'+WX.fl:[V.lon.toFixed(2),V.lat.toFixed(2),V.z.toFixed(1),W,H,WX.fl].join('|');
   /* Wait for the pan to settle and remember a failed query independently of
      the view key; otherwise a giant pan can fire one request per frame. */
   if(WX.pending!==key){WX.pending=key;WX.settle=Date.now();return}
   if(Date.now()-WX.settle<420)return;
   if(WX.err&&Date.now()-WX.failAt<120000)return;
   if(WX.key===key&&Date.now()-WX.at<600000)return;
-  const pts=wxPoints();if(!pts.length)return;
-  const box=pts.box,fieldCols=pts.cols,fieldRows=pts.rows;
+  // About 120 nodes per request, shaped like the screen so cells stay square-ish.
+  const aspect=Math.max(.2,Math.min(5,W/Math.max(1,H))),cols=Math.max(5,Math.min(22,Math.round(Math.sqrt(120*aspect)))),rows=Math.max(5,Math.min(22,Math.round(120/cols)));
+  const box=wxView(),level=U.levelFor(WX.fl),pts=U.gridPoints(box,cols,rows);
   WX.busy=true;WX.err='';
-  const root=WX;
-  const lat=pts.map(p=>p[0].toFixed(2)).join(','),lon=pts.map(p=>p[1].toFixed(2)).join(',');
-  const url='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=precipitation,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cape&wind_speed_unit=kn&precipitation_unit=mm&timezone=UTC';
-  fetch(url,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(data=>{
-    const dataRows=Array.isArray(data)?data:[data];
-    root.pts=pts.map((p,i)=>{const c=(dataRows[i]&&dataRows[i].current)||{};return{lat:p[0],lon:p[1],rain:Number(c.precipitation)||0,wind:Number(c.wind_speed_10m)||0,dir:Number(c.wind_direction_10m)||0,gust:Number(c.wind_gusts_10m)||0,cape:Number(c.cape)||0}});
-    root.box=box;root.cols=fieldCols;root.rows=fieldRows;root.key=key;root.at=Date.now();root.err=''
-  }).catch(e=>{root.err=e.message||'unavailable';root.failAt=Date.now();root.key=key;root.at=Date.now()}).finally(()=>{root.busy=false;render()})
-}
-/* Smooth model fields for wind and turbulence. The old point/arrow overlay
-   read as a scatter plot; this version samples a real grid, draws streamlines
-   in the direction of the wind, and renders a smoothed turbulence heat field. */
-function wxAt(lon,lat){
-  const b=WX.box,pts=WX.pts;if(!b||!pts.length)return null;
-  const cols=WX.cols||7,rows=WX.rows||5;
-  const dx=Math.max(1e-6,b.maxLon-b.minLon),dy=Math.max(1e-6,b.maxLat-b.minLat);
-  const fx=Math.max(0,Math.min(cols-1,(lon-b.minLon)/dx*(cols-1)));
-  const fy=Math.max(0,Math.min(rows-1,(lat-b.minLat)/dy*(rows-1)));
-  const i=Math.min(cols-2,Math.floor(fx)),j=Math.min(rows-2,Math.floor(fy));
-  const tx=fx-i,ty=fy-j;
-  const at=(rr,cc)=>pts[Math.min(rows-1,rr)*cols+Math.min(cols-1,cc)]||{};
-  const uv=p=>{const d=(Number(p.dir)||0)*R,v=Number(p.wind)||0;return{u:-v*Math.sin(d),v:-v*Math.cos(d),rain:Number(p.rain)||0,gust:Number(p.gust)||0,cape:Number(p.cape)||0}};
-  const a=uv(at(j,i)),b1=uv(at(j,i+1)),c=uv(at(j+1,i)),d=uv(at(j+1,i+1));
-  const mix=(p,q,w)=>p+(q-p)*w;
-  const u=mix(mix(a.u,b1.u,tx),mix(c.u,d.u,tx),ty);
-  const v=mix(mix(a.v,b1.v,tx),mix(c.v,d.v,tx),ty);
-  return{u,v,speed:Math.hypot(u,v),rain:mix(mix(a.rain,b1.rain,tx),mix(c.rain,d.rain,tx),ty),gust:mix(mix(a.gust,b1.gust,tx),mix(c.gust,d.gust,tx),ty),cape:mix(mix(a.cape,b1.cape,tx),mix(c.cape,d.cape,tx),ty)}
+  fetch(U.openMeteoUrl(pts,level),{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(data=>{
+    WX.grid=U.parseGrid(data,pts,level,box,cols,rows);WX.key=key;WX.at=Date.now();WX.err=''
+  }).catch(e=>{WX.err=e.message||'unavailable';WX.failAt=Date.now();WX.key=key;WX.at=Date.now()}).finally(()=>{WX.busy=false;updateWxLegend();render()})
 }
 function wxNotice(text){
   cx.save();cx.font='11px system-ui,sans-serif';cx.fillStyle='rgba(226,232,240,.76)';cx.fillText(text,12,22);cx.restore()
@@ -2565,149 +2560,145 @@ function radarTile(url){
   if(!t){t={i:new Image(),ok:false};t.i.onload=()=>{t.ok=true};t.i.onerror=()=>{t.err=true};t.i.src=url;RADAR.tiles.set(url,t);if(RADAR.tiles.size>600)RADAR.tiles.delete(RADAR.tiles.keys().next().value)}
   return t
 }
+/* Radar: RainViewer, whose free tiles stop at zoom 7, as 512 px tiles (twice
+   the detail of 256), animated over the last frames. */
 function drawRadar(){
   const frames=RADAR.frames;if(!frames.length)return false;
-  /* A coarse radar pyramid keeps the frame loop light enough for RainViewer's
-     public rate limit while still moving across the map. */
-  const z=Math.min(4,Math.max(0,Math.floor(V.z-1))),s=256*2**(V.z-z),c=wpx(V.lon,V.lat),n=2**z;
+  const z=Math.min(7,Math.max(0,Math.floor(V.z))),s=256*2**(V.z-z),c=wpx(V.lon,V.lat),n=2**z;
   const x0=Math.max(0,Math.floor((c[0]-W/2)/s)),x1=Math.min(n-1,Math.floor((c[0]+W/2)/s));
   const y0=Math.max(0,Math.floor((c[1]-H/2)/s)),y1=Math.min(n-1,Math.floor((c[1]+H/2)/s));
   const now=performance.now(),frame=frames[Math.floor(now/900)%frames.length];
   cx.save();cx.globalAlpha=.82;cx.imageSmoothingEnabled=true;
   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
-    const t=radarTile(RADAR.host+frame.path+'/256/'+z+'/'+x+'/'+y+'/2/1_1.png');
+    const t=radarTile(RADAR.host+frame.path+'/512/'+z+'/'+x+'/'+y+'/2/1_1.png');
     if(t.ok)cx.drawImage(t.i,x*s-c[0]+W/2,y*s-c[1]+H/2,s+.5,s+.5)
   }
   cx.restore();return true
 }
-function drawModelRain(){
-  if(!WX.pts.length)return;
-  cx.save();
-  for(const p of WX.pts){
-    if(p.rain<=.05)continue;const q=vis(p.lon,p.lat);if(!q)continue;const[x,y]=q,s=Math.min(1,p.rain/4),rad=32+55*s,g=cx.createRadialGradient(x,y,1,x,y,rad);
-    g.addColorStop(0,'rgba(30,120,255,'+(.15+.3*s)+')');g.addColorStop(.55,'rgba(56,189,248,'+(.08+.18*s)+')');g.addColorStop(1,'rgba(56,189,248,0)');cx.fillStyle=g;cx.beginPath();cx.arc(x,y,rad,0,7);cx.fill()
-  }
-  cx.restore()
-}
-/* Turbulence is estimated, never observed: the model gives 10 m wind, gusts and
-   CAPE on a coarse grid, and the chart is drawn from that field alone. It is
-   painted the way a forecast chart paints a field — a continuous fill on a jet
-   ramp, with a faint isopleth wherever the quantised risk steps, so the hot
-   cores and the calm areas read at a glance instead of as three flat blobs.
-   The ramp is shared with the legend in the layers panel, so the key and the
-   map cannot drift apart. */
-const TURB_RAMP=[[0,'#22d3ee'],[.18,'#2dd4bf'],[.34,'#34d399'],[.48,'#a3e635'],[.6,'#fde047'],[.72,'#fb923c'],[.84,'#ef4444'],[1,'#d946ef']];
-const TURB_STOPS=TURB_RAMP.map(([t,hex])=>[t,[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)]]);
-const TURB_FLOOR=.12;
-function turbInk(risk){
-  const t=Math.min(1,Math.max(0,risk));
-  let i=1;while(i<TURB_STOPS.length-1&&t>TURB_STOPS[i][0])i++;
-  const[t0,c0]=TURB_STOPS[i-1],[t1,c1]=TURB_STOPS[i];
-  const f=Math.min(1,Math.max(0,(t-t0)/((t1-t0)||1)));
-  return[c0[0]+(c1[0]-c0[0])*f,c0[1]+(c1[1]-c0[1])*f,c0[2]+(c1[2]-c0[2])*f]
-}
-function drawTurbulence(){
-  if(!WX.pts.length)return;
-  const b=WX.box;if(!b)return;
-  if(!TURB.canvas)TURB.canvas=document.createElement('canvas')
-  const t=TURB.ctx||(TURB.ctx=TURB.canvas.getContext('2d'));if(!t)return;
-  /* One texel per screen pixel at the moment the model answered, so the field
-     is a chart rather than a stretched 220x170 thumbnail. */
-  const spanLon=Math.max(1e-6,b.maxLon-b.minLon),spanLat=Math.max(1e-6,b.maxLat-b.minLat);
-  const cw=Math.max(320,Math.min(1000,Math.round(W||900)));
-  const ch=Math.max(180,Math.min(760,Math.round(cw*spanLat/spanLon)));
-  const key=[WX.at,cw,ch,b.minLon,b.maxLon,b.minLat,b.maxLat].join('|');
-  if(key!==TURB.key){
-    TURB.key=key;
-    if(TURB.canvas.width!==cw||TURB.canvas.height!==ch){TURB.canvas.width=cw;TURB.canvas.height=ch}
-    t.clearRect(0,0,cw,ch);
-    const img=t.createImageData(cw,ch),d=img.data;
-    /* The model answered for its own 7x5 samples and nothing between them. The
-       raster only interpolates those samples — eased, so a cell corner is a
-       slope rather than a step — and never invents a peak the model did not
-       report. */
-    const cols=WX.cols||7,rows=WX.rows||5;
-    const riskGrid=WX.pts.map(p=>Math.min(1,Math.max(0,(Number(p.gust)-Number(p.wind))/32,Number(p.cape)/3400)));
-    const gridAt=(r,c)=>riskGrid[Math.min(rows-1,Math.max(0,r))*cols+Math.min(cols-1,Math.max(0,c))]||0;
-    const ease=v=>v*v*(3-2*v);
-    const field=new Float32Array(cw*ch);
-    for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){
-      const fx=(x+.5)/cw*(cols-1),fy=(y+.5)/ch*(rows-1);
-      const i=Math.min(cols-2,Math.floor(fx)),j=Math.min(rows-2,Math.floor(fy));
-      const tx=ease(fx-i),ty=ease(fy-j);
-      const top=gridAt(j,i)+(gridAt(j,i+1)-gridAt(j,i))*tx;
-      const bottom=gridAt(j+1,i)+(gridAt(j+1,i+1)-gridAt(j+1,i))*tx;
-      field[y*cw+x]=top+(bottom-top)*ty
-    }
-    for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){
-      const idx=y*cw+x,risk=field[idx];
-      if(!(risk>TURB_FLOOR)){d[idx*4+3]=0;continue}
-      const rgb=turbInk(risk),band=Math.floor(risk*8);
-      const left=x>0&&field[idx-1]>TURB_FLOOR?Math.floor(field[idx-1]*8):band;
-      const up=y>0&&field[idx-cw]>TURB_FLOOR?Math.floor(field[idx-cw]*8):band;
-      const edge=band!==left||band!==up;
-      const fade=Math.pow((risk-TURB_FLOOR)/(1-TURB_FLOOR),.8);
-      const k=edge?.78:1;
-      d[idx*4]=Math.round(rgb[0]*k);d[idx*4+1]=Math.round(rgb[1]*k);d[idx*4+2]=Math.round(rgb[2]*k);
-      /* A field this coarse has to read at a glance, so even the first band
-         above the floor is visible on imagery; the ramp keeps it pale rather
-         than loud, and a contour is a step stronger again. */
-      d[idx*4+3]=Math.round(Math.min(1,(edge?.97:.8)*(.22+fade*.78))*235)
+/* A model field painted under the chart: one texel per ~3 screen pixels,
+   sampled bilinearly from the grid and placed through the map's own
+   projection, cached until the data or the zoom changes. Flat chart only. */
+function fieldPaint(kind,values,ink){
+  const g=WX.grid;if(!g||V.mode==='globe')return false;
+  const b=g.box,p0=mercator(b.minLon,b.maxLat),p1=mercator(b.maxLon,b.minLat);
+  if(!p0||!p1)return false;
+  const sw=p1[0]-p0[0],sh=p1[1]-p0[1];if(!(sw>4&&sh>4))return false;
+  const w=Math.max(40,Math.min(360,Math.round(sw/3))),h=Math.max(30,Math.min(360,Math.round(sh/3)));
+  const f=FIELD[kind]||(FIELD[kind]={canvas:document.createElement('canvas'),key:''});
+  const key=[WX.at,w,h,V.z.toFixed(2)].join('|');
+  if(f.key!==key){
+    f.key=key;f.canvas.width=w;f.canvas.height=h;
+    const t=f.canvas.getContext('2d'),img=t.createImageData(w,h),U=window.STRATOS_UPPERWX,mx=(p0[0]+p1[0])/2;
+    for(let j=0;j<h;j++){
+      const q=unvis(mx,p0[1]+(j+.5)/h*sh);if(!q)continue;const lat=q[1];
+      for(let i=0;i<w;i++){
+        const lon=b.minLon+(i+.5)/w*(b.maxLon-b.minLon),c=ink(U.sample(g,values,lat,lon));
+        if(!c)continue;const o=(j*w+i)*4;img.data[o]=c[0];img.data[o+1]=c[1];img.data[o+2]=c[2];img.data[o+3]=Math.round(c[3]*255)
+      }
     }
     t.putImageData(img,0,0)
   }
-  /* The field is drawn where its degrees belong instead of being stretched over
-     the viewport: pan the chart and the colours travel with the ground beneath
-     them, exactly as the radar tiles do, until the next answer for this view
-     arrives and a fresh box replaces this one. */
-  const world=SZ*2**V.z,mid=wpx(V.lon,V.lat),nw=wpx(b.minLon,b.maxLat),se=wpx(b.maxLon,b.minLat);
-  const left=nw[0]-mid[0]+W/2,right=se[0]-mid[0]+W/2;
-  const top=nw[1]-mid[1]+H/2,bottom=se[1]-mid[1]+H/2;
-  cx.save();cx.globalAlpha=1;cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';
-  if(V.mode==='globe'){cx.drawImage(TURB.canvas,0,0,W,H)}
-  else for(const shift of [0,-world,world]){
-    const x0=left+shift,x1=right+shift;
-    if(x1<-2||x0>W+2)continue;
-    cx.drawImage(TURB.canvas,x0,top,x1-x0,bottom-top)
+  cx.save();cx.imageSmoothingEnabled=true;cx.drawImage(f.canvas,p0[0],p0[1],sw,sh);cx.restore();return true
+}
+/* Grid coordinates (column, row) of a contour back to the screen. */
+function gridScreen(g,x,y){const b=g.box;return vis(b.minLon+x/(g.cols-1)*(b.maxLon-b.minLon),b.minLat+y/(g.rows-1)*(b.maxLat-b.minLat))}
+function drawJet(){
+  const g=WX.grid,U=window.STRATOS_UPPERWX;if(!g||!U)return;
+  const speed=g.upper.map(p=>p.kt);
+  if(!fieldPaint('jet',speed,U.jetColor))return;
+  /* Isotachs every 20 kt from 60, on a 4x finer bilinear grid so the lines are
+     smooth curves rather than the coarse grid's corners. */
+  const k=4,fc=(g.cols-1)*k+1,fr=(g.rows-1)*k+1,b=g.box,fine=new Array(fc*fr);
+  for(let r=0;r<fr;r++)for(let c=0;c<fc;c++)fine[r*fc+c]=U.sample(g,speed,b.minLat+r/(fr-1)*(b.maxLat-b.minLat),b.minLon+c/(fc-1)*(b.maxLon-b.minLon));
+  const fg={...g,cols:fc,rows:fr},max=Math.max(...speed);
+  cx.save();cx.lineWidth=1;cx.strokeStyle=C.txt&&C.txt.startsWith('#1')?'rgba(15,23,42,.55)':'rgba(10,16,28,.6)';cx.font='700 10px system-ui,sans-serif';cx.textAlign='center';cx.textBaseline='middle';
+  for(let lv=60;lv<=Math.min(240,max);lv+=20){
+    const segs=U.isolines(fine,fc,fr,lv);if(!segs.length)continue;
+    cx.beginPath();let label=null,best=0;
+    for(const sg of segs){const a=gridScreen(fg,sg[0],sg[1]),z=gridScreen(fg,sg[2],sg[3]);if(!a||!z)continue;cx.moveTo(a[0],a[1]);cx.lineTo(z[0],z[1]);
+      const m=[(a[0]+z[0])/2,(a[1]+z[1])/2],d=Math.min(m[0],W-m[0],m[1],H-m[1]);if(d>best){best=d;label=m}}
+    cx.stroke();
+    if(label&&best>30&&lv%40===0){const tw=cx.measureText(String(lv)).width+6;cx.fillStyle='rgba(10,16,28,.72)';cx.fillRect(label[0]-tw/2,label[1]-7,tw,14);cx.fillStyle='#f8fafc';cx.fillText(String(lv),label[0],label[1]+.5)}
   }
   cx.restore()
 }
-function seedWind(){
-  const count=Math.min(620,Math.max(280,Math.round(W*H/2200)));
-  WIND.parts=Array.from({length:count},()=>({x:Math.random()*W,y:Math.random()*H,age:Math.random()*90,life:70+Math.random()*110}));
-  WIND.last=performance.now()
-}
-function drawWind(){
-  if(!WX.pts.length)return;
-  const key=[V.mode,V.lon.toFixed(2),V.lat.toFixed(2),V.z.toFixed(1),W,H].join('|');
-  if(key!==WIND.key){WIND.key=key;seedWind()}
-  if(!WIND.parts.length)seedWind();
-  const now=performance.now(),dt=WIND.last?Math.min(.12,(now-WIND.last)/1000):.016;WIND.last=now;
-  cx.save();cx.lineCap='round';cx.lineJoin='round';
-  for(const p of WIND.parts){
-    const geo=unvis(p.x,p.y),w=geo?wxAt(geo[0],geo[1]):null;
-    if(!w||!Number.isFinite(w.u)||!Number.isFinite(w.v)){p.age=p.life;continue}
-    /* Trace a short curved path through the sampled field instead of drawing
-       an isolated dash. The particle advances each frame, so the lines drift
-       with the wind like a streamline layer. */
-    let px=p.x,py=p.y,ok=false;
-    cx.beginPath();cx.moveTo(px,py);
-    for(let k=0;k<5;k++){
-      const g=unvis(px,py),q=g?wxAt(g[0],g[1]):null;
-      if(!q||q.speed<.05)break;
-      const nx=px+q.u/q.speed*4.2,ny=py-q.v/q.speed*4.2;
-      if(!Number.isFinite(nx)||!Number.isFinite(ny))break;
-      cx.lineTo(nx,ny);px=nx;py=ny;ok=true;
-      if(px<-10||px>W+10||py<-10||py>H+10)break
-    }
-    if(ok){
-      const a=.15+Math.min(.4,w.speed/55);
-      cx.strokeStyle='rgba(225,246,255,'+a.toFixed(3)+')';cx.lineWidth=Math.max(.65,Math.min(1.4,w.speed/22));cx.stroke()
-    }
-    const nx=p.x+w.u*.72*dt,ny=p.y-w.v*.72*dt;
-    if(nx<-20||nx>W+20||ny<-20||ny>H+20||p.age>p.life){Object.assign(p,{x:Math.random()*W,y:Math.random()*H,age:0,life:70+Math.random()*110});continue}
-    p.x=nx;p.y=ny;p.age++
+/* Turbulence areas as a SIGWX chart draws them: an outline per category
+   (light dashed, moderate dashed, severe solid), filled only when the jet
+   stream is off so the two layers never share colours on the map. */
+function drawTurb(){
+  const g=WX.grid,U=window.STRATOS_UPPERWX;if(!g||!U||V.mode==='globe')return;
+  if(!L.wxwind)fieldPaint('turb',g.ti,ti=>{const c=U.turbCategory(ti);return c?[...c.rgb,c.min>=12?.42:c.min>=8?.32:.22]:null});
+  const k=4,fc=(g.cols-1)*k+1,fr=(g.rows-1)*k+1,b=g.box,fine=new Array(fc*fr);
+  for(let r=0;r<fr;r++)for(let c=0;c<fc;c++)fine[r*fc+c]=U.sample(g,g.ti,b.minLat+r/(fr-1)*(b.maxLat-b.minLat),b.minLon+c/(fc-1)*(b.maxLon-b.minLon));
+  const fg={...g,cols:fc,rows:fr};
+  cx.save();cx.lineCap='round';
+  for(const t of U.TURB_LEVELS){
+    const segs=U.isolines(fine,fc,fr,t.min);if(!segs.length)continue;
+    cx.beginPath();for(const sg of segs){const a=gridScreen(fg,sg[0],sg[1]),z=gridScreen(fg,sg[2],sg[3]);if(a&&z){cx.moveTo(a[0],a[1]);cx.lineTo(z[0],z[1])}}
+    cx.strokeStyle='rgb('+t.rgb.join(',')+')';cx.lineWidth=t.min>=12?2.6:t.min>=8?2.2:1.8;cx.setLineDash(t.min>=12?[]:[7,5]);cx.stroke()
   }
+  cx.setLineDash([]);cx.restore()
+}
+/* One legend for the weather layers that are on, like a chart's key. */
+function updateWxLegend(){
+  const app=document.getElementById('app'),U=window.STRATOS_UPPERWX;if(!app)return;
+  let el=document.getElementById('wxLegend');
+  if(!el){el=document.createElement('div');el.id='wxLegend';el.className='wxlegend';el.setAttribute('aria-label','Weather legend');app.appendChild(el);
+    el.addEventListener('change',e=>{if(!e.target.matches('[data-wxfl]'))return;WX.fl=Number(e.target.value)||340;try{localStorage.setItem('stratos.wxLevel',String(WX.fl))}catch(_){}WX.key='';WX.pending='';WX.grid=null;Object.keys(FIELD).forEach(k=>FIELD[k].key='');updateWxLegend();render()})}
+  const bar=stops=>'linear-gradient(90deg,'+stops.map(([k,c],i)=>c+' '+Math.round(i/(stops.length-1)*100)+'%').join(',')+')';
+  const parts=[];
+  if(L.wxrain){
+    // RainViewer's Universal Blue scheme, from its published colour table.
+    const st=[[10,'#cec087'],[15,'#88ddee'],[25,'#0077aa'],[35,'#ffee00'],[45,'#ff4400'],[50,'#c10000'],[60,'#ff77ff'],[65,'#ffffff']];
+    parts.push('<div class="wl"><div class="wl-t">Precipitation <span>dBZ</span></div><div class="wl-bar" style="background:'+bar(st)+'"></div><div class="wl-l"><span>Light</span><span>Moderate</span><span>Heavy</span><span>Extreme</span></div><div class="wl-s">RainViewer radar</div></div>')
+  }
+  if((L.wxwind||L.wxturb)&&U){
+    const sel='<select data-wxfl aria-label="Flight level">'+U.LEVELS.map(l=>'<option value="'+l.fl+'"'+(l.fl===WX.fl?' selected':'')+'>FL'+l.fl+'</option>').join('')+'</select>';
+    const valid=WX.grid&&WX.grid.time?WX.grid.time.slice(11,13)+WX.grid.time.slice(14,16)+'Z':'';
+    if(L.wxwind)parts.push('<div class="wl"><div class="wl-t">Jet stream <span>kt</span> '+sel+'</div><div class="wl-bar" style="background:'+bar(U.JET_STOPS.map(([k,c])=>[k,'rgb('+c.join(',')+')']))+'"></div><div class="wl-l"><span>50</span><span>80</span><span>110</span><span>140</span><span>180</span></div><div class="wl-s">Open-Meteo'+(valid?' · '+valid:'')+'</div></div>');
+    if(L.wxturb)parts.push('<div class="wl"><div class="wl-t">Turbulence <span>Ellrod</span> '+(L.wxwind?'':sel)+'</div><div class="wl-keys">'+U.TURB_LEVELS.map(t=>'<span><i style="border-color:rgb('+t.rgb.join(',')+')"></i>'+t.label+'</span>').join('')+'</div><div class="wl-s">Forecast index'+(valid?' · '+valid:'')+'</div></div>')
+  }
+  el.hidden=!parts.length;el.innerHTML=parts.join('')
+}
+/* ── IFR en-route chart (X-Plane 12 data via the bridge: /navdata/enroute) ── */
+const IFR={key:'',data:null,busy:false,err:'',pending:'',settle:0};
+function ifrBase(){return live.base||(location.port==='8765'?location.origin:'')}
+function ifrFetch(level){
+  const base=ifrBase();if(!base){IFR.err='bridge';return}
+  const pxPerNm=(256*2**V.z)/(360*60*Math.max(.15,Math.cos(V.lat*R))),nm=Math.max(30,Math.min(600,Math.round(Math.max(W,H)/pxPerNm*.6)));
+  const key=[level,V.lat.toFixed(2),V.lon.toFixed(2),nm].join('|');
+  if(IFR.busy||IFR.key===key)return;
+  if(IFR.pending!==key){IFR.pending=key;IFR.settle=Date.now();return}
+  if(Date.now()-IFR.settle<350)return;
+  IFR.busy=true;
+  fetch(base.replace(/\/+$/,'')+'/navdata/enroute?lat='+V.lat+'&lon='+normLon(V.lon)+'&nm='+nm+'&level='+level,{cache:'no-store'}).then(r=>r.json()).then(d=>{IFR.data=d&&d.ok?d:null;IFR.err=d&&d.ok&&!d.available?'nodata':''}).catch(()=>{IFR.err='bridge'}).finally(()=>{IFR.key=key;IFR.busy=false;render()})
+}
+function drawIfr(){
+  const level=L.ifrhi?'high':L.ifrlo?'low':'';if(!level||CH.on)return;
+  ifrFetch(level);
+  const d=IFR.data;
+  if(!d||d.level!==level){if(IFR.err)wxNotice(IFR.err==='nodata'?'IFR chart: no X-Plane 12 nav data on this PC':'IFR chart needs the Stratos bridge');return}
+  const day=document.documentElement.dataset.theme==='day',on=p=>p&&p[0]>-200&&p[0]<W+200&&p[1]>-200&&p[1]<H+200;
+  cx.save();
+  for(const[lat,lon,h]of d.mora||[]){
+    const a=vis(lon,lat),b=vis(lon+1,lat+1);if(!a||!b)continue;const w=Math.abs(b[0]-a[0]);if(w<70)continue;
+    const x=(a[0]+b[0])/2,y=(a[1]+b[1])/2;if(x<-w||x>W+w||y<-w||y>H+w)continue;
+    const sz=Math.max(14,Math.min(34,w/6)),big=String(Math.floor(h/10));
+    cx.fillStyle=day?'rgba(71,85,105,.22)':'rgba(148,163,184,.18)';cx.font='700 '+sz+'px system-ui,sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(big,x,y);
+    cx.font='700 '+(sz*.55)+'px system-ui,sans-serif';cx.textAlign='left';cx.fillText(String(h%10),x+sz*.36*big.length,y-sz*.32)
+  }
+  const AS={B:['#60a5fa',1.8,[]],C:['#e879f9',1.5,[]],D:['#60a5fa',1.1,[6,4]],CTR:['#60a5fa',1.1,[3,3]],R:['#f87171',1.3,[8,3]],P:['#f87171',1.6,[]]};
+  for(const a of d.airspace||[]){const st=AS[a.class];if(!st)continue;const pts=a.points.map(p=>vis(p[1],p[0]));if(pts.some(p=>!p)||!pts.some(on))continue;
+    cx.beginPath();pts.forEach((p,i)=>i?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1]));cx.closePath();cx.strokeStyle=st[0];cx.lineWidth=st[1];cx.setLineDash(st[2]);cx.globalAlpha=.85;cx.stroke();cx.setLineDash([]);cx.globalAlpha=1}
+  const ink=day?'rgba(30,64,115,.6)':'rgba(148,178,214,.6)',legs=[];cx.strokeStyle=ink;cx.lineWidth=1;
+  for(const l of d.airways||[]){const a=vis(l.a[2],l.a[1]),b=vis(l.b[2],l.b[1]);if(!a||!b||Math.abs(a[0]-b[0])>W*3||(!on(a)&&!on(b)))continue;cx.beginPath();cx.moveTo(a[0],a[1]);cx.lineTo(b[0],b[1]);cx.stroke();legs.push([l,a,b,Math.hypot(b[0]-a[0],b[1]-a[1])])}
+  legs.sort((p,q)=>q[3]-p[3]);const placed=[];cx.font='700 9.5px system-ui,sans-serif';cx.textAlign='center';cx.textBaseline='middle';
+  for(const[l,a,b,len]of legs){if(len<70)continue;const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;if(mx<0||mx>W||my<0||my>H)continue;
+    const name=l.names.slice(0,2).join(' '),mea=l.baseFl?(l.level==='high'?'FL'+String(l.baseFl).padStart(3,'0'):String(l.baseFl*100)):'';
+    const w=Math.max(cx.measureText(name).width,mea?cx.measureText(mea).width:0)+8,bx={x:mx-w/2,y:my-8,w,h:mea?25:14};
+    if(placed.some(o=>bx.x<o.x+o.w&&bx.x+bx.w>o.x&&bx.y<o.y+o.h&&bx.y+bx.h>o.y))continue;placed.push(bx);
+    cx.fillStyle=day?'#fff':'#0b1220';cx.fillRect(bx.x,bx.y,w,14);cx.strokeStyle=ink;cx.strokeRect(bx.x+.5,bx.y+.5,w-1,13);
+    cx.fillStyle=day?'#0f172a':'#dbe7f5';cx.fillText(name,mx,my-.5);if(mea){cx.fillStyle=day?'rgba(15,23,42,.75)':'rgba(219,231,245,.75)';cx.fillText(mea,mx,my+11)}}
   cx.restore()
 }
 /* ── VATSIM ATC layer ──────────────────────────────────────────────────
@@ -2842,19 +2833,61 @@ function drawAtc(){
   }
   cx.restore()
 }
-function drawWeather(){
-  if(!wxOn()||CH.on)return;
-  if(L.wxrain){
-    radarFetch();
-    if(!drawRadar()){
-      if(WX.pts.length)drawModelRain();
-      else wxNotice(RADAR.err?'Rain radar unavailable':'Rain radar loading…')
+function drawWeather(){if(CH.on)return;drawIfr();drawWeatherFields();if(L.wxsig)drawSigmets()}
+/* SIGMETs and US G-AIRMETs (NOAA AWC), interpreted by js/lib/sigmets.js. The
+   bridge serves /sigmets, the hosted site /api/sigmets; refreshed every 5 min. */
+const SIG={items:[],at:0,busy:false,err:''};
+function sigFetch(){
+  const M=window.STRATOS_SIGMETS;if(!M||SIG.busy||Date.now()-SIG.at<300000)return;
+  SIG.busy=true;SIG.err='';
+  const urls=location.protocol==='https:'?['/api/sigmets']:location.protocol==='file:'?['http://127.0.0.1:8765/sigmets']:['/sigmets','/api/sigmets'];
+  (async()=>{for(const u of urls){try{const r=await fetch(u,{cache:'no-store'});const d=await r.json();if(!r.ok||!d||d.error)throw new Error(d&&d.error||'HTTP '+r.status);SIG.items=M.normaliseAdvisories(d);SIG.err='';return}catch(e){SIG.err=e.message||'unavailable'}}})()
+    .finally(()=>{SIG.busy=false;SIG.at=Date.now()});
+}
+function drawSigmets(){
+  sigFetch();
+  if(!SIG.items.length){if(SIG.err||SIG.busy||!SIG.at)wxNotice(SIG.err?'SIGMETs unavailable':'SIGMETs loading…');return}
+  const lvl=ft=>ft==null?'':ft===0?'SFC':ft>=18000?'FL'+String(Math.round(ft/100)).padStart(3,'0'):Math.round(ft/100)*100+'ft';
+  cx.save();cx.font='600 10px system-ui,sans-serif';const labels=[],placed=[];
+  /* G-AIRMETs first so SIGMET outlines sit on top; labels below go SIGMETs first. */
+  for(const it of [...SIG.items].sort((a,b)=>/SIGMET/.test(a.kind)-/SIGMET/.test(b.kind))){
+    const sig=/SIGMET/.test(it.kind),col=sig?'248,113,113':'251,191,36';
+    for(const poly of it.polygons){
+      /* Flat chart: move the whole ring (longitudes unwrapped by lib/sigmets.js) to the world copy nearest the
+         view, rather than wrapping each vertex, which tore antimeridian areas into world-wide bands.
+         shortcut: on the globe a ring with any vertex on the far side is skipped; clip it if large advisories go missing. */
+      let pts;
+      if(V.mode==='globe'){pts=poly.map(p=>vis(p.lon,p.lat));if(pts.some(p=>!p))continue}
+      else{const mid=poly.reduce((a,p)=>a+p.lon,0)/poly.length,sh=360*Math.round((V.lon-mid)/360),c=wpx(V.lon,V.lat,V.z);
+        pts=poly.map(p=>{const q=wpx(p.lon+sh,p.lat,V.z);return[q[0]-c[0]+W/2,q[1]-c[1]+H/2]})}
+      let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9,sx=0,sy=0;
+      for(const[x,y]of pts){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);sx+=x;sy+=y}
+      if(x1<0||y1<0||x0>W||y0>H||x1-x0>W*20)continue;
+      cx.beginPath();pts.forEach(([x,y],i)=>i?cx.lineTo(x,y):cx.moveTo(x,y));cx.closePath();
+      cx.fillStyle='rgba('+col+','+(sig?.13:.07)+')';cx.fill();
+      cx.setLineDash(sig?[]:[5,4]);cx.lineWidth=sig?1.6:1.1;cx.strokeStyle='rgba('+col+',.9)';cx.stroke();cx.setLineDash([]);
+      if(x1-x0>46&&y1-y0>22){
+        const top=lvl(it.topFt),txt=(sig?it.kind.replace('Convective SIGMET','CONV SIGMET'):'G-AIRMET')+' '+it.hazard+(top?' '+(it.baseFt!=null?lvl(it.baseFt)+'-':'')+top:'');
+        labels.unshift({txt,col,tx:sx/pts.length,ty:sy/pts.length})
+      }
     }
   }
+  for(const l of labels){
+    const tw=cx.measureText(l.txt).width,r={x:l.tx-tw/2-4,y:l.ty-8,w:tw+8,h:15};
+    if(placed.some(o=>r.x<o.x+o.w+3&&r.x+r.w+3>o.x&&r.y<o.y+o.h+2&&r.y+r.h+2>o.y))continue;placed.push(r);
+    cx.fillStyle='rgba(3,10,18,.78)';cx.fillRect(r.x,r.y,r.w,r.h);
+    cx.fillStyle='rgb('+l.col+')';cx.textAlign='center';cx.fillText(l.txt,l.tx,l.ty+3);cx.textAlign='left'
+  }
+  cx.restore()
+}
+function drawWeatherFields(){
+  if(!wxOn())return;
+  if(L.wxrain){radarFetch();if(!drawRadar())wxNotice(RADAR.err?'Rain radar unavailable':'Rain radar loading…')}
   if(L.wxwind||L.wxturb){
     wxFetch();
-    if(!WX.pts.length){if(!L.wxrain)wxNotice(WX.err?'Weather overlay unavailable':'Weather overlay loading…')}
-    else{if(L.wxturb)drawTurbulence();if(L.wxwind)drawWind()}
+    if(V.mode==='globe')wxNotice('Jet stream and turbulence are drawn on the flat chart');
+    else if(!WX.grid)wxNotice(WX.err?'Upper-air data unavailable':'Upper-air data loading…');
+    else{if(L.wxturb)drawTurb();if(L.wxwind)drawJet()}
   }
 }
 function drawDayNight(){
@@ -3119,9 +3152,9 @@ function mapScale(){const bar=document.getElementById('msBar'),txt=document.getE
 function t3Next(){if(route.length<2)return null;const l=legs();let d=trav,i=0;while(i<l.length-1&&d>l[i]){d-=l[i];i++}return i+1<route.length?{point:route[i+1],nm:Math.max(0,l[i]-d),index:i+1}:null}
 let liveT0=0;
 document.getElementById('telMore')?.addEventListener('click',()=>{const tel=document.getElementById('tel');const open=tel.classList.toggle('open');document.getElementById('telMore').setAttribute('aria-expanded',open?'true':'false')});
-function liveStep(dt){T.forEach(a=>{if(Date.now()-(a.seen||0)<45000){const p=fwd(a,a.hdg,a.gs/3600*dt);a.lat=p.lat;a.lon=p.lon}});if((tk||V.fol)&&sel&&sel.k=='trf'){V.lon=sel.lon;V.lat=sel.lat}const d=live.d;own.lat=d.lat;own.lon=d.lon;trlAdd('own',d.lat,d.lon,d.alt,9000,d.agl);own.hdg=d.hdg||0;own.alt=d.alt;own.vs=d.vs||0;if(V.fol&&(!sel||sel.k=='own')){V.lon=own.lon;V.lat=own.lat}const gs=d.gs||0,el=route.length?dist(own,route.at(-1)):NaN;
+function liveStep(dt){T.forEach(a=>{if(Date.now()-(a.seen||0)<45000){const p=fwd(a,a.hdg,a.gs/3600*dt);a.lat=p.lat;a.lon=p.lon}});if((tk||V.fol)&&sel&&sel.k=='trf'){V.lon=sel.lon;V.lat=sel.lat}const d=live.d,SM=window.STRATOS_OWNSMOOTH;if(SM){const p=SM.smoothPosition(own,{lat:d.lat,lon:d.lon,gs:tnum(d.gs),trk:tnum(d.trk),hdg:tnum(d.hdg)},(performance.now()-live.at)/1000,dt);own.lat=p.lat;own.lon=p.lon;own.hdg=SM.easeAngle(own.hdg,d.hdg||0,dt)}else{own.lat=d.lat;own.lon=d.lon;own.hdg=d.hdg||0}trlAdd('own',d.lat,d.lon,d.alt,9000,d.agl);own.alt=d.alt;own.vs=d.vs||0;if(V.fol&&(!sel||sel.k=='own')){V.lon=own.lon;V.lat=own.lat}const gs=d.gs||0,el=route.length?dist(own,route.at(-1)):NaN;
 const mag=tnum(d.hdgMag),trk=tnum(d.trk),ias=tnum(d.ias),tas=tnum(d.tas),bank=tnum(d.bank),vs=tnum(d.vs);
-own.hdgMag=mag;own.trk=trk;own.bank=bank;own.ias=ias;own.tas=tas;own.windDir=tnum(d.windDir);own.windSpd=tnum(d.windSpd);own.oat=tnum(d.oat);
+own.hdgMag=mag;own.trk=SM&&trk!=null?SM.easeAngle(own.trk,trk,dt):trk;own.bank=bank;own.ias=ias;own.tas=tas;own.windDir=tnum(d.windDir);own.windSpd=tnum(d.windSpd);own.oat=tnum(d.oat);
 const shownHdg=mag!=null?mag:own.hdg;
 tset('tGS',tkts(gs));tset('tIA',tkts(ias));tset('tTA',tkts(tas));tset('tAL',Math.round(own.alt).toLocaleString('en-US'));
 tset('tVS',tfpm(vs));tset('tHD',tdeg(shownHdg));tset('tTR',tdeg(trk));drawBank(bank);setRose(shownHdg);
@@ -4037,7 +4070,6 @@ function fpRender(){
   let s;
   if(!has){
     s='<div class="fptop"><span>Flight plan</span><span class="sp"></span><em>Not imported</em></div>'
-      +'<div class="fpempty"><b>Import flight plan</b><span>Import a flight plan to view your route, departure, arrival, weather and flight details.</span></div>'
       +'<div class="fpacts"><button type="button" class="primary" data-fp-act="import">Import Flight Plan</button><button type="button" data-fp-act="plan">Build a route</button></div>';
   } else {
     fpWxFetch();

@@ -11,21 +11,23 @@
 
 @media (max-width: 767px) {
   :root {
-    --m-bg: #060d14;
-    --m-bg-2: #08121c;
-    --m-surface: #0d1a26;
-    --m-surface-2: #122333;
-    --m-line: rgba(124, 168, 214, .13);
-    --m-line-2: rgba(124, 168, 214, .24);
-    --m-ink: #eaf3fb;
-    --m-mute: #8ba2b8;
-    --m-faint: #5d738a;
-    --m-cyan: #22d3ee;
-    --m-cyan-2: #38bdf8;
-    --m-cyan-soft: rgba(34, 211, 238, .12);
-    --m-good: #34d399;
-    --m-warn: #f6c453;
-    --m-bad: #f87171;
+    /* Aliases of the shared Stratos tokens (tokens.css): phones get the same
+       palette and Day/Night/High theme as every other surface. */
+    --m-bg: var(--bg);
+    --m-bg-2: var(--land);
+    --m-surface: var(--ui);
+    --m-surface-2: var(--ui2);
+    --m-line: var(--line, rgba(124, 168, 214, .13));
+    --m-line-2: color-mix(in srgb, var(--mut) 34%, transparent);
+    --m-ink: var(--txt);
+    --m-mute: var(--mut);
+    --m-faint: color-mix(in srgb, var(--mut) 72%, var(--bg));
+    --m-cyan: var(--acc);
+    --m-cyan-2: var(--acc);
+    --m-cyan-soft: color-mix(in srgb, var(--acc) 12%, transparent);
+    --m-good: var(--grn, #34d399);
+    --m-warn: var(--warn, #f6c453);
+    --m-bad: var(--red, #f87171);
     --m-r: 16px;
     --m-r-sm: 12px;
     --m-tap: 46px;

@@ -759,7 +759,7 @@ function ensureMap() {
   if (!map) {
     const canvas = document.createElement('canvas');
     canvas.setAttribute('aria-label', 'Aircraft position');
-    map = new MiniMap(canvas, { padding: 22, onSelect: handleMapSelect });
+    map = new MiniMap(canvas, { padding: 22, onSelect: handleMapSelect, smooth: true });
     // Nothing is plotted until the simulator reports a position.
     map.setTrack(mapTrack);
   }
@@ -958,8 +958,9 @@ function render() {
     if (now - lastMapUpdate > 900) {
       lastMapUpdate = now;
       liveMap.setTrack(mapTrack);
-      liveMap.setPosition({ lat: telemetry.lat, lon: telemetry.lon }, telemetry.hdg);
     }
+    // Every sample: the map glides between them, so more samples only help.
+    liveMap.setPosition({ lat: telemetry.lat, lon: telemetry.lon, gs: telemetry.gs, trk: telemetry.trk }, telemetry.hdg);
   }
   pollTraffic(telemetry);
   document.title = flight?.arrAirport ? `Live · ${flight.depAirport || '????'} → ${flight.arrAirport}` : 'Live · Stratos';

@@ -18,6 +18,7 @@
 import { DEG, bearingDeg, destination, distanceNm, validLatLon } from './lib/geo.js';
 import { trailInk } from './lib/trailcolor.js';
 import { smoothPath } from './lib/trailpath.js';
+import { smoothPosition, easeAngle, MAX_PREDICT_S } from './lib/ownsmooth.js';
 import { GlobeRaster, earthStyle, EarthView } from './lib/earthview.js';
 import {
   cameraDirection,
@@ -219,6 +220,9 @@ export class MiniMap {
     this.trafficSelected = '';
     this.position = null;
     this.heading = null;
+    // En-route chart data from the bridge (/navdata/enroute): airways,
+    // airspace and grid MORA for the view, drawn under the nav points.
+    this.enroute = null;
     this.options = { padding: 34, attribution: true, ...options };
     // The radius ring and the distance scale are a planning chart's tools, so a
     // page asks for them; a map that never set navigation points draws nothing
@@ -634,10 +638,168 @@ export class MiniMap {
     this.draw();
   }
 
+  /**
+   * With `options.smooth`, a position carrying gs/trk is a live sample: the
+   * aircraft glides between samples (lib/ownsmooth.js) instead of stepping.
+   * Without it (replay scrubbing, previews) the position is drawn as given.
+   */
   setPosition(position, heading = null) {
-    this.position = position && validLatLon(Number(position.lat), Number(position.lon)) ? position : null;
-    this.heading = heading;
+    const valid = position && validLatLon(Number(position.lat), Number(position.lon)) ? position : null;
+    if (!this.options.smooth || !valid) {
+      this.stopSmoothing();
+      this.position = valid;
+      this.heading = heading;
+      this.draw();
+      return;
+    }
+    this.sample = { lat: Number(valid.lat), lon: Number(valid.lon), gs: Number(valid.gs), trk: Number(valid.trk), hdg: Number(heading) };
+    this.sampleAt = now();
+    this.sampleHeading = heading;
+    if (!this.smoothTimer) this.smoothTick(this.sampleAt);
+  }
+
+  smoothTick(t) {
+    const dt = Math.min(0.2, (t - (this.smoothLast || t)) / 1000);
+    this.smoothLast = t;
+    const age = (t - this.sampleAt) / 1000;
+    const shown = smoothPosition(this.position, this.sample, age, dt);
+    this.position = { ...this.sample, lat: shown.lat, lon: shown.lon };
+    this.heading = Number.isFinite(this.sampleHeading) ? easeAngle(this.heading, this.sampleHeading, dt) : this.sampleHeading;
     this.draw();
+    // Settle a moment past the prediction cap, then stop until the next sample.
+    if (age > MAX_PREDICT_S + 1) { this.stopSmoothing(); return; }
+    // shortcut: 30 fps cap keeps phones cool; raise if a desktop-only page wants 60.
+    const next = typeof requestAnimationFrame === 'function'
+      ? cb => requestAnimationFrame(cb) : cb => setTimeout(() => cb(now()), 33);
+    const wait = frame => {
+      if (frame - t < 30) { this.smoothTimer = next(wait); return; }
+      this.smoothTick(frame);
+    };
+    this.smoothTimer = next(wait);
+  }
+
+  stopSmoothing() {
+    if (!this.smoothTimer) return;
+    if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(this.smoothTimer);
+    clearTimeout(this.smoothTimer);
+    this.smoothTimer = 0;
+    this.smoothLast = 0;
+  }
+
+  /** IFR en-route layer: the bridge's /navdata/enroute answer, or null to clear. */
+  setEnroute(data) {
+    this.enroute = data && data.ok ? data : null;
+    this.draw();
+  }
+
+  drawEnroute(view) {
+    const data = this.enroute;
+    if (!data) return;
+    const ctx = this.ctx;
+    const dark = this.theme() !== 'light';
+    const inset = this.insets();
+    const visible = p => p.x > inset.left - 200 && p.x < this.width + 200 && p.y > -200 && p.y < this.height + 200;
+    ctx.save();
+
+    // Grid MORA: the cell's figure in thousands, hundreds as a superscript.
+    const corner = this.project(0, 0, view);
+    for (const [lat, lon, hundreds] of data.mora || []) {
+      const sw = this.project(lat, lon, view);
+      const ne = this.project(lat + 1, lon + 1, view);
+      const w = Math.abs(ne.x - sw.x);
+      const h = Math.abs(ne.y - sw.y);
+      if (!Number.isFinite(w) || w < 70 || h < 50) continue;
+      const cx = (sw.x + ne.x) / 2;
+      const cy = (sw.y + ne.y) / 2;
+      if (cx < -w || cx > this.width + w || cy < -h || cy > this.height + h) continue;
+      const big = String(Math.floor(hundreds / 10));
+      const small = String(hundreds % 10);
+      const size = Math.max(14, Math.min(34, w / 6));
+      ctx.fillStyle = dark ? 'rgba(148, 163, 184, .16)' : 'rgba(71, 85, 105, .2)';
+      ctx.font = `700 ${size}px system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(big, cx, cy);
+      ctx.font = `700 ${size * 0.55}px system-ui, sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.fillText(small, cx + ctx.measureText('0').width * 0 + size * 0.36 * big.length, cy - size * 0.32);
+    }
+    void corner;
+
+    // Airspace: B solid blue, C magenta, D and control zones dashed blue,
+    // restricted and prohibited red.
+    const STYLE = {
+      B: { color: dark ? '#60a5fa' : '#1d4ed8', width: 1.8, dash: [] },
+      C: { color: dark ? '#e879f9' : '#a21caf', width: 1.5, dash: [] },
+      D: { color: dark ? '#60a5fa' : '#1d4ed8', width: 1.1, dash: [6, 4] },
+      CTR: { color: dark ? '#60a5fa' : '#1d4ed8', width: 1.1, dash: [3, 3] },
+      R: { color: dark ? '#f87171' : '#b91c1c', width: 1.3, dash: [8, 3] },
+      P: { color: dark ? '#f87171' : '#b91c1c', width: 1.6, dash: [] },
+    };
+    for (const area of data.airspace || []) {
+      const style = STYLE[area.class];
+      if (!style || !Array.isArray(area.points) || area.points.length < 3) continue;
+      const pts = area.points.map(([lat, lon]) => this.project(lat, lon, view));
+      if (!pts.some(visible)) continue;
+      ctx.beginPath();
+      pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+      ctx.closePath();
+      ctx.globalAlpha = 0.85;
+      ctx.strokeStyle = style.color;
+      ctx.lineWidth = style.width;
+      ctx.setLineDash(style.dash);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    }
+
+    // Airways: the leg, then one boxed name with its MEA, labels not overlapping.
+    const placed = [];
+    const free = box => !placed.some(o => box.x < o.x + o.w && box.x + box.w > o.x && box.y < o.y + o.h && box.y + box.h > o.y);
+    const lineColor = dark ? 'rgba(148, 178, 214, .55)' : 'rgba(30, 64, 115, .55)';
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = lineColor;
+    const legs = [];
+    for (const leg of data.airways || []) {
+      const a = this.project(leg.a[1], leg.a[2], view);
+      const b = this.project(leg.b[1], leg.b[2], view);
+      if (!Number.isFinite(a.x) || !Number.isFinite(b.x) || Math.abs(a.x - b.x) > this.width * 3) continue;
+      if (!visible(a) && !visible(b)) continue;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+      legs.push({ leg, a, b, len: Math.hypot(b.x - a.x, b.y - a.y) });
+    }
+    legs.sort((p, q) => q.len - p.len);
+    ctx.font = '700 9.5px system-ui, sans-serif';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    for (const { leg, a, b, len } of legs) {
+      if (len < 70) continue;
+      const mx = (a.x + b.x) / 2;
+      const my = (a.y + b.y) / 2;
+      if (mx < inset.left || mx > this.width || my < 0 || my > this.height) continue;
+      const name = leg.names.slice(0, 2).join(' ');
+      const mea = leg.baseFl ? (leg.level === 'high' ? `FL${String(leg.baseFl).padStart(3, '0')}` : String(leg.baseFl * 100)) : '';
+      const w = Math.max(ctx.measureText(name).width, mea ? ctx.measureText(mea).width : 0) + 8;
+      const box = { x: mx - w / 2, y: my - 8, w, h: mea ? 25 : 14 };
+      if (!free(box)) continue;
+      placed.push(box);
+      ctx.fillStyle = dark ? '#0b1220' : '#ffffff';
+      ctx.strokeStyle = lineColor;
+      ctx.fillRect(box.x, box.y, box.w, 14);
+      ctx.strokeRect(box.x + 0.5, box.y + 0.5, box.w - 1, 13);
+      ctx.fillStyle = dark ? '#dbe7f5' : '#0f172a';
+      ctx.fillText(name, mx, my - 0.5);
+      if (mea) {
+        ctx.fillStyle = dark ? 'rgba(219, 231, 245, .75)' : 'rgba(15, 23, 42, .75)';
+        ctx.fillText(mea, mx, my + 11);
+      }
+    }
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.restore();
   }
 
   setLayers(next = {}) {
@@ -756,6 +918,9 @@ export class MiniMap {
     if (this.layers.track) points.push(...this.track);
     if (this.layers.route) points.push(...this.route);
     if (!points.length && this.position) points.push(this.position);
+    // Nothing to frame but a place was asked for: show that place, so an empty
+    // planning chart is still a chart.
+    if (!points.length && this.manualCenter) points.push(this.manualCenter);
     if (!points.length) return null;
     let minLat = 90, maxLat = -90;
     for (const p of points) {
@@ -1851,6 +2016,7 @@ export class MiniMap {
 
     // The radius ring belongs under everything else: it is a reference, not a
     // feature of the flight.
+    if (this.layers.enroute !== false && this.enroute) this.drawEnroute(view);
     if (this.layers.range) this.drawRange(view);
     if (this.layers.nav) this.drawNavPoints(view);
 
@@ -2069,6 +2235,7 @@ export class MiniMap {
   }
 
   destroy() {
+    this.stopSmoothing();
     this.resizeObserver.disconnect();
     this.tiles.clear();
     this.drag = null;
@@ -2083,6 +2250,8 @@ export class MiniMap {
     if (this.painter) { this.painter.clear(); this.painter = null; }
   }
 }
+
+const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
 /** Shortest distance from a point to a line segment, in the same units as the input. */
 function distanceToSegment(px, py, ax, ay, bx, by) {

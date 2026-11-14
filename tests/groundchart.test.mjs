@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  airportOrigin, buildTaxiGraph, geometryBounds, localise, normaliseWays,
-  runwayEnds, runwayTarget, shortestPath, taxiRoute,
+  airportOrigin, buildTaxiGraph, geometryBounds, holdingPoints, localise, normaliseWays,
+  overpassQuery, routeHolds, runwayEnds, runwayTarget, shortestPath, taxiRoute, waysFromOverpass,
 } from '../app/js/lib/groundchart.js';
 
 const AIRFIELD = [
@@ -112,4 +112,70 @@ test('with no designator the nearest runway end is reported as unmatched', () =>
   assert.ok(target);
   assert.equal(target.matched, false);
   assert.ok(target.distance >= 0);
+});
+
+test('holding points are read from nodes and ways, and kept out of the drawn ways', () => {
+  const field = [
+    ...AIRFIELD,
+    ['holding_position', 'B1', [[51.0015, 0.0020]]],
+    ['holding_position', '', [[51.0010, 0.0010], [51.0010, 0.0012]]],
+    ['holding_position', 'X', []],
+  ];
+  const holds = holdingPoints(field);
+  assert.equal(holds.length, 2);
+  assert.deepEqual(holds[0], { lat: 51.0015, lon: 0.002, ref: 'B1' });
+  assert.ok(Math.abs(holds[1].lon - 0.0011) < 1e-9, 'a way is placed at its midpoint');
+  assert.equal(normaliseWays(field).length, AIRFIELD.length);
+  assert.deepEqual(holdingPoints('nope'), []);
+});
+
+test('routeHolds lists the holds the taxi route crosses, in the order it reaches them', () => {
+  const route = taxiRoute(AIRFIELD, { lat: 51.0, lon: 0.0 }, { lat: 51.002, lon: 0.002 });
+  const holds = holdingPoints([
+    ['holding_position', 'B1', [[51.0015, 0.0020]]],   // on B, near the runway
+    ['holding_position', 'A2', [[51.0010, 0.0010]]],   // on A, reached first
+    ['holding_position', 'FAR', [[51.0000, 0.0150]]],  // nowhere near the route
+  ]);
+  assert.deepEqual(routeHolds(holds, route.path).map(hold => hold.ref), ['A2', 'B1']);
+  assert.deepEqual(routeHolds(holds, []), []);
+});
+
+test('the browser fallback asks Overpass the bridge query and gets the bridge shape back', () => {
+  const query = overpassQuery(47.449, -122.309);
+  assert.ok(query.includes('node["aeroway"="holding_position"](around:5000,47.449000,-122.309000)'));
+  assert.ok(query.includes('taxilane|apron|terminal|holding_position'));
+  const ways = waysFromOverpass({ elements: [
+    { type: 'way', tags: { aeroway: 'taxiway', ref: 'A' }, geometry: [{ lat: 51, lon: 0 }, { lat: 51.001, lon: 0 }] },
+    { type: 'node', lat: 51.0005, lon: 0, tags: { aeroway: 'holding_position', ref: 'A1' } },
+    { type: 'node', lat: 51, lon: 0 },
+    { type: 'way', tags: { aeroway: 'taxiway' } },
+  ] });
+  assert.deepEqual(ways, [
+    ['taxiway', 'A', [[51, 0], [51.001, 0]]],
+    ['holding_position', 'A1', [[51.0005, 0]]],
+  ]);
+  assert.deepEqual(waysFromOverpass(null), []);
+});
+
+test('hedged Overpass: a failing and a hanging mirror do not hold up one that answers', async () => {
+  const { hedgedOverpass } = await import('../app/js/efb/groundchart.js');
+  const asked = [];
+  const answer = body => ({ ok: true, json: async () => body });
+  const fetcher = (url, { signal }) => {
+    const host = new URL(url).hostname;
+    asked.push(host);
+    if (host === 'down.test') return Promise.resolve({ ok: false, status: 502 });
+    if (host === 'hang.test') return new Promise((_, reject) => signal.addEventListener('abort', () => reject(Object.assign(new Error('x'), { name: 'AbortError' }))));
+    return Promise.resolve(answer({ elements: [{ type: 'node', lat: 1, lon: 2, tags: { aeroway: 'holding_position', ref: 'H1' } }] }));
+  };
+  const mirrors = ['https://down.test/i', 'https://hang.test/i', 'https://good.test/i'];
+  const started = Date.now();
+  const result = await hedgedOverpass('q', { mirrors, staggerMs: 50, timeoutMs: 5000, fetcher });
+  assert.deepEqual(result.ways, [['holding_position', 'H1', [[1, 2]]]]);
+  assert.deepEqual(asked, ['down.test', 'hang.test', 'good.test']);
+  assert.ok(Date.now() - started < 1000, 'did not wait for the hanging mirror');
+
+  const none = await hedgedOverpass('q', { mirrors: ['https://down.test/i'], staggerMs: 50, fetcher });
+  assert.equal(none.ways, null);
+  assert.match(none.lastError, /502/);
 });

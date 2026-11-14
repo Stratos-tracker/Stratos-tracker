@@ -207,7 +207,7 @@ function fakeRes() {
   };
 }
 
-test('airmate: the old US plates are no longer served in its place', async () => {
+test('airmate: without a licence, US airports get the FAA d-TPP plates', async () => {
   const { default: handler } = await import('../api/charts.js');
   const saved = { url: process.env.AIRMATE_AIP_URL, key: process.env.AIRMATE_API_KEY, legacy: process.env.US_LEGACY_FAA };
   delete process.env.AIRMATE_AIP_URL;
@@ -215,17 +215,7 @@ test('airmate: the old US plates are no longer served in its place', async () =>
   delete process.env.US_LEGACY_FAA;
   airmateForget();
 
-  // Unlicensed: US airports say so, and show no other publisher's plates.
-  const res = fakeRes();
-  await handler({ query: { icao: 'KJFK' } }, res);
-  assert.equal(res.code, 503);
-  assert.equal(res.body.sourceRequired, true);
-  assert.equal(res.body.source, 'airmate');
-  assert.deepEqual(res.body.charts, [], 'no second-best plates stand in for the licensed ones');
-  assert.match(res.body.message, /Airmate/);
-
-  // The transition switch still reaches the old publication, unimpaired.
-  process.env.US_LEGACY_FAA = '1';
+  // No licence and no switch: the public-domain FAA publication is served.
   const realFetch = globalThis.fetch;
   globalThis.fetch = async () => ({ ok: true, status: 200, text: async () => META });
   const legacy = fakeRes();

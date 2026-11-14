@@ -242,7 +242,12 @@ export function applyAirline(airline) {
   const air = airline && !airline.house ? airline : null;
   const root = document.documentElement;
   const vars = airlineVars(air);
-  for (const [name, value] of Object.entries(vars)) root.style.setProperty(name, value);
+  // An airline paints its own accent; the house look is the shared Stratos
+  // tokens (tokens.css), so it clears the overrides instead of writing a copy.
+  for (const [name, value] of Object.entries(vars)) {
+    if (air) root.style.setProperty(name, value);
+    else root.style.removeProperty(name);
+  }
   document.body.dataset.airline = air ? air.icao : '';
   root.dataset.airline = air ? air.icao : '';
   return air;

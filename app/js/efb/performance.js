@@ -426,7 +426,7 @@ export async function mount(root, ctx) {
           <label for="perf-airport">Airport (ICAO)</label>
           <input class="e-input small" id="perf-airport" value="${esc(state.airport)}" placeholder="LFPG" autocomplete="off" spellcheck="false">
           ${state.airportName ? `<span class="e-hint">${esc(state.airportName)}</span>` : ''}
-          ${state.airportMissing ? '<span class="e-hint">No airport record for this code; enter elevation and runway length manually. Wind components stay unresolved without a runway heading.</span>' : ''}
+          ${state.airportMissing ? '<span class="e-hint">Unknown airport · enter elevation and runway length.</span>' : ''}
         </div>
         ${field('weight', state.phase === 'takeoff' ? 'Takeoff weight' : 'Landing weight', state.weight, { unit, hint: 'From X-Plane or the plan; edit it here' })}
         ${field('elevationFt', 'Elevation', state.elevationFt, { unit: 'ft' })}
@@ -490,7 +490,7 @@ export async function mount(root, ctx) {
           </dl>` : '<div class="e-small e-muted">Select a runway and enter wind to resolve the components.</div>'}
         </div>
       </div>
-      <div class="e-small e-faint" style="margin-top:9px">Atmosphere and wind are computed from the inputs; they are not aircraft-specific data. Missing values stay missing.</div>
+      <div class="e-small e-faint" style="margin-top:9px">Computed from the inputs above</div>
     </div>`;
   }
 
@@ -540,7 +540,7 @@ export async function mount(root, ctx) {
     if (!current) {
       return `${errors}<div class="e-card"><h3>Calculate</h3>
         <div class="e-empty"><b>Choose an aircraft profile</b>
-          <p>Detection uses the X-Plane airframe. If it reports a type that is not in the bundled database, select a profile by hand or accept that this type is unsupported.</p>
+          <p>Detected from X-Plane · pick a profile if the type isn't listed.</p>
           <p class="e-small">Supported profiles: ${state.database.profiles.map(item => esc(`${item.manufacturer} ${item.name}`)).join(', ')}.</p>
         </div></div>`;
     }

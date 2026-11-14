@@ -15,8 +15,13 @@
  */
 
 import {
-  esc, searchAirports, loadChartCatalogue, filterCharts, chartSourcesFor,
+  esc, searchAirports, loadChartCatalogue, filterCharts, chartSourcesFor, loadRoute, onLive,
 } from './common.js';
+import {
+  chartId, chartKind, flightKey, isPinned, pickChart, readClip, toggleClip, wantedChart, writeClip,
+} from '../lib/chartclip.js';
+import { inferPhase } from '../lib/checklists.js';
+import { MiniMap } from '../minimap.js';
 import {
   COUNTRIES, REGIONS, countriesForRegion, licenceFor, registryStats, sourcesForCountry,
 } from '../lib/chartdir.js';
@@ -162,6 +167,19 @@ export async function mount(root, ctx) {
   let countryIso = '';
   let destroyed = false;
 
+  // Clipboard, night rendering, split map and phase-following (Auto).
+  const depIcao = (flight.find(row => row.role === 'DEP') || {}).icao || '';
+  const arrIcao = (flight.find(row => row.role === 'ARR') || {}).icao || '';
+  const clipKey = flightKey(depIcao, arrIcao);
+  let clip = readClip(localStorage, clipKey);
+  let night = ctx.prefs().chartTheme !== 'day';
+  let split = false;
+  let auto = (() => { try { return localStorage.getItem('stratos.efb.charts.auto') === '1'; } catch (_) { return false; } })();
+  let phase = 'dispatch';
+  let autoKey = '';
+  let telemetry = null;
+  let splitMap = null;
+
   root.innerHTML = `
     <div class="ch-workspace">
       <aside class="ch-side" aria-label="Chart library">
@@ -225,9 +243,22 @@ export async function mount(root, ctx) {
       if (items.length >= 10) break;
       if (!items.some(entry => entry.icao === item.icao)) items.push({ icao: item.icao, label: item.name || item.icao });
     }
-    host.innerHTML = items.length
+    const pins = clip.map((chart, index) => `<button class="e-btn small ${selected && chartId(selected) === chartId(chart) ? 'primary' : 'ghost'} ch-pin" type="button" data-pin="${index}" title="${esc(chart.title || chart.pdf || '')}">📌 ${esc(chart.icao)} ${esc(String(chart.title || chart.pdf || '').slice(0, 22))}</button>`).join('');
+    host.innerHTML = `<div class="ch-quick-row">${items.length
       ? items.map(item => `<button class="e-btn small ${item.icao === icao ? 'primary' : 'ghost'}" type="button" data-quick="${esc(item.icao)}">${esc(item.label)}</button>`).join('')
-      : '<span class="e-small e-faint">Open a flight plan, or save an airport, to pin charts here.</span>';
+      : '<span class="e-small e-faint">No flight plan · search an airport</span>'}
+      <button class="e-btn small ${auto ? 'primary' : 'ghost'}" type="button" data-auto aria-pressed="${auto}" title="Follow the flight phase: diagram, SID, STAR, approach">Auto</button></div>
+      ${pins ? `<div class="ch-quick-row ch-pins" aria-label="Pinned charts for this flight">${pins}</div>` : ''}`;
+    host.querySelectorAll('[data-pin]').forEach(button => {
+      button.addEventListener('click', () => openPinned(clip[Number(button.dataset.pin)]));
+    });
+    host.querySelector('[data-auto]').addEventListener('click', () => {
+      auto = !auto;
+      autoKey = '';
+      try { localStorage.setItem('stratos.efb.charts.auto', auto ? '1' : '0'); } catch (_) { /* optional */ }
+      renderQuick();
+      if (auto) autoTick();
+    });
     host.querySelectorAll('[data-quick]').forEach(button => {
       button.addEventListener('click', () => {
         icao = button.dataset.quick;
@@ -278,7 +309,7 @@ export async function mount(root, ctx) {
     if (!catalogue) {
       listEl.innerHTML = `<div class="ch-hint">
         <b>No charts loaded</b>
-        <span>Search for any airport in the world. Where the publisher's terms allow it, the charts open here; otherwise Stratos shows the official source.</span>
+        <span>Any airport · official publisher where charts can't be embedded</span>
       </div>`;
       countEl.textContent = '';
       return;
@@ -505,13 +536,13 @@ export async function mount(root, ctx) {
             <div class="e-label">Charts · ${esc(icao)}</div>
             <div class="ch-viewer-title">${esc(titles[access] || titles.UNKNOWN)}</div>
             <p class="ch-viewer-text">${esc((coverage && coverage.message) || 'The charts for this airport are published by an external provider.')}</p>
-            ${isFreenavIcao(icao) ? '<p class="ch-viewer-text">FreeNav indexes the German charts for flight simulation and home use. Its chart list opens the official DFS PDFs in a new tab; Stratos does not copy or frame them.</p>' : ''}
+            ${isFreenavIcao(icao) ? '<p class="ch-viewer-text">German charts via FreeNav · official DFS PDFs, new tab</p>' : ''}
           </div>${chartfoxLink(icao)}${isFreenavIcao(icao) ? freenavLink() : ''}${sourcesPanel(sourceLinks)}`;
         return;
       }
       viewerCard.innerHTML = `<div class="ch-viewer-empty">
         <b>No chart open</b>
-        <p>Search for an airport anywhere in the world, then choose a document. Charts open in the same viewer the tracker uses: wheel or pinch to zoom, drag to pan, Page Up/Down for pages.</p>
+        <p>Search an airport, then pick a chart.</p>
       </div>`;
       return;
     }
@@ -537,9 +568,12 @@ export async function mount(root, ctx) {
           <button class="e-btn small" type="button" data-page="-1" title="Previous page">‹</button>
           <button class="e-btn small" type="button" data-page="1" title="Next page">›</button>
           ${official ? `<a class="e-btn small" href="${esc(official)}" target="_blank" rel="noopener">Official ↗</a>` : ''}
+          <button class="e-btn small ${isPinned(clip, pinRecord(selected)) ? 'primary' : ''}" type="button" data-chart-pin title="Pin to this flight's clipboard">📌</button>
+          <button class="e-btn small ${night ? 'primary' : ''}" type="button" data-chart-night title="Night rendering">☾</button>
+          <button class="e-btn small ${split ? 'primary' : ''}" type="button" data-chart-split title="Moving map beside the chart">Map</button>
         </div>
       </div>
-      <div class="chart-host" id="chart-host"></div>
+      <div class="chart-split${split ? ' on' : ''}"><div class="chart-host" id="chart-host"></div>${split ? '<div class="chart-map"><canvas id="chart-map-canvas" aria-label="Moving map"></canvas></div>' : ''}</div>
       <div class="e-small ${validityState(selected) === 'expired' ? 'e-faint' : 'e-muted'}" style="margin-top:8px" id="chart-validity">
         ${esc(validityText(selected))}${selected.attribution ? ` · ${esc(selected.attribution)}` : ''}
       </div>`;
@@ -581,8 +615,29 @@ export async function mount(root, ctx) {
     viewerCard.querySelectorAll('[data-page]').forEach(button => {
       button.addEventListener('click', () => viewer.setPage(viewer.pageNumber + Number(button.dataset.page)));
     });
+    viewerCard.classList.toggle('chart-night', night);
+    viewerCard.querySelector('[data-chart-pin]')?.addEventListener('click', () => {
+      clip = toggleClip(clip, pinRecord(selected));
+      writeClip(localStorage, clipKey, clip);
+      renderQuick();
+      viewerCard.querySelector('[data-chart-pin]')?.classList.toggle('primary', isPinned(clip, pinRecord(selected)));
+    });
+    viewerCard.querySelector('[data-chart-night]')?.addEventListener('click', event => {
+      night = !night;
+      ctx.setPrefs({ chartTheme: night ? 'night' : 'day' });
+      viewerCard.classList.toggle('chart-night', night);
+      event.currentTarget.classList.toggle('primary', night);
+    });
+    viewerCard.querySelector('[data-chart-split]')?.addEventListener('click', () => {
+      split = !split;
+      const bytes = documentState.bytes;
+      destroyViewer();
+      documentState = bytes ? { ...documentState, bytes } : documentState;
+      renderViewer();
+    });
+    mountSplitMap();
     if (documentState.bytes) {
-      viewer.load(documentState.bytes).catch(error => {
+      viewer.load(documentState.bytes.slice())/* pdf.js may detach the buffer it is given; keep ours for split/night re-renders */.catch(error => {
         if (destroyed) return;
         documentState = { status: 'error', error: error && error.message ? error.message : String(error) };
         renderViewer();
@@ -632,6 +687,66 @@ export async function mount(root, ctx) {
     }
   }
 
+  /** The stored form of a chart: the catalogue record plus the airport it belongs to. */
+  function pinRecord(chart) {
+    return chart ? { ...chart, icao: String(chart.icao || icao).toUpperCase() } : null;
+  }
+
+  function openPinned(chart) {
+    if (!chart) return;
+    const same = item => (item.pdf || item.url || item.title) === (chart.pdf || chart.url || chart.title);
+    if (catalogue && String(chart.icao).toUpperCase() === icao) {
+      openChart(catalogue.charts.find(same) || chart);
+      return;
+    }
+    icao = String(chart.icao).toUpperCase();
+    searchInput.value = icao;
+    load(same);
+  }
+
+  function mountSplitMap() {
+    if (splitMap) { try { splitMap.destroy(); } catch (_) { /* gone */ } splitMap = null; }
+    const canvas = viewerCard.querySelector('#chart-map-canvas');
+    if (!split || !canvas) return;
+    try {
+      splitMap = new MiniMap(canvas, { padding: 30, smooth: true, ownSymbol: 'aircraft', layers: { tiles: true, route: true, track: false, traffic: false } });
+      splitMap.attach(canvas.parentElement);
+      const route = loadRoute();
+      if (route.length > 1) splitMap.setRoute(route);
+      else if (airport && Number.isFinite(Number(airport.lat)) && Number.isFinite(Number(airport.lon))) {
+        // No plan and no flight: the map shows the chart's airport.
+        splitMap.setRoute([{ lat: Number(airport.lat), lon: Number(airport.lon), id: icao, kind: 'apt' }]);
+        splitMap.centerOn(Number(airport.lat), Number(airport.lon), 12);
+      }
+      splitMap.setFollow(Boolean(telemetry));
+      if (telemetry) splitMap.setPosition({ lat: telemetry.lat, lon: telemetry.lon, gs: telemetry.gs, trk: telemetry.trk }, telemetry.hdg);
+    } catch (error) {
+      canvas.parentElement.innerHTML = `<div class="e-notice warn" style="margin:12px">${esc(error.message)}</div>`;
+    }
+  }
+
+  /** Auto: open the chart the flight phase calls for, once per phase change. */
+  function autoTick() {
+    if (!auto || !telemetry) return;
+    phase = inferPhase(telemetry, phase).key;
+    const want = wantedChart(phase, telemetry.alt);
+    const target = want ? (want.role === 'DEP' ? depIcao : arrIcao) : '';
+    if (!want || !target) return;
+    const key = `${target}|${want.kind}`;
+    if (key === autoKey) return;
+    autoKey = key;
+    const pinned = pickChart(want, target, clip, []);
+    if (pinned) { openPinned(pinned); return; }
+    if (catalogue && icao === target) {
+      const chart = pickChart(want, target, [], catalogue.charts);
+      if (chart) openChart(chart);
+      return;
+    }
+    icao = target;
+    searchInput.value = icao;
+    load(chart => chartKind(chart) === want.kind);
+  }
+
   function destroyViewer() {
     if (viewer) {
       try { viewer.destroy(); } catch (_) { /* already gone */ }
@@ -654,7 +769,7 @@ export async function mount(root, ctx) {
     renderList();
   }
 
-  async function load() {
+  async function load(prefer = null) {
     icao = String(icao || '').trim().toUpperCase();
     if (!icao) {
       noticeEl.innerHTML = '<div class="e-notice warn">Enter an airport ICAO code or pick one of the suggestions.</div>';
@@ -700,7 +815,7 @@ export async function mount(root, ctx) {
     renderHeader();
     renderList();
     if (catalogue.charts.length) {
-      const first = visibleCharts()[0] || catalogue.charts[0];
+      const first = (prefer && catalogue.charts.find(prefer)) || visibleCharts()[0] || catalogue.charts[0];
       if (first) openChart(first);
     } else {
       renderViewer();
@@ -796,9 +911,21 @@ export async function mount(root, ctx) {
     renderViewer();
   }
 
+  const offLive = onLive(next => {
+    const t = next && next.status === 'live' && next.snapshot ? next.snapshot.telemetry : null;
+    telemetry = t && Number.isFinite(t.lat) && Number.isFinite(t.lon) ? t : null;
+    if (splitMap && telemetry) {
+      splitMap.setFollow(true);
+      splitMap.setPosition({ lat: telemetry.lat, lon: telemetry.lon, gs: telemetry.gs, trk: telemetry.trk }, telemetry.hdg);
+    }
+    autoTick();
+  });
+
   return {
     destroy() {
       destroyed = true;
+      offLive();
+      if (splitMap) { try { splitMap.destroy(); } catch (_) { /* gone */ } splitMap = null; }
       destroyViewer();
     },
   };

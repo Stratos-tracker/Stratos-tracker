@@ -381,3 +381,31 @@ test('minimap: the globe frames the route it is showing', () => {
   assert.ok(extent < radius, 'the whole route is on the visible disc');
   assert.ok(extent > radius * 0.3, 'and the route is scaled up to use it');
 });
+
+test('minimap: without smoothing (replay) a position is drawn exactly as given', () => {
+  const map = new MiniMap(makeCanvas(), { padding: 22 });
+  map.setPosition({ lat: 40, lon: -74, gs: 360, trk: 90 }, 90);
+  map.setPosition({ lat: 40, lon: -73.9, gs: 360, trk: 90 }, 90);
+  assert.equal(map.position.lon, -73.9);
+  assert.ok(!map.smoothTimer);
+});
+
+test('minimap: with smoothing a live aircraft glides between samples and the loop stops', () => {
+  const map = new MiniMap(makeCanvas(), { padding: 22, smooth: true });
+  map.setPosition({ lat: 40, lon: -74, gs: 360, trk: 90 }, 90);
+  map.stopSmoothing(); // drive frames by hand
+  const t0 = map.sampleAt;
+  map.setPosition({ lat: 40, lon: -73.995, gs: 360, trk: 90 }, 92);
+  map.stopSmoothing();
+  map.sampleAt = t0; map.smoothLast = t0;
+  const lons = [];
+  for (let f = 1; f <= 6; f++) { map.smoothTick(t0 + f * 33); map.stopSmoothing(); map.smoothLast = t0 + f * 33; lons.push(map.position.lon); }
+  lons.reduce((prev, x) => { assert.ok(x > prev, 'moves east every frame'); return x; }, -74);
+  assert.ok(lons[0] < -73.995, 'a new sample is eased into, not snapped to');
+  assert.ok(map.heading > 90 && map.heading < 92);
+  map.smoothTick(t0 + 4000); // past the prediction cap
+  assert.ok(!map.smoothTimer, 'stops redrawing once the feed is stale');
+  map.setPosition(null);
+  assert.equal(map.position, null);
+  map.destroy();
+});

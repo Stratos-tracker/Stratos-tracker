@@ -125,7 +125,9 @@ def _build():
             with open(path, "r", encoding="utf-8", errors="replace") as handle:
                 for line in handle:
                     parts = line.split()
-                    # lat lon IDENT REGION COUNTRY backend region-code
+                    # lat lon IDENT TERMINAL-AREA REGION type name (1200): the
+                    # terminal area is ENRT or an airport; the region (K1, EG)
+                    # is what airways and procedures name a fix by.
                     if len(parts) < 5 or not parts[0][0] in "-0123456789":
                         continue
                     try:
@@ -136,7 +138,7 @@ def _build():
                     # The grid-name fixes (05S015W) are Navigraph's own coordinate
                     # marks, not published intersections; they are kept as fixes
                     # because that is what the data calls them.
-                    add(ident, ident, "fix", lat, lon, None, None, parts[3], label)
+                    add(ident, ident, "fix", lat, lon, None, None, parts[4], label)
         except OSError:
             continue
 
@@ -161,12 +163,15 @@ def _build():
         except OSError:
             continue
 
+    ils_rows = []
     for path in files("earth_nav.dat"):
         label = "X-Plane 12 nav data"
         try:
             with open(path, "r", encoding="utf-8", errors="replace") as handle:
                 for line in handle:
                     parts = line.split()
+                    if parts[:1] in (["4"], ["5"], ["6"], ["12"]):
+                        ils_rows.append(parts)
                     # type lat lon elev freq range bearing ident airport region name...
                     if len(parts) < 10:
                         continue
@@ -203,9 +208,265 @@ def _build():
     for index, point in enumerate(points):
         grid.setdefault(_bucket(point["lat"], point["lon"]), []).append(index)
 
-    return {"points": points, "grid": grid, "counts": counts,
+    return {"points": points, "grid": grid, "counts": counts, "ils": ils_from_rows(ils_rows),
             "dirs": dirs, "xplane": xplane, "cycle": _cycle(xplane),
             "builtAt": int(time.time() * 1000)}
+
+
+def ils_from_rows(rows):
+    """earth_nav.dat localizer (4/5), glide slope (6) and DME-ILS (12) rows -> {airport: [ILS]}.
+
+    The 1200 format packs two numbers into one field: a localizer's bearing is
+    magnetic course * 360 + true course, a glide slope's is angle in
+    hundredths of a degree * 1000 + true course (300180.3 = 3.00 deg). Frequencies are in 10 kHz units. The first copy of a facility
+    wins, so Custom Data (read first) overrides the shipped default data.
+    """
+    locs, slopes, dmes = {}, {}, set()
+    for parts in rows:
+        try:
+            code = int(parts[0])
+            lat, lon, elev = float(parts[1]), float(parts[2]), float(parts[3])
+            freq, packed = int(parts[4]), float(parts[6])
+            ident, airport = parts[7].upper(), parts[8].upper()
+        except (ValueError, IndexError):
+            continue
+        key = (airport, ident)
+        if code in (4, 5) and len(parts) > 10 and key not in locs:
+            mag = int(packed // 360)
+            name = " ".join(parts[11:])
+            kind = name.replace("-", " ").upper() if name else ("ILS" if code == 4 else "LOC")
+            locs[key] = {
+                "airport": airport, "runway": parts[10].upper(), "ident": ident,
+                "freqMHz": round(freq / 100.0, 2), "courseMag": mag % 360 or 360,
+                "courseTrue": round(packed - mag * 360, 2), "type": kind,
+                "lat": round(lat, 6), "lon": round(lon, 6), "elevFt": int(elev),
+            }
+        elif code == 6 and key not in slopes:
+            slopes[key] = round(int(packed // 1000) / 100.0, 2)
+        elif code == 12 and "ILS" in " ".join(parts[10:]).upper():
+            dmes.add(key)
+    out = {}
+    for key, loc in locs.items():
+        loc["glideSlopeDeg"] = slopes.get(key)
+        loc["dme"] = key in dmes
+        out.setdefault(key[0], []).append(loc)
+    for airport in out:
+        out[airport].sort(key=lambda item: (item["runway"], item["ident"]))
+    return out
+
+
+# ── En-route chart data ─────────────────────────────────────────────
+# Airways (earth_awy.dat), terminal and special-use airspace (airspaces/
+# airspace.txt, OpenAir) and the grid minimum off-route altitude
+# (earth_mora.dat), all from the simulator's own data. Built on first use,
+# separately from the point index so a point query never waits on it.
+
+ENROUTE_CLASSES = {"B", "C", "D", "CTR", "R", "P"}
+_ENROUTE = None
+_ENROUTE_LOCK = threading.Lock()
+
+
+def parse_airways(lines, lookup):
+    """earth_awy.dat (1100) -> segments with both ends resolved to coordinates.
+
+    A line is: fix region type fix region type direction low/high base top names.
+    Type 11 is a fix, 2 an NDB, 3 a VHF navaid; base and top are hundreds of
+    feet; several airway names sharing a leg are joined with '-'. A leg whose
+    end the nav data cannot place is skipped, never drawn to a guessed point.
+    """
+    out = []
+    for line in lines:
+        parts = line.split()
+        if len(parts) < 11:
+            continue
+        try:
+            t1, t2, level = int(parts[2]), int(parts[5]), int(parts[7])
+            base, top = int(parts[8]), int(parts[9])
+        except ValueError:
+            continue
+        k1 = "fix" if t1 == 11 else "nav"
+        k2 = "fix" if t2 == 11 else "nav"
+        a = lookup.get((parts[0].upper(), parts[1].upper(), k1))
+        b = lookup.get((parts[3].upper(), parts[4].upper(), k2))
+        if not a or not b:
+            continue
+        out.append({
+            "names": parts[10].split("-"), "level": "high" if level == 2 else "low",
+            "baseFl": base, "topFl": top, "oneWay": parts[6].upper() in ("F", "B"),
+            "a": [parts[0].upper(), a[0], a[1]], "b": [parts[3].upper(), b[0], b[1]],
+        })
+    return out
+
+
+def _openair_coord(text):
+    """'26:50:47 N 080:16:49 W' -> (lat, lon), or None."""
+    parts = text.replace(":", " ").split()
+    try:
+        lat = float(parts[0]) + float(parts[1]) / 60 + float(parts[2]) / 3600
+        lon = float(parts[4]) + float(parts[5]) / 60 + float(parts[6]) / 3600
+    except (ValueError, IndexError):
+        return None
+    if parts[3].upper() == "S":
+        lat = -lat
+    if len(parts) > 7 and parts[7].upper() == "W":
+        lon = -lon
+    return (round(lat, 5), round(lon, 5))
+
+
+def parse_airspace(lines, classes=ENROUTE_CLASSES):
+    """OpenAir polygons (AC/AN/AL/AH/DP) for the classes an en-route chart shows."""
+    out, current = [], None
+
+    def close():
+        if current and current["class"] in classes and len(current["points"]) >= 3:
+            lats = [p[0] for p in current["points"]]
+            lons = [p[1] for p in current["points"]]
+            current["bbox"] = [min(lats), min(lons), max(lats), max(lons)]
+            out.append(current)
+
+    for raw in lines:
+        line = raw.strip()
+        if line.startswith("AC "):
+            close()
+            current = {"class": line[3:].strip().upper(), "name": "", "lower": "", "upper": "", "points": []}
+        elif current is None:
+            continue
+        elif line.startswith("AN "):
+            current["name"] = line[3:].strip()
+        elif line.startswith("AL "):
+            current["lower"] = line[3:].strip()
+        elif line.startswith("AH "):
+            current["upper"] = line[3:].strip()
+        elif line.startswith("DP "):
+            point = _openair_coord(line[3:])
+            if point:
+                current["points"].append(point)
+    close()
+    return out
+
+
+def parse_mora(lines):
+    """earth_mora.dat: '+LAT +LON v1 .. v30' -> {(lat, lon): hundreds of feet}.
+
+    Each row covers 30 one-degree cells eastward from its longitude. The row's
+    latitude names the cell's south edge here; a value of 0 or a non-number is
+    not published and is left out.
+    """
+    out = {}
+    for line in lines:
+        parts = line.split()
+        if len(parts) < 3 or parts[0][:1] not in "+-":
+            continue
+        try:
+            lat, lon = int(parts[0]), int(parts[1])
+        except ValueError:
+            continue
+        for i, value in enumerate(parts[2:32]):
+            try:
+                hundreds = int(value)
+            except ValueError:
+                continue
+            if hundreds > 0:
+                out[(lat, ((lon + i + 180) % 360) - 180)] = hundreds
+    return out
+
+
+def _build_enroute():
+    data = index()
+    lookup = {}
+    for p in data["points"]:
+        key = (p["id"], str(p.get("region") or "").upper(), p["kind"])
+        if key not in lookup:
+            lookup[key] = (p["lat"], p["lon"])
+    dirs = data["dirs"]
+
+    def first(name):
+        for directory in dirs:
+            path = os.path.join(directory, name)
+            if os.path.isfile(path):
+                return path
+        return None
+
+    def read(path):
+        if not path:
+            return []
+        with open(path, "r", encoding="utf-8", errors="replace") as handle:
+            return handle.readlines()
+
+    started = time.time()
+    airways = parse_airways(read(first("earth_awy.dat")), lookup)
+    airspace = parse_airspace(read(first(os.path.join("airspaces", "airspace.txt"))))
+    mora = parse_mora(read(first("earth_mora.dat")))
+    stratos_log("En-route data: %d airway legs, %d airspaces, %d MORA cells in %.1fs" % (
+        len(airways), len(airspace), len(mora), time.time() - started))
+    return {"airways": airways, "airspace": airspace, "mora": mora,
+            "cycle": data["cycle"].get("cycle", ""), "available": bool(dirs)}
+
+
+def enroute(lat, lon, nm=80.0, level="low", limit=3000):
+    """Airways, airspace and MORA inside a box around a position, for one chart level."""
+    try:
+        lat, lon, nm = float(lat), float(lon), float(nm)
+    except (TypeError, ValueError):
+        return {"ok": False, "error": "A latitude, a longitude and a radius are required."}
+    if not (-90.0 <= lat <= 90.0) or not (-180.0 <= lon <= 180.0) or not (0.0 < nm <= 600.0):
+        return {"ok": False, "error": "That position or radius is outside the range this map covers."}
+    level = "high" if str(level).lower() == "high" else "low"
+    global _ENROUTE
+    with _ENROUTE_LOCK:
+        if _ENROUTE is None:
+            _ENROUTE = _build_enroute()
+        data = _ENROUTE
+    dlat = nm / 60.0
+    dlon = nm / (60.0 * max(0.15, math.cos(math.radians(lat))))
+    south, north, west, east = lat - dlat, lat + dlat, lon - dlon, lon + dlon
+
+    def inside(la, lo):
+        lo = lon + ((lo - lon + 540.0) % 360.0) - 180.0
+        return south <= la <= north and west <= lo <= east
+
+    airways = []
+    for leg in data["airways"]:
+        if leg["level"] != level:
+            continue
+        if inside(leg["a"][1], leg["a"][2]) or inside(leg["b"][1], leg["b"][2]):
+            airways.append(leg)
+            if len(airways) >= limit:
+                break
+    airspace = []
+    if level == "low":
+        for area in data["airspace"]:
+            b = area["bbox"]
+            if b[2] < south or b[0] > north:
+                continue
+            mid = (b[1] + b[3]) / 2.0
+            if not inside(min(max(lat, b[0]), b[2]), min(max(lon, b[1]), b[3])) and not inside((b[0] + b[2]) / 2.0, mid):
+                continue
+            airspace.append({k: area[k] for k in ("class", "name", "lower", "upper", "points")})
+            if len(airspace) >= 600:
+                break
+    mora = []
+    for cell_lat in range(int(math.floor(south)), int(math.floor(north)) + 1):
+        for step in range(int(math.floor(west)), int(math.floor(east)) + 1):
+            cell_lon = ((step + 180) % 360) - 180
+            value = data["mora"].get((cell_lat, cell_lon))
+            if value:
+                mora.append([cell_lat, cell_lon, value])
+    return {"ok": True, "level": level, "airways": airways, "airspace": airspace, "mora": mora,
+            "available": data["available"], "source": "X-Plane 12 nav data" if data["available"] else "",
+            "cycle": data["cycle"]}
+
+
+def ils(airport):
+    """ILS/localizer records for one airport from the simulator's nav data."""
+    data = index()
+    code = str(airport or "").strip().upper()
+    return {
+        "ok": True, "airport": code, "ils": data.get("ils", {}).get(code, []),
+        "simulatorNavData": bool(data["dirs"]),
+        "source": "X-Plane 12 nav data" if data["dirs"] else "",
+        "cycle": data["cycle"].get("cycle", ""),
+    }
 
 
 def _freq_text(code, raw):

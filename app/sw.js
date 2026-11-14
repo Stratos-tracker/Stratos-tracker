@@ -2,7 +2,7 @@
    The shell is available offline after the first visit. Live data, telemetry,
    logbook JSON, weather and map tiles are NEVER cached, so stale data can never
    be presented as live. A new build replaces the old cache on activation. */
-const CACHE = 'stratos-shell-2.1.45-phone';
+const CACHE = 'stratos-shell-2.2.0-phone';
 const SHELL = [
   './',
   'index.html',
@@ -17,6 +17,7 @@ const SHELL = [
   // The professional EFB chrome, the optional 3D globe, and the vendored
   // renderer it needs. Globe tiles themselves are live data, never cached.
   'efb-hud.css',
+  'tokens.css',
   'js/lib/globe3d.js',
   'js/lib/earthview.js',
   'vendor/maplibre/maplibre-gl.js',

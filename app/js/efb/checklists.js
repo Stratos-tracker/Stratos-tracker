@@ -72,7 +72,7 @@ export async function mount(root, ctx) {
     <div id="doc-progress"></div>
     <div id="doc-sections" class="e-grid" style="gap:10px;margin-top:10px"></div>
 
-    <div class="e-small e-faint" style="margin:18px 2px 0">Checklists are simulator aids derived from publicly documented procedures. They are not manufacturer or operator manuals and are not for real-world flight.</div>`;
+    <div class="e-small e-faint" style="margin:18px 2px 0">Simulator aid · not a manufacturer checklist</div>`;
 
   const sectionsEl = root.querySelector('#doc-sections');
   const progressEl = root.querySelector('#doc-progress');

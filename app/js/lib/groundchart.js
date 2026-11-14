@@ -25,10 +25,84 @@ export function normaliseWays(raw) {
     }
     if (!Array.isArray(way) || way.length < 3) return null;
     const type = String(way[0] || '').trim().toLowerCase();
+    if (type === HOLD) return null; // read by holdingPoints(), not drawn as a way
     const ref = String(way[1] || '').trim();
     const points = readPoints(way[2]);
     return points.length > 1 ? { type, ref, points } : null;
   }).filter(Boolean);
+}
+
+const HOLD = 'holding_position';
+
+/* Fallback when the bridge is offline: ask OpenStreetMap's Overpass API from
+   the browser, with the same query and the same output shape as the bridge's
+   osm_airfield()/osm_elements(), through the mirrors the tracker map uses. */
+export const OVERPASS_MIRRORS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.openstreetmap.fr/api/interpreter',
+];
+
+export function overpassQuery(lat, lon, radiusM = 5000) {
+  const at = `(around:${radiusM},${Number(lat).toFixed(6)},${Number(lon).toFixed(6)})`;
+  return `[out:json][timeout:30];(way["aeroway"~"^(runway|taxiway|taxilane|apron|terminal|holding_position)$"]${at};node["aeroway"="holding_position"]${at};);out geom;`;
+}
+
+/** Overpass elements -> [aeroway, ref, [[lat, lon], ...]]; a holding-position node is one point. */
+export function waysFromOverpass(payload) {
+  return (payload && Array.isArray(payload.elements) ? payload.elements : []).flatMap(element => {
+    const tags = element.tags || {};
+    if (!tags.aeroway) return [];
+    if (element.type === 'way' && Array.isArray(element.geometry) && element.geometry.length) {
+      return [[tags.aeroway, tags.ref || '', element.geometry.map(point => [point.lat, point.lon])]];
+    }
+    if (element.type === 'node' && Number.isFinite(element.lat) && Number.isFinite(element.lon)) {
+      return [[tags.aeroway, tags.ref || '', [[element.lat, element.lon]]]];
+    }
+    return [];
+  });
+}
+
+/**
+ * Charted holding positions: OSM `aeroway=holding_position` nodes (one point)
+ * or short ways across a taxiway (their midpoint). Only what OSM carries.
+ */
+export function holdingPoints(raw) {
+  return (Array.isArray(raw) ? raw : []).flatMap(entry => {
+    if (!Array.isArray(entry) || String(entry[0] || '').trim().toLowerCase() !== HOLD || !Array.isArray(entry[2])) return [];
+    const points = entry[2].map(p => ({ lat: Number(p?.[0]), lon: Number(p?.[1]) }))
+      .filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lon));
+    if (!points.length) return [];
+    const lat = points.reduce((sum, p) => sum + p.lat, 0) / points.length;
+    const lon = points.reduce((sum, p) => sum + p.lon, 0) / points.length;
+    return [{ lat, lon, ref: String(entry[1] || '').trim() }];
+  });
+}
+
+/** Holding points the taxi route passes within `metres`, in the order it reaches them. */
+export function routeHolds(holds, path, metres = 30) {
+  if (!Array.isArray(path) || path.length < 2) return [];
+  const found = [];
+  for (const hold of holds || []) {
+    const mx = 111320 * Math.cos(hold.lat * DEG);
+    const local = p => ({ x: (p.lon - hold.lon) * mx, y: (p.lat - hold.lat) * 110540 });
+    let best = null;
+    let along = 0;
+    for (let i = 1; i < path.length; i += 1) {
+      const a = local(path[i - 1]);
+      const b = local(path[i]);
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const len = Math.hypot(dx, dy);
+      const t = len ? Math.max(0, Math.min(1, -(a.x * dx + a.y * dy) / (len * len))) : 0;
+      const d = Math.hypot(a.x + dx * t, a.y + dy * t);
+      if (!best || d < best.d) best = { d, at: along + len * t };
+      along += len;
+    }
+    if (best && best.d <= metres) found.push({ ...hold, alongM: best.at });
+  }
+  return found.sort((a, b) => a.alongM - b.alongM);
 }
 
 export function airportOrigin(ways) {

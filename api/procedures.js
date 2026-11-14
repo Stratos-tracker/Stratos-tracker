@@ -12,8 +12,15 @@
  */
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
-const DATA_DIR = path.join(process.cwd(), 'navdata', 'cifp');
+// Vercel runs from the project root; a local server may be started from any
+// folder, so the dataset beside this file is used when the cwd has none.
+const DATA_DIR = [
+  path.join(process.cwd(), 'navdata', 'cifp'),
+  fileURLToPath(new URL('../navdata/cifp', import.meta.url)),
+].find(dir => existsSync(dir)) || path.join(process.cwd(), 'navdata', 'cifp');
 const CODE = /^[A-Z0-9]{4}$/;
 
 /* Vercel hands the handler a plain ServerResponse; the local dev server hands

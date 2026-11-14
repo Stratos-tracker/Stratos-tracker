@@ -170,6 +170,7 @@ export function appIcon(name, size = 40) {
 const state = {
   prefs: loadPrefs(),
   app: null,
+  query: '',
   cleanup: null,
   plan: null,
   route: [],
@@ -504,17 +505,22 @@ export function closeApp() {
     state.cleanup = null;
   }
   state.app = null;
+  state.query = '';
   if (dom.body) dom.body.innerHTML = '';
   if (dom.actions) dom.actions.innerHTML = '';
 }
 
 async function openApp(id, params = new URLSearchParams()) {
   const app = APPS.find(item => item.id === id) || APPS[0];
-  if (state.app === app.id) return;
+  // Same app and same query: nothing to do. A new query (#/airport?icao=EGLL
+  // while KSEA is open) remounts it, since each page reads ctx.params once.
+  const query = params.toString();
+  if (state.app === app.id && state.query === query) return;
   closeApp();
   document.body.classList.remove('view-home');
   if (dom.home) dom.home.hidden = true;
   state.app = app.id;
+  state.query = query;
   markActive(app.id);
   setPageHead(app);
   document.title = `${app.title} · Stratos EFB`;

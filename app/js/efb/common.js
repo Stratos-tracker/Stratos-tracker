@@ -60,9 +60,10 @@ export function fmtFt(value) {
    of the observation. */
 export function fmtVisibility(decoded) {
   if (!decoded) return '—';
-  const metres = Number(decoded.visibilityM);
+  // A statute-mile METAR leaves visibilityM null, and Number(null) is 0 ("0 m" for 10SM).
+  const metres = decoded.visibilityM == null ? NaN : Number(decoded.visibilityM);
   if (Number.isFinite(metres)) return metres >= 9999 ? '10 km or more' : `${fmtNum(metres)} m`;
-  const miles = Number(decoded.visibilitySm);
+  const miles = decoded.visibilitySm == null ? NaN : Number(decoded.visibilitySm);
   if (Number.isFinite(miles)) return `${miles} SM`;
   return '—';
 }
@@ -394,12 +395,25 @@ export function airportRunways(airport) {
   }));
 }
 
+/** A radio frequency as it is read on the radio: 118.300, not 118.3. */
+export function fmtFreq(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n.toFixed(3) : String(value || '—');
+}
+
+// OurAirports frequency types as a pilot names the station.
+const FREQ_LABELS = {
+  'A/D': 'Approach/Departure', APP: 'Approach', DEP: 'Departure', TWR: 'Tower', GND: 'Ground',
+  CLD: 'Clearance', DEL: 'Delivery', ATIS: 'ATIS', 'D-ATIS': 'D-ATIS', CTAF: 'CTAF', UNIC: 'UNICOM',
+  AFIS: 'AFIS', CNTR: 'Center', RDO: 'Radio', RMP: 'Ramp', OPS: 'Operations',
+};
+
 export function airportFrequencies(airport) {
   const fqs = airport && airport.fqs;
   if (!fqs || typeof fqs !== 'object') return [];
   return Object.entries(fqs)
     .filter(([, value]) => value)
-    .map(([key, value]) => ({ label: key.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()).trim(), value: String(value) }));
+    .map(([key, value]) => ({ label: FREQ_LABELS[String(key).toUpperCase()] || String(key).toUpperCase(), value: fmtFreq(value) }));
 }
 
 export async function nearestAirport(lat, lon) {
@@ -447,6 +461,31 @@ export async function weatherFor(code, { force = false } = {}) {
     }
   }
   return { icao, error: lastError, fetchedAt: null };
+}
+
+let advisoryCache = null;
+
+/** SIGMETs and G-AIRMETs, normalised (lib/sigmets.js); bridge first, then the hosted proxy. */
+export async function advisories({ force = false } = {}) {
+  if (!force && advisoryCache && Date.now() - advisoryCache.fetchedAt < WEATHER_TTL) return advisoryCache;
+  const urls = [];
+  if (!isHostedPage()) urls.push(`${defaultBridgeBase().replace(/\/+$/, '')}/sigmets`);
+  urls.push('/api/sigmets');
+  let lastError = 'SIGMETs are unavailable.';
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, { credentials: location.protocol === 'file:' ? 'omit' : 'include', cache: 'no-store' });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data || data.error) { lastError = (data && data.error) || `The advisory service answered ${response.status}.`; continue; }
+      const { normaliseAdvisories } = await import('../lib/sigmets.js');
+      const missing = Object.keys(data.errors || {});
+      advisoryCache = { items: normaliseAdvisories(data), missing, fetchedAt: Number(data.fetchedAt) || Date.now(), source: data.source || 'NOAA Aviation Weather Center' };
+      return advisoryCache;
+    } catch (error) {
+      lastError = error.message;
+    }
+  }
+  return { error: lastError };
 }
 
 export async function windsAloft(fcst = '06') {

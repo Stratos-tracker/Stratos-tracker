@@ -135,6 +135,9 @@ export async function mount(root, ctx) {
   let savedRoutes = [];
   let notice = { text: '', tone: '', at: 0 };
   let chartTheme = ctx.prefs().chartTheme === 'day' ? 'day' : 'night';
+  // IFR en-route layer: off, low (victor/T routes, airspace, MORA) or high (jet/Q routes).
+  let enrouteLevel = ['low', 'high'].includes(ctx.prefs().enroute) ? ctx.prefs().enroute : 'off';
+  let enrouteKey = '';
 
   const searches = {
     dep: { rows: [], token: 0 },
@@ -304,6 +307,7 @@ export async function mount(root, ctx) {
           <button class="nav-tool" type="button" data-act="fit" title="Fit the plan" aria-label="Fit the plan">${ICON.fit}</button>
           <span class="nav-tool-gap" aria-hidden="true"></span>
           <button class="nav-tool" type="button" data-act="chart" title="Day or night chart" aria-label="Day or night chart">${ICON.chart}</button>
+          <button class="nav-tool nav-tool-text" type="button" data-act="enroute" aria-pressed="${enrouteLevel !== 'off'}" title="IFR en-route chart: off, low, high" aria-label="IFR en-route chart">${enrouteLevel === 'high' ? 'HI' : enrouteLevel === 'low' ? 'LO' : 'IFR'}</button>
           <button class="nav-tool" type="button" data-act="panel" aria-pressed="${panelOpen}" title="Plan panel" aria-label="Plan panel">${ICON.panel}</button>
         </div>
 
@@ -448,7 +452,33 @@ export async function mount(root, ctx) {
 
   function scheduleNear(delay = 260) {
     clearTimeout(nearTimer);
-    nearTimer = setTimeout(() => { refreshNear(); }, delay);
+    nearTimer = setTimeout(() => { refreshNear(); refreshEnroute(); }, delay);
+  }
+
+  /** Airways, airspace and MORA for the view, from the simulator's data via the bridge. */
+  async function refreshEnroute() {
+    if (destroyed || !map) return;
+    if (enrouteLevel === 'off') { enrouteKey = ''; map.setEnroute(null); return; }
+    const bridge = isHostedPage() ? '' : defaultBridgeBase().replace(/\/+$/, '');
+    const center = map.viewCenter();
+    if (!center) return; // no view yet: the next view change asks again
+    if (!bridge) { setNotice('The IFR chart needs the Stratos bridge with X-Plane 12 nav data.', 'warn'); return; }
+    const span = map.viewSpanNm() || 160;
+    const nm = Math.max(30, Math.min(600, Math.round(span * 0.75)));
+    const key = `${enrouteLevel}|${center.lat.toFixed(2)}|${center.lon.toFixed(2)}|${nm}`;
+    if (key === enrouteKey) return;
+    enrouteKey = key;
+    try {
+      const response = await fetch(`${bridge}/navdata/enroute?lat=${center.lat}&lon=${center.lon}&nm=${nm}&level=${enrouteLevel}`, { cache: 'no-store' });
+      const data = await response.json();
+      if (destroyed || enrouteKey !== key) return;
+      map.setEnroute(data);
+      if (data && data.ok && !data.available) setNotice('No X-Plane 12 nav data on this PC · IFR chart unavailable', 'warn');
+    } catch (_) {
+      if (destroyed || enrouteKey !== key) return;
+      enrouteKey = '';
+      setNotice('Bridge offline · the IFR chart needs the Stratos bridge', 'warn');
+    }
   }
 
   /**
@@ -458,8 +488,24 @@ export async function mount(root, ctx) {
    * radius: the ring is a distance on the ground, never a count of pixels, so it
    * draws the same real size at every latitude.
    */
+  /** An empty plan still opens on a chart: the aircraft, else the last chart airport, else an overview. */
+  function ensureStartView() {
+    if (!map || map.viewCenter()) return;
+    const live = liveStatus().snapshot;
+    const t = live && live.telemetry;
+    if (t && Number.isFinite(t.lat) && Number.isFinite(t.lon)) { map.centerOn(t.lat, t.lon, 8); return; }
+    let recent = '';
+    try { recent = (JSON.parse(localStorage.getItem('stratos.efb.charts.recent') || '[]')[0] || {}).icao || ''; } catch (_) { /* none */ }
+    const known = recent && BUNDLED_AIRPORTS.find(a => String(a.id || a[0]).toUpperCase() === recent.toUpperCase());
+    const lat = known ? Number(known.lat ?? known[2]) : NaN;
+    const lon = known ? Number(known.lon ?? known[3]) : NaN;
+    if (Number.isFinite(lat) && Number.isFinite(lon)) map.centerOn(lat, lon, 8);
+    else map.centerOn(39.5, -98.35, 4);
+  }
+
   async function refreshNear({ force = false } = {}) {
     if (destroyed || !map) return;
+    ensureStartView();
     const center = map.viewCenter();
     if (!center) return;
     navNear.center = center;
@@ -1690,9 +1736,9 @@ export async function mount(root, ctx) {
       ${searchBlock('dep', 'Find the departure airport', 'ICAO, IATA or airport name — e.g. CYUL')}
       ${mapPickCard()}
       ${airportCard(plan.origin, 'Departure', 'sid')}
-      ${plan.points.length > 1 ? `<div class="e-notice"><div>The rest of the route is kept when you change the departure. A SID applied to the previous airport is removed, because a procedure belongs to the airport it was published for.</div></div>` : ''}
+      ${plan.points.length > 1 ? `<div class="e-notice"><div>Changing departure keeps the route and removes the old SID.</div></div>` : ''}
       ${savedRoutes.length ? savedPlansCard() : ''}
-      <p class="e-small e-faint">A route cannot start without a departure: any waypoint, navaid or chart tap before this step is refused with the reason.</p>`;
+      <p class="e-small e-faint">Set a departure first.</p>`;
   }
 
   function selectionDetail() {
@@ -1914,7 +1960,7 @@ export async function mount(root, ctx) {
       ${procedureCard('sid')}
       ${procedureCard('star')}
       ${procedureCard('approach')}
-      <div class="e-notice"><div><b>Source.</b> Procedures come from the CIFP navigation data on this PC (or the FAA CIFP dataset shipped with Stratos, which covers the United States). Coverage outside that dataset is reported as unavailable. An approach is never guessed: if the SimBrief plan does not name one, choose the published procedure here. Airways are not part of any dataset Stratos ships, so no airway can be inserted.</div></div>`;
+      <div class="e-notice"><div><b>Source</b> · simulator CIFP, or bundled FAA CIFP (US). Choose the approach here if the plan names none.</div></div>`;
   }
 
   function weatherRow(row) {
@@ -1981,7 +2027,7 @@ export async function mount(root, ctx) {
             </div>
           </div>`).join('')}
         </div>` : ''}` : ''}
-      <p class="e-small e-faint">Suggestions are ranked by distance and the runway length the airport data states. Minima, aircraft performance and company policy are not assessed, and each suggestion lists what is missing.</p>
+      <p class="e-small e-faint">Ranked by distance and runway length · minima not assessed</p>
     </div>`;
   }
 
@@ -2049,7 +2095,7 @@ export async function mount(root, ctx) {
             ${plan.fuel.burnSource === 'plan'
               ? (burn
                 ? `<p class="e-small e-muted" style="margin:8px 0 0">${fmtNum(burn.burnPerHour)} ${esc(burn.unit)}/h — the loaded plan's trip fuel over its enroute time${burn.aircraft ? ` (${esc(burn.aircraft)})` : ''}. The same aircraft the plan was flown in.</p>`
-                : `<div class="e-notice warn" style="margin-top:8px"><div>No SimBrief plan with trip fuel and enroute time is stored, so there is no fuel flow to use. Load a plan in the Flight Plan app, or enter a fuel flow.</div></div>`)
+                : `<div class="e-notice warn" style="margin-top:8px"><div>No fuel flow · load a SimBrief plan or enter one.</div></div>`)
               : `<div class="e-row" style="margin-top:8px">
                   <label class="e-field" style="flex:1 1 130px"><span class="fp-search-label">Cruise fuel flow</span>
                     <input class="e-input small" type="number" min="0" step="50" id="fp-fuel-burn" value="${esc(plan.fuel.burnPerHour ?? '')}" placeholder="e.g. 2600">
@@ -2076,7 +2122,7 @@ export async function mount(root, ctx) {
             <label class="e-field"><span class="fp-search-label">Extra fuel (${esc(unit === 'lb' ? 'lb' : 'kg')})</span>
               <input class="e-input small" type="number" min="0" step="10" id="fp-fuel-extra" value="${esc(plan.fuel.extra ?? '')}" placeholder="—"></label>
           </div>
-          <p class="e-small e-faint" style="margin-top:8px">No aircraft performance table is applied: the burn rate, the taxi time, the contingency and the reserve are the assumptions on this page. A wind is not imported, so the headwind field starts at zero.</p>`}
+          <p class="e-small e-faint" style="margin-top:8px">Burn, taxi, contingency and reserve as entered · no wind imported</p>`}
         <div id="fp-fuel-out" style="margin-top:10px">${fuelBreakdown()}</div>
       </div>
       ${alternateCard()}
@@ -2087,7 +2133,7 @@ export async function mount(root, ctx) {
           : weather.status === 'loading' ? '<div class="e-loading"><i></i>Reading METAR and TAF…</div>'
             : weather.status === 'unavailable' ? `<div class="e-notice warn"><div>${esc(weather.error || 'Weather is unavailable.')}</div></div>`
               : weather.rows.map(weatherRow).join('')}
-        <p class="e-small e-faint">Real-world NOAA reports, not simulator weather. Times are the fetch time; a report older than an hour is marked stale and never shown as current.</p>
+        <p class="e-small e-faint">NOAA real-world reports · older than 1 h marked stale</p>
       </div>`;
   }
 
@@ -2154,7 +2200,7 @@ export async function mount(root, ctx) {
         ${check.warnings.length
           ? `<ul class="fp-check warn">${check.warnings.map(warning => `<li>${esc(warning.message)}</li>`).join('')}</ul>`
           : ''}
-        <p class="e-small e-faint" style="margin-top:8px">This checks the plan's own structure: endpoints, waypoint limits and procedure completeness. It is not a route-validity, obstacle, minima or dispatch check, and it cannot make a plan operationally valid.</p>
+        <p class="e-small e-faint" style="margin-top:8px">Structure check only · not a dispatch check</p>
       </div>
 
       ${savedPlansCard({ actions: true })}
@@ -2162,7 +2208,7 @@ export async function mount(root, ctx) {
       <div class="e-card fp-card">
         <h3>Data and limitations</h3>
         <dl class="e-kv">${provenance.map(([label, value]) => `<dt>${esc(label)}</dt><dd><span class="e-small">${esc(value)}</span></dd>`).join('')}</dl>
-        <p class="e-small e-faint" style="margin-top:8px">SIDs, STARs and approaches are only what the CIFP data publishes for the airports in this plan; a procedure the data does not carry is reported, never approximated. No airway, wind, performance, minima or obstacle data is invented. Simulator use only.</p>
+        <p class="e-small e-faint" style="margin-top:8px">Procedures: CIFP only · simulator use only</p>
       </div>`;
   }
 
@@ -2370,6 +2416,15 @@ export async function mount(root, ctx) {
     }
     if (act === 'zoom') { map?.zoomBy(target.dataset.dir === 'in' ? 1 : -1); return; }
     if (act === 'fit') { map?.fitRoute(); return; }
+    if (act === 'enroute') {
+      enrouteLevel = enrouteLevel === 'off' ? 'low' : enrouteLevel === 'low' ? 'high' : 'off';
+      ctx.setPrefs({ enroute: enrouteLevel });
+      enrouteKey = '';
+      target.textContent = enrouteLevel === 'high' ? 'HI' : enrouteLevel === 'low' ? 'LO' : 'IFR';
+      target.setAttribute('aria-pressed', String(enrouteLevel !== 'off'));
+      refreshEnroute();
+      return;
+    }
     if (act === 'chart') {
       chartTheme = chartTheme === 'night' ? 'day' : 'night';
       ctx.setPrefs({ chartTheme });
@@ -2592,6 +2647,7 @@ export async function mount(root, ctx) {
   ensureLive();
   onLive(() => { if (!destroyed) paintReadout(); });
   refreshNear({ force: true });
+  refreshEnroute();
   importLatestSimbrief().catch(() => {});
   refreshLegacyProcedureGeometry().catch(() => {});
   if (step === 'procedures' || (plan.sid || plan.star || plan.approach)) {

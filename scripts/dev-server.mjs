@@ -22,6 +22,7 @@ import runways from '../api/runways.js';
 import photo from '../api/photo.js';
 import weather from '../api/weather.js';
 import winds from '../api/winds.js';
+import sigmets from '../api/sigmets.js';
 import charts from '../api/charts.js';
 import chart from '../api/chart.js';
 import ourairports from '../api/ourairports.js';
@@ -174,6 +175,7 @@ const ROUTES = {
   '/api/photo': photoApi,
   '/api/weather': adapt(weather),
   '/api/winds': adapt(winds),
+  '/api/sigmets': adapt(sigmets),
   '/api/charts': adapt(charts),
   '/api/chart': adapt(chart),
   '/api/ourairports': adapt(ourairports),

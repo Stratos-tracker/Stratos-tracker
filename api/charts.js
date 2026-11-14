@@ -272,26 +272,8 @@ export default async function handler(req, res) {
     return;
   }
 
-  /* Airmate replaces the FAA plates for the United States. Its charts arrive
-     with the calibration that puts them on the ground, and the old d-TPP sheets
-     are no longer offered alongside them: one source, one lie of the land.
-     Until the licence is in place there is no US catalogue rather than a
-     second-best one, and US_LEGACY_FAA=1 keeps the old plates reachable while
-     that licence is being arranged. */
-  if (String(process.env.US_LEGACY_FAA || '') !== '1') {
-    res.setHeader('Cache-Control', 'no-store');
-    res.status(503).json({
-      source: 'airmate',
-      sourceName: 'Airmate AIP',
-      icao,
-      charts: [],
-      sourceRequired: true,
-      message: `Charts for ${icao} come from the licensed Airmate source, which is not configured. `
-        + 'No other publisher is shown in its place.',
-    });
-    return;
-  }
-
+  /* United States: the FAA d-TPP (public domain). A licensed Airmate source,
+     when configured, answered above and takes precedence. */
   let data;
   try {
     data = await faaCatalogue();

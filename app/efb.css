@@ -17,34 +17,36 @@
  */
 
 :root {
-  /* Legacy token names are kept: section modules and inline styles read them. */
-  --efb-bg: #070a0f;
-  --efb-screen-a: #080b11;
-  --efb-screen-b: #0b1016;
-  --efb-screen-c: #06080c;
-  --efb-panel: #0b1017;
-  --efb-panel-2: #111822;
-  --efb-panel-3: #16202b;
-  --efb-line: rgba(148, 163, 184, .13);
-  --efb-line-strong: rgba(148, 163, 184, .24);
-  --efb-text: #e6edf6;
-  --efb-muted: #93a3b8;
-  --efb-faint: #6b7b8f;
-  --efb-accent: #22d3ee;
-  --efb-accent-soft: rgba(34, 211, 238, .10);
-  --efb-accent-line: rgba(34, 211, 238, .38);
-  --efb-accent-ink: #04222a;
-  --efb-accent-2: #22d3ee;
-  --efb-good: #34d399;
-  --efb-warn: #f2b544;
-  --efb-bad: #f87171;
-  --efb-radius: 10px;
-  --efb-r: 10px;
-  --efb-r-sm: 7px;
-  --efb-shadow: 0 16px 44px rgba(0, 0, 0, .45);
-  --efb-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable", "Segoe UI", Roboto, system-ui, sans-serif;
-  --efb-mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
-  color-scheme: dark;
+  /* The EFB's token names are aliases of the shared Stratos tokens
+     (tokens.css), so the bag and the Flight Deck are one palette, one type
+     family and one scale, and follow the same Day/Night/High theme. Section
+     modules and inline styles keep reading the --efb-* names. */
+  --efb-bg: var(--bg);
+  --efb-screen-a: var(--bg);
+  --efb-screen-b: var(--land);
+  --efb-screen-c: var(--bg);
+  --efb-panel: var(--ui);
+  --efb-panel-2: var(--ui2);
+  --efb-panel-3: color-mix(in srgb, var(--ui2) 88%, var(--txt));
+  --efb-line: var(--line);
+  --efb-line-strong: color-mix(in srgb, var(--mut) 34%, transparent);
+  --efb-text: var(--txt);
+  --efb-muted: var(--mut);
+  --efb-faint: color-mix(in srgb, var(--mut) 72%, var(--bg));
+  --efb-accent: var(--acc);
+  --efb-accent-soft: color-mix(in srgb, var(--acc) 10%, transparent);
+  --efb-accent-line: color-mix(in srgb, var(--acc) 38%, transparent);
+  --efb-accent-ink: color-mix(in srgb, var(--acc) 18%, #000);
+  --efb-accent-2: var(--acc);
+  --efb-good: var(--grn);
+  --efb-warn: var(--warn);
+  --efb-bad: var(--red);
+  --efb-radius: var(--s-radius-lg);
+  --efb-r: var(--s-radius-lg);
+  --efb-r-sm: var(--s-radius-md);
+  --efb-shadow: var(--s-elev-2);
+  --efb-font: var(--s-font);
+  --efb-mono: var(--s-font-mono);
 }
 
 * { box-sizing: border-box; }
@@ -57,6 +59,8 @@ body.efb {
   background: var(--efb-bg);
   color: var(--efb-text);
   font: 13.5px/1.45 var(--efb-font);
+  /* Every figure in a column lines up: frequencies, headings, times, weights. */
+  font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
   overscroll-behavior: none;
@@ -1210,6 +1214,20 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--efb-accent); }
 .ch-source-main span { display: block; font-size: 10.5px; color: var(--efb-muted); }
 
 .chart-frame { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+/* Night rendering: ink becomes light on a dark sheet; hue-rotate keeps the
+   publisher's colours (magenta, blue) recognisable after the inversion. */
+.chart-night .chart-page { filter: invert(.92) hue-rotate(180deg); }
+.chart-night .chart-stage { background: #0b0f14; }
+/* Split view: the chart and a moving map side by side, stacked on a phone. */
+.chart-split { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr; gap: 8px; }
+.chart-split.on { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+.chart-split > .chart-host { min-height: 0; }
+.chart-map { position: relative; min-height: 260px; border-radius: var(--efb-r-sm); overflow: hidden; border: 1px solid var(--efb-line); }
+.chart-map canvas { display: block; width: 100%; height: 100%; }
+@media (max-width: 900px) { .chart-split.on { grid-template-columns: 1fr; grid-template-rows: minmax(0, 3fr) minmax(220px, 2fr); } }
+.ch-quick { display: flex; flex-direction: column; gap: 6px; }
+.ch-quick-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ch-pins .ch-pin { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chart-host {
   position: relative;
   flex: 1;
@@ -1886,6 +1904,8 @@ body.view-nav .efb-main { background: #04070b; }
   backdrop-filter: blur(8px);
 }
 .nav-tool:hover { background: rgba(18, 26, 36, .95); color: var(--efb-text); }
+.nav-tool-text { width: auto; min-width: 30px; padding: 0 6px; font: 700 10.5px/1 var(--efb-font); letter-spacing: .04em; }
+.nav-tool[aria-pressed="true"] { color: var(--efb-accent); border-color: var(--efb-accent-line); }
 .nav-tool:focus-visible { outline: 2px solid var(--efb-accent); outline-offset: 1px; }
 .nav-tool[aria-pressed="true"] { color: var(--efb-accent); border-color: var(--efb-accent-line); background: var(--efb-accent-soft); }
 .nav-tool-gap { height: 1px; margin: 2px 4px; background: var(--efb-line); }
@@ -2475,10 +2495,11 @@ body.view-nav .efb-main { background: #04070b; }
   border-radius: 2px;
 }
 .gc-key.runway { height: 5px; background: #414d5c; box-shadow: inset 0 0 0 1px rgba(241, 245, 249, .68); }
-.gc-key.taxi { background: #4a5664; box-shadow: inset 0 1px rgba(226, 232, 240, .55); }
+.gc-key.taxi { height: 6px; background: linear-gradient(#252c36 0 40%, #facc15 40% 60%, #252c36 60%); }
 .gc-key.apron { background: rgba(146, 162, 184, .4); }
 .gc-key.terminal { background: rgba(34, 211, 238, .35); }
 .gc-key.route { height: 2px; background: var(--efb-accent); }
+.gc-key.hold { height: 6px; width: 4px; border-left: 2px solid #f87171; border-right: 2px dashed #f87171; background: none; }
 .gc-note { margin-top: 7px; font-size: 10.5px; line-height: 1.45; color: var(--efb-faint); }
 /* Without geometry the card is a short notice, not a tall empty chart. */
 .e-card.is-empty .gc-wrap,

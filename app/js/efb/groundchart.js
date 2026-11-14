@@ -9,8 +9,9 @@
  */
 
 import {
-  airportOrigin, bearingDegrees, geometryBounds, localise,
-  normaliseWays, runwayTarget, taxiRoute,
+  airportOrigin, bearingDegrees, geometryBounds, holdingPoints, localise,
+  normaliseWays, overpassQuery, routeHolds, runwayTarget, taxiRoute, waysFromOverpass,
+  LINE_TYPES, OVERPASS_MIRRORS,
 } from '../lib/groundchart.js';
 import { defaultBridgeBase, isHostedPage } from '../bridge.js';
 
@@ -19,12 +20,84 @@ const esc = value => String(value == null ? '' : value)
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
+/** Direction (radians, local east/north) of the charted taxiway nearest a point, or null beyond 40 m. */
+function taxiAngleAt(localWays, at) {
+  let best = null;
+  for (const way of localWays) {
+    if (!LINE_TYPES.has(way.type)) continue;
+    for (let i = 1; i < way.points.length; i += 1) {
+      const a = way.points[i - 1];
+      const b = way.points[i];
+      const d = distanceToSegment(at.x, at.y, a.x, a.y, b.x, b.y);
+      if (d <= 40 && (!best || d < best.d)) best = { d, angle: Math.atan2(b.y - a.y, b.x - a.x) };
+    }
+  }
+  return best ? best.angle : null;
+}
+
 function distanceToSegment(px, py, ax, ay, bx, by) {
   const dx = bx - ax;
   const dy = by - ay;
   const length = dx * dx + dy * dy;
   const t = length ? clamp(((px - ax) * dx + (py - ay) * dy) / length, 0, 1) : 0;
   return Math.hypot(px - (ax + dx * t), py - (ay + dy * t));
+}
+
+/**
+ * Ask the Overpass mirrors with staggered (hedged) requests: start one, and if
+ * it has not answered within staggerMs start the next as well, keeping the
+ * earlier ones running; a failure starts the next at once. The first good
+ * answer wins and the rest are cancelled. Some mirrors hang without answering,
+ * so trying them strictly one after another can take minutes.
+ */
+export function hedgedOverpass(query, { mirrors = OVERPASS_MIRRORS, staggerMs = 8000, timeoutMs = 45000, fetcher = fetch } = {}) {
+  const controllers = [];
+  let lastError = 'no server answered';
+  return new Promise(resolve => {
+    let next = 0;
+    let pending = 0;
+    let done = false;
+    let stagger = 0;
+    const finish = ways => {
+      if (done) return;
+      done = true;
+      clearTimeout(stagger);
+      controllers.forEach(controller => controller.abort());
+      resolve({ ways, lastError });
+    };
+    const launch = () => {
+      if (done || next >= mirrors.length) return;
+      const url = mirrors[next++];
+      const host = new URL(url).hostname;
+      const controller = new AbortController();
+      controllers.push(controller);
+      pending += 1;
+      const kill = setTimeout(() => controller.abort(), timeoutMs);
+      fetcher(`${url}?data=${encodeURIComponent(query)}`, { signal: controller.signal })
+        .then(response => {
+          if (!response.ok) throw new Error(`${host} answered ${response.status}`);
+          return response.json();
+        })
+        .then(payload => {
+          // A timed-out query still answers 200, with a remark and no elements.
+          if (payload.remark && !(payload.elements || []).length) throw new Error(`${host}: ${payload.remark}`);
+          finish(waysFromOverpass(payload));
+        })
+        .catch(error => {
+          if (done) return;
+          lastError = error.name === 'AbortError' ? `${host} timed out` : (error.message || `${host} unreachable`);
+          launch();
+        })
+        .finally(() => {
+          clearTimeout(kill);
+          pending -= 1;
+          if (!done && pending === 0 && next >= mirrors.length) finish(null);
+        });
+      clearTimeout(stagger);
+      stagger = setTimeout(launch, staggerMs);
+    };
+    launch();
+  });
 }
 
 export class GroundChart {
@@ -43,6 +116,9 @@ export class GroundChart {
     this.position = null;
     this.route = null;
     this.routeTarget = null;
+    this.holds = [];
+    this.routeHoldList = [];
+    this.baseStatus = '';
     this.selected = null;
     this.hover = null;
     this.drag = null;
@@ -73,8 +149,9 @@ export class GroundChart {
         <span><i class="gc-key apron"></i>Apron</span>
         <span><i class="gc-key terminal"></i>Terminal</span>
         <span><i class="gc-key route"></i>Taxi route</span>
+        <span><i class="gc-key hold"></i>Holding point</span>
       </div>
-      <div class="gc-note">Geometry © OpenStreetMap contributors (ODbL), served by the Stratos Bridge. Only charted ways are drawn; no taxiway, stand or holding point is inferred.</div>`;
+      <div class="gc-note">© OpenStreetMap contributors (ODbL)</div>`;
 
     this.canvas = container.querySelector('canvas');
     this.tip = container.querySelector('.gc-tip');
@@ -168,24 +245,27 @@ export class GroundChart {
       this.showEmpty('No airport position');
       return;
     }
-    if (isHostedPage()) {
-      this.setStatus('The ground geometry is served by the bridge on the simulator PC.');
-      this.showEmpty('Ground chart needs the bridge');
-      return;
-    }
     this.setStatus('Loading the charted geometry…');
-    try {
-      const base = defaultBridgeBase().replace(/\/+$/, '');
-      const response = await fetch(`${base}/osm?id=${encodeURIComponent(id)}&lat=${Number(lat)}&lon=${Number(lon)}`, {
-        credentials: location.protocol === 'file:' ? 'omit' : 'include',
-        cache: 'no-store',
-      });
-      if (!response.ok) throw new Error(`The bridge answered ${response.status}.`);
-      this.useWays(await response.json());
-    } catch (error) {
-      this.setStatus(`Ground geometry unavailable: ${error.message}`);
-      this.showEmpty('Ground geometry unavailable');
+    if (!isHostedPage()) {
+      try {
+        const base = defaultBridgeBase().replace(/\/+$/, '');
+        const response = await fetch(`${base}/osm?id=${encodeURIComponent(id)}&lat=${Number(lat)}&lon=${Number(lon)}`, {
+          credentials: location.protocol === 'file:' ? 'omit' : 'include',
+          cache: 'no-store',
+        });
+        if (response.ok) {
+          const ways = await response.json();
+          if (Array.isArray(ways) && ways.length) { this.useWays(ways); return; }
+        }
+      } catch (_) { /* bridge offline: read OpenStreetMap directly below */ }
     }
+    if (this.destroyed) return;
+    this.setStatus('Bridge offline: reading OpenStreetMap directly…');
+    const { ways, lastError } = await hedgedOverpass(overpassQuery(lat, lon));
+    if (this.destroyed) return;
+    if (ways) { this.useWays(ways); return; }
+    this.setStatus(`Ground geometry unavailable: the bridge is offline and OpenStreetMap did not answer (${lastError}).`);
+    this.showEmpty('Ground geometry unavailable');
   }
 
   useWays(raw) {
@@ -202,9 +282,14 @@ export class GroundChart {
     this.origin = airportOrigin(ways);
     this.local = localise(ways, this.origin);
     this.bounds = geometryBounds(this.local);
+    this.holds = holdingPoints(raw).map(hold => {
+      const at = this.localFromLatLon(hold);
+      return { ...hold, ...at, angle: taxiAngleAt(this.local, at) };
+    });
     this.container.classList.remove('is-empty');
     this.empty.hidden = true;
-    this.setStatus(`${ways.length} charted ways · ${ways.filter(way => way.type === 'taxiway').length} taxiways`);
+    this.baseStatus = `${ways.length} charted ways · ${ways.filter(way => way.type === 'taxiway').length} taxiways · ${this.holds.length} holding points`;
+    this.setStatus(this.baseStatus);
     this.fit();
     this.updateRoute();
   }
@@ -285,6 +370,11 @@ export class GroundChart {
     }
     this.routeTarget = target;
     this.route = taxiRoute(this.ways, this.position, { lat: target.lat, lon: target.lon }, { preferRunway: true });
+    this.routeHoldList = this.route ? routeHolds(this.holds, this.route.path) : [];
+    const refs = this.routeHoldList.map(hold => hold.ref).filter(Boolean);
+    const unnamed = this.routeHoldList.length - refs.length;
+    if (unnamed) refs.push(`${unnamed} unnamed`);
+    if (this.baseStatus) this.setStatus(refs.length ? `${this.baseStatus} · Hold short: ${refs.join(', ')}` : this.baseStatus);
     this.requestDraw();
   }
 
@@ -390,19 +480,15 @@ export class GroundChart {
       pathFor(way);
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      ctx.strokeStyle = selected ? this.accent : 'rgba(226, 232, 240, .55)';
-      ctx.lineWidth = 7.4;
+      // Pavement as a quiet dark band, the centreline as a solid yellow line,
+      // as painted on the airfield; taxilanes are the same line, fainter.
+      ctx.strokeStyle = selected ? 'rgba(8, 47, 58, .92)' : '#252c36';
+      ctx.lineWidth = 7;
       ctx.stroke();
       pathFor(way);
-      ctx.strokeStyle = selected ? 'rgba(8, 47, 58, .92)' : '#4a5664';
-      ctx.lineWidth = 4.8;
+      ctx.strokeStyle = selected ? this.accent : way.type === 'taxilane' ? 'rgba(250, 204, 21, .55)' : '#facc15';
+      ctx.lineWidth = selected ? 2.4 : way.type === 'taxilane' ? 1.2 : 1.6;
       ctx.stroke();
-      pathFor(way);
-      ctx.strokeStyle = selected ? '#e0fbff' : 'rgba(241, 245, 249, .5)';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 5]);
-      ctx.stroke();
-      ctx.setLineDash([]);
     };
 
     for (const way of [...byType.taxilane, ...byType.taxiway]) {
@@ -446,6 +532,36 @@ export class GroundChart {
           ctx.stroke();
         }
       });
+    }
+
+    // Holding points: the hold-short marking (solid bar on the taxiway side,
+    // dashed on the runway side, which OSM does not say, so both are drawn as
+    // a pair) across the nearest charted taxiway. Holds on the route are drawn bolder.
+    const onRoute = new Set(this.routeHoldList.map(hold => `${hold.lat},${hold.lon}`));
+    for (const hold of this.holds) {
+      const p = this.project(hold);
+      if (p.x < -20 || p.x > width + 20 || p.y < -20 || p.y > height + 20) continue;
+      const hot = onRoute.has(`${hold.lat},${hold.lon}`);
+      // Red, so the bars stand out across the yellow centreline.
+      ctx.strokeStyle = hot ? '#ef4444' : '#f87171';
+      ctx.lineWidth = hot ? 2.4 : 1.6;
+      if (hold.angle == null) {
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y - 4); ctx.lineTo(p.x + 4, p.y); ctx.lineTo(p.x, p.y + 4); ctx.lineTo(p.x - 4, p.y); ctx.closePath();
+        ctx.stroke();
+        continue;
+      }
+      const along = -hold.angle; // local y is north-up, the canvas is y-down
+      const ax = Math.cos(along), ay = Math.sin(along);
+      const half = hot ? 8 : 6.5;
+      [-1.8, 1.8].forEach((offset, index) => {
+        ctx.setLineDash(index ? [2, 2] : []);
+        ctx.beginPath();
+        ctx.moveTo(p.x + ax * offset - ay * half, p.y + ay * offset + ax * half);
+        ctx.lineTo(p.x + ax * offset + ay * half, p.y + ay * offset - ax * half);
+        ctx.stroke();
+      });
+      ctx.setLineDash([]);
     }
 
     if (this.route && this.route.path.length > 1) {
@@ -493,6 +609,12 @@ export class GroundChart {
         const match = parts.find(part => Number(String(part).replace(/\D/g, '')) === (number === 0 ? 36 : number));
         labels.push({ text: match || parts[index] || way.ref, x: p.x + Math.cos(angle) * 16, y: p.y + Math.sin(angle) * 16, route: false, type: 'runway' });
       });
+    }
+
+    for (const hold of this.holds) {
+      if (!hold.ref) continue;
+      const p = this.project(hold);
+      labels.push({ text: hold.ref, x: p.x + 14, y: p.y - 12, route: onRoute.has(`${hold.lat},${hold.lon}`), type: 'hold' });
     }
 
     labels.sort((a, b) => Number(b.route) - Number(a.route));

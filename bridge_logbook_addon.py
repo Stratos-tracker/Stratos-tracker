@@ -22,7 +22,7 @@ import threading
 import time
 import uuid
 
-VERSION = "2.1.45"
+VERSION = "2.2.0"
 
 # ── Thresholds ──────────────────────────────────────────────────────
 TAXI_SPEED_KT    = 2
@@ -243,7 +243,8 @@ def match_runway(airports_list, lat, lon, heading):
                     continue
                 rw_heading = (math.degrees(math.atan2(bx, by)) + 360) % 360
                 delta = 180.0 if heading is None else abs(((heading - rw_heading + 540) % 360) - 180)
-                score = distance * 10 + t * 0.2 + (0 if index == 0 else 0.05)
+                # Both directions of a runway share the centreline, so the heading picks the landing end.
+                score = distance * 10 + t * 0.2 + (0 if index == 0 else 0.05) + (0 if heading is None else delta / 90)
                 if best is None or score < best["score"]:
                     le_name = str(rw[0] if index == 0 else rw[1])
                     he_name = str(rw[1] if index == 0 else rw[0])
@@ -276,6 +277,7 @@ _flight_state = {
     "parked_since": None,
     "recent": [],
     "touchdown_t": None,
+    "touchdown_recent": None,
 }
 _fs_lock = threading.Lock()
 _last_snapshot = 0.0
@@ -427,7 +429,15 @@ def _analyse_landing(data, airports_list, recent=None, touchdown_t=None):
             vs_source = "unavailable"
     gs = data.get("gs")
     heading = data.get("hdg")
-    runway = match_runway(airports_list, float(data["lat"]), float(data["lon"]), heading)
+    # Place the touchdown at first wheel contact, not where the rollout slowed to LANDED_SPEED_KT.
+    contact = recent[-1] if touchdown_t is not None and recent else data
+    if not (isinstance(contact.get("lat"), (int, float)) and isinstance(contact.get("lon"), (int, float))):
+        contact = data
+    if isinstance(contact.get("hdg"), (int, float)):
+        heading = contact["hdg"]
+    if isinstance(contact.get("gs"), (int, float)):
+        gs = contact["gs"]
+    runway = match_runway(airports_list, float(contact["lat"]), float(contact["lon"]), heading)
     warnings = []
     if runway is None:
         warnings.append("Runway could not be matched from the recorded position.")
@@ -438,8 +448,8 @@ def _analyse_landing(data, airports_list, recent=None, touchdown_t=None):
         "vsFpm": int(round(vs)) if vs is not None else None,
         "vsSource": vs_source,
         "gsKt": int(round(float(gs))) if isinstance(gs, (int, float)) else None,
-        "lat": round(float(data["lat"]), 6),
-        "lon": round(float(data["lon"]), 6),
+        "lat": round(float(contact["lat"]), 6),
+        "lon": round(float(contact["lon"]), 6),
         "heading": round(float(heading), 1) if isinstance(heading, (int, float)) else None,
         "at": _now_ms(),
         "runway": runway,
@@ -494,6 +504,7 @@ def process_telemetry_for_logbook(data, airports_list=None):
             if agl > AIRBORNE_AGL_FT and gs > TAKEOFF_SPEED_KT:
                 flight["phase"] = state["phase"] = "AIRBORNE"
                 state["touchdown_t"] = None
+                state["touchdown_recent"] = None
                 flight["takeoffTime"] = now_ms
             elif gs < PARKED_SPEED_KT and on_ground:
                 flight["phase"] = state["phase"] = "PARKED"
@@ -501,13 +512,17 @@ def process_telemetry_for_logbook(data, airports_list=None):
         elif phase == "AIRBORNE":
             if on_ground and state["touchdown_t"] is None:
                 state["touchdown_t"] = now_ms  # first wheel contact, anchors the landing-rate window
+                # Freeze the approach samples now: the rollout to LANDED_SPEED_KT lasts longer than
+                # the 40-sample window at simulator rates and would push every one of them out.
+                state["touchdown_recent"] = list(state["recent"])
             if on_ground and gs < LANDED_SPEED_KT:
                 flight["phase"] = state["phase"] = "LANDED"
                 flight["landingTime"] = now_ms
                 flight["fuelArr"] = data.get("fuel")
                 if airports_list:
                     flight["arrAirport"] = nearest_airport(lat, lon, airports_list)
-                landing = _analyse_landing(data, airports_list, state["recent"], state["touchdown_t"])
+                landing = _analyse_landing(data, airports_list, state["touchdown_recent"] or state["recent"],
+                                           state["touchdown_t"])
                 flight["landing"] = landing
                 flight["landingVS"] = landing.get("vsFpm")
                 state["parked_since"] = time.time()
@@ -518,6 +533,7 @@ def process_telemetry_for_logbook(data, airports_list=None):
                 flight["landingTime"] = None
                 flight["arrAirport"] = None
                 state["touchdown_t"] = None
+                state["touchdown_recent"] = None
                 flight["landingVS"] = None
                 flight["landing"] = None
                 state["parked_since"] = None
@@ -527,6 +543,7 @@ def process_telemetry_for_logbook(data, airports_list=None):
                 state["flight"] = None
                 state["parked_since"] = None
                 state["recent"] = []
+                state["touchdown_recent"] = None
                 _remove_inprogress()
                 return "PARKED"
 

@@ -1412,7 +1412,8 @@ test('the flight-plan card replaces the pencil and never invents a value', async
   const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
   assert.match(page, /<div id="fp" class="box" aria-live="polite"><\/div>/, 'the map owns a flight-plan card');
   assert.equal(page.includes('id="bPlan"'), false, 'the pencil-in-a-circle control is gone');
-  assert.match(page, /Import a flight plan to view your route, departure, arrival, weather and flight details\./, 'the empty state explains the card');
+  assert.match(page, /<span>Flight plan<\/span><span class="sp"><\/span><em>Not imported<\/em>/, 'the empty state is one compact header row');
+  assert.equal(page.includes('class="fpempty"'), false, 'no explanatory paragraph floats over the map');
   assert.match(page, /class="primary" data-fp-act="import">Import Flight Plan</, 'the import action is the primary button');
   // The SID/STAR runway sits under its own procedure, and an absent one says so.
   assert.match(page, /const block=\(label,row,rwyRow,ofpOn\)/, 'the procedure block takes its own runway row');
@@ -1480,7 +1481,7 @@ test('the colour board documents the palette the interface really uses', async (
   const settings = fs.readFileSync(new URL('../app/js/pilot/settings.js', import.meta.url), 'utf8');
   const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
   const shell = fs.readFileSync(new URL('../app/shell.css', import.meta.url), 'utf8');
-  const ui = fs.readFileSync(new URL('../app/stratos-ui.css', import.meta.url), 'utf8');
+  const ui = fs.readFileSync(new URL('../app/tokens.css', import.meta.url), 'utf8');
   assert.match(settings, /Aviation colour board/, 'the board lives in Settings');
   for (const hex of ['#38bdf8', '#a78bfa', '#f59e0b', '#ffffff', '#0a1421', '#8b9db3', '#df827a', '#5ec99a']) {
     assert.ok(settings.toLowerCase().includes(hex), `${hex} is shown with its job`);
@@ -1721,13 +1722,15 @@ test('the dev server answers the satellite tile proxy the page asks for', async 
   assert.match(server, /res\.setHeader\('Content-Type', tile\.type\)/, 'the tile comes back as an image, not a 404 page');
 });
 
-test('the estimated field is anchored to the ground and drawn at screen scale', async () => {
+test('the upper-air fields are anchored to the ground and drawn at screen scale', async () => {
   const fs = await import('node:fs');
   const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
-  assert.ok(page.includes('const cw=Math.max(320,Math.min(1000,Math.round(W||900)))'), 'the raster is built at screen width, not a fixed thumbnail');
-  assert.ok(page.includes('cx.drawImage(TURB.canvas,x0,top,x1-x0,bottom-top)'), 'the field is blitted to its own degrees, so a pan moves it with the chart');
-  assert.ok(page.includes('const top=gridAt(j,i)+(gridAt(j,i+1)-gridAt(j,i))*tx;'), 'the field interpolates the model samples and nothing else');
-  assert.ok(page.includes('imageSmoothingQuality=') === false || true);
+  assert.ok(page.includes('const w=Math.max(40,Math.min(360,Math.round(sw/3)))'), 'the raster follows the field\'s size on screen, not a fixed thumbnail');
+  assert.ok(page.includes('const b=g.box,p0=mercator(b.minLon,b.maxLat),p1=mercator(b.maxLon,b.minLat);'), 'the field is placed by its own lat/lon box, so a pan moves it with the chart');
+  assert.ok(page.includes('c=ink(U.sample(g,values,lat,lon))'), 'the field interpolates the model grid and nothing else');
+  assert.ok(page.includes('U.isolines(fine,fc,fr,lv)'), 'the jet stream carries isotachs');
+  assert.ok(page.includes("cx.setLineDash(t.min>=12?[]:[7,5])"), 'turbulence is outlined by category, as on a SIGWX chart');
+  assert.ok(page.includes('id="wxLegend"') || page.includes("el.id='wxLegend'"), 'every weather layer has a legend');
 });
 
 test('the VATSIM ATC layer marks staffed airports and invents no coverage', async () => {
