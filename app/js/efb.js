@@ -30,6 +30,10 @@ export const APPS = [
     icon: 'flightplan', module: './efb/flightplan.js',
   },
   {
+    id: 'routes', group: 'Flight', name: 'Route Finder', title: 'Route Finder', subtitle: 'Real flights to fly, ready for SimBrief',
+    icon: 'routes', module: './efb/routes.js',
+  },
+  {
     id: 'briefing', group: 'Flight', name: 'OFP', title: 'Flight Plan & OFP', subtitle: 'Route, procedures and operational flight plan',
     icon: 'briefing', module: './efb/briefing.js',
   },
@@ -99,6 +103,8 @@ const ICONS = {
   // Navigator: a compass rose over a planned track, not a generic pin.
   // SF Symbols "map": the folded sheet, not a generic pin.
   navigator: '<path d="M9 4.6 3.8 6.7v12.7L9 17.3l6 2.3 5.2-2.1V4.8L15 6.9z"/><path d="M9 4.6v12.7M15 6.9v12.7"/>',
+  // Two airports joined by a great-circle arc.
+  routes: '<circle cx="5.5" cy="17.5" r="2"/><circle cx="18.5" cy="17.5" r="2"/><path d="M6.8 15.9C9 9 15 9 17.2 15.9"/><path d="m15.2 13.6 2 2.3.6-3"/>',
   // SF Symbols "doc.text".
   briefing: '<path d="M6.8 3.6h7.4L18.8 8v12.4H6.8z"/><path d="M14.2 3.7V8h4.5"/><path d="M9.5 11.6h6.4M9.5 14.4h6.4M9.5 17.2h4.2"/>',
   // A planned track between two fixes, with the turns a route makes.
@@ -146,6 +152,7 @@ export function icon(name, size = 16) {
 const APP_ICONS = {
   navigator: '<circle cx="12" cy="12" r="9.5" fill="#1e8fff"/><circle cx="12" cy="12" r="8.2" fill="#3aa2ff"/><path d="M12 3.3v1.4M12 19.3v1.4M3.3 12h1.4M19.3 12h1.4M5.9 5.9l1 1M17.1 17.1l1 1M5.9 18.1l1-1M17.1 6.9l1-1" stroke="#e6f4ff" stroke-width=".95" stroke-linecap="round"/><g transform="rotate(-45 12 12)"><path d="M12 4 13.2 12h-2.4z" fill="#ff3b30"/><path d="M12 20l-1.2-8h2.4z" fill="#f8fbff"/></g><circle cx="12" cy="12" r="1.2" fill="#fff"/><circle cx="12" cy="12" r=".55" fill="#d92d20"/>',
   flightplan: '<path d="M3 12.4 21 4l-6.6 16-2.6-6.3z" fill="#ff9500"/><path d="m11.8 13.7 9.2-9.7-6.6 16z" fill="#ffb340"/>',
+  routes: '<circle cx="12" cy="12.4" r="8.4" fill="#eaf3ff"/><g fill="none" stroke="#9cc3f5" stroke-width=".9"><ellipse cx="12" cy="12.4" rx="3.7" ry="8.4"/><path d="M3.6 12.4h16.8M4.6 8.4h14.8M4.6 16.4h14.8"/></g><path d="M5 17.2C7.4 10 12.6 6.6 17.9 6.9" fill="none" stroke="#ff9f0a" stroke-width="1.8" stroke-linecap="round"/><circle cx="5" cy="17.2" r="1.7" fill="#ff9f0a" stroke="#ffffff" stroke-width=".8"/><path d="M0-3.4.7-.9 3.2.4v.8L.7-.3.5 2l.9.7v.6L0 3l-1.4.3v-.6l.9-.7L-.7-.3l-2.5.7v-.8L-.7-.9z" fill="#ffffff" stroke="#0b3a8f" stroke-width=".35" transform="translate(18.6 6.6) rotate(78) scale(1.25)"/>',
   briefing: '<path d="M3 7.9a2 2 0 0 1 2-2h4.1l1.9 2.3H19a2 2 0 0 1 2 2v8.9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#0a84ff"/><path d="M3 10.2h18v6.6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#4fa9ff"/>',
   weather: '<defs><linearGradient id="wxCloud" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#d7e8fa"/></linearGradient></defs><circle cx="15.4" cy="8.6" r="3.4" fill="#ffcf00"/><circle cx="15.4" cy="8.6" r="2.6" fill="#ffd60a"/><g fill="url(#wxCloud)"><circle cx="9.2" cy="13.4" r="3"/><circle cx="12.4" cy="11.8" r="3.7"/><circle cx="15.6" cy="13.6" r="2.9"/><rect x="7.2" y="13.2" width="10.2" height="4.2" rx="2.1"/></g>',
   charts: '<path d="M6 3.4h7.7l4.3 4.3v12.1a.9.9 0 0 1-.9.9H6.9a.9.9 0 0 1-.9-.9z" fill="#ff3b30"/><path d="M13.7 3.4v4.3h4.3" fill="#ff8a80"/><path d="M8.4 10.8h6.6M8.4 13.2h6.6M8.4 15.6h4.4" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/>',

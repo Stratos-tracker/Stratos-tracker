@@ -1,4 +1,22 @@
 {
+  "2.2.1": {
+    "summary": "Route Finder, a new EFB app: real flights in the air now, filtered by aircraft, airline and flight time, each ready to uplink to SimBrief. The EFB home screen now shows the Stratos wing.",
+    "changelog": {
+      "features": [
+        "Route Finder: real airline flights in the air now, with callsign, departure, arrival, distance and estimated block time.",
+        "Filter by aircraft type, airline and flight time, from under an hour to over eight.",
+        "Uplink to SimBrief opens the flight planner prefilled with the airline, flight number, aircraft and both airports."
+      ],
+      "improvements": [],
+      "fixes": [],
+      "performance": [],
+      "ui": [
+        "The EFB home screen shows the Stratos wing as its default wallpaper; an airline's logo still replaces it when one is set."
+      ],
+      "compatibility": [],
+      "other": []
+    }
+  },
   "2.2.0": {
     "summary": "IFR en-route charts, a jet-stream and turbulence map with legends, SIGMETs, holding points and an ILS card, smoother live tracking, and a pro chart workspace with pinned charts, night mode, split view and Auto.",
     "changelog": {
@@ -545,35 +563,6 @@
         "Photos load through the app's own /api/photo route, which the local dev server also serves; the desktop build supplies the header the photo service requires."
       ],
       "other": []
-    }
-  },
-  "2.1.17": {
-    "summary": "Live VATSIM traffic, a flight plan you can edit on its own map, and a flight overview split into tabs.",
-    "changelog": {
-      "features": [
-        "Traffic source in Map layers: VATSIM shows pilots online now with callsign, type, altitude and speed, next to the existing live ADS-B feeds; an airport panel also names the controllers online for that airport.",
-        "The route planner's map now shows the plan: select a waypoint or the leg between two of them for its coordinates, altitude, distances and connected legs, then Move up, Move down, Direct or Delete it, or drag to move it.",
-        "Flight overview is split into Overview, Route, Flight data and Weather, with the aircraft identified by type and matched to a silhouette where artwork exists.",
-        "SimBrief is connected once: Settings saves the Pilot ID or username and every import reuses it."
-      ],
-      "improvements": [
-        "Live ADS-B works from a local copy of the app: npm run dev serves it and fetches the feeds server-side, so the browser's cross-origin rules no longer block them.",
-        "Map layers offers only the traffic sources that answer. Volanta, ElevateX and Flightradar24 were removed instead of sitting there with no data."
-      ],
-      "fixes": [
-        "The first ADS-B mirror was read with the wrong key, so its aircraft were thrown away and every poll fell through to a slower fallback.",
-        "VATSIM pilots appeared only after a delayed retry because the first poll ran before the feed parser had loaded.",
-        "The corner traffic badge said 'aircrafts' for a count of aircraft.",
-        "The desktop build could not read VATSIM's live feed or one ADS-B mirror because those hosts were missing from its CORS allowlist."
-      ],
-      "performance": [],
-      "ui": [
-        "The corner badge counts aircraft or pilots according to the source in use, and names it in the tooltip."
-      ],
-      "compatibility": [],
-      "other": [
-        "npm run dev starts a local server with the same traffic proxy the hosted build uses; a plain static server still serves the files but cannot reach the ADS-B feeds."
-      ]
     }
   },
   "2.1.25": {

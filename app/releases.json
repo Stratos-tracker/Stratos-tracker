@@ -3,67 +3,48 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.2.0",
+    "version": "2.2.1",
     "releasedAt": "2026-11-14",
     "severity": "normal",
-    "summary": "IFR en-route charts, a jet-stream and turbulence map with legends, SIGMETs, holding points and an ILS card, smoother live tracking, and a pro chart workspace with pinned charts, night mode, split view and Auto.",
+    "summary": "Route Finder, a new EFB app: real flights in the air now, filtered by aircraft, airline and flight time, each ready to uplink to SimBrief. The EFB home screen now shows the Stratos wing.",
     "changelog": {
       "features": [
-        "IFR Low and IFR High charts on the Flight Deck map and in the Flight Planner: airways with minimum altitudes, Class B/C/D and restricted airspace, and grid MORA, read from X-Plane 12 through the bridge.",
-        "Jet stream layer: upper-level wind speed at a chosen flight level (FL180 to FL450) with isotachs, from Open-Meteo.",
-        "Turbulence layer: the Ellrod clear-air turbulence index between two flight levels, outlined light, moderate and severe.",
-        "SIGMETs and US G-AIRMETs from NOAA: a map layer, and a card in the EFB weather page filtered to the route or station.",
-        "Holding points on the EFB ground chart, with the holds on the taxi route listed.",
-        "ILS and localizer card on the EFB airport page: frequency, course, glide slope and DME from X-Plane 12.",
-        "Chart clipboard, night rendering, split view with a moving map, and Auto chart selection by flight phase."
+        "Route Finder: real airline flights in the air now, with callsign, departure, arrival, distance and estimated block time.",
+        "Filter by aircraft type, airline and flight time, from under an hour to over eight.",
+        "Uplink to SimBrief opens the flight planner prefilled with the airline, flight number, aircraft and both airports."
       ],
-      "improvements": [
-        "The aircraft moves smoothly between position updates on every live map, phone included.",
-        "Rain radar uses RainViewer's sharper 512 px tiles up to its zoom limit, with a legend for every weather layer.",
-        "With the bridge offline, airport procedures fall back to the bundled FAA data and the ground chart reads OpenStreetMap directly.",
-        "The bridge tries several OpenStreetMap servers when one is down.",
-        "US airports show FAA charts again when no Airmate licence is configured.",
-        "One shared colour and type system for the Flight Deck, the EFB and phones.",
-        "Shorter on-screen text, frequencies as 118.300 and three-digit headings."
-      ],
-      "fixes": [
-        "The EFB airport page showed no published procedures for every airport.",
-        "Opening another airport in the EFB by link did not reload the page.",
-        "SIGMET areas crossing the 180 degree meridian were drawn across the whole map.",
-        "Airway endpoints could not be matched because fixes stored the wrong region."
-      ],
+      "improvements": [],
+      "fixes": [],
       "performance": [],
       "ui": [
-        "On phones, one panel opens at a time and the map starts clear.",
-        "Taxiways on the ground chart are drawn as yellow centrelines."
+        "The EFB home screen shows the Stratos wing as its default wallpaper; an airline's logo still replaces it when one is set."
       ],
       "compatibility": [],
       "other": []
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.0/Stratos-Setup.exe",
-        "sha256": "cd0ede9841b373c086b581408b970b14d47c89077c12279bae6706da7ec80cd9",
-        "size": 118966634
-      },
-      "mac-arm64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.0/Stratos-2.2.0-mac-arm64.dmg",
-        "sha256": "a3092f17b74092490feedcf2af1033a2604d5615e86f49b78d1aaf77528510be",
-        "size": 137536158
-      },
-      "mac-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.0/Stratos-2.2.0-mac-x64.dmg",
-        "sha256": "38aa8e3923f6444443ea971ff2927c27cb4b218c36f7e81e0b0d3376093c0a78",
-        "size": 142948500
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.0/Stratos-2.2.0-linux-x64.AppImage",
-        "sha256": "24d774420464c0a2cb0860e7d256ed0ca7a8cea573c08f1b2ad3373bb4fbdd2a",
-        "size": 158910518
-      }
     }
   },
   "releases": [
+    {
+      "version": "2.2.1",
+      "releasedAt": "2026-11-14",
+      "severity": "normal",
+      "summary": "Route Finder, a new EFB app: real flights in the air now, filtered by aircraft, airline and flight time, each ready to uplink to SimBrief. The EFB home screen now shows the Stratos wing.",
+      "changelog": {
+        "features": [
+          "Route Finder: real airline flights in the air now, with callsign, departure, arrival, distance and estimated block time.",
+          "Filter by aircraft type, airline and flight time, from under an hour to over eight.",
+          "Uplink to SimBrief opens the flight planner prefilled with the airline, flight number, aircraft and both airports."
+        ],
+        "improvements": [],
+        "fixes": [],
+        "performance": [],
+        "ui": [
+          "The EFB home screen shows the Stratos wing as its default wallpaper; an airline's logo still replaces it when one is set."
+        ],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.2.0",
       "releasedAt": "2026-11-14",
@@ -1335,60 +1316,6 @@
           "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.18/Stratos-2.1.18-linux-x64.AppImage",
           "sha256": "6e239332a51b474eb0bc503bd0babc152022c06226941ea050db3e197f2d66a6",
           "size": 140345691
-        }
-      }
-    },
-    {
-      "version": "2.1.17",
-      "releasedAt": "2026-10-23",
-      "severity": "normal",
-      "summary": "Live VATSIM traffic, a flight plan you can edit on its own map, and a flight overview split into tabs.",
-      "changelog": {
-        "features": [
-          "Traffic source in Map layers: VATSIM shows pilots online now with callsign, type, altitude and speed, next to the existing live ADS-B feeds; an airport panel also names the controllers online for that airport.",
-          "The route planner's map now shows the plan: select a waypoint or the leg between two of them for its coordinates, altitude, distances and connected legs, then Move up, Move down, Direct or Delete it, or drag to move it.",
-          "Flight overview is split into Overview, Route, Flight data and Weather, with the aircraft identified by type and matched to a silhouette where artwork exists.",
-          "SimBrief is connected once: Settings saves the Pilot ID or username and every import reuses it."
-        ],
-        "improvements": [
-          "Live ADS-B works from a local copy of the app: npm run dev serves it and fetches the feeds server-side, so the browser's cross-origin rules no longer block them.",
-          "Map layers offers only the traffic sources that answer. Volanta, ElevateX and Flightradar24 were removed instead of sitting there with no data."
-        ],
-        "fixes": [
-          "The first ADS-B mirror was read with the wrong key, so its aircraft were thrown away and every poll fell through to a slower fallback.",
-          "VATSIM pilots appeared only after a delayed retry because the first poll ran before the feed parser had loaded.",
-          "The corner traffic badge said 'aircrafts' for a count of aircraft.",
-          "The desktop build could not read VATSIM's live feed or one ADS-B mirror because those hosts were missing from its CORS allowlist."
-        ],
-        "performance": [],
-        "ui": [
-          "The corner badge counts aircraft or pilots according to the source in use, and names it in the tooltip."
-        ],
-        "compatibility": [],
-        "other": [
-          "npm run dev starts a local server with the same traffic proxy the hosted build uses; a plain static server still serves the files but cannot reach the ADS-B feeds."
-        ]
-      },
-      "downloads": {
-        "windows": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.17/Stratos-Setup.exe",
-          "sha256": "9e9ded5e4a1c7bce0ce8905df3584a35d123eaa08a075765f3a0519aa417f032",
-          "size": 103849832
-        },
-        "mac-arm64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.17/Stratos-2.1.17-mac-arm64.dmg",
-          "sha256": "b3c30e8a4e92a906a35c022a7fdbcdb6c8bada15123cf5dde750138e4e0d825f",
-          "size": 119604464
-        },
-        "mac-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.17/Stratos-2.1.17-mac-x64.dmg",
-          "sha256": "29118881ee16a52a412e98fec35bf22b93b709d3bec8a14fa9c3ddad4d5becf2",
-          "size": 124907396
-        },
-        "linux-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.17/Stratos-2.1.17-linux-x64.AppImage",
-          "sha256": "a5849aebfeeb75a49cb6a0665773e8cc0a86da70365be6bf9fe25190a957781a",
-          "size": 140333416
         }
       }
     }

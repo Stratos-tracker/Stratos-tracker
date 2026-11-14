@@ -530,7 +530,7 @@ test('the airline dresses the whole bag, with a preview and a manual override', 
   assert.ok(/class="home-logo"/.test(page), 'with the house mark, without its wordmark, under the deck');
   assert.doesNotMatch(page, /home-brand/, 'and no airline wordmark in the bottom-right corner');
   assert.match(css, /\.home-logo \{[^}]*place-items: center/, 'the mark is centred on the deck');
-  assert.match(css, /\.home-logo svg \{[^}]*color: var\(--efb-accent\)/, 'drawn in the house accent');
+  assert.match(css, /\.home-mark \{[^}]*background: var\(--efb-accent\)[^}]*mask: url\(icon-512\.png\)/, 'the Stratos wing, drawn in the house accent');
   assert.match(css, /body\[data-airline=""\] \.home-logo/, 'and only while no airline is loaded');
   assert.ok(/id="home-airline-logo"/.test(page), 'with the airline mark on the wallpaper');
   assert.match(shell, /function renderAirlineWallpaper/, 'drawn from the resolved airline');
