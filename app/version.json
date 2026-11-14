@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-14",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.1/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.1/Stratos-Setup.exe",
+      "sha256": "e2620881ee988b250e394eb06f126b78828894fa8de7c303481352f969670edd",
+      "size": 118980582
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.1/Stratos-2.2.1-mac-arm64.dmg",
+      "sha256": "446f1b6440e936ea17e428e97f86ab557079c29df0ee424b147f1901ff162a57",
+      "size": 137567112
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.1/Stratos-2.2.1-mac-x64.dmg",
+      "sha256": "e2fc4c1088d5ac4c8d50913a7f833499fa45d2e8944e5660e06eb537592fddeb",
+      "size": 142977564
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.1/Stratos-2.2.1-linux-x64.AppImage",
+      "sha256": "fb3b34547cfe0b6bfe1deb495e1e628ce33b5d810db41165a68fbd68b5a14f29",
+      "size": 158922454
+    }
+  },
   "summary": "Route Finder, a new EFB app: real flights in the air now, filtered by aircraft, airline and flight time, each ready to uplink to SimBrief. The EFB home screen now shows the Stratos wing.",
   "reason": "",
   "releaseNotes": [
