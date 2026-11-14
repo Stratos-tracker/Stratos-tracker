@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-14",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.0/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.0/Stratos-Setup.exe",
+      "sha256": "cd0ede9841b373c086b581408b970b14d47c89077c12279bae6706da7ec80cd9",
+      "size": 118966634
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.0/Stratos-2.2.0-mac-arm64.dmg",
+      "sha256": "a3092f17b74092490feedcf2af1033a2604d5615e86f49b78d1aaf77528510be",
+      "size": 137536158
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.0/Stratos-2.2.0-mac-x64.dmg",
+      "sha256": "38aa8e3923f6444443ea971ff2927c27cb4b218c36f7e81e0b0d3376093c0a78",
+      "size": 142948500
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.0/Stratos-2.2.0-linux-x64.AppImage",
+      "sha256": "24d774420464c0a2cb0860e7d256ed0ca7a8cea573c08f1b2ad3373bb4fbdd2a",
+      "size": 158910518
+    }
+  },
   "summary": "IFR en-route charts, a jet-stream and turbulence map with legends, SIGMETs, holding points and an ILS card, smoother live tracking, and a pro chart workspace with pinned charts, night mode, split view and Auto.",
   "reason": "",
   "releaseNotes": [
