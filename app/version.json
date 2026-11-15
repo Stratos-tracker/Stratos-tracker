@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-15",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.5/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.5/Stratos-Setup.exe",
+      "sha256": "620062969a9548929ec3e40b5b14297a25380a68be2b5b09553271af1b8419bf",
+      "size": 119006567
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.5/Stratos-2.2.5-mac-arm64.dmg",
+      "sha256": "bde81559878ced5e4e108a5b7a46cf60444eb2148508afebf95eaff7b9d1daa1",
+      "size": 137541978
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.5/Stratos-2.2.5-mac-x64.dmg",
+      "sha256": "fd8d53b7e0ec62e07ba1f6bbade9e5cc04ca3c9de2c58f959f690575c0efe810",
+      "size": 143003258
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.5/Stratos-2.2.5-linux-x64.AppImage",
+      "sha256": "e09f52f4f404947adccf316bc9084a4a59ba5585fe7d6be3556fd24f79d60433",
+      "size": 158938338
+    }
+  },
   "summary": "A new graphite look across Stratos and an iPadOS-style EFB home screen with flight and clock widgets.",
   "reason": "",
   "releaseNotes": [
