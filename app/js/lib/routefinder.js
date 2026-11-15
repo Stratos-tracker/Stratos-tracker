@@ -136,6 +136,12 @@ export async function findRoutes({ type = '', airline = '', from = '', to = '', 
 // ---- All flights: the VRS standing data (github.com/vradarserver/standing-data) ----
 export const VRS = 'https://raw.githubusercontent.com/vradarserver/standing-data/main';
 // Searched when no airline is chosen: large carriers across every region.
+// Each default airline's usual [short-haul, long-haul] type, for routes no live flight has shown today.
+export const USUAL_TYPES = {
+  BAW: ['A320', 'B77W'], DLH: ['A20N', 'A359'], AFR: ['A320', 'B77W'], KLM: ['B738', 'B789'], UAE: ['B77W', 'A388'],
+  QTR: ['B738', 'B77W'], THY: ['A321', 'B77W'], DAL: ['A321', 'A359'], AAL: ['A321', 'B789'], UAL: ['B38M', 'B789'],
+  SIA: ['B38M', 'A359'], QFA: ['B738', 'B789'], ANA: ['A321', 'B77W'], CPA: ['A333', 'A359'], EZY: ['A320', 'A320'], RYR: ['B738', 'B738'],
+};
 export const DEFAULT_AIRLINES = ['BAW', 'DLH', 'AFR', 'KLM', 'UAE', 'QTR', 'THY', 'DAL', 'AAL', 'UAL', 'SIA', 'QFA', 'ANA', 'CPA', 'EZY', 'RYR'];
 
 const csvRows = text => String(text || '').replace(/^﻿/, '').split(/\r?\n/).slice(1).filter(Boolean).map(l => l.split(','));
@@ -181,7 +187,58 @@ const cachedText = (url, fetchText) => {
  * Real airline routes matching the filters, airborne now or not.
  * fetchText(url) answers the file's text; a 404 should answer null.
  */
-export async function findAllRoutes({ type = '', airline = '', from = '', to = '', duration = 'any', fetchText, limit = 12, onProgress = () => {} }) {
+/** Live ADS-B answers -> { seen: callsign -> type, fleet: airline -> [[type, count]] most common first }. */
+export function typeIndex(payloads) {
+  const seen = new Map(), counts = new Map();
+  for (const payload of payloads) for (const ac of (payload && Array.isArray(payload.ac) ? payload.ac : [])) {
+    const cs = parseCallsign(ac.flight), t = String(ac.t || '').toUpperCase();
+    if (!cs || !t) continue;
+    seen.set(cs.callsign, t);
+    const f = counts.get(cs.airline) || new Map(); f.set(t, (f.get(t) || 0) + 1); counts.set(cs.airline, f);
+  }
+  const fleet = new Map([...counts].map(([a, f]) => [a, [...f].sort((x, y) => y[1] - x[1])]));
+  return { seen, fleet };
+}
+
+/**
+ * The aircraft for a route: the type its callsign was seen on in today's live
+ * traffic (exact), else the airline's most common live type that suits the
+ * distance (typical), else ''. A chosen type must match what is known.
+ */
+export function typeForLeg({ callsign, airline }, nm, index, wanted = '') {
+  const seen = index && index.seen.get(callsign);
+  if (seen) return !wanted || seen === wanted ? { type: seen, typical: false } : null;
+  const fleet = (index && index.fleet.get(airline)) || [];
+  if (wanted) return typeCanFly(wanted, nm) && (!fleet.length || fleet.some(([t]) => t === wanted)) ? { type: wanted, typical: true } : null;
+  // A known airline's usual types beat a small live sample; other airlines use what they fly today.
+  if (USUAL_TYPES[airline]) {
+    const [short, long] = USUAL_TYPES[airline];
+    return { type: [nm > 2500 ? long : short, long, short].find(t => typeCanFly(t, nm)) || short, typical: true };
+  }
+  // Past 2,500 nm airlines fly widebodies where they have them, though a narrowbody could make it.
+  const fit = (nm > 2500 && fleet.find(([t]) => WIDEBODY.test(t) && typeCanFly(t, nm))) || fleet.find(([t]) => typeCanFly(t, nm));
+  return { type: fit ? fit[0] : (nm > 2500 ? 'B789' : 'A320'), typical: true };
+}
+
+let liveIndex = null; // { at, promise }: today's types, refreshed every 10 minutes
+function liveTypes(fetchTraffic) {
+  if (!fetchTraffic) return Promise.resolve(null);
+  if (!liveIndex || Date.now() - liveIndex.at > 600000) {
+    const at = Date.now();
+    // Four at a time with one retry: the feed refuses bursts of parallel requests.
+    const get = url => fetchTraffic(url).catch(() => new Promise(r => setTimeout(r, 800)).then(() => fetchTraffic(url))).catch(() => null);
+    const codes = ROUTE_TYPES.map(t => t.code), out = [];
+    const worker = async () => { while (codes.length) out.push(await get(`https://api.adsb.lol/v2/type/${codes.shift()}`)); };
+    const promise = Promise.all([worker(), worker(), worker(), worker()]).then(() => (out.some(Boolean) ? typeIndex(out) : null));
+    liveIndex = { at, promise };
+    promise.then(i => { if (!i && liveIndex && liveIndex.at === at) liveIndex = null; });
+  }
+  return liveIndex.promise;
+}
+
+export async function findAllRoutes({ type = '', airline = '', from = '', to = '', duration = 'any', fetchText, fetchTraffic, limit = 12, onProgress = () => {} }) {
+  const wanted = String(type || '').toUpperCase();
+  const typesPromise = liveTypes(fetchTraffic);
   const airlines = airline ? [String(airline).toUpperCase()] : DEFAULT_AIRLINES;
   const files = await Promise.all(airlines.map(a => cachedText(`${VRS}/routes/schema-01/${a[0]}/${a}-all.csv`, fetchText)));
   if (files.every(f => f === null) && !airline) throw new Error('Route data is unavailable right now.');
@@ -193,6 +250,7 @@ export async function findAllRoutes({ type = '', airline = '', from = '', to = '
     if (!airports.has(url)) airports.set(url, cachedText(url, fetchText).then(parseVrsAirports));
     return (await airports.get(url)).get(icao) || null;
   };
+  const index = await typesPromise;
   const results = [];
   let looked = 0;
   const seen = new Set();
@@ -203,8 +261,10 @@ export async function findAllRoutes({ type = '', airline = '', from = '', to = '
     for (const [l, origin, destination] of found) {
       if (!origin || !destination || results.length >= limit) continue;
       const nm = Math.round(distanceNm(origin, destination));
-      const minutes = blockMinutes(nm, type);
-      if (typeCanFly(type, nm) && matchesDuration(minutes, duration)) results.push({ callsign: l.callsign, airline: l.airline, number: l.number, type: String(type || '').toUpperCase(), registration: '', airlineName: '', origin, destination, distanceNm: nm, blockMinutes: minutes });
+      const ac = typeForLeg(l, nm, index, wanted);
+      if (!ac) continue;
+      const minutes = blockMinutes(nm, ac.type);
+      if (matchesDuration(minutes, duration)) results.push({ callsign: l.callsign, airline: l.airline, number: l.number, type: ac.type, typical: ac.typical, registration: '', airlineName: '', origin, destination, distanceNm: nm, blockMinutes: minutes });
     }
     onProgress({ looked, found: results.length, pool: pool.length });
   }

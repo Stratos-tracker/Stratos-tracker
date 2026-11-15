@@ -106,7 +106,7 @@ export async function mount(root) {
     return `<article class="rf-card">
       <header class="rf-head">
         ${logo ? `<img class="rf-logo" src="${esc(logo)}" alt="">` : `<span class="rf-logo rf-code">${esc(f.airline)}</span>`}
-        <div class="rf-id"><b>${esc(f.callsign)}</b><span>${esc(f.airlineName || AIRLINES.find(a => a.icao === f.airline)?.name || f.airline)}${f.type ? ` · ${esc(f.type)}` : ''}${f.registration ? ` · ${esc(f.registration)}` : ''}</span></div>
+        <div class="rf-id"><b>${esc(f.callsign)}</b><span>${esc(f.airlineName || AIRLINES.find(a => a.icao === f.airline)?.name || f.airline)}${f.type ? ` · ${esc(f.type)}${f.typical ? ' <i class="rf-typ" title="The type this airline usually flies on a route this long; this flight was not seen today">typical</i>' : ''}` : ''}${f.registration ? ` · ${esc(f.registration)}` : ''}</span></div>
         ${live ? '<span class="e-badge good rf-live">Airborne now</span>' : '<span class="e-badge rf-live">Real route</span>'}
       </header>
       <div class="rf-route">

@@ -3,55 +3,44 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.2.2",
+    "version": "2.2.3",
     "releasedAt": "2026-11-15",
     "severity": "normal",
-    "summary": "Route Finder now finds any real airline flight, not just those airborne, with airport filters and a flight-time slider. Desktop updates now prompt on launch and install inside the app.",
+    "summary": "Route Finder shows the aircraft type for every flight.",
     "changelog": {
       "features": [
-        "Route Finder searches every known real airline route; FLYING NOW limits it to flights airborne right now.",
-        "Route Finder filters by departure and arrival airport."
+        "Every Route Finder flight shows its aircraft type: the exact one when that flight was seen in today’s live traffic, otherwise the airline’s typical type for the distance, marked TYPICAL."
       ],
       "improvements": [
-        "Flight time is a slider from 30 minutes to 21 hours.",
-        "On Windows, Update Now downloads the new version, checks its published checksum, installs it and reopens Stratos."
+        "Choosing an aircraft in Route Finder skips flights seen today on a different type."
       ],
-      "fixes": [
-        "The desktop app now detects new releases: it read the version file packaged with itself and always thought it was current."
-      ],
+      "fixes": [],
       "performance": [],
-      "ui": [
-        "Removed the DIRECT TO button from the EFB and Flight Deck, and the TRK button from the Flight Deck."
-      ],
-      "compatibility": [
-        "Installs of 2.2.1 or older must update to 2.2.2 by hand once; later updates are offered in the app."
-      ],
+      "ui": [],
+      "compatibility": [],
       "other": []
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.2/Stratos-Setup.exe",
-        "sha256": "1176024f6b877474992c824e4f68f400f4d48e0944f1c58a41567d3ad20b4b26",
-        "size": 118972667
-      },
-      "mac-arm64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.2/Stratos-2.2.2-mac-arm64.dmg",
-        "sha256": "0a257fde78dec8efc38bbade7e162465cfa0cce5a92c8a9c0b318b826242bd00",
-        "size": 137572631
-      },
-      "mac-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.2/Stratos-2.2.2-mac-x64.dmg",
-        "sha256": "e47e317eed181d00e6288091707e853802d7ef01727c2db530b11750e62c2198",
-        "size": 142965044
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.2/Stratos-2.2.2-linux-x64.AppImage",
-        "sha256": "49f7e8546b1424617ed8ee365a60e363dcae8f90b130a6a4de1f7c06fdbb5323",
-        "size": 158914103
-      }
     }
   },
   "releases": [
+    {
+      "version": "2.2.3",
+      "releasedAt": "2026-11-15",
+      "severity": "normal",
+      "summary": "Route Finder shows the aircraft type for every flight.",
+      "changelog": {
+        "features": [
+          "Every Route Finder flight shows its aircraft type: the exact one when that flight was seen in today’s live traffic, otherwise the airline’s typical type for the distance, marked TYPICAL."
+        ],
+        "improvements": [
+          "Choosing an aircraft in Route Finder skips flights seen today on a different type."
+        ],
+        "fixes": [],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.2.2",
       "releasedAt": "2026-11-15",
@@ -1323,47 +1312,6 @@
           "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.20/Stratos-2.1.20-linux-x64.AppImage",
           "sha256": "e24d892ef2a0ff5b9599bcdcb3bc8bf69d3e7aea7de2a40a3916c26ddd40b5f1",
           "size": 140366156
-        }
-      }
-    },
-    {
-      "version": "2.1.19",
-      "releasedAt": "2026-10-23",
-      "severity": "normal",
-      "summary": "The aircraft card now tells a missing photo route apart from a registration that has no photo.",
-      "changelog": {
-        "features": [],
-        "improvements": [
-          "The card separates three answers: a photo, no published photo for that registration, and a deployment that cannot look photos up at all."
-        ],
-        "fixes": [
-          "A build without the photo route said no photo was published for the registration; it now says the lookup is unavailable there instead of making a claim it cannot check."
-        ],
-        "performance": [],
-        "ui": [],
-        "compatibility": [],
-        "other": []
-      },
-      "downloads": {
-        "windows": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.19/Stratos-Setup.exe",
-          "sha256": "94b26a82d45c2841c28eea3a3f4a51a9e7d5297cbedd9eb376e3787ef03bb5c1",
-          "size": 103857404
-        },
-        "mac-arm64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.19/Stratos-2.1.19-mac-arm64.dmg",
-          "sha256": "21576642dc41a8e4719af3df1aba0ebf4b35e9f9387eab8eec08ed4eb94c0fc6",
-          "size": 119585839
-        },
-        "mac-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.19/Stratos-2.1.19-mac-x64.dmg",
-          "sha256": "cecf383febab39ac31c39b99ce23f0e7facd08b9c1c58878ac0e2c84dfc4c4e5",
-          "size": 124912873
-        },
-        "linux-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.19/Stratos-2.1.19-linux-x64.AppImage",
-          "sha256": "a16851038bff640645761fed90198149e9230381a6909b8f7693abf08ae0f132",
-          "size": 140345714
         }
       }
     }

@@ -523,22 +523,6 @@
       "other": []
     }
   },
-  "2.1.19": {
-    "summary": "The aircraft card now tells a missing photo route apart from a registration that has no photo.",
-    "changelog": {
-      "features": [],
-      "improvements": [
-        "The card separates three answers: a photo, no published photo for that registration, and a deployment that cannot look photos up at all."
-      ],
-      "fixes": [
-        "A build without the photo route said no photo was published for the registration; it now says the lookup is unavailable there instead of making a claim it cannot check."
-      ],
-      "performance": [],
-      "ui": [],
-      "compatibility": [],
-      "other": []
-    }
-  },
   "2.1.25": {
     "summary": "The bag stands on its own on a tablet, and opening Stratos on a phone no longer strands you on a browser error page when the PC is off.",
     "changelog": {
@@ -637,6 +621,22 @@
       "compatibility": [
         "Installs of 2.2.1 or older must update to 2.2.2 by hand once; later updates are offered in the app."
       ],
+      "other": []
+    }
+  },
+  "2.2.3": {
+    "summary": "Route Finder shows the aircraft type for every flight.",
+    "changelog": {
+      "features": [
+        "Every Route Finder flight shows its aircraft type: the exact one when that flight was seen in today’s live traffic, otherwise the airline’s typical type for the distance, marked TYPICAL."
+      ],
+      "improvements": [
+        "Choosing an aircraft in Route Finder skips flights seen today on a different type."
+      ],
+      "fixes": [],
+      "performance": [],
+      "ui": [],
+      "compatibility": [],
       "other": []
     }
   }

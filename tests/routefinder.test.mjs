@@ -111,3 +111,19 @@ test('the flight-time slider passes a minute range', async () => {
   assert.ok(matchesDuration(90, [60, 120]) && matchesDuration(120, [60, 120]));
   assert.ok(!matchesDuration(130, [60, 120]) && matchesDuration(1500, [480, Infinity]));
 });
+
+test('every route gets an aircraft: seen today exactly, else the airline\'s typical type', async () => {
+  const { typeIndex, typeForLeg } = await import('../app/js/lib/routefinder.js');
+  const index = typeIndex([{ ac: [
+    { flight: 'BAW117', t: 'B77W' }, { flight: 'BAW1326', t: 'A320' }, { flight: 'BAW1444', t: 'A320' }, { flight: 'BAW15', t: 'A388' },
+  ] }]);
+  assert.deepEqual(typeForLeg({ callsign: 'BAW117', airline: 'BAW' }, 3000, index), { type: 'B77W', typical: false });
+  assert.deepEqual(typeForLeg({ callsign: 'BAW900', airline: 'BAW' }, 500, index), { type: 'A320', typical: true });
+  assert.equal(typeForLeg({ callsign: 'BAW901', airline: 'BAW' }, 4500, index).type, 'B77W', 'long haul takes the usual widebody');
+  const other = typeIndex([{ ac: [{ flight: 'VIR1', t: 'B789' }, { flight: 'VIR2', t: 'A339' }, { flight: 'VIR3', t: 'B789' }] }]);
+  assert.equal(typeForLeg({ callsign: 'VIR9', airline: 'VIR' }, 4000, other).type, 'B789', 'other airlines use the live fleet of today');
+  assert.equal(typeForLeg({ callsign: 'BAW117', airline: 'BAW' }, 3000, index, 'A388'), null, 'a chosen type must match what was seen');
+  assert.deepEqual(typeForLeg({ callsign: 'BAW902', airline: 'BAW' }, 6000, index, 'A388'), { type: 'A388', typical: true });
+  assert.equal(typeForLeg({ callsign: 'XYZ1', airline: 'XYZ' }, 500, null).type, 'A320', 'an unknown airline gets a generic type');
+  assert.equal(typeForLeg({ callsign: 'UAE1', airline: 'UAE' }, 6000, null).type, 'A388');
+});

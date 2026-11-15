@@ -756,6 +756,7 @@ body[data-airline]:not([data-airline=""]) .home-airline-logo { opacity: 1; }
 .rf-id b { font: 700 16px/1.1 var(--efb-font); letter-spacing: .03em; }
 .rf-id span { font-size: 11.5px; color: var(--efb-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rf-live { margin-left: auto; flex: none; }
+.rf-typ { font-style: normal; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; opacity: .7; }
 .rf-route { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; }
 .rf-apt { display: flex; flex-direction: column; }
 .rf-apt b { font: 700 22px/1 var(--efb-font); letter-spacing: .04em; }
