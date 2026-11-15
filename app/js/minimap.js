@@ -1624,8 +1624,9 @@ export class MiniMap {
       const p = this.project(point.lat, point.lon, view);
       return p.x > inset.left - 40 && p.x < this.width + 40 && p.y > -40 && p.y < this.height + 40 ? p : null;
     };
-    // How many fix labels the chart can carry without becoming a wall of text.
-    const fixBudget = span == null ? 0 : span > 900 ? 0 : span > 400 ? 24 : span > 160 ? 60 : 110;
+    // Every fix on screen gets its symbol, so the waypoints cover the whole chart;
+    // only the labels are budgeted, nearest the centre first, so text never walls it.
+    const fixBudget = span == null ? 0 : span > 900 ? 0 : span > 400 ? 40 : span > 160 ? 110 : 200;
     const placed = [];
     const fits = (x, y, width) => {
       const box = { x: x - 3, y: y - 11, w: width + 6, h: 14 };
@@ -1646,12 +1647,17 @@ export class MiniMap {
     for (const point of ordered) {
       const isRoute = routeIds.has(String(point.id || '').toUpperCase());
       const isFix = point.kind === 'fix' && !isRoute;
-      if (isFix && fixesDrawn >= fixBudget) { hidden += 1; continue; }
+      if (isFix && span > 900) { hidden += 1; continue; }
       const p = onScreen(point);
       if (!p) continue;
       if (isFix) fixesDrawn += 1;
+      const labelled = !isFix || fixesDrawn <= fixBudget;
       ctx.save();
-      drawNavPoint(ctx, p.x, p.y, {
+      // A fix without a label is a small, quieter tick, so a dense area reads as a
+      // texture of waypoints instead of a wall of triangles.
+      ctx.translate(p.x, p.y);
+      if (isFix && !labelled) { ctx.scale(0.62, 0.62); ctx.globalAlpha = 0.6; }
+      drawNavPoint(ctx, 0, 0, {
         kind: point.kind,
         accent: '#22d3ee',
         end: point.kind === 'apt' ? null : null,
@@ -1661,7 +1667,7 @@ export class MiniMap {
       const label = String(point.id || '');
       ctx.font = isFix ? '600 9.5px system-ui, sans-serif' : '600 10.5px system-ui, sans-serif';
       const width = ctx.measureText(label).width;
-      if (fits(p.x + 8, p.y + 3.5, width)) {
+      if (labelled && fits(p.x + 8, p.y + 3.5, width)) {
         ctx.fillStyle = 'rgba(4,9,15,.6)';
         ctx.fillRect(p.x + 6, p.y - 6, width + 5, 12);
         ctx.fillStyle = this.theme() === 'light' ? '#0f172a' : '#cfe9f5';
@@ -1767,7 +1773,8 @@ export class MiniMap {
     const drag = this.drag && this.drag.moved && this.drag.lat != null ? this.drag : null;
     const points = this.route.map((p, index) => {
       const live = drag && drag.index === index ? { lat: drag.lat, lon: drag.lon } : p;
-      return { ...this.project(live.lat, live.lon, view), id: p.id || '', index };
+      // lat/lon ride along: legPath draws the great circle from them.
+      return { ...this.project(live.lat, live.lon, view), lat: live.lat, lon: live.lon, id: p.id || '', index };
     });
     if (!points.length) return;
     const { segmentIndex, waypointIndex } = this.selection;
@@ -1848,6 +1855,8 @@ export class MiniMap {
     if (!this.route.length) return;
     const points = this.route.map((point, index) => ({
       ...this.project(point.lat, point.lon, view),
+      lat: point.lat,
+      lon: point.lon,
       point,
       index,
     }));
@@ -1859,7 +1868,7 @@ export class MiniMap {
     const segments = Array.isArray(this.selection.segments) ? this.selection.segments : [];
     const selectedLeg = this.selection.segmentIndex != null ? this.selection.segmentIndex : null;
     const invert = this.theme() === 'light';
-    const ink = invert ? 'rgba(30, 41, 59, .95)' : 'rgba(198, 214, 242, .95)';
+    const ink = this.options.routeInk || (invert ? 'rgba(30, 41, 59, .95)' : 'rgba(198, 214, 242, .95)');
     const flown = invert ? 'rgba(100, 116, 139, .5)' : 'rgba(148, 170, 200, .4)';
 
     // Every leg is its own great circle, so a long oceanic leg bends and a leg

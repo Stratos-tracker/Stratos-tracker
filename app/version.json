@@ -1,44 +1,37 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.2.6",
+  "latestVersion": "2.2.7",
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-15",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.6/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.6/Stratos-Setup.exe",
-      "sha256": "0ede616a31be304580fc9181f55cc98d8dc512f3587b749d3a769420d5d68f5e",
-      "size": 119002626
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.6/Stratos-2.2.6-mac-arm64.dmg",
-      "sha256": "8bf7d02b80f37a208fde520efa6b9ba7ea439f55fafd5fe87f411ad46dac7bd0",
-      "size": 137536267
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.6/Stratos-2.2.6-mac-x64.dmg",
-      "sha256": "055228b2eb00b066e8d8d11ac91a511f214eaa7f9efa8a850982c4f423a3c623",
-      "size": 143011243
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.6/Stratos-2.2.6-linux-x64.AppImage",
-      "sha256": "f509b6be6235cfa07a3eb44cf1b814e2c3bea072b97b4751b6437aeaee0e35b6",
-      "size": 158934276
-    }
-  },
-  "summary": "SID and STAR procedures load worldwide in the desktop app, and the website deploys again with the current installer.",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "A rebuilt Flight Planner: click the chart to draw the route, a DEP / route / ARR bar, a legs table and waypoints across the whole chart.",
   "reason": "",
   "releaseNotes": [
-    "The desktop app draws SIDs, STARs and approaches for every airport in your X-Plane data: procedure requests now reach the Stratos bridge directly.",
-    "The website deploys again and its download buttons serve the current installer; it had stopped updating at 2.1.45."
+    "Flight Planner: every chart click adds the waypoint under it and draws the leg; the first click picks the departure airport.",
+    "A route bar with DEP, the route as text and ARR. Type fixes or coordinates and press Enter; unknown idents are named, not guessed.",
+    "A legs table with the route, track, leg distance and running total for every point.",
+    "Waypoints from the simulator data now cover the whole chart: the new Fit view radius follows the zoom, and fixes are hidden only when zoomed far out.",
+    "The planner is four tabs (Route, Procedures, Fuel, Review) instead of a six-step wizard, and the planned route is drawn in magenta.",
+    "Planned route lines were not drawn on the EFB maps since 2.2.0; the Flight Planner and the Navigator show them again.",
+    "The Flight Planner chart no longer freezes for most of a second each time it is panned or zoomed.",
+    "Reopening the Flight Planner starts the chart at the plan instead of the default map."
   ],
   "notes": {
-    "features": [],
-    "improvements": [],
+    "features": [
+      "Flight Planner: every chart click adds the waypoint under it and draws the leg; the first click picks the departure airport.",
+      "A route bar with DEP, the route as text and ARR. Type fixes or coordinates and press Enter; unknown idents are named, not guessed.",
+      "A legs table with the route, track, leg distance and running total for every point."
+    ],
+    "improvements": [
+      "Waypoints from the simulator data now cover the whole chart: the new Fit view radius follows the zoom, and fixes are hidden only when zoomed far out.",
+      "The planner is four tabs (Route, Procedures, Fuel, Review) instead of a six-step wizard, and the planned route is drawn in magenta."
+    ],
     "fixes": [
-      "The desktop app draws SIDs, STARs and approaches for every airport in your X-Plane data: procedure requests now reach the Stratos bridge directly.",
-      "The website deploys again and its download buttons serve the current installer; it had stopped updating at 2.1.45."
+      "Planned route lines were not drawn on the EFB maps since 2.2.0; the Flight Planner and the Navigator show them again.",
+      "The Flight Planner chart no longer freezes for most of a second each time it is panned or zoomed.",
+      "Reopening the Flight Planner starts the chart at the plan instead of the default map."
     ],
     "performance": [],
     "ui": [],

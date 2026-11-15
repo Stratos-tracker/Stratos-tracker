@@ -728,7 +728,8 @@ test('a chart tap becomes a real identifier, never a generated one', () => {
   assert.doesNotMatch(src, /WP\$\{String\(index\)/, 'the page no longer numbers its own waypoints');
   assert.doesNotMatch(src, /'Chart position'/, 'and no longer calls one a chart position');
   assert.match(src, /navIndex\.pick\(/, 'a tap is resolved against the navigation index');
-  assert.match(src, /pickChooser/, 'more than one record at a tap is a question, not a guess');
+  assert.match(src, /addRecord\(answer\.point,/, 'a click adds the closest record at once, so two clicks draw a leg');
+  assert.doesNotMatch(src, /pickChooser/, 'with no chooser in the way');
   assert.match(src, /coordinateIdent\(/, 'a tap that finds nothing is named as a coordinate');
   assert.match(navnear, /export function coordinateIdent/, 'and that name comes from the shared module');
   // The departure rule is checked before anything is resolved.
@@ -745,7 +746,10 @@ test('the chart reads real points inside a geodesic radius of its own centre', (
   assert.match(src, /data-act="radius"/, 'the pilot can change it');
   assert.match(src, /data-act="ring"/, 'and hide the ring on its own');
   assert.match(src, /map\.viewCenter\(\)/, 'the query is centred on the view, not the aircraft');
-  assert.match(src, /fetchNear\(bridge, center\.lat, center\.lon, navNear\.radiusNm, \{ kinds: \['fix'\] \}\)/,
+  assert.match(src, /if \(navNear\.auto\) navNear\.radiusNm = .*span \* 0\.6/, 'Fit view sizes the query to the chart on screen');
+  assert.match(src, /<option value="auto" selected>Fit view<\/option>/, 'and is the default');
+  assert.match(src, /sizeWatch\?\.observe\(canvas\)/, 'and asks again once the chart has its real size');
+  assert.match(src, /fetchNear\(bridge, center\.lat, center\.lon, navNear\.radiusNm, \{ kinds: \['fix'\], limit: 3000 \}\)/,
     'en-route fixes come from the simulator nav data and only that');
   assert.match(src, /navIndex\.near\(/, 'the published set is searched in the index');
   // The map layer draws the same records and knows the span in miles.

@@ -149,3 +149,18 @@ test('a tapped position is named the way a pilot reads it, never as a generated 
   assert.match(coordinateIdent(40.6413, -73.7781), /^\d{4}[NS]\d{4,5}[EW]$/);
   assert.doesNotMatch(coordinateIdent(40.6413, -73.7781), /^WP/);
 });
+
+test('simulator fixes are de-duplicated by namesake, fast enough for every pan', () => {
+  const index = new NavPointIndex();
+  const airports = Array.from({ length: 40000 }, (_, i) => ({ id: `A${i}`, lat: 40 + (i % 200) / 10, lon: -10 + Math.floor(i / 200) / 10 }));
+  index.setPublished(airports, [{ id: 'BPK', type: 'VOR', lat: 51.7497, lon: -0.1067 }]);
+  const fixes = Array.from({ length: 3000 }, (_, i) => ({ id: `F${i}`, kind: 'fix', lat: 51 + (i % 60) / 50, lon: -1 + Math.floor(i / 60) / 25 }));
+  fixes.push({ id: 'BPK', kind: 'nav', lat: 51.75, lon: -0.107 });   // the published VOR again
+  fixes.push({ id: 'F0', kind: 'fix', lat: 51.0001, lon: -1 });      // a repeat within 1.5 NM
+  fixes.push({ id: 'F0', kind: 'fix', lat: 45, lon: 10 });           // a namesake far away is its own fix
+  const started = performance.now();
+  const kept = index.setSimulator(fixes);
+  const ms = performance.now() - started;
+  assert.equal(kept, 3001, 'repeats are dropped, a distant namesake is kept');
+  assert.ok(ms < 250, `3 000 fixes against 40 000 published points took ${Math.round(ms)} ms`);
+});

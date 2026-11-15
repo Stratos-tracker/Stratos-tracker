@@ -409,3 +409,16 @@ test('minimap: with smoothing a live aircraft glides between samples and the loo
   assert.equal(map.position, null);
   map.destroy();
 });
+
+test('minimap: both route drawers hand the leg path real coordinates, so a planned leg is drawn', () => {
+  for (const routeStyle of ['nav', 'plain']) {
+    const map = new MiniMap(makeCanvas(), { padding: 22, routeStyle });
+    map.setRoute([{ id: 'EGLL', lat: 51.47, lon: -0.45 }, { id: 'EHAM', lat: 52.31, lon: 4.76 }]);
+    const legs = [];
+    const legPath = map.legPath.bind(map);
+    map.legPath = (a, b, view) => { const pieces = legPath(a, b, view); legs.push(pieces); return pieces; };
+    if (routeStyle === 'nav') map.drawNavRoute(map.fit()); else map.drawRoute(map.fit());
+    assert.equal(legs.length, 1, routeStyle + ': one leg between two points');
+    assert.ok(legs[0].length && legs[0][0].length > 1, routeStyle + ': and the leg has a line to stroke');
+  }
+});

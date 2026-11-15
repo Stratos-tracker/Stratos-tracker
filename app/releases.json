@@ -3,46 +3,58 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.2.6",
+    "version": "2.2.7",
     "releasedAt": "2026-11-15",
     "severity": "normal",
-    "summary": "SID and STAR procedures load worldwide in the desktop app, and the website deploys again with the current installer.",
+    "summary": "A rebuilt Flight Planner: click the chart to draw the route, a DEP / route / ARR bar, a legs table and waypoints across the whole chart.",
     "changelog": {
-      "features": [],
-      "improvements": [],
+      "features": [
+        "Flight Planner: every chart click adds the waypoint under it and draws the leg; the first click picks the departure airport.",
+        "A route bar with DEP, the route as text and ARR. Type fixes or coordinates and press Enter; unknown idents are named, not guessed.",
+        "A legs table with the route, track, leg distance and running total for every point."
+      ],
+      "improvements": [
+        "Waypoints from the simulator data now cover the whole chart: the new Fit view radius follows the zoom, and fixes are hidden only when zoomed far out.",
+        "The planner is four tabs (Route, Procedures, Fuel, Review) instead of a six-step wizard, and the planned route is drawn in magenta."
+      ],
       "fixes": [
-        "The desktop app draws SIDs, STARs and approaches for every airport in your X-Plane data: procedure requests now reach the Stratos bridge directly.",
-        "The website deploys again and its download buttons serve the current installer; it had stopped updating at 2.1.45."
+        "Planned route lines were not drawn on the EFB maps since 2.2.0; the Flight Planner and the Navigator show them again.",
+        "The Flight Planner chart no longer freezes for most of a second each time it is panned or zoomed.",
+        "Reopening the Flight Planner starts the chart at the plan instead of the default map."
       ],
       "performance": [],
       "ui": [],
       "compatibility": [],
       "other": []
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.6/Stratos-Setup.exe",
-        "sha256": "0ede616a31be304580fc9181f55cc98d8dc512f3587b749d3a769420d5d68f5e",
-        "size": 119002626
-      },
-      "mac-arm64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.6/Stratos-2.2.6-mac-arm64.dmg",
-        "sha256": "8bf7d02b80f37a208fde520efa6b9ba7ea439f55fafd5fe87f411ad46dac7bd0",
-        "size": 137536267
-      },
-      "mac-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.6/Stratos-2.2.6-mac-x64.dmg",
-        "sha256": "055228b2eb00b066e8d8d11ac91a511f214eaa7f9efa8a850982c4f423a3c623",
-        "size": 143011243
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.6/Stratos-2.2.6-linux-x64.AppImage",
-        "sha256": "f509b6be6235cfa07a3eb44cf1b814e2c3bea072b97b4751b6437aeaee0e35b6",
-        "size": 158934276
-      }
     }
   },
   "releases": [
+    {
+      "version": "2.2.7",
+      "releasedAt": "2026-11-15",
+      "severity": "normal",
+      "summary": "A rebuilt Flight Planner: click the chart to draw the route, a DEP / route / ARR bar, a legs table and waypoints across the whole chart.",
+      "changelog": {
+        "features": [
+          "Flight Planner: every chart click adds the waypoint under it and draws the leg; the first click picks the departure airport.",
+          "A route bar with DEP, the route as text and ARR. Type fixes or coordinates and press Enter; unknown idents are named, not guessed.",
+          "A legs table with the route, track, leg distance and running total for every point."
+        ],
+        "improvements": [
+          "Waypoints from the simulator data now cover the whole chart: the new Fit view radius follows the zoom, and fixes are hidden only when zoomed far out.",
+          "The planner is four tabs (Route, Procedures, Fuel, Review) instead of a six-step wizard, and the planned route is drawn in magenta."
+        ],
+        "fixes": [
+          "Planned route lines were not drawn on the EFB maps since 2.2.0; the Flight Planner and the Navigator show them again.",
+          "The Flight Planner chart no longer freezes for most of a second each time it is panned or zoomed.",
+          "Reopening the Flight Planner starts the chart at the plan instead of the default map."
+        ],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.2.6",
       "releasedAt": "2026-11-15",
@@ -1270,54 +1282,6 @@
           "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.24/Stratos-2.1.24-linux-x64.AppImage",
           "sha256": "2f1a82f19faf3b2d94a2b6c4412d30b02489f7efc3132d6225456d89a8cf7367",
           "size": 144022355
-        }
-      }
-    },
-    {
-      "version": "2.1.23",
-      "releasedAt": "2026-10-25",
-      "severity": "normal",
-      "summary": "The phone opens the same map as the PC with your aircraft on it, the flown trail eases through turns, and the flight-plan card shows the cruise level and opens your SimBrief OFP.",
-      "changelog": {
-        "features": [
-          "Opening Stratos on a phone now hands it to the map your PC serves, which pairs itself and shows live telemetry: no code, no address to type and no settings.",
-          "The flight-plan card has an OFP action that opens the SimBrief document for the imported plan. When SimBrief publishes no PDF for a plan, its OFP text is shown in the Flight summary instead of a dead button.",
-          "The compact flight-plan card states the planned cruise level (CRZ FL350) and the distance remaining, so neither needs the card expanded."
-        ],
-        "improvements": [
-          "A flown trail is drawn through rounded corners: a turn curves instead of kinking at the sample rate. The recorded positions are not moved, and the phone's map uses the same curve."
-        ],
-        "fixes": [
-          "The bridge the desktop app starts now listens on the local network, so a phone can reach it; one-tap pairing previously answered that the bridge was reachable only on this PC.",
-          "The packaged bridge now carries the pages it serves, so a phone opening the page the PC provides no longer lands on a 404.",
-          "The phone no longer claims live simulator data while none is arriving: it says which part it is waiting for.",
-          "SimBrief responses that state the planned level as an initial cruise altitude now supply the cruise level instead of leaving it blank."
-        ],
-        "performance": [],
-        "ui": [],
-        "compatibility": [],
-        "other": []
-      },
-      "downloads": {
-        "windows": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.23/Stratos-Setup.exe",
-          "sha256": "b9e05919d93c940751b4471acfcb791acf57d3066d04868f4c93b63300690689",
-          "size": 107105001
-        },
-        "mac-arm64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.23/Stratos-2.1.23-mac-arm64.dmg",
-          "sha256": "73607b2910acf77c2bec251f1916fa551ef59ddb9adf528450c5827f040be638",
-          "size": 122882347
-        },
-        "mac-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.23/Stratos-2.1.23-mac-x64.dmg",
-          "sha256": "9a66b7e18cad5ff8a15de8a67aed639b903a2661d65e7a0c95ef7972fd9ec421",
-          "size": 128245604
-        },
-        "linux-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.23/Stratos-2.1.23-linux-x64.AppImage",
-          "sha256": "95cf211e1bb430bebdcfe59ce00a31d26661aed0a9b2942bc07d1fb9867d2e0e",
-          "size": 143768227
         }
       }
     }

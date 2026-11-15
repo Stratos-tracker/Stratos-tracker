@@ -52,6 +52,16 @@ function cellsAround(lat, lon, nm) {
 }
 
 /** One identifier per place: a VOR and its co-located DME are one station. */
+/** Points grouped by identifier: a duplicate check then only looks at namesakes. */
+function byIdent(points) {
+  const map = new Map();
+  for (const point of points) {
+    const list = map.get(point.id);
+    if (list) list.push(point); else map.set(point.id, [point]);
+  }
+  return map;
+}
+
 function samePoint(a, b) {
   return String(a.id).toUpperCase() === String(b.id).toUpperCase()
     && distanceNm(a, b) < 1.5;
@@ -101,6 +111,7 @@ export class NavPointIndex {
     for (const airport of airports) push(airport, 'apt');
     for (const navaid of navaids) push(navaid, 'nav');
     this.published = rows;
+    this.publishedById = byIdent(rows);
     this.reindex();
     return this.published.length;
   }
@@ -118,6 +129,8 @@ export class NavPointIndex {
   setSimulator(points = []) {
     const rows = Array.isArray(points) ? points : [];
     const next = [];
+    const kept = new Map();
+    const published = this.publishedById || byIdent(this.published);
     for (const row of rows) {
       const lat = Number(row.lat);
       const lon = Number(row.lon);
@@ -135,9 +148,12 @@ export class NavPointIndex {
         region: String(row.region || ''),
         source: String(row.source || 'Simulator nav data'),
       };
-      if (next.some(existing => samePoint(existing, point))) continue;
-      if (this.published.some(existing => samePoint(existing, point))) continue;
+      // Namesakes only: the same rule as comparing with every point, without the
+      // quadratic cost that froze the chart on each pan with thousands of fixes.
+      if ((kept.get(id) || []).some(existing => samePoint(existing, point))) continue;
+      if ((published.get(id) || []).some(existing => samePoint(existing, point))) continue;
       next.push(point);
+      if (kept.has(id)) kept.get(id).push(point); else kept.set(id, [point]);
     }
     this.simulator = next;
     this.reindex();
@@ -233,11 +249,12 @@ export class NavPointIndex {
 }
 
 /** The bridge's own nav-data answer for a position, or null when unavailable. */
-export async function fetchNear(base, lat, lon, nm = DEFAULT_RADIUS_NM, { kinds = null, signal } = {}) {
+export async function fetchNear(base, lat, lon, nm = DEFAULT_RADIUS_NM, { kinds = null, signal, limit = null } = {}) {
   const root = String(base || '').replace(/\/+$/, '');
   if (!root) return null;
   const query = new URLSearchParams({ lat: String(lat), lon: String(lon), nm: String(nm) });
   if (kinds && kinds.length) query.set('kinds', kinds.join(','));
+  if (limit) query.set('limit', String(limit));
   try {
     const response = await fetch(`${root}/navdata/near?${query.toString()}`, { signal, cache: 'no-store' });
     if (!response.ok) return null;

@@ -159,7 +159,6 @@ export async function mount(root, ctx) {
   };
   let weather = { status: 'idle', rows: [], error: '', fetchedAt: 0 };
   let alternates = { status: 'idle', rows: [], error: '', maxNm: 250, minRunwayFt: 6000 };
-  let mapPick = null;
 
   /* The real navigation points around the chart. The centre is the middle of the
      view — never the aircraft's position — so this answers for the place the
@@ -167,6 +166,9 @@ export async function mount(root, ctx) {
   const navNear = {
     status: 'idle',        // idle | loading | ready | empty
     radiusNm: DEFAULT_RADIUS_NM,
+    // Fit view: the radius follows the zoom, so the points fill the chart the
+    // pilot is looking at instead of a small circle in its middle.
+    auto: true,
     center: null,
     rows: [],              // what the chart is drawing for this query
     total: 0,              // every record inside the radius, before the draw cap
@@ -179,8 +181,6 @@ export async function mount(root, ctx) {
   const navIndex = new NavPointIndex();
   let navIndexPromise = null;
   let nearTimer = 0;
-  // A tap that found more than one record, waiting on the pilot to choose.
-  let pickChooser = null;
 
   const seeded = readDraft();
   // A stored route from the Flight Deck or SimBrief belongs to the flight that
@@ -220,6 +220,7 @@ export async function mount(root, ctx) {
          chart is not needed to read that. */
       layers: { tiles: true, route: true, track: false, traffic: false, nav: true, range: false, scale: true },
       routeStyle: 'nav',
+      routeInk: '#ff4fd8', // the magenta planned route of a flight planner chart
       accent: accentNow(),
       chartTheme,
       tint: chartTheme === 'night' ? 'rgba(6, 10, 18, .42)' : null,
@@ -247,7 +248,6 @@ export async function mount(root, ctx) {
       },
       onPick: position => handleChartPick(position),
       onViewChange: () => {
-        mapPick = null;
         // Panned or zoomed: the query radius now covers a different piece of the
         // world, so the points are re-read and the scale and centre are redrawn.
         scheduleNear();
@@ -263,20 +263,19 @@ export async function mount(root, ctx) {
 
   root.innerHTML = `
     <div class="fp-shell map-shell">
-      <nav class="fp-steps" id="fp-steps" aria-label="Flight plan steps"></nav>
+      <!-- The route bar: departure, the route as text, arrival. Typing here and
+           clicking the chart edit the same plan. -->
+      <form class="fp-bar" id="fp-bar" autocomplete="off">
+        <label class="fp-bar-apt"><span>DEP</span><input id="fp-bar-dep" maxlength="6" spellcheck="false" placeholder="ICAO" aria-label="Departure airport"></label>
+        <label class="fp-bar-route"><span>ROUTE</span><input id="fp-bar-route" spellcheck="false" placeholder="Click the chart, or type fixes: BPK UMLAT 51.5,-0.4" aria-label="Route"></label>
+        <label class="fp-bar-apt"><span>ARR</span><input id="fp-bar-arr" maxlength="6" spellcheck="false" placeholder="ICAO" aria-label="Arrival airport"></label>
+        <button type="submit" hidden></button>
+        <div class="fp-bar-facts" id="fp-bar-facts"></div>
+        <span class="map-chip" id="fp-chip">New plan</span>
+        <button class="map-hud-btn" type="button" data-act="reset-plan" title="Discard this plan and start a new one">Reset plan</button>
+      </form>
       <div class="fp-view map-view">
         <div class="fp-map" id="fp-map"></div>
-
-        <div class="map-hud">
-          <div class="map-flight">
-            <div class="map-route" id="fp-route"></div>
-            <div class="map-sub" id="fp-sub"></div>
-          </div>
-          <div class="map-hud-right">
-            <span class="map-chip" id="fp-chip">New plan</span>
-            <button class="map-hud-btn" type="button" data-act="reset-plan" title="Discard this plan and start a new one">Reset plan</button>
-          </div>
-        </div>
 
         <div class="map-banner" id="fp-banner" hidden></div>
 
@@ -285,8 +284,9 @@ export async function mount(root, ctx) {
             <b>Chart</b>
             <label class="map-readout-field">Radius
               <select class="map-readout-select" data-act="radius" aria-label="Navigation-point radius in nautical miles">
+                <option value="auto" selected>Fit view</option>
                 <option value="20">20 NM</option>
-                <option value="40" selected>40 NM</option>
+                <option value="40">40 NM</option>
                 <option value="80">80 NM</option>
                 <option value="160">160 NM</option>
                 <option value="320">320 NM</option>
@@ -299,7 +299,6 @@ export async function mount(root, ctx) {
           <div class="map-readout-facts" id="fp-readout-facts"></div>
         </div>
 
-        <div class="map-pick" id="fp-pick" hidden></div>
 
         <div class="nav-tools" role="group" aria-label="Chart controls">
           <button class="nav-tool" type="button" data-act="zoom" data-dir="in" title="Zoom in" aria-label="Zoom in">+</button>
@@ -313,8 +312,7 @@ export async function mount(root, ctx) {
 
         <aside class="nav-panel fp-panel" id="fp-panel" aria-label="Flight plan" ${panelOpen ? '' : 'hidden'}>
           <header class="nav-panel-head">
-            <b id="fp-panel-title">Departure</b>
-            <span class="nav-panel-count" id="fp-panel-hint"></span>
+            <nav class="fp-steps" id="fp-steps" aria-label="Flight plan pages"></nav>
             <button class="nav-panel-close" type="button" data-act="panel-close" aria-label="Hide the plan panel">${ICON.close}</button>
           </header>
           <div class="fp-scroll" id="fp-scroll"></div>
@@ -330,15 +328,15 @@ export async function mount(root, ctx) {
   const el = {
     steps: root.querySelector('#fp-steps'),
     mapHost: root.querySelector('#fp-map'),
-    route: root.querySelector('#fp-route'),
-    sub: root.querySelector('#fp-sub'),
+    bar: root.querySelector('#fp-bar'),
+    barDep: root.querySelector('#fp-bar-dep'),
+    barRoute: root.querySelector('#fp-bar-route'),
+    barArr: root.querySelector('#fp-bar-arr'),
+    barFacts: root.querySelector('#fp-bar-facts'),
     chip: root.querySelector('#fp-chip'),
     banner: root.querySelector('#fp-banner'),
     readout: root.querySelector('#fp-readout'),
-    pick: root.querySelector('#fp-pick'),
     panel: root.querySelector('#fp-panel'),
-    title: root.querySelector('#fp-panel-title'),
-    panelHint: root.querySelector('#fp-panel-hint'),
     scroll: root.querySelector('#fp-scroll'),
     actions: root.querySelector('#fp-actions'),
     strip: root.querySelector('#fp-strip'),
@@ -348,7 +346,6 @@ export async function mount(root, ctx) {
 
   /* ── small helpers ───────────────────────────────────────────────────── */
 
-  const stepMeta = id => RP.STEPS.find(entry => entry.id === id) || RP.STEPS[0];
 
   function setNotice(text, tone = '') {
     notice = text ? { text, tone, at: Date.now() } : { text: '', tone: '', at: 0 };
@@ -491,6 +488,8 @@ export async function mount(root, ctx) {
   /** An empty plan still opens on a chart: the aircraft, else the last chart airport, else an overview. */
   function ensureStartView() {
     if (!map || map.viewCenter()) return;
+    // A plan in progress opens where it starts, not over the default map.
+    if (plan.origin) { map.centerOn(plan.origin.lat, plan.origin.lon, 8); return; }
     const live = liveStatus().snapshot;
     const t = live && live.telemetry;
     if (t && Number.isFinite(t.lat) && Number.isFinite(t.lon)) { map.centerOn(t.lat, t.lon, 8); return; }
@@ -509,6 +508,11 @@ export async function mount(root, ctx) {
     const center = map.viewCenter();
     if (!center) return;
     navNear.center = center;
+    const span = map.viewSpanNm() || 0;
+    if (navNear.auto) navNear.radiusNm = Math.max(20, Math.min(MAX_RADIUS_NM, Math.round(span * 0.6)));
+    // Zoomed out past this a busy area holds tens of thousands of fixes: airports
+    // and navaids only, as on a planner chart, until the pilot zooms in.
+    const fixesHidden = navNear.auto && span > 350;
     const key = `${center.lat.toFixed(3)}|${center.lon.toFixed(3)}|${navNear.radiusNm}`;
     if (!force && key === navNear.key && (navNear.status === 'ready' || navNear.status === 'empty')) return;
     navNear.key = key;
@@ -524,8 +528,8 @@ export async function mount(root, ctx) {
     const fixNote = 'En-route fixes need the simulator\u2019s own navigation data: connect the bridge to read them.';
     let fixes = [];
     let fixesRead = false;
-    if (bridge) {
-      const answer = await fetchNear(bridge, center.lat, center.lon, navNear.radiusNm, { kinds: ['fix'] });
+    if (bridge && !fixesHidden) {
+      const answer = await fetchNear(bridge, center.lat, center.lon, navNear.radiusNm, { kinds: ['fix'], limit: 3000 });
       if (answer) {
         fixes = Array.isArray(answer.points) ? answer.points : [];
         fixesRead = true;
@@ -534,14 +538,16 @@ export async function mount(root, ctx) {
     if (destroyed || navNear.key !== key) return;
     navIndex.setSimulator(fixes);
 
-    const answer = navIndex.near(center.lat, center.lon, navNear.radiusNm, { limit: 600 });
+    const answer = navIndex.near(center.lat, center.lon, navNear.radiusNm, { limit: 3500 });
     const rows = answer.ok ? answer.points : [];
     navNear.rows = rows;
     navNear.total = answer.count || rows.length;
     navNear.hidden = Math.max(0, (answer.count || 0) - rows.length);
     navNear.coverage = answer.coverage || navIndex.coverage;
     navNear.status = rows.length ? 'ready' : 'empty';
-    navNear.reason = rows.length
+    navNear.reason = fixesHidden
+      ? 'Zoom in to see the waypoints.'
+      : rows.length
       ? (fixesRead ? '' : fixNote)
       : `No record in the loaded navigation data is within ${formatRadius(navNear.radiusNm)} of the chart centre. ${fixesRead ? '' : fixNote}`.trim();
     navNear.at = Date.now();
@@ -561,7 +567,8 @@ export async function mount(root, ctx) {
     const host = el.readout;
     if (!host) return;
     const select = host.querySelector('[data-act="radius"]');
-    if (select && select.value !== String(navNear.radiusNm)) select.value = String(navNear.radiusNm);
+    const shown = navNear.auto ? 'auto' : String(navNear.radiusNm);
+    if (select && select.value !== shown) select.value = shown;
     const ring = host.querySelector('[data-act="ring"]');
     if (ring && map) ring.setAttribute('aria-pressed', String(Boolean(map.showRange)));
     const globeBtn = host.querySelector('[data-act="globe"]');
@@ -720,42 +727,8 @@ export async function mount(root, ctx) {
     return 'fix';
   }
 
-  /** The card a tap opens when it found more than one record, or none. */
-  function renderPick() {
-    const host = el.pick;
-    if (!host) return;
-    // The chooser is a decision the pilot has to make, so it takes the chart's
-    // lower corner from the readout rather than being layered over it.
-    if (el.readout) el.readout.hidden = Boolean(pickChooser);
-    if (!pickChooser) {
-      host.hidden = true;
-      host.innerHTML = '';
-      return;
-    }
-    const { options, position, reach } = pickChooser;
-    const rows = options.map((option, index) => `
-      <button class="map-pick-row" type="button" data-act="pick-point" data-index="${index}">
-        <span class="map-pick-id">${esc(option.id)}</span>
-        <span class="map-pick-main"><b>${esc(option.name || option.id)}</b><small>${esc(pointKindLabel(option))} · ${esc(formatRadius(option.distanceNm))} from the tap${option.elev != null ? ` · ${esc(fmtNum(option.elev))} ft` : ''}</small></span>
-      </button>`).join('');
-    host.innerHTML = `
-      <div class="map-pick-head">
-        <b>${options.length ? `${options.length} records at that tap` : `Nothing published within ${esc(formatRadius(reach))}`}</b>
-        <span>${esc(coverageText(pickChooser.coverage))}</span>
-      </div>
-      ${rows}
-      <button class="map-pick-row is-custom" type="button" data-act="pick-custom">
-        <span class="map-pick-id">${esc(coordinateIdent(position.lat, position.lon))}</span>
-        <span class="map-pick-main"><b>Custom coordinate</b><small>${esc(formatLatLon(position.lat, position.lon, 4))} · not a published fix</small></span>
-      </button>
-      <button class="map-pick-row is-ghost" type="button" data-act="drop-pick">Cancel</button>`;
-    host.hidden = false;
-  }
-
   /** Put a real record, or a custom coordinate, on the route. */
   function addRecord(record, note = '') {
-    pickChooser = null;
-    renderPick();
     const point = planPointFrom(record);
     const result = RP.addPoint(plan, point);
     if (!result.ok) {
@@ -778,9 +751,10 @@ export async function mount(root, ctx) {
 
   async function handleChartPick(position) {
     if (!position || !Number.isFinite(position.lat) || !Number.isFinite(position.lon)) return;
-    // The departure and arrival steps read a chart tap as "the airport under the
-    // tap"; every other step adds a user fix at that position.
-    if (step === 'departure' || step === 'arrival') {
+    // A plan is built from its departure outwards, so the first tap on an empty
+    // plan names the nearest airport as the departure; every later tap extends
+    // the route line from the last point.
+    if (!plan.origin) {
       const directory = await airportDirectory();
       const nearest = directory
         .map(airport => ({ airport, nm: distanceNm(position, airport) }))
@@ -788,21 +762,11 @@ export async function mount(root, ctx) {
         .sort((a, b) => a.nm - b.nm)[0]
         || nearbyAirports(position.lat, position.lon, 1, 60)[0];
       if (!nearest) {
-        setNotice('No airport in the airport database is within 60 nm of that point. Search for the airport instead.', 'warn');
+        setNotice(`${RP.NO_DEPARTURE} No airport is within 60 nm of that click.`, 'warn');
         return;
       }
-      const airport = nearest.airport || nearest;
-      const nm = nearest.nm != null ? nearest.nm : distanceNm(position, airport);
-      mapPick = { airport, nm, role: step };
-      render();
-      return;
-    }
-    // The departure rule comes first, whatever the tap found: a plan is built
-    // from its departure airport outwards.
-    if (!plan.origin) {
-      step = 'departure';
-      setNotice(RP.NO_DEPARTURE, 'warn');
-      render();
+      chooseDeparture(nearest.airport || nearest);
+      setNotice(`${plan.origin ? plan.origin.id : 'The airport'} is the departure. Click fixes, navaids and the arrival airport to draw the route.`, '');
       return;
     }
     await ensureNavIndex();
@@ -810,19 +774,24 @@ export async function mount(root, ctx) {
     const reach = snapRadiusNm();
     const answer = navIndex.pick(position.lat, position.lon, reach);
     if (!answer.ok) {
-      // Nothing published there. The pilot may still place the exact position,
-      // but it is named as a custom coordinate, not as a fix.
-      pickChooser = { position, options: [], reach, coverage: answer.coverage };
-      renderPick();
-      setNotice(`No navigation record in the loaded data is within ${formatRadius(reach)} of that tap. Choose a nearby fix, or place the exact position as a custom coordinate.`, 'warn');
+      // Nothing published there: the click still draws the leg, to a user
+      // waypoint named by its coordinates so it never passes for a real fix.
+      const id = coordinateIdent(position.lat, position.lon);
+      addRecord({
+        id,
+        name: `User waypoint ${formatLatLon(position.lat, position.lon, 3)}`,
+        lat: position.lat,
+        lon: position.lon,
+        kind: 'fix',
+        elev: null,
+        source: 'chart position',
+      }, `${id} added as a user waypoint: no published fix within ${formatRadius(reach)} of the click.`);
       return;
     }
-    if (answer.options.length > 1) {
-      pickChooser = { position, options: answer.options, reach, coverage: answer.coverage };
-      renderPick();
-      return;
-    }
-    addRecord(answer.point);
+    // Several records under the click: the closest one wins, the way a planner
+    // click works; the others are named so a wrong pick is one Undo away.
+    const others = answer.options.filter(option => option !== answer.point).map(option => option.id);
+    addRecord(answer.point, others.length ? `${answer.point.id} added. Also at that spot: ${others.join(', ')}. Undo to pick again.` : '');
   }
 
   /* ── entry points that must respect the departure rule ───────────────── */
@@ -1561,9 +1530,6 @@ export async function mount(root, ctx) {
     procedures.approach = { status: 'idle', payload: null, error: '' };
     navNear.status = 'idle';
     navNear.key = '';
-    mapPick = null;
-    pickChooser = null;
-    renderPick();
     if (clearShared) {
       try {
         localStorage.removeItem(RP.ROUTE_KEY);
@@ -1579,35 +1545,114 @@ export async function mount(root, ctx) {
 
   /* ── painting ────────────────────────────────────────────────────────── */
 
+  /* The panel's pages. Departure and arrival live in the route bar and on the
+     Route page, so the wizard's six steps read as four tabs. */
+  const TAB_LABELS = { route: 'Route', procedures: 'Procedures', fuel: 'Fuel', review: 'Review' };
   function paintSteps() {
     if (!el.steps) return;
-    const states = RP.stepState(plan, { burnPerHour: effectiveBurn() });
-    const currentIndex = RP.STEP_IDS.indexOf(step);
-    el.steps.innerHTML = states.map((entry, index) => `<button class="fp-step${entry.id === step ? ' is-current' : ''}${entry.done ? ' is-done' : ''}${entry.available ? '' : ' is-muted'}" type="button" data-act="step" data-step="${entry.id}" aria-current="${entry.id === step ? 'step' : 'false'}">
-        <span class="fp-step-n">${entry.done ? '✓' : index + 1}</span>
-        <span class="fp-step-label">${esc(entry.label)}</span>
-      </button>`).join('');
-    el.steps.querySelectorAll('[data-step]').forEach(node => {
-      const id = node.dataset.step;
-      const at = RP.STEP_IDS.indexOf(id);
-      node.classList.toggle('is-past', at < currentIndex);
-    });
+    const states = RP.stepState(plan, { burnPerHour: effectiveBurn() }).filter(entry => TAB_LABELS[entry.id]);
+    el.steps.innerHTML = states.map(entry => `<button class="fp-step${entry.id === step ? ' is-current' : ''}${entry.available || entry.id === 'route' ? '' : ' is-muted'}" type="button" data-act="step" data-step="${entry.id}" aria-current="${entry.id === step ? 'page' : 'false'}">${esc(TAB_LABELS[entry.id])}</button>`).join('');
+  }
+
+  const procedureRecord = tag => (tag === 'SID' ? plan.sid : tag === 'STAR' ? plan.star : plan.approach);
+
+  /** The route between the airports as one line of text: procedures by name, fixes by ident. */
+  function routeText() {
+    const out = [];
+    for (const point of plan.points.slice(1, plan.destination ? -1 : undefined)) {
+      const token = point.ss ? (procedureRecord(point.ss) || {}).id || point.id : point.id;
+      if (out[out.length - 1] !== token) out.push(token);
+    }
+    return out.join(' ');
+  }
+
+  /** The DEP or ARR field: the exact ICAO match, else the best search result. */
+  async function setBarAirport(kind, value) {
+    const q = String(value || '').trim().toUpperCase();
+    const current = kind === 'dep' ? plan.origin : plan.destination;
+    if (!q || (current && current.id === q)) { paintHud(); return; }
+    const rows = await searchAirports(q, 6).catch(() => []);
+    if (destroyed) return;
+    const airport = rows.find(row => String(row.id).toUpperCase() === q) || rows[0];
+    if (!airport) { setNotice(`No airport in the database matches ${q}.`, 'warn'); paintHud(); return; }
+    const point = {
+      id: String(airport.id).toUpperCase(), name: airport.name, lat: Number(airport.lat), lon: Number(airport.lon),
+      elev: Number(airport.elev) || 0, kind: 'apt', source: airport.source || '',
+    };
+    if (kind === 'dep') chooseDeparture(point);
+    else chooseArrival(point);
+  }
+
+  /**
+   * The typed route replaces the pilot's own points; the departure, the arrival
+   * and any applied procedure stay. Each ident resolves to the record of that
+   * name closest to the point before it; an ident the loaded data does not
+   * have is named, never guessed.
+   */
+  async function applyRouteText(text) {
+    if (!plan.origin) { setNotice(RP.NO_DEPARTURE, 'warn'); paintHud(); return; }
+    const skip = new Set(['DCT', plan.origin.id, plan.destination && plan.destination.id,
+      ...[plan.sid, plan.star, plan.approach].filter(Boolean).map(record => String(record.id).toUpperCase())]);
+    const tokens = String(text || '').toUpperCase().split(/\s+/).filter(token => token && !skip.has(token));
+    await ensureNavIndex();
+    if (destroyed) return;
+    const existing = plan.points.filter(point => !point.ss);
+    const pool = [...navIndex.all(), ...navaidPool().map(row => ({ ...row, kind: 'nav' })), ...knownFixes(5000)];
+    const sidEnd = plan.points.filter(point => point.ss === 'SID').pop();
+    let previous = sidEnd || plan.origin;
+    const resolved = [];
+    const missing = [];
+    for (const token of tokens) {
+      let point = existing.find(entry => entry.id === token) || null;
+      const coord = point ? null : parseWaypointText(token);
+      if (coord && !coord.error && Number.isFinite(coord.lat)) point = { ...coord, source: 'entered' };
+      if (!point) {
+        const hits = pool.filter(row => String(row.id || '').toUpperCase() === token);
+        if (!hits.length) {
+          const airports = await searchAirports(token, 3).catch(() => []);
+          const airport = airports.find(row => String(row.id).toUpperCase() === token);
+          if (airport) hits.push({ ...airport, id: token, lat: Number(airport.lat), lon: Number(airport.lon), kind: 'apt' });
+        }
+        const from = previous;
+        hits.sort((a, b) => distanceNm(from, a) - distanceNm(from, b));
+        point = hits[0] ? planPointFrom(hits[0]) : null;
+      }
+      if (!point) { missing.push(token); continue; }
+      resolved.push(point);
+      previous = point;
+    }
+    if (destroyed) return;
+    pushUndo();
+    let next = plan;
+    for (let i = next.points.length - (next.destination ? 2 : 1); i >= 1; i--) {
+      if (!next.points[i].ss) next = RP.removePoint(next, i);
+    }
+    for (const point of resolved) {
+      const before = next.points.findIndex(entry => entry.ss === 'STAR' || entry.ss === 'APP');
+      const result = RP.addPoint(next, point, before >= 0 ? { index: before } : {});
+      if (result.ok) next = result.plan;
+    }
+    plan = next;
+    selection = null;
+    afterChange({ fit: true });
+    if (missing.length) setNotice(`Not in the loaded navigation data: ${missing.join(', ')}. Airways are not in Stratos's data, so type the fixes along them.`, 'warn');
+    else setNotice(`Route updated: ${resolved.length} point${resolved.length === 1 ? '' : 's'} between the airports.`, '');
   }
 
   function paintHud() {
     const summary = RP.routeSummary(plan);
-    if (el.route) {
-      el.route.innerHTML = plan.origin || plan.destination
-        ? `${esc((plan.origin && plan.origin.id) || '????')}<s>→</s>${esc((plan.destination && plan.destination.id) || '????')}`
-        : '<span class="map-route-empty">No departure selected</span>';
-    }
-    if (el.sub) {
-      const bits = [];
-      if (plan.points.length) bits.push(`${plan.points.length} point${plan.points.length === 1 ? '' : 's'}`);
-      if (summary.distanceNm > 0) bits.push(`${fmtNum(summary.distanceNm, 0)} nm`);
-      if (summary.eteMinutes > 0) bits.push(`${fmtMinutes(summary.eteMinutes)} est.`);
-      if (plan.departureRwy) bits.push(`RWY ${plan.departureRwy}`);
-      el.sub.textContent = bits.length ? bits.join(' · ') : 'Choose the departure airport to start the plan';
+    const typing = node => node && document.activeElement === node;
+    if (el.barDep && !typing(el.barDep)) el.barDep.value = plan.origin ? plan.origin.id : '';
+    if (el.barArr && !typing(el.barArr)) el.barArr.value = plan.destination ? plan.destination.id : '';
+    if (el.barRoute && !typing(el.barRoute)) el.barRoute.value = routeText();
+    if (el.barFacts) {
+      const fact = (label, value) => `<span><em>${label}</em><b>${value}</b></span>`;
+      el.barFacts.innerHTML = [
+        fact('DIST', summary.distanceNm > 0 ? `${fmtNum(summary.distanceNm, 0)} nm` : '—'),
+        fact('ETE', summary.eteMinutes > 0 ? esc(fmtMinutes(summary.eteMinutes)) : '—'),
+        fact('CRZ', esc(fmtFl(plan.cruiseAlt))),
+        fact('WPT', String(plan.points.length)),
+      ].join('');
     }
     if (el.chip) {
       el.chip.textContent = plan.savedId && !plan.dirty ? 'Saved' : plan.dirty ? 'Unsaved' : 'Draft';
@@ -1644,20 +1689,6 @@ export async function mount(root, ctx) {
     } else map.setSelection({});
   }
 
-  const stepTitles = {
-    departure: 'Departure',
-    route: 'Build the route',
-    arrival: 'Arrival',
-    procedures: 'Procedures',
-    fuel: 'Fuel & alternate',
-    review: 'Review & send',
-  };
-
-  /* ── step bodies ─────────────────────────────────────────────────────── */
-
-  /* The field starts empty even when something is already selected: pre-filling
-     it would fire a search for the current airport on every render and leave a
-     result list open under a field the pilot is not using. */
   function searchBlock(kind, label, placeholder) {
     return `<div class="fp-search-block">
       <label class="fp-search-label" for="fp-search-${kind}">${esc(label)}</label>
@@ -1697,20 +1728,6 @@ export async function mount(root, ctx) {
     </div>`;
   }
 
-  function mapPickCard() {
-    if (!mapPick) return '';
-    const role = mapPick.role === 'arrival' ? 'arrival' : 'departure';
-    const { airport, nm } = mapPick;
-    return `<div class="e-card fp-card fp-pick">
-      <div class="fp-stop-head"><span class="e-badge">Nearest airport</span><b>${esc(String(airport.id).toUpperCase())}</b><span class="e-small e-muted">${esc(airport.name || '')}</span></div>
-      <p class="e-small e-muted" style="margin:6px 0 8px">${fmtNum(nm, 1)} nm from the point you tapped, from the airport database.</p>
-      <div class="e-row">
-        <button class="e-btn small primary" type="button" data-act="use-map-pick" data-role="${role}">Use as ${role}</button>
-        <button class="e-btn small ghost" type="button" data-act="drop-map-pick">Dismiss</button>
-      </div>
-    </div>`;
-  }
-
   /**
    * Saved plans. The list belongs on the first step as well as the last: a pilot
    * who has cleared the draft must be able to reopen a plan without building a
@@ -1731,15 +1748,8 @@ export async function mount(root, ctx) {
     </div>`;
   }
 
-  function bodyDeparture() {
-    return `
-      ${searchBlock('dep', 'Find the departure airport', 'ICAO, IATA or airport name — e.g. CYUL')}
-      ${mapPickCard()}
-      ${airportCard(plan.origin, 'Departure', 'sid')}
-      ${plan.points.length > 1 ? `<div class="e-notice"><div>Changing departure keeps the route and removes the old SID.</div></div>` : ''}
-      ${savedRoutes.length ? savedPlansCard() : ''}
-      <p class="e-small e-faint">Set a departure first.</p>`;
-  }
+
+  /* ── step bodies ─────────────────────────────────────────────────────── */
 
   function selectionDetail() {
     if (!selection) return '';
@@ -1768,91 +1778,76 @@ export async function mount(root, ctx) {
     </div>`;
   }
 
+  /** The legs table: each row is the leg flown to that point, as on a nav log. */
   function routeList() {
-    if (!plan.points.length) {
-      return `<div class="e-empty fp-empty-small"><b>No route yet</b><p>Choose the departure airport first. Fixes, navaids and published procedure legs are added here.</p></div>`;
-    }
-    const legs = plan.points.map((point, index) => {
-      const next = plan.points[index + 1];
-      return next ? distanceNm(point, next) : null;
-    });
-    return `<div class="fp-route-list" id="fp-route-list">${plan.points.map((point, index) => {
+    if (!plan.points.length) return '';
+    let total = 0;
+    const rows = plan.points.map((point, index) => {
+      const prev = plan.points[index - 1];
+      const legNm = prev ? distanceNm(prev, point) : null;
+      if (legNm != null) total += legNm;
       const isOrigin = index === 0;
-      const isArrival = index === plan.points.length - 1 && plan.points.length > 1;
-      const legNm = index > 0 ? legs[index - 1] : null;
+      const isArrival = index === plan.points.length - 1 && Boolean(plan.destination);
+      const via = isOrigin ? '' : point.ss ? (procedureRecord(point.ss) || {}).id || point.ss : 'DCT';
+      const trk = prev ? `${String(Math.round(bearingDeg(prev, point)) % 360 || 360).padStart(3, '0')}°` : '';
       const selected = selection && selection.type === 'wp' && selection.index === index;
-      return `${index > 0 ? `<div class="fp-leg-row">${legNm != null ? `${fmtNum(legNm, 1)} nm` : ''}</div>` : ''}
-        <div class="fp-route-row${selected ? ' is-selected' : ''}" data-act="select-wp" data-index="${index}" role="button" tabindex="0">
-          <span class="fp-route-seq">${String(index + 1).padStart(2, '0')}</span>
+      return `<div class="fp-route-row${selected ? ' is-selected' : ''}" data-act="select-wp" data-index="${index}" role="button" tabindex="0">
           <i class="nav-sym" data-kind="${esc(point.kind === 'apt' ? 'apt' : point.kind === 'nav' ? 'nav' : 'fix')}" aria-hidden="true"></i>
           <span class="fp-route-main">
             <b>${esc(point.id)}</b>
-            <span>${esc(isOrigin ? 'Departure' : isArrival ? 'Arrival' : point.ss ? `${point.ss} leg` : point.name && point.name !== point.id ? point.name : 'Fix')}</span>
+            <span>${esc(isOrigin ? 'Departure' : isArrival ? 'Arrival' : point.name && point.name !== point.id ? point.name : point.kind === 'nav' ? 'Navaid' : 'Fix')}</span>
           </span>
-          ${point.altFt ? `<span class="fp-route-alt">${esc(fmtFl(point.altFt))}</span>` : ''}
+          <span class="fp-route-via">${esc(via)}</span>
+          <span class="fp-route-num">${trk}</span>
+          <span class="fp-route-num">${legNm != null ? fmtNum(legNm, 0) : ''}</span>
+          <span class="fp-route-num is-dim">${legNm != null ? fmtNum(total, 0) : ''}</span>
           <span class="fp-route-actions">
             ${isOrigin || isArrival ? '' : `<button type="button" class="fp-mini" data-act="move-up" data-index="${index}" title="Move up" aria-label="Move ${esc(point.id)} up">↑</button>
             <button type="button" class="fp-mini" data-act="move-down" data-index="${index}" title="Move down" aria-label="Move ${esc(point.id)} down">↓</button>`}
             ${isOrigin ? '' : `<button type="button" class="fp-mini danger" data-act="remove-wp" data-index="${index}" title="Remove" aria-label="Remove ${esc(point.id)}">×</button>`}
           </span>
         </div>`;
-    }).join('')}</div>`;
+    }).join('');
+    return `<div class="fp-route-list" id="fp-route-list">
+      <div class="fp-route-head" aria-hidden="true"><span></span><span>Ident</span><span>Via</span><span>Trk</span><span>Dist</span><span>Total</span><span></span></div>
+      ${rows}
+    </div>`;
   }
 
   function bodyRoute() {
     if (!plan.origin) {
-      return `<div class="e-empty"><b>Select a departure first</b><p>${esc(RP.NO_DEPARTURE)}</p>
-        <button class="e-btn small primary" type="button" data-act="step" data-step="departure">Choose departure</button></div>`;
+      return `<div class="e-empty fp-start">
+          <b>Click the chart to start</b>
+          <p>Your first click picks the nearest airport as the departure. Every click after that adds the fix, navaid or airport under it and draws the leg to it. You can also type DEP, the route and ARR in the bar above.</p>
+        </div>
+        ${savedRoutes.length ? savedPlansCard() : ''}`;
     }
-    const summary = RP.routeSummary(plan);
     const navaidNote = navaids.status === 'ready'
       ? `Navaid search uses the bridge database (${fmtNum(navaids.rows.length)} stations from OurAirports).`
       : navaids.status === 'loading'
         ? 'Loading the bridge navaid database… the bundled snapshot can be searched meanwhile.'
         : navaids.reason || 'Navaid search uses the bundled snapshot.';
+    const check = RP.validatePlan(plan);
     return `
       ${searchBlock('route', 'Add a point', 'Airport, navaid, fix or 45.47,-73.74')}
       <div class="e-row fp-tools">
-        <button class="e-btn small ghost" type="button" data-act="route-hint">${ICON.search} Chart tap</button>
+        <span class="e-small e-faint">${plan.destination ? 'Clicks insert before the arrival.' : 'Click an airport to end the route there.'}</span>
         <span class="e-spacer"></span>
         <button class="e-btn small ghost" type="button" data-act="undo" ${undoStack.length ? '' : 'disabled'}>Undo</button>
         <button class="e-btn small ghost" type="button" data-act="clear-route" ${plan.points.length > 1 ? '' : 'disabled'}>Clear</button>
       </div>
       <div id="fp-detail-host">${selectionDetail()}</div>
       ${routeList()}
-      <div class="fp-summary-row">
-        <span><em>Points</em><b>${plan.points.length}</b></span>
-        <span><em>Distance</em><b>${summary.distanceNm > 0 ? `${fmtNum(summary.distanceNm, 0)} nm` : '—'}</b></span>
-        <span><em>Est. time</em><b>${summary.eteMinutes > 0 ? fmtMinutes(summary.eteMinutes) : '—'}</b></span>
-      </div>
       <div class="fp-cruise">
         <label class="e-field"><span class="fp-search-label">Cruise speed (kt TAS)</span>
           <input class="e-input small" type="number" min="60" max="700" step="5" id="fp-cruise-kts" value="${plan.cruiseKts}"></label>
         <label class="e-field"><span class="fp-search-label">Cruise level (ft)</span>
           <input class="e-input small" type="number" min="1000" max="60000" step="1000" id="fp-cruise-alt" value="${plan.cruiseAlt}"></label>
       </div>
+      ${airportCard(plan.origin, 'Departure', 'sid')}
+      ${plan.destination ? airportCard(plan.destination, 'Arrival', 'star') : ''}
+      ${plan.destination && check.errors.length ? `<div class="e-notice warn"><div>${check.errors.map(error => esc(error.message)).join('<br>')}</div></div>` : ''}
       <p class="e-small e-faint">Distances and times are great-circle estimates at the cruise speed above, with no wind and no ATC routing. ${esc(navaidNote)}</p>`;
-  }
-
-  function bodyArrival() {
-    if (!plan.origin) {
-      return `<div class="e-empty"><b>Select a departure first</b><p>${esc(RP.NO_DEPARTURE)}</p>
-        <button class="e-btn small primary" type="button" data-act="step" data-step="departure">Choose departure</button></div>`;
-    }
-    const check = RP.validatePlan(plan);
-    const summary = RP.routeSummary(plan);
-    return `
-      ${searchBlock('arr', 'Find the arrival airport', 'ICAO, IATA or airport name')}
-      ${mapPickCard()}
-      ${airportCard(plan.destination, 'Arrival', 'star')}
-      ${plan.points.length > 2 ? `<div class="e-notice"><div>${plan.points.length - 2} intermediate point${plan.points.length - 2 === 1 ? '' : 's'} between ${esc(plan.origin.id)} and ${esc(plan.destination ? plan.destination.id : 'the arrival')}.</div></div>` : ''}
-      <div class="fp-summary-row">
-        <span><em>Route</em><b>${esc(plan.origin.id)} → ${esc((plan.destination && plan.destination.id) || '—')}</b></span>
-        <span><em>Distance</em><b>${summary.distanceNm > 0 ? `${fmtNum(summary.distanceNm, 0)} nm` : '—'}</b></span>
-        <span><em>Points</em><b>${plan.points.length}</b></span>
-      </div>
-      ${check.errors.length ? `<div class="e-notice warn"><div>${check.errors.map(error => esc(error.message)).join('<br>')}</div></div>` : ''}
-      <p class="e-small e-faint">Procedures are a separate page: choose the arrival here, then continue.</p>`;
   }
 
   function procedureCard(kind) {
@@ -2213,9 +2208,7 @@ export async function mount(root, ctx) {
   }
 
   function bodyFor(id) {
-    if (id === 'departure') return bodyDeparture();
     if (id === 'route') return bodyRoute();
-    if (id === 'arrival') return bodyArrival();
     if (id === 'procedures') return bodyProcedures();
     if (id === 'fuel') return bodyFuel();
     return bodyReview();
@@ -2242,27 +2235,14 @@ export async function mount(root, ctx) {
       return `${back}<span class="e-spacer"></span>
         <button class="e-btn small" type="button" data-act="step" data-step="review">Review the plan</button>`;
     }
-    if (id === 'arrival') {
-      const enabled = check.canContinueToProcedures;
-      return `${back}<span class="e-spacer"></span>
-        <button class="e-btn small primary" type="button" data-act="continue-procedures" ${enabled ? '' : 'disabled'} title="${enabled ? 'SID and STAR selection' : 'A departure, an arrival and a route are needed first'}">Continue to Procedures</button>`;
-    }
-    if (id === 'route') {
-      // The arrival page is where the "Continue to Procedures" rule lives, so
-      // this step always hands over; it does not pretend the route is finished.
-      return `${back}<span class="e-spacer"></span>
-        <button class="e-btn small" type="button" data-act="step" data-step="arrival">Continue to arrival</button>`;
-    }
+    const enabled = check.canContinueToProcedures;
     return `<span class="e-spacer"></span>
-      <button class="e-btn small primary" type="button" data-act="step" data-step="route" ${plan.origin ? '' : 'disabled'}>Continue to route</button>`;
+      <button class="e-btn small primary" type="button" data-act="continue-procedures" ${enabled ? '' : 'disabled'} title="${enabled ? 'SID and STAR selection' : 'A departure, an arrival and a route are needed first'}">Continue to Procedures</button>`;
   }
 
   /** The panel body and footer, painted on their own for async updates. */
   function paintStep() {
     if (!el.scroll || !el.actions) return;
-    const meta = stepMeta(step);
-    if (el.title) el.title.textContent = stepTitles[step] || meta.label;
-    if (el.panelHint) el.panelHint.textContent = `${RP.STEP_IDS.indexOf(step) + 1}/${RP.STEPS.length}`;
     const scrollTop = el.scroll.scrollTop;
     el.scroll.innerHTML = bodyFor(step);
     el.scroll.scrollTop = scrollTop;
@@ -2292,6 +2272,7 @@ export async function mount(root, ctx) {
   }
 
   function render() {
+    if (step === 'departure' || step === 'arrival') step = 'route';
     paintSteps();
     paintHud();
     paintMap();
@@ -2464,27 +2445,6 @@ export async function mount(root, ctx) {
       paintReadout();
       return;
     }
-    if (act === 'pick-point') {
-      const option = pickChooser && pickChooser.options[Number(target.dataset.index)];
-      if (option) addRecord(option);
-      return;
-    }
-    if (act === 'pick-custom') {
-      const position = pickChooser && pickChooser.position;
-      if (!position) { pickChooser = null; renderPick(); return; }
-      const id = coordinateIdent(position.lat, position.lon);
-      addRecord({
-        id,
-        name: `Custom coordinate ${formatLatLon(position.lat, position.lon, 3)}`,
-        lat: position.lat,
-        lon: position.lon,
-        kind: 'fix',
-        elev: null,
-        source: 'chart position',
-      }, `${id} placed as a custom coordinate, not a published fix.`);
-      return;
-    }
-    if (act === 'drop-pick') { pickChooser = null; renderPick(); return; }
     if (act === 'clear-route') {
       if (!window.confirm('Remove every intermediate point and the arrival, keeping only the departure?')) return;
       pushUndo();
@@ -2510,16 +2470,6 @@ export async function mount(root, ctx) {
       afterChange({ fit: false });
       return;
     }
-    if (act === 'use-map-pick') {
-      const airport = mapPick && mapPick.airport;
-      if (!airport) return;
-      const role = target.dataset.role;
-      mapPick = null;
-      if (role === 'departure') chooseDeparture(airport);
-      else chooseArrival(airport);
-      return;
-    }
-    if (act === 'drop-map-pick') { mapPick = null; render(); return; }
     if (act === 'load-procedures') { loadProcedures(target.dataset.kind); return; }
     if (act === 'pick-procedure') { chooseProcedure(target.dataset.kind, target.dataset.ident); return; }
     if (act === 'clear-procedure') {
@@ -2568,6 +2518,10 @@ export async function mount(root, ctx) {
   }
 
   root.addEventListener('click', onRootClick);
+  el.bar?.addEventListener('submit', event => event.preventDefault());
+  el.barDep?.addEventListener('change', () => setBarAirport('dep', el.barDep.value));
+  el.barArr?.addEventListener('change', () => setBarAirport('arr', el.barArr.value));
+  el.barRoute?.addEventListener('change', () => applyRouteText(el.barRoute.value));
 
   function onRootKeydown(event) {
     if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -2582,7 +2536,8 @@ export async function mount(root, ctx) {
     const radius = event.target.closest('[data-act="radius"]');
     if (radius) {
       const wanted = Number(radius.value);
-      navNear.radiusNm = Number.isFinite(wanted) && wanted > 0
+      navNear.auto = radius.value === 'auto';
+      if (!navNear.auto) navNear.radiusNm = Number.isFinite(wanted) && wanted > 0
         ? Math.max(5, Math.min(MAX_RADIUS_NM, wanted))
         : DEFAULT_RADIUS_NM;
       map?.setRange(navNear.radiusNm);
@@ -2602,6 +2557,9 @@ export async function mount(root, ctx) {
     map.draw();
   };
   window.addEventListener('resize', onResize);
+  // The chart gets its real size after the first query; "Fit view" must ask again.
+  const sizeWatch = typeof ResizeObserver === 'function' ? new ResizeObserver(() => { scheduleNear(); paintReadout(); }) : null;
+  sizeWatch?.observe(canvas);
 
   const onAirline = () => { if (map) { map.options.accent = accentNow(); map.draw(); } };
   window.addEventListener('stratos:efb-airline', onAirline);
@@ -2666,6 +2624,7 @@ export async function mount(root, ctx) {
       root.removeEventListener('keydown', onRootKeydown);
       root.removeEventListener('change', onTransitionChange);
       window.removeEventListener('resize', onResize);
+      sizeWatch?.disconnect();
       window.removeEventListener('stratos:efb-airline', onAirline);
       if (map) { try { map.destroy(); } catch (_) { /* already gone */ } map = null; }
     },
