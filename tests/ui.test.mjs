@@ -1483,15 +1483,15 @@ test('the colour board documents the palette the interface really uses', async (
   const shell = fs.readFileSync(new URL('../app/shell.css', import.meta.url), 'utf8');
   const ui = fs.readFileSync(new URL('../app/tokens.css', import.meta.url), 'utf8');
   assert.match(settings, /Aviation colour board/, 'the board lives in Settings');
-  for (const hex of ['#38bdf8', '#a78bfa', '#f59e0b', '#ffffff', '#0a1421', '#8b9db3', '#df827a', '#5ec99a']) {
+  for (const hex of ['#2f9bff', '#a78bfa', '#f59e0b', '#ffffff', '#111316', '#98a1ab', '#ff5a52', '#3ccf7a']) {
     assert.ok(settings.toLowerCase().includes(hex), `${hex} is shown with its job`);
   }
   assert.match(settings, /class="board-demo"/, 'the board shows real controls, markers and a TOD');
   // The documented values are the live tokens, not a second palette.
-  assert.match(page, /--acc:#38bdf8/);
+  assert.match(page, /--acc:#2f9bff/);
   assert.match(page, /const MKSELN='#a78bfa'/);
-  assert.match(shell, /--shell-accent: #38bdf8/);
-  assert.match(ui, /--acc:#38bdf8/);
+  assert.match(shell, /--shell-accent: #2f9bff/);
+  assert.match(ui, /--acc:#2f9bff/);
 });
 
 test('every page offers the same five destinations', async () => {

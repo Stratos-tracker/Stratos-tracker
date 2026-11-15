@@ -8,11 +8,11 @@
 :root {
   --shell-bar: 52px;
   --shell-line: rgba(126, 176, 220, .13);
-  --shell-panel: #070e17;
+  --shell-panel: #0f1013;
   --shell-soft: rgba(255, 255, 255, .045);
   --shell-ink: #e8f1fa;
   --shell-mute: #8299ae;
-  --shell-accent: #38bdf8;
+  --shell-accent: #2f9bff;
   --shell-good: #34d399;
   --shell-warn: #f6c453;
   --shell-font: "Bahnschrift", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
@@ -204,15 +204,15 @@
    120 ms hover fade. The page still owns its layout grid. */
 
 :root {
-  --shell-panel: #0a1420;
-  --shell-rail-bg: #0c1826;
+  --shell-panel: #151619;
+  --shell-rail-bg: #191a1d;
   --shell-line: rgba(122, 160, 205, .14);
   --shell-line-strong: rgba(122, 160, 205, .22);
   --shell-soft: rgba(255, 255, 255, .04);
   --shell-ink: #e7eef7;
   --shell-mute: #8397ac;
   --shell-faint: #61748a;
-  --shell-accent: #38bdf8;
+  --shell-accent: #2f9bff;
   --shell-accent-soft: rgba(56, 189, 248, .12);
   --shell-good: #3ecf8e;
   --shell-warn: #e9c05e;
@@ -466,7 +466,7 @@
   background: var(--shell-panel); color: var(--shell-ink);
   font-family: var(--shell-font); box-shadow: 0 24px 60px rgba(0, 0, 0, .5);
 }
-.shell-dialog::backdrop { background: rgba(3, 7, 12, .62); }
+.shell-dialog::backdrop { background: rgba(7, 8, 11, .62); }
 .shell-dialog h2 { margin: 0 0 8px; font-size: 18px; letter-spacing: .01em; }
 .shell-dialog p { margin: 0 0 12px; font-size: 13px; line-height: 1.55; color: var(--shell-mute); }
 .shell-dialog-note { border-left: 2px solid var(--shell-warn); padding-left: 11px; }
@@ -635,9 +635,9 @@
   gap: 8px;
   padding: 11px 13px 12px;
   border-radius: 14px;
-  background: linear-gradient(165deg, rgba(16, 30, 43, .97), rgba(7, 14, 23, .98));
+  background: linear-gradient(165deg, rgba(30, 31, 34, .97), rgba(15, 16, 19, .98));
   border: 1px solid rgba(56, 189, 248, .26);
-  box-shadow: 0 14px 38px rgba(3, 9, 16, .46);
+  box-shadow: 0 14px 38px rgba(9, 10, 13, .46);
   color: #e8f1fa;
   font-family: var(--shell-font);
   text-align: left;
@@ -646,7 +646,7 @@
 .dl-top { display: flex; align-items: center; gap: 8px; }
 .dl-eyebrow {
   font-size: 9.5px; font-weight: 750; letter-spacing: .16em; text-transform: uppercase;
-  color: #38bdf8;
+  color: #2f9bff;
 }
 .dl-ver {
   font-size: 10px; font-weight: 700; letter-spacing: .04em; color: #9fd8f5;
@@ -670,7 +670,7 @@
   color: #e8f1fa;
 }
 .dl-btn:hover { background: rgba(56, 189, 248, .12); border-color: rgba(56, 189, 248, .55); text-decoration: none; }
-.dl-btn:focus-visible { outline: 2px solid #38bdf8; outline-offset: 1px; }
+.dl-btn:focus-visible { outline: 2px solid #2f9bff; outline-offset: 1px; }
 .dl-plat { font-size: 12px; font-weight: 700; letter-spacing: .01em; color: #e8f1fa; }
 .dl-note { font-size: 9.5px; letter-spacing: .02em; color: #8299ae; }
 .dl-warn { color: #f6c453; }
@@ -683,7 +683,7 @@
 .dl-retry:disabled { opacity: .55; cursor: default; }
 .dl-foot { display: flex; align-items: center; gap: 8px; border-top: 1px solid rgba(126, 176, 220, .12); padding-top: 7px; }
 .dl-all { font-size: 10px; font-weight: 650; letter-spacing: .02em; color: #7fb8d6; text-decoration: none; }
-.dl-all:hover { color: #38bdf8; text-decoration: none; }
+.dl-all:hover { color: #2f9bff; text-decoration: none; }
 .dl-ver-note { margin-left: auto; font-size: 9px; letter-spacing: .04em; color: #63788b; }
 /* After dismissal: one small control where the panel was. */
 .dl-chip {
@@ -691,12 +691,12 @@
   display: inline-flex; align-items: center; gap: 5px;
   min-height: 0; padding: 5px 11px; border-radius: 999px; cursor: pointer;
   font-family: var(--shell-font); font-size: 10.5px; font-weight: 700; letter-spacing: .03em;
-  background: rgba(7, 14, 23, .9); color: #a9c6da;
+  background: rgba(15, 16, 19, .9); color: #a9c6da;
   border: 1px solid rgba(56, 189, 248, .24);
-  box-shadow: 0 6px 18px rgba(3, 9, 16, .35);
+  box-shadow: 0 6px 18px rgba(9, 10, 13, .35);
 }
 .dl-chip:hover { color: #e8f1fa; border-color: rgba(56, 189, 248, .55); }
-.dl-chip:focus-visible { outline: 2px solid #38bdf8; outline-offset: 1px; }
+.dl-chip:focus-visible { outline: 2px solid #2f9bff; outline-offset: 1px; }
 @media (max-width: 520px) {
   .dl-offer { top: 8px; width: calc(100% - 16px); padding: 10px 11px 11px; }
   .dl-grid { gap: 5px; }

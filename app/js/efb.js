@@ -490,6 +490,13 @@ function updateClock() {
   if (dom.clock) dom.clock.innerHTML = `${time}<small>Z</small>`;
   const home = document.getElementById('home-clock');
   if (home) home.textContent = time;
+  // the clock widget: an analogue face on UTC, the digital UTC and local time
+  const now = new Date(), h = now.getUTCHours() % 12, m = now.getUTCMinutes(), sec = now.getUTCSeconds();
+  const turn = (id, deg) => document.getElementById(id)?.setAttribute('transform', `rotate(${deg} 50 50)`);
+  turn('hcw-h', h * 30 + m / 2); turn('hcw-m', m * 6 + sec / 10); turn('hcw-s', sec * 6);
+  const utc = document.getElementById('hcw-utc'), lcl = document.getElementById('hcw-lcl');
+  if (utc) utc.textContent = time;
+  if (lcl) lcl.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
 
 /* ── routing ─────────────────────────────────────────────────────────── */

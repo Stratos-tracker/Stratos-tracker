@@ -2,7 +2,7 @@
    The shell is available offline after the first visit. Live data, telemetry,
    logbook JSON, weather and map tiles are NEVER cached, so stale data can never
    be presented as live. A new build replaces the old cache on activation. */
-const CACHE = 'stratos-shell-2.2.4-phone';
+const CACHE = 'stratos-shell-2.2.5-phone';
 const SHELL = [
   './',
   'index.html',

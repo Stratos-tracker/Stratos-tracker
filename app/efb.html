@@ -61,6 +61,8 @@
     <!-- Flight widget: the loaded route, phase and bridge state at a glance.
          Values appear only when the simulator reports them; offline it says so
          instead of showing a last known position as if it were current. -->
+    <div class="home-layout">
+    <div class="home-widgets">
     <a class="home-widget" id="home-widget" href="#/navigator" aria-label="Open Navigator">
       <span class="hw-head">
         <span class="hw-eyebrow">Navigator</span>
@@ -73,8 +75,25 @@
       </span>
       <span class="hw-tele" id="hw-tele"></span>
     </a>
+    <!-- A clock widget: UTC on the face, UTC and local time beside it. -->
+    <div class="home-clockw" aria-label="Clock">
+      <svg class="hcw-face" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="47" class="hcw-dial"/>
+        <g class="hcw-ticks"><line x1="50" y1="8" x2="50" y2="16" transform="rotate(0 50 50)"/><line x1="50" y1="8" x2="50" y2="13" transform="rotate(30 50 50)"/><line x1="50" y1="8" x2="50" y2="13" transform="rotate(60 50 50)"/><line x1="50" y1="8" x2="50" y2="16" transform="rotate(90 50 50)"/><line x1="50" y1="8" x2="50" y2="13" transform="rotate(120 50 50)"/><line x1="50" y1="8" x2="50" y2="13" transform="rotate(150 50 50)"/><line x1="50" y1="8" x2="50" y2="16" transform="rotate(180 50 50)"/><line x1="50" y1="8" x2="50" y2="13" transform="rotate(210 50 50)"/><line x1="50" y1="8" x2="50" y2="13" transform="rotate(240 50 50)"/><line x1="50" y1="8" x2="50" y2="16" transform="rotate(270 50 50)"/><line x1="50" y1="8" x2="50" y2="13" transform="rotate(300 50 50)"/><line x1="50" y1="8" x2="50" y2="13" transform="rotate(330 50 50)"/></g>
+        <line id="hcw-h" x1="50" y1="50" x2="50" y2="27" class="hcw-hand"/>
+        <line id="hcw-m" x1="50" y1="50" x2="50" y2="15" class="hcw-hand"/>
+        <line id="hcw-s" x1="50" y1="56" x2="50" y2="12" class="hcw-sec"/>
+        <circle cx="50" cy="50" r="2.6" class="hcw-pin"/>
+      </svg>
+      <span class="hcw-read">
+        <span><b id="hcw-utc">--:--</b><em>UTC</em></span>
+        <span><b id="hcw-lcl">--:--</b><em>Local</em></span>
+      </span>
+    </div>
+    </div>
 
     <div class="home-grid" id="home-grid"></div>
+    </div>
     <p class="home-foot">Simulator use only · not for real-world navigation</p>
   </div>
   <div class="home-dock" id="home-dock" aria-label="Dock"></div>

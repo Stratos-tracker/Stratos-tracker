@@ -1,58 +1,35 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.2.4",
+  "latestVersion": "2.2.5",
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-15",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.4/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.4/Stratos-Setup.exe",
-      "sha256": "4eadb9d8a137861daa82e9aff54076d3d61cb92635588ac1bec96d0b46d9bf32",
-      "size": 119003159
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.4/Stratos-2.2.4-mac-arm64.dmg",
-      "sha256": "c8013404725c18cc58117c8f76e208fbcf9a8f7f3cffe3a82fa855153f74519f",
-      "size": 137537622
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.4/Stratos-2.2.4-mac-x64.dmg",
-      "sha256": "bea97e3c0b85ad2e040fe81203ebcc62707e1c228e6e959217333daab5672d28",
-      "size": 143009740
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.4/Stratos-2.2.4-linux-x64.AppImage",
-      "sha256": "a225ba9bd5cc319e33b51160d20f00f1de5bb353a0bb43f64b27481bac4faf7a",
-      "size": 158939220
-    }
-  },
-  "summary": "A new performance calculator: V1/VR/V2, FLEX and flaps for takeoff, VAPP, autobrake and stopping point for landing, drawn on a to-scale runway. Weight & Balance uplinks its weights to it.",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "A new graphite look across Stratos and an iPadOS-style EFB home screen with flight and clock widgets.",
   "reason": "",
   "releaseNotes": [
-    "Performance: takeoff speeds, FLEX or assumed temperature and the best flap setting; landing VAPP, autobrake and stopping distance with the 1.15 factor.",
-    "A to-scale runway diagram with V1 and VR, the 35 ft and stop flags, the stopping distance and the runway margin.",
-    "Weight & Balance can uplink its takeoff and landing weights to Performance.",
-    "Performance profiles for the A319, A320, A320neo, A330-900, A350-900, A380, 737-800, 737 MAX 8 and 787-9.",
-    "Results update as you type, with a wind compass, weight gauge and density altitude.",
-    "Speeds and distances are Stratos estimates for simulator use, not certified performance."
+    "EFB home: an iPadOS-style layout with glass widgets for the flight and a UTC clock beside the app grid, and a frosted dock.",
+    "A graphite night theme across the EFB, Flight Deck and Profile pages: neutral surfaces, one blue accent, a magenta route and tighter corners.",
+    "The Settings colour board documents the new palette.",
+    "The phone flight panel no longer shows the heading with a doubled degree sign.",
+    "The A320 checklist no longer says Stratos does not compute performance."
   ],
   "notes": {
     "features": [
-      "Performance: takeoff speeds, FLEX or assumed temperature and the best flap setting; landing VAPP, autobrake and stopping distance with the 1.15 factor.",
-      "A to-scale runway diagram with V1 and VR, the 35 ft and stop flags, the stopping distance and the runway margin.",
-      "Weight & Balance can uplink its takeoff and landing weights to Performance."
+      "EFB home: an iPadOS-style layout with glass widgets for the flight and a UTC clock beside the app grid, and a frosted dock."
     ],
     "improvements": [
-      "Performance profiles for the A319, A320, A320neo, A330-900, A350-900, A380, 737-800, 737 MAX 8 and 787-9.",
-      "Results update as you type, with a wind compass, weight gauge and density altitude."
+      "A graphite night theme across the EFB, Flight Deck and Profile pages: neutral surfaces, one blue accent, a magenta route and tighter corners.",
+      "The Settings colour board documents the new palette."
     ],
-    "fixes": [],
+    "fixes": [
+      "The phone flight panel no longer shows the heading with a doubled degree sign.",
+      "The A320 checklist no longer says Stratos does not compute performance."
+    ],
     "performance": [],
     "ui": [],
     "compatibility": [],
-    "other": [
-      "Speeds and distances are Stratos estimates for simulator use, not certified performance."
-    ]
+    "other": []
   }
 }

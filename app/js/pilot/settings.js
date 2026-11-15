@@ -244,16 +244,16 @@ export async function mount(root, ctx) {
           <div class="card-head"><h2>Aviation colour board</h2><span class="spacer"></span>${tag('system palette', 'accent')}</div>
           <p class="help">Every colour has one job, in the map, the rail, the cards and the phone. These are the values the interface actually uses, so a change here is a change everywhere.</p>
           <div class="swatches">
-            <div class="swatch"><i class="chip" style="background:#38bdf8" aria-hidden="true"></i><div><b>Signature cyan</b><code>#38BDF8</code><span>Primary actions, active navigation, selected waypoints and interactive controls. The Stratos signature, used sparingly.</span></div></div>
+            <div class="swatch"><i class="chip" style="background:#2f9bff" aria-hidden="true"></i><div><b>Signature blue</b><code>#2F9BFF</code><span>Primary actions, active navigation, selected waypoints and interactive controls. The Stratos signature, used sparingly.</span></div></div>
             <div class="swatch"><i class="chip" style="background:#c084fc" aria-hidden="true"></i><div><b>Departure purple</b><code>#C084FC</code><span>Published SID geometry, procedure fixes and the departure procedure label. Selected waypoints keep the deeper violet halo.</span></div></div>
             <div class="swatch"><i class="chip" style="background:#f59e0b" aria-hidden="true"></i><div><b>Arrival amber</b><code>#F59E0B</code><span>Published STAR geometry and arrival procedure labels. Amber also marks the Top of Descent and time-sensitive cautions.</span></div></div>
             <div class="swatch"><i class="chip" style="background:#f472b6" aria-hidden="true"></i><div><b>Approach pink</b><code>#F472B6</code><span>Approach geometry, kept distinct from the STAR it follows.</span></div></div>
             <div class="swatch"><i class="chip" style="background:#a78bfa" aria-hidden="true"></i><div><b>Navigation violet</b><code>#A78BFA</code><span>Selected waypoint emphasis only. The light map uses the deeper #7C3AED for contrast.</span></div></div>
             <div class="swatch"><i class="chip" style="background:#ffffff" aria-hidden="true"></i><div><b>Instrument white</b><code>#FFFFFF</code><span>Primary text, headings and the on-ground flight trail.</span></div></div>
-            <div class="swatch"><i class="chip" style="background:#0a1421" aria-hidden="true"></i><div><b>Deep charcoal</b><code>#0A1421</code><span>Primary background, exactly the night map and panel base.</span></div></div>
-            <div class="swatch"><i class="chip" style="background:#8b9db3" aria-hidden="true"></i><div><b>Muted grey</b><code>#8B9DB3</code><span>Secondary text, inactive controls and dividers.</span></div></div>
-            <div class="swatch"><i class="chip" style="background:#df827a" aria-hidden="true"></i><div><b>Alert red</b><code>#DF827A</code><span>Genuine errors and destructive actions only.</span></div></div>
-            <div class="swatch"><i class="chip" style="background:#5ec99a" aria-hidden="true"></i><div><b>Confirmed green</b><code>#5EC99A</code><span>Successful states and a live connection.</span></div></div>
+            <div class="swatch"><i class="chip" style="background:#111316" aria-hidden="true"></i><div><b>Graphite</b><code>#111316</code><span>Primary background, exactly the night map and panel base.</span></div></div>
+            <div class="swatch"><i class="chip" style="background:#98a1ab" aria-hidden="true"></i><div><b>Muted grey</b><code>#98A1AB</code><span>Secondary text, inactive controls and dividers.</span></div></div>
+            <div class="swatch"><i class="chip" style="background:#ff5a52" aria-hidden="true"></i><div><b>Alert red</b><code>#FF5A52</code><span>Genuine errors and destructive actions only.</span></div></div>
+            <div class="swatch"><i class="chip" style="background:#3ccf7a" aria-hidden="true"></i><div><b>Confirmed green</b><code>#3CCF7A</code><span>Successful states and a live connection.</span></div></div>
           </div>
           <div class="board-demo" aria-label="Colour board in use">
             <span class="demo-label">In use</span>

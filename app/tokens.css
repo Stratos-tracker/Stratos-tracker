@@ -5,26 +5,26 @@
    contrast. */
 
 :root {
-  --bg:#0a1421;
-  --land:#101d2b;
-  --coast:#2c3f55;
-  --grid:rgba(150,180,215,.12);
-  --ap:#e7b36c;
-  --nav:#86bdb1;
-  --route:#e7b36c;
-  --own:#df827a;
-  --txt:#e4ecf5;
-  --ui:#0d1927;
-  --ui2:#132132;
-  --mut:#8b9db3;
-  --trf:#9dc0e0;
-  --acc:#38bdf8;
-  --red:#df827a;
-  --grn:#5ec99a;
-  --warn:#e7b36c;
-  --mag:#9fb0d8;
-  --line:rgba(140,170,205,.16);
-  --focus:#e7b36c;
+  --bg:#111316;
+  --land:#16191d;
+  --coast:#3a4048;
+  --grid:rgba(200,210,225,.08);
+  --ap:#e8b34d;
+  --nav:#4fd1c5;
+  --route:#e451f0;
+  --own:#ffc53d;
+  --txt:#e8eaed;
+  --ui:#181b1f;
+  --ui2:#22262b;
+  --mut:#98a1ab;
+  --trf:#8ab4f8;
+  --acc:#2f9bff;
+  --red:#ff5a52;
+  --grn:#3ccf7a;
+  --warn:#ffb020;
+  --mag:#e451f0;
+  --line:rgba(255,255,255,.08);
+  --focus:#2f9bff;
   color-scheme:dark;
   font-family:"Segoe UI Variable Text","Bahnschrift","Segoe UI",system-ui,sans-serif;
   font-synthesis:none;
@@ -38,11 +38,11 @@
   color-scheme:light;
 }
 :root[data-theme="night"] {
-  --bg:#0a1421; --land:#101d2b; --coast:#2c3f55; --grid:rgba(150,180,215,.12);
-  --ap:#e7b36c; --nav:#86bdb1; --route:#e7b36c; --own:#df827a;
-  --txt:#e4ecf5; --ui:#0d1927; --ui2:#132132; --mut:#8b9db3;
-  --trf:#9dc0e0; --acc:#38bdf8; --red:#df827a; --grn:#5ec99a;
-  --warn:#e7b36c; --mag:#9fb0d8; --line:rgba(140,170,205,.16); --focus:#e7b36c;
+  --bg:#111316; --land:#16191d; --coast:#3a4048; --grid:rgba(200,210,225,.08);
+  --ap:#e8b34d; --nav:#4fd1c5; --route:#e451f0; --own:#ffc53d;
+  --txt:#e8eaed; --ui:#181b1f; --ui2:#22262b; --mut:#98a1ab;
+  --trf:#8ab4f8; --acc:#2f9bff; --red:#ff5a52; --grn:#3ccf7a;
+  --warn:#ffb020; --mag:#e451f0; --line:rgba(255,255,255,.08); --focus:#2f9bff;
   color-scheme:dark;
 }
 :root[data-theme="contrast"] {
@@ -59,10 +59,10 @@
   --s-space-1:4px;  --s-space-2:8px;  --s-space-3:12px; --s-space-4:16px;
   --s-space-5:20px; --s-space-6:24px; --s-space-7:32px; --s-space-8:48px;
   /* Radii: one small, one default, one large, one pill. */
-  --s-radius-xs:2px; --s-radius-sm:4px; --s-radius-md:6px; --s-radius-lg:10px; --s-radius-pill:999px;
+  --s-radius-xs:2px; --s-radius-sm:3px; --s-radius-md:4px; --s-radius-lg:6px; --s-radius-pill:999px;
   /* Elevation: two levels only, kept subtle so panels stay flat over the map. */
-  --s-elev-1:0 2px 8px rgba(0,0,0,.14);
-  --s-elev-2:0 12px 30px rgba(0,0,0,.24);
+  --s-elev-1:0 1px 2px rgba(0,0,0,.3);
+  --s-elev-2:0 4px 14px rgba(0,0,0,.35);
   /* Type scale, 1.18 ratio. */
   --s-fs-2xs:10px; --s-fs-xs:11px; --s-fs-sm:12px; --s-fs-md:14px;
   --s-fs-lg:16px; --s-fs-xl:20px; --s-fs-2xl:28px; --s-fs-3xl:36px;

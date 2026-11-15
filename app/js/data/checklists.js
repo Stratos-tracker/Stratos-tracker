@@ -59,7 +59,7 @@ function airbusSections(variant) {
       item('Flight plan and ATC clearance', 'Route, level and alternates checked'),
       item('Weather and NOTAMs', 'Departure, destination and alternate reviewed'),
       item('Fuel and load sheet', 'Fuel on board matches the plan; load sheet received'),
-      item('Performance calculation', 'Takeoff and landing data computed for the actual conditions', 'Use the add-on EFB or your operator tool. Stratos does not compute performance.'),
+      item('Performance calculation', 'Takeoff and landing data computed for the actual conditions', 'Stratos Performance gives simulator estimates; the add-on EFB has the official figures for the aircraft.'),
       item('Aircraft status', 'Technical log reviewed; no open item affecting the flight'),
     ]),
     section('cockpit', 'Cockpit preparation / cold and dark', 'cockpit', [

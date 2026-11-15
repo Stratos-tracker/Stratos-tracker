@@ -16,7 +16,7 @@
   align-items: center;
   gap: 14px;
   padding: 0 14px;
-  background: linear-gradient(180deg, rgba(5, 11, 18, .94), rgba(5, 11, 18, .62));
+  background: linear-gradient(180deg, rgba(11, 12, 15, .94), rgba(11, 12, 15, .62));
   border-bottom: 1px solid rgba(120, 150, 175, .18);
   font: 600 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
   letter-spacing: .09em;
@@ -67,7 +67,7 @@
   overflow: hidden;
   border-radius: 12px;
   border: 1px solid rgba(120, 150, 175, .22);
-  background: linear-gradient(180deg, rgba(7, 14, 22, .96), rgba(5, 11, 18, .985));
+  background: linear-gradient(180deg, rgba(14, 15, 18, .96), rgba(11, 12, 15, .985));
   box-shadow: 0 14px 34px rgba(0, 0, 0, .38);
 }
 .live #tel { display: block; }
@@ -127,7 +127,7 @@
   grid-template-columns: repeat(6, minmax(0, 1fr));
   border-top: 1px solid rgba(120, 150, 175, .16);
   padding: 7px 2px 8px;
-  background: rgba(4, 9, 15, .72);
+  background: rgba(9, 10, 13, .72);
 }
 #tel.open .tel-extra { display: grid; }
 .tel-extra div { padding: 3px 9px; border-right: 1px solid rgba(120, 150, 175, .1); min-width: 0; }
@@ -225,7 +225,7 @@
   justify-content: center;
   border-radius: 50%;
   border: 1px solid rgba(148, 163, 184, .45);
-  background: rgba(5, 11, 18, .7);
+  background: rgba(11, 12, 15, .7);
   position: relative;
   color: #e8f1fa;
   font-size: 9px;
@@ -277,7 +277,7 @@
   gap: 4px;
   padding: 5px;
   border-radius: 11px;
-  background: rgba(6, 13, 20, .9);
+  background: rgba(13, 14, 17, .9);
   border: 1px solid rgba(120, 150, 175, .24);
   box-shadow: 0 10px 26px rgba(0, 0, 0, .35);
 }
@@ -315,7 +315,7 @@
   padding: 0;
   border-radius: 12px;
   border: 1px solid rgba(120, 150, 175, .22);
-  background: linear-gradient(180deg, rgba(8, 15, 24, .96), rgba(5, 11, 18, .985));
+  background: linear-gradient(180deg, rgba(16, 17, 20, .96), rgba(11, 12, 15, .985));
   box-shadow: 0 14px 34px rgba(0, 0, 0, .42);
   overflow: hidden;
 }
@@ -359,7 +359,7 @@
   gap: 0;
   padding: 6px 12px;
   border-top: 1px solid rgba(120, 150, 175, .16);
-  background: rgba(2, 7, 12, .45);
+  background: rgba(7, 8, 11, .45);
   font: 600 11px/1.2 ui-monospace, Menlo, monospace;
   color: #8ea3b8;
   white-space: nowrap;
@@ -447,7 +447,7 @@
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: #04080d;
+  background: #08090c;
   overflow: hidden;
 }
 #globe3d[hidden] { display: none; }
@@ -485,7 +485,7 @@
   color: #cbd5e1;
   font: 600 13px/1.5 system-ui;
   text-align: center;
-  background: #04080d;
+  background: #08090c;
 }
 .g3-ac {
   position: relative;
@@ -516,7 +516,7 @@
   transform: translateX(-50%);
   padding: 2px 6px;
   border-radius: 4px;
-  background: rgba(5, 12, 19, .9);
+  background: rgba(12, 13, 16, .9);
   border: 1px solid rgba(34, 211, 238, .4);
   color: #e8f1fa;
   font: 700 9px/1.2 ui-monospace, Menlo, monospace;
@@ -557,7 +557,7 @@ html.phone-mode #procpane, html.phone-mode #planpane { display: none !important;
     margin: 0;
     border-radius: 9px;
     border-color: rgba(120, 150, 175, .22);
-    background: linear-gradient(180deg, rgba(8, 16, 25, .96), rgba(4, 10, 16, .98));
+    background: linear-gradient(180deg, rgba(16, 17, 20, .96), rgba(10, 11, 14, .98));
     box-shadow: 0 12px 30px rgba(0, 0, 0, .42);
   }
   html[data-ui="new"] #tel .tel-main { grid-template-columns: repeat(6, minmax(0, 1fr)); }
@@ -583,12 +583,12 @@ html.phone-mode #procpane, html.phone-mode #planpane { display: none !important;
     padding: 0;
     pointer-events: auto;
     color: #dbe7f2;
-    background: rgba(8, 16, 25, .92);
+    background: rgba(16, 17, 20, .92);
     border: 1px solid rgba(120, 150, 175, .3);
     box-shadow: 0 7px 20px rgba(0, 0, 0, .4);
   }
   html[data-ui="new"] #fab .fab:hover { color: #fff; border-color: rgba(56, 189, 248, .6); }
-  html[data-ui="new"] #fab .fab.on { background: #38bdf8; color: #04212b; border-color: transparent; }
+  html[data-ui="new"] #fab .fab.on { background: #38bdf8; color: #1b1c1f; border-color: transparent; }
 
   /* The screenshot's top-left stack: +/- share one capsule, layers below. */
   html[data-ui="new"] #bZi {
@@ -611,7 +611,7 @@ html.phone-mode #procpane, html.phone-mode #planpane { display: none !important;
     top: 140px;
     border-radius: 11px;
   }
-  html[data-ui="new"] #bLay .layers-glyph path { stroke: #081019; }
+  html[data-ui="new"] #bLay .layers-glyph path { stroke: #101114; }
   html[data-ui="new"] #bFol {
     right: 12px;
     left: auto;
@@ -642,7 +642,7 @@ html.phone-mode #procpane, html.phone-mode #planpane { display: none !important;
   #rose .rose-deg { fill: #64748b; font-size: 5px; letter-spacing: .02em; }
   #rose .rose-needle-n { fill: #f8fafc; filter: drop-shadow(0 0 2px rgba(56, 189, 248, .55)); }
   #rose .rose-needle-s { fill: #38bdf8; opacity: .9; }
-  #rose .rose-hub { fill: #e2e8f0; stroke: #081019; stroke-width: 1; }
+  #rose .rose-hub { fill: #e2e8f0; stroke: #101114; stroke-width: 1; }
   #rose .rose-lub { fill: #38bdf8; filter: drop-shadow(0 0 3px rgba(56, 189, 248, .5)); }
   #rose .rose-hdg {
     position: absolute;
@@ -654,7 +654,7 @@ html.phone-mode #procpane, html.phone-mode #planpane { display: none !important;
     letter-spacing: .08em;
     padding: 3px 8px 2px;
     border-radius: 6px;
-    background: rgba(5, 12, 19, .94);
+    background: rgba(12, 13, 16, .94);
     border: 1px solid rgba(120, 150, 175, .32);
     box-shadow: 0 3px 10px rgba(0, 0, 0, .4);
     white-space: nowrap;

@@ -7,7 +7,7 @@
  * surface is a card, a row is a row, and the accent is still the bag's.
  */
 
-body.view-plan .efb-main { background: #04070b; }
+body.view-plan .efb-main { background: #07080b; }
 
 .fp-shell { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 
@@ -19,7 +19,7 @@ body.view-plan .efb-main { background: #04070b; }
   gap: 2px;
   padding: 7px 10px;
   border-bottom: 1px solid var(--efb-line);
-  background: rgba(7, 11, 17, .94);
+  background: rgba(12, 13, 16, .94);
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -57,7 +57,7 @@ body.view-plan .efb-main { background: #04070b; }
 
 /* ── chart and panel ─────────────────────────────────────────────────── */
 
-.fp-view { position: relative; flex: 1; min-height: 0; background: #05080c; overflow: hidden; }
+.fp-view { position: relative; flex: 1; min-height: 0; background: #08090c; overflow: hidden; }
 .fp-map { position: absolute; inset: 0; }
 .fp-map canvas { touch-action: none; cursor: grab; }
 .fp-map canvas:active { cursor: grabbing; }
@@ -80,7 +80,7 @@ body.view-plan .efb-main { background: #04070b; }
   flex-wrap: wrap;
   padding: 8px;
   border-top: 1px solid var(--efb-line);
-  background: rgba(6, 10, 16, .62);
+  background: rgba(11, 12, 15, .62);
 }
 
 /* ── search ──────────────────────────────────────────────────────────── */
@@ -90,7 +90,7 @@ body.view-plan .efb-main { background: #04070b; }
 .fp-search-block { position: relative; display: flex; flex-direction: column; gap: 5px; }
 .fp-search-label { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--efb-faint); font-weight: 700; }
 .fp-search { flex: none; min-width: 0; }
-.fp-results { position: static; margin: 0; max-height: 232px; box-shadow: none; background: #0b121b; }
+.fp-results { position: static; margin: 0; max-height: 232px; box-shadow: none; background: #131417; }
 .fp-results:empty { display: none; }
 .fp-result { display: flex !important; align-items: center; gap: 8px; }
 .fp-result-id { font-size: 11px; font-weight: 750; letter-spacing: .04em; min-width: 42px; }
@@ -246,7 +246,7 @@ body.view-plan .efb-main { background: #04070b; }
   padding: 6px 7px;
   border-radius: 5px;
   border: 1px solid var(--efb-line);
-  background: rgba(6, 10, 16, .7);
+  background: rgba(11, 12, 15, .7);
   font-size: 9.5px;
   line-height: 1.5;
   color: var(--efb-muted);
@@ -307,7 +307,7 @@ body.view-plan .efb-main { background: #04070b; }
   padding: 9px 11px 10px;
   border-radius: 10px;
   border: 1px solid var(--efb-line-strong);
-  background: rgba(7, 11, 17, .86);
+  background: rgba(12, 13, 16, .86);
   box-shadow: 0 12px 26px rgba(0, 0, 0, .38);
 }
 .map-readout[hidden] { display: none; }
@@ -361,7 +361,7 @@ body.view-plan .efb-main { background: #04070b; }
 .map-readout-btn[aria-pressed='true'] {
   border-color: var(--efb-accent);
   background: var(--efb-accent);
-  color: #04121a;
+  color: #101114;
 }
 .map-readout-facts { display: flex; flex-direction: column; gap: 5px; padding-top: 7px; }
 .map-readout-row {
@@ -393,7 +393,7 @@ body.view-plan .efb-main { background: #04070b; }
   padding: 0 9px;
   border-radius: 5px;
   border: 1px solid var(--efb-line-strong);
-  background: rgba(7, 11, 17, .82);
+  background: rgba(12, 13, 16, .82);
   color: var(--efb-muted);
   font: inherit;
   font-size: 9.5px;
@@ -429,7 +429,7 @@ body.view-plan .efb-main { background: #04070b; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.map-readout-seg button[aria-pressed='true'] { border-color: var(--efb-accent); background: var(--efb-accent); color: #04121a; }
+.map-readout-seg button[aria-pressed='true'] { border-color: var(--efb-accent); background: var(--efb-accent); color: #101114; }
 .map-readout-tools { display: flex; gap: 5px; }
 .map-readout-tools .map-readout-btn { flex: 1 1 0; }
 .map-readout-globe .map-readout-note { margin-top: 6px; }
@@ -449,7 +449,7 @@ body.view-plan .efb-main { background: #04070b; }
   padding: 8px;
   border-radius: 11px;
   border: 1px solid var(--efb-line-strong);
-  background: rgba(9, 14, 20, .95);
+  background: rgba(14, 15, 18, .95);
   box-shadow: 0 16px 32px rgba(0, 0, 0, .45);
 }
 .map-pick[hidden] { display: none; }

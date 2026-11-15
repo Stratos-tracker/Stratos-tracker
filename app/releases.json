@@ -3,52 +3,52 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.2.4",
+    "version": "2.2.5",
     "releasedAt": "2026-11-15",
     "severity": "normal",
-    "summary": "A new performance calculator: V1/VR/V2, FLEX and flaps for takeoff, VAPP, autobrake and stopping point for landing, drawn on a to-scale runway. Weight & Balance uplinks its weights to it.",
+    "summary": "A new graphite look across Stratos and an iPadOS-style EFB home screen with flight and clock widgets.",
     "changelog": {
       "features": [
-        "Performance: takeoff speeds, FLEX or assumed temperature and the best flap setting; landing VAPP, autobrake and stopping distance with the 1.15 factor.",
-        "A to-scale runway diagram with V1 and VR, the 35 ft and stop flags, the stopping distance and the runway margin.",
-        "Weight & Balance can uplink its takeoff and landing weights to Performance."
+        "EFB home: an iPadOS-style layout with glass widgets for the flight and a UTC clock beside the app grid, and a frosted dock."
       ],
       "improvements": [
-        "Performance profiles for the A319, A320, A320neo, A330-900, A350-900, A380, 737-800, 737 MAX 8 and 787-9.",
-        "Results update as you type, with a wind compass, weight gauge and density altitude."
+        "A graphite night theme across the EFB, Flight Deck and Profile pages: neutral surfaces, one blue accent, a magenta route and tighter corners.",
+        "The Settings colour board documents the new palette."
       ],
-      "fixes": [],
+      "fixes": [
+        "The phone flight panel no longer shows the heading with a doubled degree sign.",
+        "The A320 checklist no longer says Stratos does not compute performance."
+      ],
       "performance": [],
       "ui": [],
       "compatibility": [],
-      "other": [
-        "Speeds and distances are Stratos estimates for simulator use, not certified performance."
-      ]
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.4/Stratos-Setup.exe",
-        "sha256": "4eadb9d8a137861daa82e9aff54076d3d61cb92635588ac1bec96d0b46d9bf32",
-        "size": 119003159
-      },
-      "mac-arm64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.4/Stratos-2.2.4-mac-arm64.dmg",
-        "sha256": "c8013404725c18cc58117c8f76e208fbcf9a8f7f3cffe3a82fa855153f74519f",
-        "size": 137537622
-      },
-      "mac-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.4/Stratos-2.2.4-mac-x64.dmg",
-        "sha256": "bea97e3c0b85ad2e040fe81203ebcc62707e1c228e6e959217333daab5672d28",
-        "size": 143009740
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.4/Stratos-2.2.4-linux-x64.AppImage",
-        "sha256": "a225ba9bd5cc319e33b51160d20f00f1de5bb353a0bb43f64b27481bac4faf7a",
-        "size": 158939220
-      }
+      "other": []
     }
   },
   "releases": [
+    {
+      "version": "2.2.5",
+      "releasedAt": "2026-11-15",
+      "severity": "normal",
+      "summary": "A new graphite look across Stratos and an iPadOS-style EFB home screen with flight and clock widgets.",
+      "changelog": {
+        "features": [
+          "EFB home: an iPadOS-style layout with glass widgets for the flight and a UTC clock beside the app grid, and a frosted dock."
+        ],
+        "improvements": [
+          "A graphite night theme across the EFB, Flight Deck and Profile pages: neutral surfaces, one blue accent, a magenta route and tighter corners.",
+          "The Settings colour board documents the new palette."
+        ],
+        "fixes": [
+          "The phone flight panel no longer shows the heading with a doubled degree sign.",
+          "The A320 checklist no longer says Stratos does not compute performance."
+        ],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.2.4",
       "releasedAt": "2026-11-15",
@@ -1297,65 +1297,6 @@
           "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.22/Stratos-2.1.22-linux-x64.AppImage",
           "sha256": "6c0c4fde8e35f52ff59971223bc4b0804890927265b2e870a9d327a3ccc08a55",
           "size": 142317538
-        }
-      }
-    },
-    {
-      "version": "2.1.21",
-      "releasedAt": "2026-10-24",
-      "severity": "normal",
-      "summary": "A phone finds the simulator in one tap, its map shows nearby traffic with the paths Stratos actually recorded, and TOC, TOD and SID/STAR follow the planned route.",
-      "changelog": {
-        "features": [
-          "One tap connects a phone: it finds the PC on the network, pairs itself and reconnects after a Wi-Fi change or a bridge restart. No QR code and no address to type; networks that block multicast keep the relay.",
-          "The phone's live map shows nearby aircraft, from VATSIM and from the traffic the bridge already polls, behind a Traffic layer button. Tap one for its altitude, speed, heading, distance and its recorded path.",
-          "A clicked aircraft's trail is the path Stratos recorded, kept for 45 minutes in the bridge's store: it survives a reload and matches on the PC and the phone, and a relayed phone gets it too.",
-          "The flown path is drawn as a trajectory coloured by height above ground, white on the ground through blue, green, yellow and orange to magenta at the flight levels, for your own aircraft and for any traffic you select.",
-          "SID and STAR paths follow the published legs from the runway to the procedure's last fix, from the simulator's CIFP data or the bundled FAA dataset, adding only the legs the plan does not draw.",
-          "TOC and TOD are placed on the planned route itself, calculated from the cruise level, the climb and descent profile and the constraints available, and they move when the cruise level or route changes."
-        ],
-        "improvements": [
-          "Waypoint markers are separated by meaning, SID, STAR, VOR, en-route fix, airport, TOC and TOD, and a selected point turns purple with a heavier ring on both mouse and touch.",
-          "The aircraft card detects a registration when the feed does not report one, shows a verified photo for it, and collapses to a strip keeping SID and STAR with the departure and arrival runways beneath.",
-          "A trail states how many positions it holds and where they came from, and the phone names the bridge or the relay.",
-          "Procedure data is cached, traffic polling stops while its layer is hidden, and a phone on the relay reuses the desktop's traffic list instead of fetching a second feed."
-        ],
-        "fixes": [
-          "TOC and TOD no longer appear at an arbitrary point: they are interpolated along the ordered route legs and kept inside the segment they belong to.",
-          "A no-position sample, a duplicate or an out-of-order one can no longer bend a traffic trail.",
-          "The phone's status line reports Connecting, Connected, Reconnecting and Disconnected from the actual socket instead of staying on its last label."
-        ],
-        "performance": [
-          "The bridge posts only the trail samples the relay has not seen, at most 400 points every 15 seconds, and stops when the simulator is idle."
-        ],
-        "ui": [
-          "Traffic is drawn as small heading glyphs with the selected aircraft painted last, so a neighbour cannot cover it."
-        ],
-        "compatibility": [
-          "The relay gained /api/traffic. An older relay answers 404 and a hosted phone falls back to VATSIM traffic with no relay trails; desktop builds before this version cannot post traffic to it."
-        ],
-        "other": []
-      },
-      "downloads": {
-        "windows": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.21/Stratos-Setup.exe",
-          "sha256": "87c95fcfca46a008964324e53056753de472939e7a70ed8d96d6efd496424d16",
-          "size": 105650818
-        },
-        "mac-arm64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.21/Stratos-2.1.21-mac-arm64.dmg",
-          "sha256": "611d32b3a9efb6500d235318b6db11bbd5acd0ef7eaa4238ae29239f7ed95dc2",
-          "size": 121382971
-        },
-        "mac-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.21/Stratos-2.1.21-mac-x64.dmg",
-          "sha256": "6a112d365b7392d14202da588b79ce119c5067928ec96935dc5d53b5203bd0f7",
-          "size": 126712639
-        },
-        "linux-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.21/Stratos-2.1.21-linux-x64.AppImage",
-          "sha256": "146a81b361696d017ff93856224f7d64d5acdfff22383ae26aa5d7e41bc451c1",
-          "size": 142297325
         }
       }
     }

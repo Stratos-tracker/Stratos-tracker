@@ -67,7 +67,7 @@
     grid-template-columns: repeat(7, 1fr);
     gap: 2px;
     padding: 5px 6px calc(5px + var(--m-safe-b));
-    background: linear-gradient(180deg, rgba(8, 18, 28, .82), rgba(5, 11, 17, .98) 42%);
+    background: linear-gradient(180deg, rgba(18, 19, 22, .82), rgba(11, 12, 15, .98) 42%);
     -webkit-backdrop-filter: blur(22px) saturate(1.25);
     backdrop-filter: blur(22px) saturate(1.25);
     border-top: 1px solid var(--m-line);
@@ -115,7 +115,7 @@
     padding: calc(6px + var(--m-safe-t)) var(--m-gutter) 0;
     gap: 6px;
     flex-wrap: wrap;
-    background: rgba(6, 13, 20, .78);
+    background: rgba(13, 14, 17, .78);
     -webkit-backdrop-filter: blur(18px) saturate(1.2);
     backdrop-filter: blur(18px) saturate(1.2);
     border-bottom: 1px solid var(--m-line);
@@ -135,7 +135,7 @@
   #appbar #sb {
     height: 40px;
     border-radius: 12px;
-    background: rgba(18, 34, 49, .8);
+    background: rgba(34, 35, 38, .8);
     border: 1px solid var(--m-line);
     padding: 0 12px;
     box-shadow: none;
@@ -165,12 +165,12 @@
     right: 0;
     z-index: 42;
     border-bottom: 0;
-    background: linear-gradient(180deg, rgba(5, 11, 17, .96), rgba(5, 11, 17, .72) 70%, rgba(5, 11, 17, 0));
+    background: linear-gradient(180deg, rgba(11, 12, 15, .96), rgba(11, 12, 15, .72) 70%, rgba(11, 12, 15, 0));
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
   }
   body[data-mobile-section="map"] #appbar #sb {
-    background: rgba(12, 24, 35, .86);
+    background: rgba(24, 25, 28, .86);
     border-color: rgba(124, 168, 214, .2);
   }
   body[data-mobile-section="map"] #res {
@@ -205,14 +205,14 @@
     border-radius: 13px;
     font-size: 17px;
     color: var(--m-ink);
-    background: rgba(13, 26, 38, .92);
+    background: rgba(26, 27, 30, .92);
     border: 1px solid var(--m-line-2);
     box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
   }
   body[data-mobile-section="map"] #fab .fab:active { transform: scale(.94); }
-  body[data-mobile-section="map"] #fab .fab.on { background: var(--m-cyan); color: #04212b; border-color: transparent; }
+  body[data-mobile-section="map"] #fab .fab.on { background: var(--m-cyan); color: #1b1c1f; border-color: transparent; }
 
   /* Flight planning stays one tap away even though the rail is gone. */
   .m-plan {
@@ -232,7 +232,7 @@
     letter-spacing: .08em;
     text-transform: uppercase;
     color: var(--m-ink);
-    background: rgba(13, 26, 38, .92);
+    background: rgba(26, 27, 30, .92);
     border: 1px solid var(--m-line-2);
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
@@ -261,7 +261,7 @@
     -webkit-overflow-scrolling: touch;
     padding: 0 16px 14px !important;
     border-radius: 20px;
-    background: linear-gradient(180deg, rgba(17, 31, 45, .985), rgba(8, 17, 26, .995)) !important;
+    background: linear-gradient(180deg, rgba(31, 32, 35, .985), rgba(17, 18, 21, .995)) !important;
     border: 1px solid var(--m-line-2) !important;
     box-shadow: 0 -12px 40px rgba(0, 0, 0, .45);
     scrollbar-width: none;
@@ -289,7 +289,7 @@
     padding: 0;
     border: 0;
     border-radius: 20px 20px 0 0;
-    background: linear-gradient(180deg, rgba(17, 31, 45, .99), rgba(17, 31, 45, .82));
+    background: linear-gradient(180deg, rgba(31, 32, 35, .99), rgba(31, 32, 35, .82));
     cursor: grab;
     touch-action: none;
   }
@@ -315,7 +315,7 @@
     z-index: 47;
     border-radius: 20px;
     padding: 14px 16px !important;
-    background: linear-gradient(180deg, rgba(17, 31, 45, .985), rgba(8, 17, 26, .995)) !important;
+    background: linear-gradient(180deg, rgba(31, 32, 35, .985), rgba(17, 18, 21, .995)) !important;
     border: 1px solid var(--m-line-2) !important;
     box-shadow: 0 -12px 40px rgba(0, 0, 0, .45);
     scrollbar-width: none;
@@ -365,7 +365,7 @@
   /* ── Flights: a list of flights, not a dashboard ─────────────────── */
   body[data-mobile-section="flights"] #topbar {
     padding: calc(8px + var(--m-safe-t)) var(--m-gutter) 8px;
-    background: rgba(6, 13, 20, .82);
+    background: rgba(13, 14, 17, .82);
     -webkit-backdrop-filter: blur(18px) saturate(1.2);
     backdrop-filter: blur(18px) saturate(1.2);
     border-bottom: 1px solid var(--m-line);
@@ -381,7 +381,7 @@
     z-index: 19;
     gap: 6px;
     padding: 8px var(--m-gutter);
-    background: rgba(6, 13, 20, .94);
+    background: rgba(13, 14, 17, .94);
     -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--m-line);
@@ -400,7 +400,7 @@
     color: var(--m-mute);
   }
   body[data-mobile-section="flights"] .tab-btn.act {
-    color: #04212b;
+    color: #1b1c1f;
     background: var(--m-cyan);
     border-color: var(--m-cyan);
   }
@@ -445,7 +445,7 @@
   /* ── Weather: compact panels, one airport at a time ──────────────── */
   body[data-mobile-section="weather"] #topbar {
     padding: calc(8px + var(--m-safe-t)) var(--m-gutter) 8px;
-    background: rgba(6, 13, 20, .82);
+    background: rgba(13, 14, 17, .82);
     -webkit-backdrop-filter: blur(18px) saturate(1.2);
     backdrop-filter: blur(18px) saturate(1.2);
     border-bottom: 1px solid var(--m-line);
@@ -470,7 +470,7 @@
     padding: 0 16px;
     border-radius: 12px;
     background: var(--m-cyan);
-    color: #04212b;
+    color: #1b1c1f;
     font-weight: 750;
   }
   body[data-mobile-section="weather"] #recent-strip {
@@ -524,7 +524,7 @@
     padding: calc(6px + var(--m-safe-t)) 10px 6px;
     gap: 8px;
     flex-wrap: nowrap;
-    background: rgba(6, 13, 20, .9);
+    background: rgba(13, 14, 17, .9);
     border-bottom: 1px solid var(--m-line);
   }
   body[data-mobile-section="charts"] .et-brand small { display: none; }
@@ -546,7 +546,7 @@
     overflow-y: hidden;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
-    background: rgba(7, 15, 23, .96);
+    background: rgba(15, 16, 19, .96);
     -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--m-line);
@@ -570,7 +570,7 @@
     overflow-y: hidden;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
-    background: rgba(7, 15, 23, .96);
+    background: rgba(15, 16, 19, .96);
     -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--m-line);
@@ -681,7 +681,7 @@
     padding: 8px var(--m-gutter);
     overflow-x: auto;
     scrollbar-width: none;
-    background: rgba(6, 13, 20, .94);
+    background: rgba(13, 14, 17, .94);
     -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--m-line);
@@ -701,7 +701,7 @@
   body[data-mobile-section="profile"] .subnav button.act,
   body[data-mobile-section="profile"] .subnav button[aria-current="page"],
   body[data-mobile-section="profile"] .subnav button.on {
-    color: #04212b;
+    color: #1b1c1f;
     background: var(--m-cyan);
     border-color: var(--m-cyan);
   }

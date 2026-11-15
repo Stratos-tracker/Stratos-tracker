@@ -35,14 +35,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Stratos"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="theme-color" content="#0b1118">
 <title>Stratos | Flight Tracker for X-Plane 12 &amp; MSFS 2020/2024</title>
 <style>
-:root{--bg:#bcd6e4;--land:#efe9d6;--coast:#5c7b8b;--grid:rgba(40,70,90,.16);--ap:#c2410c;--nav:#0f766e;--route:#6d28d9;--own:#e11d48;--txt:#1b2a33;--ui:rgba(255,253,246,.94);--ui2:#e6e0cd;--mut:#5d6b73;--trf:#1d4ed8;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{--bg:#bcd6e4;--land:#efe9d6;--coast:#5c7b8b;--grid:rgba(40,70,90,.16);--ap:#c2410c;--nav:#0f766e;--route:#6d28d9;--own:#e11d48;--txt:#28292c;--ui:rgba(255,253,246,.94);--ui2:#e6e0cd;--mut:#5d6b73;--trf:#1d4ed8;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 :root[data-theme=contrast]{--bg:#000;--land:#0d0d0d;--coast:#fff;--grid:rgba(255,255,255,.3);--ap:#ff0;--nav:#0ff;--route:#f0f;--own:#fff;--txt:#fff;--ui:#000;--ui2:#333;--mut:#ddd;--trf:#7f7;color-scheme:dark}
 html,body{height:100%;min-height:100%;margin:0;background:var(--bg);color:var(--txt);font:14px/1.35 "Trebuchet MS","Segoe UI",system-ui,sans-serif;overscroll-behavior:none}
 #app{position:relative;height:100vh;height:100dvh;min-height:320px;overflow:hidden;isolation:isolate}
 canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
-#map3d{z-index:1;background:#04080d}
+#map3d{z-index:1;background:#08090c}
 #map3d[hidden]{display:none}
-.map3d-tip{position:absolute;z-index:2;pointer-events:none;display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:10px;background:rgba(4,10,17,.9);border:1px solid rgba(148,163,184,.28);box-shadow:0 8px 24px rgba(0,0,0,.3);color:#e2e8f0;font-size:11px;line-height:1.25;min-width:120px}
+.map3d-tip{position:absolute;z-index:2;pointer-events:none;display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:10px;background:rgba(10, 11, 14,.9);border:1px solid rgba(148,163,184,.28);box-shadow:0 8px 24px rgba(0,0,0,.3);color:#e2e8f0;font-size:11px;line-height:1.25;min-width:120px}
 .map3d-tip[hidden]{display:none}
 .map3d-tip b{font-size:13px;color:#f8fafc}.map3d-tip span{color:#94a3b8}
 .box{background:var(--ui);border:1px solid var(--ui2);border-radius:10px;position:absolute;box-shadow:0 2px 10px rgba(0,0,0,.25)}
@@ -96,7 +96,7 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",
 /* Instrument surfaces. Opaque instead of a per-frame backdrop blur: the map
    canvas repaints underneath, so blur would re-composite on every frame. */
 :root{--surface:#c3d8e0}
-:root[data-theme=night]{--surface:#0d141c}
+:root[data-theme=night]{--surface:#1b1c1f}
 :root[data-theme=contrast]{--surface:#080808}
 .box,#sb,.fab,#lay,#st,#sheet,#res,#tabs,#fc,#cv,#tel{-webkit-backdrop-filter:none;backdrop-filter:none}
 .box,#sb,.fab,#lay,#st,#sheet,#res,#fc,#cv,#tel{background:var(--surface)}
@@ -128,7 +128,7 @@ button.on{background:var(--acc);color:#fff;border-color:transparent}:root[data-t
 #gn{margin-top:6px;line-height:1.45}
 #gwrap .row{margin-top:7px}
 
-:root[data-theme=night]{--bg:#0a1421;--land:#0d1721;--coast:#28425a;--grid:rgba(140,180,220,.08);--ap:#f6c453;--nav:#5eead4;--route:#22d3ee;--own:#f8b84e;--txt:#e8f1fa;--ui:rgba(9,16,25,.96);--ui2:#152230;--mut:#8b9db3;--trf:#8fb8ff;--acc:#38bdf8}
+:root[data-theme=night]{--bg:#131417;--land:#191a1d;--coast:#3a4048;--grid:rgba(200,210,225,.08);--ap:#e8b34d;--nav:#4fd1c5;--route:#e451f0;--own:#ffc53d;--txt:#e8eaed;--ui:rgba(27, 28, 31,.97);--ui2:#26272a;--mut:#98a1ab;--trf:#8ab4f8;--acc:#2f9bff}
 #tel{display:none}.live #sheet{bottom:76px}
 #fc{display:none;top:12px;left:12px;width:358px;max-width:calc(100% - 24px);z-index:3;padding:14px 16px;border-radius:16px;background:color-mix(in srgb,var(--surface) 93%,transparent);border:1px solid color-mix(in srgb,var(--coast) 42%,transparent);box-shadow:var(--sh-2)}
 .fh{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mut);font-weight:700;letter-spacing:.08em}.fh b{font-size:15px;color:var(--txt);letter-spacing:.01em}
@@ -150,7 +150,7 @@ button.on{background:var(--acc);color:#fff;border-color:transparent}:root[data-t
 #online b{display:block;font-size:12px;font-weight:700;letter-spacing:.02em}
 #online span{font-size:10.5px;color:var(--mut);letter-spacing:.04em}
 @media(max-width:767px){#online{display:none}}
-.seg{display:flex;gap:4px;background:var(--ui2);padding:3px;border-radius:12px;margin:10px 0}.seg button{flex:1;background:none;padding:8px 0;border-radius:9px;color:var(--mut)}.seg button.on{background:var(--acc);color:#04212b}
+.seg{display:flex;gap:4px;background:var(--ui2);padding:3px;border-radius:12px;margin:10px 0}.seg button{flex:1;background:none;padding:8px 0;border-radius:9px;color:var(--mut)}.seg button.on{background:var(--acc);color:#1b1c1f}
 .ah{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.ic{font-size:28px;letter-spacing:.03em}.chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.chips span{background:var(--ui2);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700}
 @media(max-height:520px) and (orientation:landscape){#top{max-width:360px}#sheet{max-height:calc(100dvh - 90px);bottom:66px}#tabs{padding-top:4px;padding-bottom:4px}.tab{min-height:40px}}
 @media(min-width:768px){
@@ -170,10 +170,10 @@ button.on{background:var(--acc);color:#fff;border-color:transparent}:root[data-t
 #fc .fh em{border-color:color-mix(in srgb,var(--acc) 45%,transparent);color:var(--txt)}
 #fc .fci{flex:0 0 auto;width:22px;height:22px;display:grid;place-items:center;padding:0;border-radius:6px;border:1px solid color-mix(in srgb,var(--coast) 40%,transparent);background:none;color:var(--mut);font-size:11px;line-height:1;cursor:pointer}
 #fc .fci:hover{color:var(--txt);border-color:var(--acc)}
-#fc .fcph{position:relative;margin:-14px -16px 12px;border-radius:16px 16px 0 0;overflow:hidden;background:linear-gradient(135deg,#1e293b,#0b1220);display:block}
+#fc .fcph{position:relative;margin:-14px -16px 12px;border-radius:16px 16px 0 0;overflow:hidden;background:linear-gradient(135deg,#2b2c2f,#141518);display:block}
 #fc .fcph a.fcph-link{display:block;line-height:0}
 #fc .fcph img{display:block;width:100%;height:132px;object-fit:cover}
-#fc .fcph figcaption{position:absolute;left:0;right:0;bottom:0;padding:14px 12px 5px;font-size:10px;letter-spacing:.02em;color:#e2e8f0;text-align:right;background:linear-gradient(180deg,transparent,rgba(3,7,18,.82))}
+#fc .fcph figcaption{position:absolute;left:0;right:0;bottom:0;padding:14px 12px 5px;font-size:10px;letter-spacing:.02em;color:#e2e8f0;text-align:right;background:linear-gradient(180deg,transparent,rgba(9, 10, 13,.82))}
 #fc .fcph figcaption a{color:#e2e8f0;text-decoration:none}
 #fc .fcph figcaption a:hover{text-decoration:underline}
 #fc .fcph.none,#fc .fcph.load{display:flex;flex-direction:column;justify-content:center;gap:3px;min-height:84px;padding:12px 16px}
@@ -239,7 +239,7 @@ button.on{background:var(--acc);color:#fff;border-color:transparent}:root[data-t
 #fp .fpacts{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
 #fp .fpacts button{min-height:0;padding:6px 10px;border-radius:8px;font-size:11.5px;font-weight:600;border:1px solid color-mix(in srgb,var(--coast) 45%,transparent);background:var(--ui2);color:var(--txt);cursor:pointer}
 #fp .fpacts button:hover{border-color:var(--acc)}
-#fp .fpacts button.primary{background:var(--acc);border-color:var(--acc);color:#06161d;font-weight:750}
+#fp .fpacts button.primary{background:var(--acc);border-color:var(--acc);color:#131417;font-weight:750}
 #fp .fpsec{margin-top:10px;padding-top:9px;border-top:1px solid color-mix(in srgb,var(--coast) 30%,transparent)}
 #fp .fp-sec-h{display:flex;align-items:center;gap:8px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:700}
 #fp .fpkv{display:grid;grid-template-columns:1fr auto;gap:3px 12px;margin:6px 0 0;font-size:11.5px}
@@ -252,7 +252,7 @@ button.on{background:var(--acc);color:#fff;border-color:transparent}:root[data-t
 #mwtools button{padding:7px 8px;border-radius:8px;font-size:11.5px;font-weight:600}
 /* A workspace that is open is marked in the signature cyan like every other
    active control, not in the route's colour. */
-#mwtools button.on{background:var(--acc);border-color:var(--acc);color:#06161d}
+#mwtools button.on{background:var(--acc);border-color:var(--acc);color:#131417}
 @media(max-width:767px){#fp{left:8px;right:8px;width:auto;bottom:12px;max-height:min(52dvh,470px);overflow:auto;padding:12px 13px}
 #app:has(#fp.show) #attr{display:none}
 /* The card owns the bottom of the map, so the floating controls move to the
@@ -286,7 +286,7 @@ button.on{background:var(--acc);color:#fff;border-color:transparent}:root[data-t
 html,body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 button{border-radius:var(--r-sm);min-height:34px;transition:background-color var(--t) var(--ease),border-color var(--t) var(--ease),color var(--t) var(--ease)}
 button:hover{border-color:var(--acc)}
-button.on{background:var(--acc);color:#06161d;border-color:var(--acc);border-radius:var(--r-sm)}
+button.on{background:var(--acc);color:#131417;border-color:var(--acc);border-radius:var(--r-sm)}
 button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 #sb{box-shadow:var(--sh-1);border-radius:999px}
 #res,#sheet,#lay,#cv{box-shadow:var(--sh-2)}
@@ -460,7 +460,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
    clear of the plan panel rather than drawn underneath it. */
 @media(min-width:901px){#app.dk-plan-open #fc,#app.dk-plan-open #fp{left:322px}}
 @media(max-width:900px){#app.dk-sheet-open #fc,#app.dk-sheet-open #fp{display:none}}
-.wxlegend{position:absolute;right:12px;bottom:34px;z-index:3;display:flex;gap:16px;align-items:flex-start;max-width:calc(100% - 24px);padding:9px 12px 8px;border-radius:12px;background:color-mix(in srgb,var(--surface,#0d141c) 92%,transparent);border:1px solid color-mix(in srgb,var(--coast) 44%,transparent);box-shadow:var(--sh-2);font:11px/1.3 system-ui,sans-serif;color:var(--txt)}
+.wxlegend{position:absolute;right:12px;bottom:34px;z-index:3;display:flex;gap:16px;align-items:flex-start;max-width:calc(100% - 24px);padding:9px 12px 8px;border-radius:12px;background:color-mix(in srgb,var(--surface,#141518) 92%,transparent);border:1px solid color-mix(in srgb,var(--coast) 44%,transparent);box-shadow:var(--sh-2);font:11px/1.3 system-ui,sans-serif;color:var(--txt)}
 .wxlegend[hidden]{display:none}
 .wxlegend .wl{min-width:168px}
 .wxlegend .wl-t{display:flex;align-items:center;gap:6px;font-weight:700;letter-spacing:.02em;margin-bottom:5px}
@@ -3954,7 +3954,7 @@ function fcRender(ok){
       +'<div class="fcd">'+esc(sub)+(d.registration&&d.callsign?' · '+esc(d.registration):'')+'</div>';
     const routeLine=(org||dst)?'<div class="fr"><span>'+esc(org||'—')+'</span><span class="arw"></span><span>'+esc(dst||'—')+'</span></div>'
       +'<div class="ft"><span>off <b>'+zTime(cf.takeoffTime||cf.startTime)+'</b></span><span>eta <b>'+etaZ(g('tEt'))+'</b></span></div>':'';
-    const compact='<div class="fcs"><span><b>'+g('tAL')+'</b> ft</span><span><b>'+g('tGS')+'</b> kt</span><span><b>'+g('tHD')+'&deg;</b> hdg</span>'+(left!=null?'<span><b>'+left+'</b> nm left</span>':'')+'</div>';
+    const compact='<div class="fcs"><span><b>'+g('tAL')+'</b> ft</span><span><b>'+g('tGS')+'</b> kt</span><span><b>'+g('tHD').replace(/°+$/,'')+'&deg;</b> hdg</span>'+(left!=null?'<span><b>'+left+'</b> nm left</span>':'')+'</div>';
     /* The plan card stands down while this one is up, so the one action a
        pilot needs in the air — the OFP itself — moves onto this card. */
     const ofpBtn=fpOfp()?'<button type="button" data-fc-act="ofp" title="Open the Operational Flight Plan SimBrief generated for this flight">OFP</button>':'';
@@ -3969,7 +3969,7 @@ function fcRender(ok){
       if(proc.plan){rows.push(['Departure runway',proc.depRwy?esc(proc.depRwy):'Not in the plan']);rows.push(['Arrival runway',proc.arrRwy?esc(proc.arrRwy):'Not in the plan'])}
       s=fcPhotoHtml({k:'own'})+header+routeLine
         +(rt?'<div class="fbm"><div class="pb"><u style="width:'+pct.toFixed(1)+'%"></u><s style="left:'+pct.toFixed(1)+'%">&#9992;</s></div><span class="fm">'+Math.round(Math.max(0,tot-pr))+' nm remaining</span></div>':'')
-        +'<div class="fg">'+fcField(g('tAL'),'ALT FT')+fcField(g('tGS'),'GS KT')+fcField(g('tHD')+'°','HDG')+fcField(g('tVS'),'VS FPM')
+        +'<div class="fg">'+fcField(g('tAL'),'ALT FT')+fcField(g('tGS'),'GS KT')+fcField(g('tHD').replace(/°+$/,'')+'°','HDG')+fcField(g('tVS'),'VS FPM')
         +fcField(left==null?'–':left,'DEST NM')+'</div>'
         +fcProcHtml({k:'own'})
         +'<div class="fcm">'+rows.map(r=>'<div><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('')+'</div>'
