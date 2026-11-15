@@ -53,7 +53,8 @@ test('the bundled database is versioned, sourced and valid', () => {
   for (const profile of database.profiles) {
     assert.ok(profile.source.record, `${profile.id} names the ACD record`);
     assert.ok(profile.source.retrieved, `${profile.id} names when it was read`);
-    assert.equal(profile.verification, 'verified');
+    // FAA ACD records are verified; planning-document profiles say they are not.
+    assert.equal(profile.verification, profile.source.name.startsWith('FAA') ? 'verified' : 'unverified');
     assert.equal(profile.units.weight, 'kg');
     assert.ok(profile.operatingRange.weightKg[1] >= profile.limits.mtowKg);
     assert.ok(profile.limits.mtowKg >= profile.limits.mlwKg);
@@ -129,9 +130,11 @@ test('the matcher resolves the airframe X-Plane reports, not a neighbouring type
   assert.equal(manual.profile.id, 'a340-600');
   assert.equal(manual.confidence, 'manual');
 
-  const unknown = matchAircraft(database, { icaoType: 'A20N', description: 'Airbus A320neo' });
+  const unknown = matchAircraft(database, { icaoType: 'A225', description: 'Antonov An-225' });
   assert.equal(unknown.profile, null);
-  assert.match(unknown.reason, /No bundled performance profile matches type A20N/);
+  assert.match(unknown.reason, /No bundled performance profile matches type A225/);
+  assert.equal(matchAircraft(database, { icaoType: '', description: 'FlyByWire A32NX' }).profile.id, 'a320neo');
+  assert.equal(matchAircraft(database, { icaoType: '', description: 'Zibo 737-800' }).profile.id, 'b737-800');
 });
 
 test('units convert at the boundary and never pass a blank through as zero', () => {
@@ -277,7 +280,6 @@ test('the page has no import path and always binds landing to the destination', 
   const css = fs.readFileSync(new URL('app/efb.css', root), 'utf8');
 
   assert.doesNotMatch(page, /perf-file|data-import|templateDataset|performanceDataset|localStorage/);
-  assert.match(page, /data-calculate/);
   assert.match(page, /function phaseLeg\(\)/);
   assert.match(page, /state\.phase === 'landing' \? ofp\.destination : ofp\.origin/);
   assert.match(page, /state\.phase === 'landing' \? ofp\.weights\.lw : ofp\.weights\.tow/);
@@ -288,13 +290,36 @@ test('the page has no import path and always binds landing to the destination', 
   assert.match(page, /const builtPlan = loadRouteMeta\(\)\.plan/);
   assert.match(page, /builtPlan\.arrivalRwy : builtPlan\.departureRwy/);
   assert.match(page, /state\.airport === phaseAirport\(\) \? phaseRunway\(\)/, 'a changed airport drops the old runway');
-  // Controls that do not change a result are not offered, and the axes the
-  // mission names are declared unsupported rather than silently ignored.
-  assert.doesNotMatch(page, /perf-surface|perf-slopePct|perf-flap|perf-thrust/);
-  assert.match(page, /function correctionNotice\(\)/);
-  assert.match(page, /No performance correction is applied for/);
+  // The estimate is drawn, not listed: speeds, the thrust flag, a to-scale runway and the wind.
+  assert.match(page, /estimateTakeoff\(current/);
+  assert.match(page, /estimateLanding\(current/);
+  assert.match(page, /function runwaySvg\(/);
+  assert.match(page, /function windSvg\(/);
   assert.match(page, /The Stratos bridge is offline, so no airframe can be detected/);
-  assert.match(page, /STATUS_TEXT = \{ verified: 'Verified', interpolated: 'Interpolated', estimated: 'Estimated', unavailable: 'Unavailable' \}/);
-  assert.match(css, /\.perf-layout \{/);
-  assert.match(css, /@media \(max-width: 1180px\) \{\s*\.perf-layout \{ grid-template-columns: minmax\(0, 1fr\); \}/);
+  assert.match(page, /Stratos estimate · simulator use only/);
+  assert.match(css, /\.pf \{/);
+  assert.match(css, /@media \(max-width: 1180px\) \{\s*\.pf \{ grid-template-columns: minmax\(0, 1fr\); \}/);
+});
+
+test('the estimate gives speeds, FLEX and field lengths that respond to weight, runway and brakes', async () => {
+  const { estimateTakeoff, estimateLanding } = await import('../app/js/lib/perfmodel.js');
+  const a320 = profileById(database, 'a320');
+  const light = estimateTakeoff(a320, { weightKg: 60000, paFt: 0, oatC: 15, toraFt: 10000 });
+  const heavy = estimateTakeoff(a320, { weightKg: 77000, paFt: 0, oatC: 15, toraFt: 10000 });
+  assert.ok(light.v1 <= light.vr && light.vr < light.v2, 'V1 <= VR < V2');
+  assert.ok(heavy.v2 > light.v2 && heavy.flexC < light.flexC, 'heavier is faster and allows less FLEX');
+  assert.equal(light.thrust, 'FLEX');
+  assert.ok(light.requiredFt <= 10000 && light.marginFt >= 0);
+  const short = estimateTakeoff(a320, { weightKg: 77000, paFt: 5000, oatC: 35, toraFt: 5000 });
+  assert.equal(short.thrust, 'TOGA');
+  assert.equal(short.fits, false, 'a runway that is too short is reported, not hidden');
+  const toga = estimateTakeoff(a320, { weightKg: 60000, paFt: 0, oatC: 15, toraFt: 10000, thrust: 'toga' });
+  assert.equal(toga.flexC, null);
+  const med = estimateLanding(a320, { weightKg: 62000, paFt: 0, oatC: 15, ldaFt: 8000, autobrake: 'MED' });
+  const lo = estimateLanding(a320, { weightKg: 62000, paFt: 0, oatC: 15, ldaFt: 8000, autobrake: 'LO' });
+  const wet = estimateLanding(a320, { weightKg: 62000, paFt: 0, oatC: 15, ldaFt: 8000, autobrake: 'MAX', surface: 'wet' });
+  assert.ok(lo.stopFt > med.stopFt, 'a lower autobrake stops later');
+  assert.ok(med.factoredFt === Math.round(med.stopFt * 1.15) || Math.abs(med.factoredFt - med.stopFt * 1.15) < 2);
+  assert.ok(med.vapp >= med.vref + 5);
+  assert.ok(wet.stopFt > estimateLanding(a320, { weightKg: 62000, paFt: 0, oatC: 15, autobrake: 'MAX' }).stopFt, 'a wet runway limits braking');
 });

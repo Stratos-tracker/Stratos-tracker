@@ -476,6 +476,671 @@
         ],
         "reason": "The FAA ACD publishes weight limits and an approach speed only; it contains no takeoff or landing corrections for wind, slope, surface, flaps, thrust, anti-ice or braking."
       }
+    },
+    {
+      "id": "a319",
+      "manufacturer": "Airbus",
+      "name": "A319",
+      "icao": "A319",
+      "match": {
+        "text": [
+          "ToLiss A319",
+          "A319-100",
+          "Airbus A319"
+        ],
+        "exclude": [
+          "neo"
+        ]
+      },
+      "source": {
+        "name": "Manufacturer airport planning document",
+        "record": "Airbus A319 Aircraft Characteristics, Airport and Maintenance Planning",
+        "release": "typical published values",
+        "retrieved": "2026-11-15",
+        "license": "Published figures, compiled by Stratos"
+      },
+      "verification": "unverified",
+      "units": {
+        "weight": "kg",
+        "distance": "ft",
+        "speed": "kt"
+      },
+      "limits": {
+        "mtowKg": 75500,
+        "mlwKg": 62500
+      },
+      "operatingRange": {
+        "weightKg": [
+          0,
+          75500
+        ],
+        "pressureAltitudeFt": [
+          -1000,
+          12000
+        ],
+        "oatC": [
+          -40,
+          50
+        ],
+        "basis": "Stratos input window, not an aircraft operating limitation."
+      },
+      "takeoff": {
+        "status": "unsupported",
+        "reason": "No licensed takeoff table is bundled; field lengths and speeds are Stratos estimates.",
+        "table": null
+      },
+      "landing": {
+        "status": "unsupported",
+        "reason": "No licensed landing table is bundled; field lengths are Stratos estimates.",
+        "vrefKt": 131,
+        "vrefBasis": "Typical approach speed at maximum landing weight from the planning document.",
+        "table": null
+      },
+      "corrections": {
+        "status": "unsupported",
+        "axes": [
+          "wind",
+          "slope",
+          "surface",
+          "flaps",
+          "thrust",
+          "antiIce",
+          "braking",
+          "autobrake"
+        ],
+        "reason": "The planning document publishes weights and an approach speed only; it contains no takeoff or landing corrections."
+      }
+    },
+    {
+      "id": "a320",
+      "manufacturer": "Airbus",
+      "name": "A320",
+      "icao": "A320",
+      "match": {
+        "text": [
+          "Fenix A320",
+          "A320-200",
+          "Airbus A320",
+          "A320ceo"
+        ],
+        "exclude": [
+          "neo",
+          "A20N",
+          "A32NX"
+        ]
+      },
+      "source": {
+        "name": "Manufacturer airport planning document",
+        "record": "Airbus A320 Aircraft Characteristics, Airport and Maintenance Planning",
+        "release": "typical published values",
+        "retrieved": "2026-11-15",
+        "license": "Published figures, compiled by Stratos"
+      },
+      "verification": "unverified",
+      "units": {
+        "weight": "kg",
+        "distance": "ft",
+        "speed": "kt"
+      },
+      "limits": {
+        "mtowKg": 78000,
+        "mlwKg": 66000
+      },
+      "operatingRange": {
+        "weightKg": [
+          0,
+          78000
+        ],
+        "pressureAltitudeFt": [
+          -1000,
+          12000
+        ],
+        "oatC": [
+          -40,
+          50
+        ],
+        "basis": "Stratos input window, not an aircraft operating limitation."
+      },
+      "takeoff": {
+        "status": "unsupported",
+        "reason": "No licensed takeoff table is bundled; field lengths and speeds are Stratos estimates.",
+        "table": null
+      },
+      "landing": {
+        "status": "unsupported",
+        "reason": "No licensed landing table is bundled; field lengths are Stratos estimates.",
+        "vrefKt": 136,
+        "vrefBasis": "Typical approach speed at maximum landing weight from the planning document.",
+        "table": null
+      },
+      "corrections": {
+        "status": "unsupported",
+        "axes": [
+          "wind",
+          "slope",
+          "surface",
+          "flaps",
+          "thrust",
+          "antiIce",
+          "braking",
+          "autobrake"
+        ],
+        "reason": "The planning document publishes weights and an approach speed only; it contains no takeoff or landing corrections."
+      }
+    },
+    {
+      "id": "a320neo",
+      "manufacturer": "Airbus",
+      "name": "A320neo",
+      "icao": "A20N",
+      "match": {
+        "text": [
+          "A32NX",
+          "FlyByWire A320",
+          "A320neo",
+          "A320 neo"
+        ],
+        "exclude": []
+      },
+      "source": {
+        "name": "Manufacturer airport planning document",
+        "record": "Airbus A320 Aircraft Characteristics, Airport and Maintenance Planning",
+        "release": "typical published values",
+        "retrieved": "2026-11-15",
+        "license": "Published figures, compiled by Stratos"
+      },
+      "verification": "unverified",
+      "units": {
+        "weight": "kg",
+        "distance": "ft",
+        "speed": "kt"
+      },
+      "limits": {
+        "mtowKg": 79000,
+        "mlwKg": 67400
+      },
+      "operatingRange": {
+        "weightKg": [
+          0,
+          79000
+        ],
+        "pressureAltitudeFt": [
+          -1000,
+          12000
+        ],
+        "oatC": [
+          -40,
+          50
+        ],
+        "basis": "Stratos input window, not an aircraft operating limitation."
+      },
+      "takeoff": {
+        "status": "unsupported",
+        "reason": "No licensed takeoff table is bundled; field lengths and speeds are Stratos estimates.",
+        "table": null
+      },
+      "landing": {
+        "status": "unsupported",
+        "reason": "No licensed landing table is bundled; field lengths are Stratos estimates.",
+        "vrefKt": 136,
+        "vrefBasis": "Typical approach speed at maximum landing weight from the planning document.",
+        "table": null
+      },
+      "corrections": {
+        "status": "unsupported",
+        "axes": [
+          "wind",
+          "slope",
+          "surface",
+          "flaps",
+          "thrust",
+          "antiIce",
+          "braking",
+          "autobrake"
+        ],
+        "reason": "The planning document publishes weights and an approach speed only; it contains no takeoff or landing corrections."
+      }
+    },
+    {
+      "id": "a330-900",
+      "manufacturer": "Airbus",
+      "name": "A330-900",
+      "icao": "A339",
+      "match": {
+        "text": [
+          "A330-900",
+          "A330neo",
+          "A339"
+        ],
+        "exclude": []
+      },
+      "source": {
+        "name": "Manufacturer airport planning document",
+        "record": "Airbus A330 Aircraft Characteristics, Airport and Maintenance Planning",
+        "release": "typical published values",
+        "retrieved": "2026-11-15",
+        "license": "Published figures, compiled by Stratos"
+      },
+      "verification": "unverified",
+      "units": {
+        "weight": "kg",
+        "distance": "ft",
+        "speed": "kt"
+      },
+      "limits": {
+        "mtowKg": 251000,
+        "mlwKg": 191000
+      },
+      "operatingRange": {
+        "weightKg": [
+          0,
+          251000
+        ],
+        "pressureAltitudeFt": [
+          -1000,
+          12000
+        ],
+        "oatC": [
+          -40,
+          50
+        ],
+        "basis": "Stratos input window, not an aircraft operating limitation."
+      },
+      "takeoff": {
+        "status": "unsupported",
+        "reason": "No licensed takeoff table is bundled; field lengths and speeds are Stratos estimates.",
+        "table": null
+      },
+      "landing": {
+        "status": "unsupported",
+        "reason": "No licensed landing table is bundled; field lengths are Stratos estimates.",
+        "vrefKt": 137,
+        "vrefBasis": "Typical approach speed at maximum landing weight from the planning document.",
+        "table": null
+      },
+      "corrections": {
+        "status": "unsupported",
+        "axes": [
+          "wind",
+          "slope",
+          "surface",
+          "flaps",
+          "thrust",
+          "antiIce",
+          "braking",
+          "autobrake"
+        ],
+        "reason": "The planning document publishes weights and an approach speed only; it contains no takeoff or landing corrections."
+      }
+    },
+    {
+      "id": "a350-900",
+      "manufacturer": "Airbus",
+      "name": "A350-900",
+      "icao": "A359",
+      "match": {
+        "text": [
+          "A350-900",
+          "A350 900",
+          "A359",
+          "Airbus A350"
+        ],
+        "exclude": [
+          "1000"
+        ]
+      },
+      "source": {
+        "name": "Manufacturer airport planning document",
+        "record": "Airbus A350 Aircraft Characteristics, Airport and Maintenance Planning",
+        "release": "typical published values",
+        "retrieved": "2026-11-15",
+        "license": "Published figures, compiled by Stratos"
+      },
+      "verification": "unverified",
+      "units": {
+        "weight": "kg",
+        "distance": "ft",
+        "speed": "kt"
+      },
+      "limits": {
+        "mtowKg": 283000,
+        "mlwKg": 205000
+      },
+      "operatingRange": {
+        "weightKg": [
+          0,
+          283000
+        ],
+        "pressureAltitudeFt": [
+          -1000,
+          12000
+        ],
+        "oatC": [
+          -40,
+          50
+        ],
+        "basis": "Stratos input window, not an aircraft operating limitation."
+      },
+      "takeoff": {
+        "status": "unsupported",
+        "reason": "No licensed takeoff table is bundled; field lengths and speeds are Stratos estimates.",
+        "table": null
+      },
+      "landing": {
+        "status": "unsupported",
+        "reason": "No licensed landing table is bundled; field lengths are Stratos estimates.",
+        "vrefKt": 140,
+        "vrefBasis": "Typical approach speed at maximum landing weight from the planning document.",
+        "table": null
+      },
+      "corrections": {
+        "status": "unsupported",
+        "axes": [
+          "wind",
+          "slope",
+          "surface",
+          "flaps",
+          "thrust",
+          "antiIce",
+          "braking",
+          "autobrake"
+        ],
+        "reason": "The planning document publishes weights and an approach speed only; it contains no takeoff or landing corrections."
+      }
+    },
+    {
+      "id": "a380-800",
+      "manufacturer": "Airbus",
+      "name": "A380-800",
+      "icao": "A388",
+      "match": {
+        "text": [
+          "A380",
+          "A380-800",
+          "A388"
+        ],
+        "exclude": []
+      },
+      "source": {
+        "name": "Manufacturer airport planning document",
+        "record": "Airbus A380 Aircraft Characteristics, Airport and Maintenance Planning",
+        "release": "typical published values",
+        "retrieved": "2026-11-15",
+        "license": "Published figures, compiled by Stratos"
+      },
+      "verification": "unverified",
+      "units": {
+        "weight": "kg",
+        "distance": "ft",
+        "speed": "kt"
+      },
+      "limits": {
+        "mtowKg": 575000,
+        "mlwKg": 394000
+      },
+      "operatingRange": {
+        "weightKg": [
+          0,
+          575000
+        ],
+        "pressureAltitudeFt": [
+          -1000,
+          12000
+        ],
+        "oatC": [
+          -40,
+          50
+        ],
+        "basis": "Stratos input window, not an aircraft operating limitation."
+      },
+      "takeoff": {
+        "status": "unsupported",
+        "reason": "No licensed takeoff table is bundled; field lengths and speeds are Stratos estimates.",
+        "table": null
+      },
+      "landing": {
+        "status": "unsupported",
+        "reason": "No licensed landing table is bundled; field lengths are Stratos estimates.",
+        "vrefKt": 138,
+        "vrefBasis": "Typical approach speed at maximum landing weight from the planning document.",
+        "table": null
+      },
+      "corrections": {
+        "status": "unsupported",
+        "axes": [
+          "wind",
+          "slope",
+          "surface",
+          "flaps",
+          "thrust",
+          "antiIce",
+          "braking",
+          "autobrake"
+        ],
+        "reason": "The planning document publishes weights and an approach speed only; it contains no takeoff or landing corrections."
+      }
+    },
+    {
+      "id": "b737-800",
+      "manufacturer": "Boeing",
+      "name": "737-800",
+      "icao": "B738",
+      "match": {
+        "text": [
+          "Zibo",
+          "737-800",
+          "B738",
+          "Boeing 737-800",
+          "737 800"
+        ],
+        "exclude": [
+          "MAX"
+        ]
+      },
+      "source": {
+        "name": "Manufacturer airport planning document",
+        "record": "Boeing 737 Airplane Characteristics for Airport Planning",
+        "release": "typical published values",
+        "retrieved": "2026-11-15",
+        "license": "Published figures, compiled by Stratos"
+      },
+      "verification": "unverified",
+      "units": {
+        "weight": "kg",
+        "distance": "ft",
+        "speed": "kt"
+      },
+      "limits": {
+        "mtowKg": 79016,
+        "mlwKg": 66361
+      },
+      "operatingRange": {
+        "weightKg": [
+          0,
+          79016
+        ],
+        "pressureAltitudeFt": [
+          -1000,
+          12000
+        ],
+        "oatC": [
+          -40,
+          50
+        ],
+        "basis": "Stratos input window, not an aircraft operating limitation."
+      },
+      "takeoff": {
+        "status": "unsupported",
+        "reason": "No licensed takeoff table is bundled; field lengths and speeds are Stratos estimates.",
+        "table": null
+      },
+      "landing": {
+        "status": "unsupported",
+        "reason": "No licensed landing table is bundled; field lengths are Stratos estimates.",
+        "vrefKt": 142,
+        "vrefBasis": "Typical approach speed at maximum landing weight from the planning document.",
+        "table": null
+      },
+      "corrections": {
+        "status": "unsupported",
+        "axes": [
+          "wind",
+          "slope",
+          "surface",
+          "flaps",
+          "thrust",
+          "antiIce",
+          "braking",
+          "autobrake"
+        ],
+        "reason": "The planning document publishes weights and an approach speed only; it contains no takeoff or landing corrections."
+      }
+    },
+    {
+      "id": "b737-max8",
+      "manufacturer": "Boeing",
+      "name": "737 MAX 8",
+      "icao": "B38M",
+      "match": {
+        "text": [
+          "737 MAX 8",
+          "737-8",
+          "B38M",
+          "737 MAX"
+        ],
+        "exclude": []
+      },
+      "source": {
+        "name": "Manufacturer airport planning document",
+        "record": "Boeing 737 MAX Airplane Characteristics for Airport Planning",
+        "release": "typical published values",
+        "retrieved": "2026-11-15",
+        "license": "Published figures, compiled by Stratos"
+      },
+      "verification": "unverified",
+      "units": {
+        "weight": "kg",
+        "distance": "ft",
+        "speed": "kt"
+      },
+      "limits": {
+        "mtowKg": 82191,
+        "mlwKg": 69309
+      },
+      "operatingRange": {
+        "weightKg": [
+          0,
+          82191
+        ],
+        "pressureAltitudeFt": [
+          -1000,
+          12000
+        ],
+        "oatC": [
+          -40,
+          50
+        ],
+        "basis": "Stratos input window, not an aircraft operating limitation."
+      },
+      "takeoff": {
+        "status": "unsupported",
+        "reason": "No licensed takeoff table is bundled; field lengths and speeds are Stratos estimates.",
+        "table": null
+      },
+      "landing": {
+        "status": "unsupported",
+        "reason": "No licensed landing table is bundled; field lengths are Stratos estimates.",
+        "vrefKt": 145,
+        "vrefBasis": "Typical approach speed at maximum landing weight from the planning document.",
+        "table": null
+      },
+      "corrections": {
+        "status": "unsupported",
+        "axes": [
+          "wind",
+          "slope",
+          "surface",
+          "flaps",
+          "thrust",
+          "antiIce",
+          "braking",
+          "autobrake"
+        ],
+        "reason": "The planning document publishes weights and an approach speed only; it contains no takeoff or landing corrections."
+      }
+    },
+    {
+      "id": "b787-9",
+      "manufacturer": "Boeing",
+      "name": "787-9",
+      "icao": "B789",
+      "match": {
+        "text": [
+          "787-9",
+          "B789",
+          "Boeing 787-9",
+          "787 9"
+        ],
+        "exclude": []
+      },
+      "source": {
+        "name": "Manufacturer airport planning document",
+        "record": "Boeing 787 Airplane Characteristics for Airport Planning",
+        "release": "typical published values",
+        "retrieved": "2026-11-15",
+        "license": "Published figures, compiled by Stratos"
+      },
+      "verification": "unverified",
+      "units": {
+        "weight": "kg",
+        "distance": "ft",
+        "speed": "kt"
+      },
+      "limits": {
+        "mtowKg": 254011,
+        "mlwKg": 192777
+      },
+      "operatingRange": {
+        "weightKg": [
+          0,
+          254011
+        ],
+        "pressureAltitudeFt": [
+          -1000,
+          12000
+        ],
+        "oatC": [
+          -40,
+          50
+        ],
+        "basis": "Stratos input window, not an aircraft operating limitation."
+      },
+      "takeoff": {
+        "status": "unsupported",
+        "reason": "No licensed takeoff table is bundled; field lengths and speeds are Stratos estimates.",
+        "table": null
+      },
+      "landing": {
+        "status": "unsupported",
+        "reason": "No licensed landing table is bundled; field lengths are Stratos estimates.",
+        "vrefKt": 150,
+        "vrefBasis": "Typical approach speed at maximum landing weight from the planning document.",
+        "table": null
+      },
+      "corrections": {
+        "status": "unsupported",
+        "axes": [
+          "wind",
+          "slope",
+          "surface",
+          "flaps",
+          "thrust",
+          "antiIce",
+          "braking",
+          "autobrake"
+        ],
+        "reason": "The planning document publishes weights and an approach speed only; it contains no takeoff or landing corrections."
+      }
     }
   ]
 }

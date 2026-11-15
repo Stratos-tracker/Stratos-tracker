@@ -15,7 +15,7 @@
  * check needs a minimum and maximum %MAC.
  */
 
-import { esc, fmtNum, currentPlan } from './common.js';
+import { esc, fmtNum, currentPlan, saveWbUplink, loadWbUplink, fmtAge } from './common.js';
 import {
   computeLoadSheet, limitsFromOfp, plannedLandingWeight,
 } from '../lib/weightbalance.js';
@@ -93,6 +93,13 @@ export async function mount(root, ctx) {
     const cgValue = ofp && limitsOfp.cg != null ? limitsOfp.cg : sheet.cg;
     const cgSource = ofp && limitsOfp.cg != null ? 'SimBrief' : sheet.cg != null ? 'entered' : null;
 
+    // What Performance receives: the weights of the mode on screen, in kg.
+    const kg = v => (v == null || !Number.isFinite(Number(v)) ? null : Math.round(convertWeight(Number(v), planUnit, 'kg')));
+    const uplink = mode === 'plan'
+      ? { tow: kg(ofp && ofp.weights && ofp.weights.tow), lw: kg(landing.value), zfw: kg(ofp && ofp.weights && ofp.weights.zfw) }
+      : { tow: kg(sheet.tow), lw: kg(sheet.lw), zfw: kg(sheet.zfw) };
+    const sent = loadWbUplink();
+
     const rows = [
       ['oew', 'Operating empty weight (OEW)'],
       ['zfw', 'Zero fuel weight (ZFW)'],
@@ -107,12 +114,14 @@ export async function mount(root, ctx) {
           <button type="button" data-mode="sheet" aria-pressed="${mode === 'sheet'}">Build a load sheet</button>
         </div>
         <span class="e-spacer"></span>
+        <button class="e-btn primary small" type="button" data-uplink ${uplink.tow == null ? 'disabled' : ''}>Uplink to Performance</button>
         <div class="e-seg" role="group" aria-label="Weight unit">
           <button type="button" data-unit="kg" aria-pressed="${unit === 'kg'}">kg</button>
           <button type="button" data-unit="lb" aria-pressed="${unit === 'lb'}">lb</button>
         </div>
       </div>
 
+      ${sent && sent.towKg ? `<div class="e-notice good" style="margin-bottom:12px"><div>Uplinked to Performance ${esc(fmtAge(sent.at))}: TOW ${display(convertWeight(sent.towKg, 'kg', planUnit))}${sent.lwKg ? ` · LW ${display(convertWeight(sent.lwKg, 'kg', planUnit))}` : ''}. <a href="#/performance">Open Performance</a></div></div>` : ''}
       ${mode === 'plan' ? planMode(display, landing, cgValue, cgSource) : sheetMode(display, sheet)}
 
       <div class="e-card" style="margin-top:12px">
@@ -130,6 +139,10 @@ export async function mount(root, ctx) {
 
       <div class="e-small e-faint" style="margin:14px 2px 0">${ofp ? `Plan weights come from SimBrief (${esc(planUnit)}).` : 'No SimBrief plan is loaded, so every value here is yours.'} Limits are checked only against values that exist; a missing limit is never treated as a pass.</div>`;
 
+    root.querySelector('[data-uplink]')?.addEventListener('click', () => {
+      saveWbUplink({ towKg: uplink.tow, lwKg: uplink.lw, zfwKg: uplink.zfw, cg: cgValue ?? null });
+      render();
+    });
     root.querySelectorAll('[data-mode]').forEach(button => {
       button.addEventListener('click', () => { mode = button.dataset.mode; render(); });
     });

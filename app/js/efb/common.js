@@ -126,6 +126,17 @@ export function savePrefs(patch) {
   return next;
 }
 
+/* ── Weight & Balance uplink ─────────────────────────────────────────── */
+
+// The load sheet sent to Performance: { towKg, lwKg, zfwKg, cg, at }.
+const WB_UPLINK_KEY = 'stratos.efb.wbUplink';
+export function saveWbUplink(sheet) {
+  try { localStorage.setItem(WB_UPLINK_KEY, JSON.stringify({ ...sheet, at: Date.now() })); } catch (_) { /* private mode */ }
+}
+export function loadWbUplink() {
+  try { return JSON.parse(localStorage.getItem(WB_UPLINK_KEY) || 'null'); } catch (_) { return null; }
+}
+
 /* ── the current plan ────────────────────────────────────────────────── */
 
 /**

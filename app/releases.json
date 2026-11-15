@@ -3,47 +3,54 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.2.3",
+    "version": "2.2.4",
     "releasedAt": "2026-11-15",
     "severity": "normal",
-    "summary": "Route Finder shows the aircraft type for every flight.",
+    "summary": "A new performance calculator: V1/VR/V2, FLEX and flaps for takeoff, VAPP, autobrake and stopping point for landing, drawn on a to-scale runway. Weight & Balance uplinks its weights to it.",
     "changelog": {
       "features": [
-        "Every Route Finder flight shows its aircraft type: the exact one when that flight was seen in today’s live traffic, otherwise the airline’s typical type for the distance, marked TYPICAL."
+        "Performance: takeoff speeds, FLEX or assumed temperature and the best flap setting; landing VAPP, autobrake and stopping distance with the 1.15 factor.",
+        "A to-scale runway diagram with V1 and VR, the 35 ft and stop flags, the stopping distance and the runway margin.",
+        "Weight & Balance can uplink its takeoff and landing weights to Performance."
       ],
       "improvements": [
-        "Choosing an aircraft in Route Finder skips flights seen today on a different type."
+        "Performance profiles for the A319, A320, A320neo, A330-900, A350-900, A380, 737-800, 737 MAX 8 and 787-9.",
+        "Results update as you type, with a wind compass, weight gauge and density altitude."
       ],
       "fixes": [],
       "performance": [],
       "ui": [],
       "compatibility": [],
-      "other": []
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.3/Stratos-Setup.exe",
-        "sha256": "0ecce78ede7a4bbf4883c94e2ade785d820d3a33efe55ac04e3b132cea82ce76",
-        "size": 118976838
-      },
-      "mac-arm64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.3/Stratos-2.2.3-mac-arm64.dmg",
-        "sha256": "a7f25a2d65efbd68f7902c77cad1add39f77450dd4b6e72f5d8d16d144bc6519",
-        "size": 137572904
-      },
-      "mac-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.3/Stratos-2.2.3-mac-x64.dmg",
-        "sha256": "0981283a26aacba6bca203a5fc96b888a9e1cc426f84457f1f205e88de59f717",
-        "size": 142967632
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.3/Stratos-2.2.3-linux-x64.AppImage",
-        "sha256": "fd7cf6f37c60050b4b1fe649c69a8f9f7c7934dccc323b459d70f255fa1d65c8",
-        "size": 158918199
-      }
+      "other": [
+        "Speeds and distances are Stratos estimates for simulator use, not certified performance."
+      ]
     }
   },
   "releases": [
+    {
+      "version": "2.2.4",
+      "releasedAt": "2026-11-15",
+      "severity": "normal",
+      "summary": "A new performance calculator: V1/VR/V2, FLEX and flaps for takeoff, VAPP, autobrake and stopping point for landing, drawn on a to-scale runway. Weight & Balance uplinks its weights to it.",
+      "changelog": {
+        "features": [
+          "Performance: takeoff speeds, FLEX or assumed temperature and the best flap setting; landing VAPP, autobrake and stopping distance with the 1.15 factor.",
+          "A to-scale runway diagram with V1 and VR, the 35 ft and stop flags, the stopping distance and the runway margin.",
+          "Weight & Balance can uplink its takeoff and landing weights to Performance."
+        ],
+        "improvements": [
+          "Performance profiles for the A319, A320, A320neo, A330-900, A350-900, A380, 737-800, 737 MAX 8 and 787-9.",
+          "Results update as you type, with a wind compass, weight gauge and density altitude."
+        ],
+        "fixes": [],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": [
+          "Speeds and distances are Stratos estimates for simulator use, not certified performance."
+        ]
+      }
+    },
     {
       "version": "2.2.3",
       "releasedAt": "2026-11-15",
@@ -1305,57 +1312,6 @@
           "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.21/Stratos-2.1.21-linux-x64.AppImage",
           "sha256": "146a81b361696d017ff93856224f7d64d5acdfff22383ae26aa5d7e41bc451c1",
           "size": 142297325
-        }
-      }
-    },
-    {
-      "version": "2.1.20",
-      "releasedAt": "2026-10-23",
-      "severity": "normal",
-      "summary": "The route is drawn with chart symbols, long legs carry their heading and distance, and map labels are set in a chart typeface.",
-      "changelog": {
-        "features": [
-          "Route points carry a symbol by meaning: a crosshair for an en-route fix, a star on an airway, a triangle for a SID, a diamond for a STAR, a ring for an airport, amber for a VOR, pink for an NDB, a hexagon otherwise.",
-          "TOC and TOD appear on the plan from the altitudes it already carries, with the cruise level beside them; nothing is added to the route.",
-          "Every leg of 50 nm or more shows its distance and initial heading on a small tag at the midpoint.",
-          "The aircraft card works out a registration the feed did not report, from the simulator's aircraft title, a Mode S address or a VATSIM callsign, and labels it as detected."
-        ],
-        "improvements": [
-          "Airport, waypoint, navaid and traffic labels are set in the shell's condensed technical face with slight tracking, so idents stay readable while covering less of the map.",
-          "Waypoint symbols sit a step above the route band, so a fix reads as a mark on the line rather than a thicker part of it.",
-          "Labels give way instead of overprinting: each is checked against the ones already placed this frame, and a leg tag is dropped rather than laid over a name."
-        ],
-        "fixes": [
-          "The desktop build could not reach the registration database because hexdb.io was missing from its CORS allowlist.",
-          "A build with no registration lookup route said the registration did not exist; it now says the lookup is unavailable there."
-        ],
-        "performance": [],
-        "ui": [
-          "Distance and heading sit horizontally on a tag beside the leg, held clear of the course, instead of being rotated along it."
-        ],
-        "compatibility": [],
-        "other": []
-      },
-      "downloads": {
-        "windows": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.20/Stratos-Setup.exe",
-          "sha256": "8fab0999785277e95a9fc45b4b915e2631276bab79a924fd493330bb97a7e741",
-          "size": 103873424
-        },
-        "mac-arm64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.20/Stratos-2.1.20-mac-arm64.dmg",
-          "sha256": "5f2bd44db8bf1f908f682c1ab47fc6b128906f6030c636aa19d44b87443f1004",
-          "size": 119582696
-        },
-        "mac-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.20/Stratos-2.1.20-mac-x64.dmg",
-          "sha256": "cf46267fe22670ebbf38c5dceeda2106fc3625db94574ef377f1a249509c0b8d",
-          "size": 124922284
-        },
-        "linux-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.20/Stratos-2.1.20-linux-x64.AppImage",
-          "sha256": "e24d892ef2a0ff5b9599bcdcb3bc8bf69d3e7aea7de2a40a3916c26ddd40b5f1",
-          "size": 140366156
         }
       }
     }
