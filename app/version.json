@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-15",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.2/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.2/Stratos-Setup.exe",
+      "sha256": "1176024f6b877474992c824e4f68f400f4d48e0944f1c58a41567d3ad20b4b26",
+      "size": 118972667
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.2/Stratos-2.2.2-mac-arm64.dmg",
+      "sha256": "0a257fde78dec8efc38bbade7e162465cfa0cce5a92c8a9c0b318b826242bd00",
+      "size": 137572631
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.2/Stratos-2.2.2-mac-x64.dmg",
+      "sha256": "e47e317eed181d00e6288091707e853802d7ef01727c2db530b11750e62c2198",
+      "size": 142965044
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.2/Stratos-2.2.2-linux-x64.AppImage",
+      "sha256": "49f7e8546b1424617ed8ee365a60e363dcae8f90b130a6a4de1f7c06fdbb5323",
+      "size": 158914103
+    }
+  },
   "summary": "Route Finder now finds any real airline flight, not just those airborne, with airport filters and a flight-time slider. Desktop updates now prompt on launch and install inside the app.",
   "reason": "",
   "releaseNotes": [
