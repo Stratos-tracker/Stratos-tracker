@@ -3,51 +3,42 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.2.5",
+    "version": "2.2.6",
     "releasedAt": "2026-11-15",
     "severity": "normal",
-    "summary": "A new graphite look across Stratos and an iPadOS-style EFB home screen with flight and clock widgets.",
+    "summary": "SID and STAR procedures load worldwide in the desktop app, and the website deploys again with the current installer.",
     "changelog": {
-      "features": [
-        "EFB home: an iPadOS-style layout with glass widgets for the flight and a UTC clock beside the app grid, and a frosted dock."
-      ],
-      "improvements": [
-        "A graphite night theme across the EFB, Flight Deck and Profile pages: neutral surfaces, one blue accent, a magenta route and tighter corners.",
-        "The Settings colour board documents the new palette."
-      ],
+      "features": [],
+      "improvements": [],
       "fixes": [
-        "The phone flight panel no longer shows the heading with a doubled degree sign.",
-        "The A320 checklist no longer says Stratos does not compute performance."
+        "The desktop app draws SIDs, STARs and approaches for every airport in your X-Plane data: procedure requests now reach the Stratos bridge directly.",
+        "The website deploys again and its download buttons serve the current installer; it had stopped updating at 2.1.45."
       ],
       "performance": [],
       "ui": [],
       "compatibility": [],
       "other": []
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.5/Stratos-Setup.exe",
-        "sha256": "620062969a9548929ec3e40b5b14297a25380a68be2b5b09553271af1b8419bf",
-        "size": 119006567
-      },
-      "mac-arm64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.5/Stratos-2.2.5-mac-arm64.dmg",
-        "sha256": "bde81559878ced5e4e108a5b7a46cf60444eb2148508afebf95eaff7b9d1daa1",
-        "size": 137541978
-      },
-      "mac-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.5/Stratos-2.2.5-mac-x64.dmg",
-        "sha256": "fd8d53b7e0ec62e07ba1f6bbade9e5cc04ca3c9de2c58f959f690575c0efe810",
-        "size": 143003258
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.5/Stratos-2.2.5-linux-x64.AppImage",
-        "sha256": "e09f52f4f404947adccf316bc9084a4a59ba5585fe7d6be3556fd24f79d60433",
-        "size": 158938338
-      }
     }
   },
   "releases": [
+    {
+      "version": "2.2.6",
+      "releasedAt": "2026-11-15",
+      "severity": "normal",
+      "summary": "SID and STAR procedures load worldwide in the desktop app, and the website deploys again with the current installer.",
+      "changelog": {
+        "features": [],
+        "improvements": [],
+        "fixes": [
+          "The desktop app draws SIDs, STARs and approaches for every airport in your X-Plane data: procedure requests now reach the Stratos bridge directly.",
+          "The website deploys again and its download buttons serve the current installer; it had stopped updating at 2.1.45."
+        ],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.2.5",
       "releasedAt": "2026-11-15",
@@ -1283,64 +1274,6 @@
           "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.23/Stratos-2.1.23-linux-x64.AppImage",
           "sha256": "95cf211e1bb430bebdcfe59ce00a31d26661aed0a9b2942bc07d1fb9867d2e0e",
           "size": 143768227
-        }
-      }
-    },
-    {
-      "version": "2.1.22",
-      "releasedAt": "2026-10-24",
-      "severity": "normal",
-      "summary": "A calmer, more professional Stratos: five destinations on every page, a real flight-plan card in place of the pencil, and SimBrief SID and STAR that finally import.",
-      "changelog": {
-        "features": [
-          "Five top-level destinations on every page — Flight Deck, Flight Planning, Logbook, Explore and Profile — with Live, Charts, Weather and the data pack one tap away in the map's tools menu.",
-          "The flight-plan card replaces the pencil control: callsign, aircraft, departure and arrival, SID and STAR with their planned runways, cruise, distance and time.",
-          "It expands in place for route, alternate, weather, weights, fuel, passengers, cargo and live progress, and remembers whether it is open.",
-          "Explore gathers Weather, Airports, Charts, Statistics and Live in one hub, linked from its own strip on the Explore page.",
-          "Settings documents the palette on an aviation colour board: cyan, violet, amber, white, charcoal, grey, red and green, each with its HEX and its job, beside real controls and map symbols.",
-          "SimBrief SID and STAR now import from the fields SimBrief actually writes, including plans with Detailed Navlog off, and a shortened ident is restored to the full published name when the plan's IFPS route confirms it."
-        ],
-        "improvements": [
-          "The card keeps the SID above its departure runway and the STAR above its arrival runway, even while the rest of it is minimized.",
-          "The map rail and every page bar share one navigation list, with labels and tooltips shortened to match.",
-          "The flight summary prints ICAO codes instead of airport objects, and a detected callsign takes precedence over the plan's."
-        ],
-        "fixes": [
-          "A SimBrief plan no longer imports with no SID or STAR: they are read from `general`, where SimBrief writes them.",
-          "A plan without navlog fixes still imports its SID, STAR and runways and keeps the current route, instead of failing the whole import.",
-          "The weather search no longer pushes its Search button off a phone screen, and the toolbar no longer overflows at 390 px.",
-          "The Live page marks Explore as its section instead of leaving the bottom bar with no current item."
-        ],
-        "performance": [],
-        "ui": [
-          "Selected waypoints and the night accent now use the exact violet and cyan the colour board documents.",
-          "The flight-plan card uses the shell's panel styling, with a compact summary line and a single control to expand or minimize it."
-        ],
-        "compatibility": [
-          "No storage format change: a plan stored by 2.1.21 gains its SID and STAR from its own route text the next time it is opened."
-        ],
-        "other": []
-      },
-      "downloads": {
-        "windows": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.22/Stratos-Setup.exe",
-          "sha256": "2a21e09c718577edc0038d6c532f4921ce13a5e11164f209bd7ac6c26bd83e48",
-          "size": 105668980
-        },
-        "mac-arm64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.22/Stratos-2.1.22-mac-arm64.dmg",
-          "sha256": "9d2ed361dc497dfcc9d0fbe4ece42fa5f0482d72df84b76950b3bd3a10f36790",
-          "size": 121410681
-        },
-        "mac-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.22/Stratos-2.1.22-mac-x64.dmg",
-          "sha256": "6e96b2333439fac3f0dfa25bfe69d237233e0deb61f798e82424128f06ec15ea",
-          "size": 126745009
-        },
-        "linux-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.22/Stratos-2.1.22-linux-x64.AppImage",
-          "sha256": "6c0c4fde8e35f52ff59971223bc4b0804890927265b2e870a9d327a3ccc08a55",
-          "size": 142317538
         }
       }
     }

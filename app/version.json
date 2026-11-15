@@ -1,52 +1,23 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.2.5",
+  "latestVersion": "2.2.6",
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-15",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.5/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.5/Stratos-Setup.exe",
-      "sha256": "620062969a9548929ec3e40b5b14297a25380a68be2b5b09553271af1b8419bf",
-      "size": 119006567
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.5/Stratos-2.2.5-mac-arm64.dmg",
-      "sha256": "bde81559878ced5e4e108a5b7a46cf60444eb2148508afebf95eaff7b9d1daa1",
-      "size": 137541978
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.5/Stratos-2.2.5-mac-x64.dmg",
-      "sha256": "fd8d53b7e0ec62e07ba1f6bbade9e5cc04ca3c9de2c58f959f690575c0efe810",
-      "size": 143003258
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.5/Stratos-2.2.5-linux-x64.AppImage",
-      "sha256": "e09f52f4f404947adccf316bc9084a4a59ba5585fe7d6be3556fd24f79d60433",
-      "size": 158938338
-    }
-  },
-  "summary": "A new graphite look across Stratos and an iPadOS-style EFB home screen with flight and clock widgets.",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "SID and STAR procedures load worldwide in the desktop app, and the website deploys again with the current installer.",
   "reason": "",
   "releaseNotes": [
-    "EFB home: an iPadOS-style layout with glass widgets for the flight and a UTC clock beside the app grid, and a frosted dock.",
-    "A graphite night theme across the EFB, Flight Deck and Profile pages: neutral surfaces, one blue accent, a magenta route and tighter corners.",
-    "The Settings colour board documents the new palette.",
-    "The phone flight panel no longer shows the heading with a doubled degree sign.",
-    "The A320 checklist no longer says Stratos does not compute performance."
+    "The desktop app draws SIDs, STARs and approaches for every airport in your X-Plane data: procedure requests now reach the Stratos bridge directly.",
+    "The website deploys again and its download buttons serve the current installer; it had stopped updating at 2.1.45."
   ],
   "notes": {
-    "features": [
-      "EFB home: an iPadOS-style layout with glass widgets for the flight and a UTC clock beside the app grid, and a frosted dock."
-    ],
-    "improvements": [
-      "A graphite night theme across the EFB, Flight Deck and Profile pages: neutral surfaces, one blue accent, a magenta route and tighter corners.",
-      "The Settings colour board documents the new palette."
-    ],
+    "features": [],
+    "improvements": [],
     "fixes": [
-      "The phone flight panel no longer shows the heading with a doubled degree sign.",
-      "The A320 checklist no longer says Stratos does not compute performance."
+      "The desktop app draws SIDs, STARs and approaches for every airport in your X-Plane data: procedure requests now reach the Stratos bridge directly.",
+      "The website deploys again and its download buttons serve the current installer; it had stopped updating at 2.1.45."
     ],
     "performance": [],
     "ui": [],

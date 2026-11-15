@@ -73,7 +73,12 @@ export function endpointsFor(airport, kind = '', ident = '') {
   if (kind) query.set('kind', String(kind).toLowerCase());
   if (ident) query.set('id', up(ident));
   const qs = query.toString();
-  return [`/procedures.json?${qs}`, `/api/procedures?${qs}`];
+  // The desktop app loads its pages from files, where a relative path reaches
+  // nothing: it asks the bridge at its address (the app allows that origin).
+  const fromFiles = typeof location !== 'undefined' && location.protocol === 'file:';
+  return fromFiles
+    ? [`http://127.0.0.1:8765/procedures.json?${qs}`]
+    : [`/procedures.json?${qs}`, `/api/procedures?${qs}`];
 }
 
 /** Runway designators the payload publishes, in runway order. */

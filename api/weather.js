@@ -1,6 +1,7 @@
 // Stratos API: METAR + TAF for one station from NOAA Aviation Weather Center.
 // Public-domain data, no API key. Results are cached for 5 minutes at the edge.
-// Query: /api/weather?icao=KJFK
+// Query: /api/weather?icao=KJFK  (and ?type=sigmets, which /api/sigmets rewrites to)
+import sigmets from './_sigmets.js';
 
 const CACHE_MS = 5 * 60 * 1000;
 const cache = new Map(); // icao -> { at, payload }
@@ -34,6 +35,7 @@ export default async function handler(req, res) {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
+  if (req.query && req.query.type === 'sigmets') return sigmets(req, res);
   const icao = station(req.query && req.query.icao);
   if (!icao) {
     res.status(400).json({ error: 'Provide a 3–5 character station identifier, e.g. ?icao=KJFK' });

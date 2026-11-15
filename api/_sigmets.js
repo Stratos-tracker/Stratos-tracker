@@ -1,5 +1,7 @@
 // Stratos API: SIGMETs and G-AIRMETs from the NOAA Aviation Weather Center.
-// Public-domain NWS data, no API key. Query: /api/sigmets
+// Public-domain NWS data, no API key. Query: /api/sigmets (rewritten to
+// /api/weather?type=sigmets: the underscore keeps this file from counting
+// against the Hobby plan's 12-function limit, which failed every deploy).
 // The three feeds are passed through as { airsigmet, isigmet, gairmet };
 // app/js/lib/sigmets.js interprets them. A feed that fails is null, not empty,
 // so the page can say which part is missing instead of showing "no hazards".

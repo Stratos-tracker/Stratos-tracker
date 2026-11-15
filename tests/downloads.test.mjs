@@ -309,3 +309,10 @@ test('the website carries no third-party download link anywhere', () => {
   assert.match(module, /releases\.json/, 'the installers come from the published manifest');
   assert.match(module, /DOWNLOAD_ENDPOINT = '\/api\/download'/, 'and link through the site endpoint');
 });
+
+test('the site stays within the Vercel Hobby limit of 12 serverless functions', async () => {
+  const fs = await import('node:fs');
+  // a 13th function fails every deployment; helpers start with "_" and are not deployed as functions
+  const functions = fs.readdirSync(new URL('../api/', import.meta.url)).filter(name => name.endsWith('.js') && !name.startsWith('_'));
+  assert.ok(functions.length <= 12, `${functions.length} functions in api/: ${functions.join(', ')}`);
+});

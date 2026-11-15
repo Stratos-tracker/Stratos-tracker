@@ -102,6 +102,11 @@ test('procdeck: an airport is four characters and asks both sources', () => {
     '/api/procedures?airport=KATL&kind=sid&id=BANNG3',
   ]);
   assert.deepEqual(endpointsFor(''), []);
+  // the desktop app's pages come from files: the bridge is asked at its address
+  globalThis.location = { protocol: 'file:' };
+  try {
+    assert.deepEqual(endpointsFor('egll', 'star'), ['http://127.0.0.1:8765/procedures.json?airport=EGLL&kind=star']);
+  } finally { delete globalThis.location; }
 });
 
 test('procdeck: the payload lists its runways, procedures and transitions', () => {

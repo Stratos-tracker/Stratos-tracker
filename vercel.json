@@ -4,6 +4,7 @@
     "api/procedures.js": { "includeFiles": "navdata/cifp/**" }
   },
   "rewrites": [
+    { "source": "/api/sigmets", "destination": "/api/weather?type=sigmets" },
     { "source": "/phone", "destination": "/app/index.html" },
     { "source": "/phone/", "destination": "/app/index.html" }
   ],

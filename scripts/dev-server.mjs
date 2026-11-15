@@ -22,7 +22,7 @@ import runways from '../api/runways.js';
 import photo from '../api/photo.js';
 import weather from '../api/weather.js';
 import winds from '../api/winds.js';
-import sigmets from '../api/sigmets.js';
+import sigmets from '../api/_sigmets.js';
 import charts from '../api/charts.js';
 import chart from '../api/chart.js';
 import ourairports from '../api/ourairports.js';
