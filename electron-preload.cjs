@@ -14,6 +14,8 @@ contextBridge.exposeInMainWorld('stratosDesktop', {
   checkForUpdates: () => ipcRenderer.invoke('updater:check'),
   installUpdate: () => ipcRenderer.invoke('updater:install'),
   openUpdateDownload: url => ipcRenderer.invoke('updates:open-download', url),
+  // Windows: download, verify and run the installer, then restart into the new version.
+  installUpdateDownload: (url, sha256) => ipcRenderer.invoke('updates:install-download', url, sha256),
   // Download progress and verification results, pushed from the main process.
   // The payload is the same status object as getUpdateStatus().
   onUpdateProgress: callback => {

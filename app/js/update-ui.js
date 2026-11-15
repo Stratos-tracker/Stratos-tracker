@@ -30,6 +30,15 @@ import { APP_VERSION } from './lib/version.js';
 
 const STYLE_ID = 'stratos-update-styles';
 
+/* Windows desktop: download, verify and run the installer in the app, which
+   then restarts on the new version. null = not available here (use the download). */
+async function installInApp(desktop, release) {
+  const entry = release && release.downloads && release.downloads.windows;
+  if (!desktop?.installUpdateDownload || platformKey() !== 'windows' || !entry?.url || !entry.sha256) return null;
+  const result = await desktop.installUpdateDownload(entry.url, entry.sha256).catch(error => ({ ok: false, message: error.message }));
+  return result && result.unsupported ? null : result;
+}
+
 const CSS = `
 .su-backdrop{position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;
   padding:24px;background:rgba(3,7,12,.68);backdrop-filter:blur(3px)}
@@ -567,6 +576,11 @@ export async function mountUpdateCenter({ root, installedVersion = APP_VERSION, 
     // download the pilot runs. Nothing here replaces the installed files, and a
     // failure never leaves the installation half-written.
     if (release) {
+      state.progress = { state: 'downloading', label: 'Downloading the update…', percent: null };
+      paint();
+      const inApp = await installInApp(desktop, release);
+      if (inApp && inApp.ok) { state.progress = { state: 'downloaded', label: 'Installing the update…', percent: 100, message: 'Stratos closes and reopens on the new version.' }; paint(); return; }
+      if (inApp) { state.progress = null; state.actionError = friendlyMessage(inApp.message); paint(); return; }
       const url = downloadFor(release, platformKey());
       if (!url) {
         state.actionError = `No installer is published for ${platformName().toLowerCase()} yet.`;
@@ -649,6 +663,8 @@ export function initAppUpdates({ desktop = null, installedVersion = APP_VERSION,
         label: 'Downloading the verified installer…',
         note: 'You can keep using Stratos; it restarts when the download is verified.',
       });
+    } else if (event.state === 'downloaded' && event.installing) {
+      state.setProgress({ percent: 100, label: 'Installing the update…', note: 'Stratos closes and reopens on the new version. Your data is kept.' });
     } else if (event.state === 'downloaded') {
       state.setProgress({
         percent: 100,
@@ -727,6 +743,9 @@ export function initAppUpdates({ desktop = null, installedVersion = APP_VERSION,
         // Updates are installers, not updater feeds: the release publishes one
         // per platform and this opens the right one. Nothing here modifies the
         // installed app, so a failed download can never corrupt an installation.
+        const inApp = await installInApp(desktop, result.release);
+        if (inApp && inApp.ok) return;
+        if (inApp) throw new Error(inApp.message || 'The update could not be installed.');
         const url = downloadFor(result.release, platformKey());
         if (!url) throw new Error('No installer is published for this platform yet.');
         setProgress({

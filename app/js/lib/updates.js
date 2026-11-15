@@ -21,11 +21,12 @@
    GitHub asset existing. `releases.json` is the full history and is used as the
    fallback, which also keeps older clients working. */
 export const MANIFEST_URLS = [
+  // Main first: the desktop app loads its pages from the installed files, so a
+  // relative version.json is the copy packaged with that build and can never
+  // announce a newer one. The local copies are the offline fallback.
+  'https://raw.githubusercontent.com/Stratos-tracker/Stratos-tracker/main/app/version.json',
   'version.json',
   'releases.json',
-  // The last resort is main itself: the release page no longer attaches a copy
-  // of the manifest, so a raw file is the address that always exists.
-  'https://raw.githubusercontent.com/Stratos-tracker/Stratos-tracker/main/app/version.json',
 ];
 
 export const CACHE_KEY = 'stratos.update.cache';

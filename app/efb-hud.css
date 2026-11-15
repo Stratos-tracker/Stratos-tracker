@@ -619,13 +619,6 @@ html.phone-mode #procpane, html.phone-mode #planpane { display: none !important;
     border-radius: 50%;
     font-size: 19px;
   }
-  html[data-ui="new"] #b3d {
-    right: 12px;
-    left: auto;
-    top: calc(50% - 2px);
-    border-radius: 50%;
-    font-size: 10.5px;
-  }
 
   html[data-ui="new"] #rose {
     display: block;

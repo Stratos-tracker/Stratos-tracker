@@ -2,7 +2,7 @@
    The shell is available offline after the first visit. Live data, telemetry,
    logbook JSON, weather and map tiles are NEVER cached, so stale data can never
    be presented as live. A new build replaces the old cache on activation. */
-const CACHE = 'stratos-shell-2.2.1-phone';
+const CACHE = 'stratos-shell-2.2.2-phone';
 const SHELL = [
   './',
   'index.html',
@@ -41,10 +41,8 @@ const SHELL = [
   'js/efb.js',
   // Phone Mode: its own entry point, manifest, stylesheet and modules, so an
   // installed phone app opens the phone interface — not the desktop deck.
-  'directto.css',
   'js/lib/directto.js',
   'js/lib/routestore.js',
-  'js/directto-control.js',
   'manifest-phone.webmanifest',
   // The account pages are static, so they open offline too; every account API
   // call is cross-origin and never touches this cache.

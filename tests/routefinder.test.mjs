@@ -80,3 +80,34 @@ test('a refused live request is retried once, and a failed route lookup is tried
   assert.equal(second.results.length, 1, 'the failure was not remembered as "no route"');
   assert.equal(routeCalls, 2);
 });
+
+test('VRS route files become legs; multi-stop flights split, junk dropped', async () => {
+  const { parseVrsRoutes, parseVrsAirports, typeCanFly } = await import('../app/js/lib/routefinder.js');
+  const legs = parseVrsRoutes('﻿Callsign,Code,Number,AirlineCode,AirportCodes\r\nBAW1,BAW,1,BAW,EGLL-KJFK\r\nQFA1,QFA,1,QFA,YSSY-WSSS-EGLL\r\nN123,,,,KJFK-KBOS\r\n');
+  assert.deepEqual(legs.map(l => `${l.callsign} ${l.from}-${l.to}`), ['BAW1 EGLL-KJFK', 'QFA1 YSSY-WSSS', 'QFA1 WSSS-EGLL']);
+  const apts = parseVrsAirports('Code,Name,ICAO,IATA,Location,CountryISO2,Latitude,Longitude,AltitudeFeet\nEGLL,Heathrow,EGLL,LHR,London,GB,51.4706,-0.4619,83\nXX,bad,,,,,,,\n');
+  assert.equal(apts.get('EGLL').city, 'London');
+  assert.equal(apts.size, 1);
+  assert.ok(typeCanFly('', 9000) && typeCanFly('A388', 4500) && !typeCanFly('A388', 300) && !typeCanFly('AT76', 2000));
+});
+
+test('an all-flights search filters by departure and arrival without live traffic', async () => {
+  const { findAllRoutes } = await import('../app/js/lib/routefinder.js');
+  const files = {
+    'BAW-all.csv': 'h\nBAW1,BAW,1,BAW,EGLL-KJFK\nBAW2,BAW,2,BAW,KJFK-EGLL\nBAW3,BAW,3,BAW,EGLL-LFPG\n',
+    'EG.csv': 'h\nEGLL,Heathrow,EGLL,LHR,London,GB,51.47,-0.46,83\n',
+    'KJ.csv': 'h\nKJFK,JFK,KJFK,JFK,New York,US,40.64,-73.78,13\n',
+    'LF.csv': 'h\nLFPG,CDG,LFPG,CDG,Paris,FR,49.01,2.55,392\n',
+  };
+  const fetchText = async url => files[url.split('/').pop()] ?? null;
+  const { results } = await findAllRoutes({ airline: 'BAW', from: 'EGLL', fetchText });
+  assert.deepEqual(results.map(r => r.callsign).sort(), ['BAW1', 'BAW3']);
+  const long = await findAllRoutes({ airline: 'BAW', from: 'EGLL', duration: '4-8', fetchText });
+  assert.deepEqual(long.results.map(r => `${r.origin.icao}-${r.destination.icao}`), ['EGLL-KJFK']);
+});
+
+test('the flight-time slider passes a minute range', async () => {
+  const { matchesDuration } = await import('../app/js/lib/routefinder.js');
+  assert.ok(matchesDuration(90, [60, 120]) && matchesDuration(120, [60, 120]));
+  assert.ok(!matchesDuration(130, [60, 120]) && matchesDuration(1500, [480, Infinity]));
+});

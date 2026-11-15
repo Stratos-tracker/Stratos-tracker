@@ -45,8 +45,6 @@ canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;displa
 .map3d-tip{position:absolute;z-index:2;pointer-events:none;display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:10px;background:rgba(4,10,17,.9);border:1px solid rgba(148,163,184,.28);box-shadow:0 8px 24px rgba(0,0,0,.3);color:#e2e8f0;font-size:11px;line-height:1.25;min-width:120px}
 .map3d-tip[hidden]{display:none}
 .map3d-tip b{font-size:13px;color:#f8fafc}.map3d-tip span{color:#94a3b8}
-#b3d{font-size:12px;font-weight:800;letter-spacing:.04em}
-#b3d.on{background:var(--acc);color:#fff;border-color:transparent}
 .box{background:var(--ui);border:1px solid var(--ui2);border-radius:10px;position:absolute;box-shadow:0 2px 10px rgba(0,0,0,.25)}
 #q{flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:1px solid var(--ui2);background:var(--ui);color:var(--txt);font:inherit;font-size:16px}
 button{font:inherit;color:var(--txt);background:var(--ui);border:1px solid var(--ui2);border-radius:8px;padding:7px 10px;cursor:pointer}
@@ -558,7 +556,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 <div id="fp" class="box" aria-live="polite"></div>
 <div id="online" class="box"><b id="olPlace">–</b><span id="olCount">–</span></div>
 <div id="rose" aria-hidden="true"><svg viewBox="0 0 120 120"><defs><radialGradient id="roseFace" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="#203447"/><stop offset=".55" stop-color="#0c1926"/><stop offset="1" stop-color="#050d15"/></radialGradient><linearGradient id="roseRing" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7dd3fc" stop-opacity=".65"/><stop offset=".5" stop-color="#334155" stop-opacity=".55"/><stop offset="1" stop-color="#0f172a" stop-opacity=".9"/></linearGradient></defs><circle class="rose-shadow" cx="60" cy="60" r="57"/><circle class="rose-bezel" cx="60" cy="60" r="56"/><circle class="rose-face" cx="60" cy="60" r="50"/><circle class="rose-ring" cx="60" cy="60" r="45.5"/><g id="roseTicks"></g><g id="roseNeedle"><path class="rose-needle-n" d="M60 16 64.5 56 60 62 55.5 56Z"/><path class="rose-needle-s" d="M60 104 55.5 64 60 58 64.5 64Z"/><circle class="rose-hub" cx="60" cy="60" r="3.2"/></g><path class="rose-lub" d="M60 2.5 55.5 11.5 64.5 11.5Z"/></svg><span class="rose-hdg" id="roseHdg">—</span></div>
-<div id="fab"><button id="bLay" class="fab" title="Map settings" aria-label="Map settings" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><g class="layers-glyph" fill="currentColor" stroke="#081019" stroke-width="1.15" stroke-linejoin="round"><path d="M12 2.6c.3 0 .59.07.85.22l7.35 4.35c.53.31.53 1.09 0 1.4l-7.35 4.35a1.71 1.71 0 0 1-1.7 0L3.8 8.57c-.53-.31-.53-1.09 0-1.4l7.35-4.35c.26-.15.55-.22.85-.22Z" transform="translate(0 8.8)"/><path d="M12 2.6c.3 0 .59.07.85.22l7.35 4.35c.53.31.53 1.09 0 1.4l-7.35 4.35a1.71 1.71 0 0 1-1.7 0L3.8 8.57c-.53-.31-.53-1.09 0-1.4l7.35-4.35c.26-.15.55-.22.85-.22Z" transform="translate(0 4.4)"/><path d="M12 2.6c.3 0 .59.07.85.22l7.35 4.35c.53.31.53 1.09 0 1.4l-7.35 4.35a1.71 1.71 0 0 1-1.7 0L3.8 8.57c-.53-.31-.53-1.09 0-1.4l7.35-4.35c.26-.15.55-.22.85-.22Z"/></g></svg></button><button id="bFol" class="fab" title="Follow aircraft" aria-pressed="false">&#9992;</button><button id="b3d" class="fab" title="3D recorded track view" aria-label="3D recorded track view" aria-pressed="false">TRK</button><button id="bZi" class="fab" title="Zoom in">+</button><button id="bZo" class="fab" title="Zoom out">−</button>
+<div id="fab"><button id="bLay" class="fab" title="Map settings" aria-label="Map settings" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><g class="layers-glyph" fill="currentColor" stroke="#081019" stroke-width="1.15" stroke-linejoin="round"><path d="M12 2.6c.3 0 .59.07.85.22l7.35 4.35c.53.31.53 1.09 0 1.4l-7.35 4.35a1.71 1.71 0 0 1-1.7 0L3.8 8.57c-.53-.31-.53-1.09 0-1.4l7.35-4.35c.26-.15.55-.22.85-.22Z" transform="translate(0 8.8)"/><path d="M12 2.6c.3 0 .59.07.85.22l7.35 4.35c.53.31.53 1.09 0 1.4l-7.35 4.35a1.71 1.71 0 0 1-1.7 0L3.8 8.57c-.53-.31-.53-1.09 0-1.4l7.35-4.35c.26-.15.55-.22.85-.22Z" transform="translate(0 4.4)"/><path d="M12 2.6c.3 0 .59.07.85.22l7.35 4.35c.53.31.53 1.09 0 1.4l-7.35 4.35a1.71 1.71 0 0 1-1.7 0L3.8 8.57c-.53-.31-.53-1.09 0-1.4l7.35-4.35c.26-.15.55-.22.85-.22Z"/></g></svg></button><button id="bFol" class="fab" title="Follow aircraft" aria-pressed="false">&#9992;</button><button id="bZi" class="fab" title="Zoom in">+</button><button id="bZo" class="fab" title="Zoom out">−</button>
 </div><aside id="lay" role="dialog" aria-label="Map settings" aria-hidden="true">
 <header class="lay-h"><b>Map settings</b><button type="button" class="lay-x" id="layX" aria-label="Close settings">&#10005;</button></header>
 <div class="lay-body">
@@ -1792,8 +1790,7 @@ let track3d=null,view3d=false,t3sig='';
 function t3Points(){const out=[],a=TRL.get('own');if(a)for(const p of a){if(Array.isArray(p)&&Number.isFinite(p[0])&&Number.isFinite(p[1]))out.push([p[0],p[1],Number(p[2])||0,Number(p[3])||0,Number.isFinite(p[4])?p[4]:null])}if(liveOk()){const last=out[out.length-1];if(!last||Math.abs(last[0]-own.lat)>1e-7||Math.abs(last[1]-own.lon)>1e-7)out.push([own.lat,own.lon,own.alt||0,Date.now(),live.d&&live.d.agl])}return out}
 function ensure3d(){if(track3d)return track3d;const Ctor=window.Track3DView;if(!Ctor)return null;track3d=new Ctor($('#map3d'),$('#map3dtip'),{accent:MP.color,leftTilt:false,ownMarker:true});return track3d}
 function sync3d(force){if(!view3d||!track3d)return;const pts=t3Points(),last=pts[pts.length-1],sig=pts.length+':'+(last?last[0].toFixed(6)+','+last[1].toFixed(6):'');if(!force&&sig===t3sig)return;t3sig=sig;track3d.setTrack(pts)}
-function set3d(on){const next=!!on;if(next&&!ensure3d())return;view3d=next;$('#map3d').hidden=!next;$('#b3d').classList.toggle('on',next);$('#b3d').setAttribute('aria-pressed',next?'true':'false');if(next){track3d.resize();sync3d(true)}else track3d?.hideTip()}
-$('#b3d').onclick=()=>set3d(!view3d);
+function set3d(on){const next=!!on;if(next&&!ensure3d())return;view3d=next;$('#map3d').hidden=!next;if(next){track3d.resize();sync3d(true)}else track3d?.hideTip()}
 /* ── Optional 3D globe ──────────────────────────────────────────────────
    Separate from the recorded-track view above. It shares the 2D chart's
    centre and zoom, carries the real Esri imagery and AWS/Mapzen relief, and
@@ -5042,6 +5039,5 @@ navigator.serviceWorker.addEventListener('controllerchange',()=>{try{if(sessionS
     } catch (_) { /* publishing is optional; the map is unaffected */ }
   }
 </script><script type="module" src="js/mobile.js"></script>
-<script type="module" src="js/directto-control.js"></script>
 </body>
 </html>

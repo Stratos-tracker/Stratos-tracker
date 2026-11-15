@@ -1,53 +1,41 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.2.1",
+  "latestVersion": "2.2.2",
   "minimumSupportedVersion": "",
   "mandatory": false,
-  "releaseDate": "2026-11-14",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.1/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.1/Stratos-Setup.exe",
-      "sha256": "e2620881ee988b250e394eb06f126b78828894fa8de7c303481352f969670edd",
-      "size": 118980582
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.1/Stratos-2.2.1-mac-arm64.dmg",
-      "sha256": "446f1b6440e936ea17e428e97f86ab557079c29df0ee424b147f1901ff162a57",
-      "size": 137567112
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.1/Stratos-2.2.1-mac-x64.dmg",
-      "sha256": "e2fc4c1088d5ac4c8d50913a7f833499fa45d2e8944e5660e06eb537592fddeb",
-      "size": 142977564
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.1/Stratos-2.2.1-linux-x64.AppImage",
-      "sha256": "fb3b34547cfe0b6bfe1deb495e1e628ce33b5d810db41165a68fbd68b5a14f29",
-      "size": 158922454
-    }
-  },
-  "summary": "Route Finder, a new EFB app: real flights in the air now, filtered by aircraft, airline and flight time, each ready to uplink to SimBrief. The EFB home screen now shows the Stratos wing.",
+  "releaseDate": "2026-11-15",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "Route Finder now finds any real airline flight, not just those airborne, with airport filters and a flight-time slider. Desktop updates now prompt on launch and install inside the app.",
   "reason": "",
   "releaseNotes": [
-    "Route Finder: real airline flights in the air now, with callsign, departure, arrival, distance and estimated block time.",
-    "Filter by aircraft type, airline and flight time, from under an hour to over eight.",
-    "Uplink to SimBrief opens the flight planner prefilled with the airline, flight number, aircraft and both airports.",
-    "The EFB home screen shows the Stratos wing as its default wallpaper; an airline's logo still replaces it when one is set."
+    "Route Finder searches every known real airline route; FLYING NOW limits it to flights airborne right now.",
+    "Route Finder filters by departure and arrival airport.",
+    "Flight time is a slider from 30 minutes to 21 hours.",
+    "On Windows, Update Now downloads the new version, checks its published checksum, installs it and reopens Stratos.",
+    "The desktop app now detects new releases: it read the version file packaged with itself and always thought it was current.",
+    "Removed the DIRECT TO button from the EFB and Flight Deck, and the TRK button from the Flight Deck.",
+    "Installs of 2.2.1 or older must update to 2.2.2 by hand once; later updates are offered in the app."
   ],
   "notes": {
     "features": [
-      "Route Finder: real airline flights in the air now, with callsign, departure, arrival, distance and estimated block time.",
-      "Filter by aircraft type, airline and flight time, from under an hour to over eight.",
-      "Uplink to SimBrief opens the flight planner prefilled with the airline, flight number, aircraft and both airports."
+      "Route Finder searches every known real airline route; FLYING NOW limits it to flights airborne right now.",
+      "Route Finder filters by departure and arrival airport."
     ],
-    "improvements": [],
-    "fixes": [],
+    "improvements": [
+      "Flight time is a slider from 30 minutes to 21 hours.",
+      "On Windows, Update Now downloads the new version, checks its published checksum, installs it and reopens Stratos."
+    ],
+    "fixes": [
+      "The desktop app now detects new releases: it read the version file packaged with itself and always thought it was current."
+    ],
     "performance": [],
     "ui": [
-      "The EFB home screen shows the Stratos wing as its default wallpaper; an airline's logo still replaces it when one is set."
+      "Removed the DIRECT TO button from the EFB and Flight Deck, and the TRK button from the Flight Deck."
     ],
-    "compatibility": [],
+    "compatibility": [
+      "Installs of 2.2.1 or older must update to 2.2.2 by hand once; later updates are offered in the app."
+    ],
     "other": []
   }
 }

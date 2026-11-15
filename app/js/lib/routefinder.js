@@ -1,9 +1,11 @@
 /* Real-world route ideas for the EFB Route Finder.
  *
- * Flights are real and in the air now: live ADS-B aircraft of a type
- * (adsb.lol, through the same proxy the map uses), whose callsign is then
- * looked up in adsbdb's route database for its scheduled origin and
- * destination. Block time is estimated from the great-circle distance and the
+ * FLYING NOW: live ADS-B aircraft of a type (adsb.lol, through the same proxy
+ * the map uses), whose callsign is then looked up in adsbdb's route database
+ * for its scheduled origin and destination.
+ * All flights: every route an airline's callsigns are known to fly, from the
+ * Virtual Radar Server standing data (updated daily), whether or not one is
+ * airborne now. Block time is estimated from the great-circle distance and the
  * type's typical cruise speed; it is a planning figure, not the timetable.
  */
 
@@ -54,8 +56,10 @@ export function cruiseKt(type) {
 /** Block minutes: airborne time at the type's cruise plus 25 minutes of taxi, climb and approach. */
 export const blockMinutes = (nm, type) => Math.round((nm / cruiseKt(type)) * 60 + 25);
 
-export function matchesDuration(minutes, durationId) {
-  const d = DURATIONS.find(x => x.id === durationId) || DURATIONS[0];
+/** duration: a DURATIONS id, or [minMinutes, maxMinutes] from the slider. */
+export function matchesDuration(minutes, duration) {
+  if (Array.isArray(duration)) return minutes >= duration[0] && minutes <= duration[1];
+  const d = DURATIONS.find(x => x.id === duration) || DURATIONS[0];
   return minutes >= d.min && minutes < d.max;
 }
 
@@ -88,7 +92,7 @@ export function candidatesFrom(payloads, { airline = '' } = {}) {
 
 /** SimBrief's dispatch page, prefilled (the documented redirect parameters). */
 export function simbriefUrl(f) {
-  const q = new URLSearchParams({ airline: f.airline, fltnum: f.number, type: f.type, orig: f.origin.icao, dest: f.destination.icao });
+  const q = new URLSearchParams({ airline: f.airline, fltnum: f.number, ...(f.type ? { type: f.type } : {}), orig: f.origin.icao, dest: f.destination.icao });
   return `https://dispatch.simbrief.com/options/custom?${q}`;
 }
 
@@ -98,7 +102,7 @@ const routeCache = new Map();
  * Real flights matching the filters. fetchTraffic(url) answers adsb.lol JSON
  * (the page decides proxy or direct); fetchRoute(callsign) answers adsbdb JSON.
  */
-export async function findRoutes({ type = '', airline = '', duration = 'any', fetchTraffic, fetchRoute, limit = 12, maxLookups = 60, onProgress = () => {} }) {
+export async function findRoutes({ type = '', airline = '', from = '', to = '', duration = 'any', fetchTraffic, fetchRoute, limit = 12, maxLookups = (from || to) ? 150 : 60, onProgress = () => {} }) {
   const types = type ? [String(type).toUpperCase()] : DEFAULT_TYPES;
   // One retry: the live feed refuses the odd request when several arrive at once.
   const live = url => fetchTraffic(url).catch(() => new Promise(r => setTimeout(r, 700)).then(() => fetchTraffic(url))).catch(() => null);
@@ -119,11 +123,89 @@ export async function findRoutes({ type = '', airline = '', duration = 'any', fe
     }));
     batch.forEach((c, k) => {
       const r = routes[k];
-      if (!r || results.length >= limit) return;
+      if (!r || results.length >= limit || (from && r.origin.icao !== from) || (to && r.destination.icao !== to)) return;
       const nm = Math.round(distanceNm(r.origin, r.destination));
       const minutes = blockMinutes(nm, c.type);
       if (matchesDuration(minutes, duration)) results.push({ ...c, ...r, distanceNm: nm, blockMinutes: minutes });
     });
+    onProgress({ looked, found: results.length, pool: pool.length });
+  }
+  return { results, pool: pool.length, looked };
+}
+
+// ---- All flights: the VRS standing data (github.com/vradarserver/standing-data) ----
+export const VRS = 'https://raw.githubusercontent.com/vradarserver/standing-data/main';
+// Searched when no airline is chosen: large carriers across every region.
+export const DEFAULT_AIRLINES = ['BAW', 'DLH', 'AFR', 'KLM', 'UAE', 'QTR', 'THY', 'DAL', 'AAL', 'UAL', 'SIA', 'QFA', 'ANA', 'CPA', 'EZY', 'RYR'];
+
+const csvRows = text => String(text || '').replace(/^﻿/, '').split(/\r?\n/).slice(1).filter(Boolean).map(l => l.split(','));
+
+/** An airline's route file -> one leg per row: { callsign, airline, number, from, to }. Multi-stop flights become their legs. */
+export function parseVrsRoutes(text) {
+  const legs = [];
+  for (const [callsign, code, number, , codes = ''] of csvRows(text)) {
+    if (!parseCallsign(callsign)) continue;
+    const stops = codes.split('-').filter(c => /^[A-Z0-9]{4}$/.test(c));
+    for (let i = 1; i < stops.length; i += 1) if (stops[i] !== stops[i - 1]) legs.push({ callsign, airline: code, number, from: stops[i - 1], to: stops[i] });
+  }
+  return legs;
+}
+
+/** An airports file (one ICAO prefix) -> Map of ICAO -> airport in the adsbdb shape used by the cards. */
+export function parseVrsAirports(text) {
+  const out = new Map();
+  for (const [, name, icao, iata, city, country, lat, lon] of csvRows(text)) {
+    const la = Number(lat), lo = Number(lon);
+    if (/^[A-Z0-9]{4}$/.test(icao || '') && Number.isFinite(la) && Number.isFinite(lo)) out.set(icao, { icao, iata: iata || '', name: name || '', city: city || '', country: country || '', lat: la, lon: lo });
+  }
+  return out;
+}
+
+// shortcut: a type's routes are not in the data, so a chosen type only keeps legs it can plausibly fly (range by class); upgrade if a route-to-type source appears.
+export function typeCanFly(type, nm) {
+  const t = String(type || '').toUpperCase();
+  if (!t) return true;
+  if (TURBOPROP.test(t)) return nm <= 1000;
+  if (REGIONAL.test(t)) return nm <= 2000;
+  if (WIDEBODY.test(t)) return nm >= 1200;
+  return nm <= 3500;
+}
+
+const vrsCache = new Map();
+const cachedText = (url, fetchText) => {
+  if (!vrsCache.has(url)) vrsCache.set(url, fetchText(url).catch(() => { vrsCache.delete(url); return null; }));
+  return vrsCache.get(url);
+};
+
+/**
+ * Real airline routes matching the filters, airborne now or not.
+ * fetchText(url) answers the file's text; a 404 should answer null.
+ */
+export async function findAllRoutes({ type = '', airline = '', from = '', to = '', duration = 'any', fetchText, limit = 12, onProgress = () => {} }) {
+  const airlines = airline ? [String(airline).toUpperCase()] : DEFAULT_AIRLINES;
+  const files = await Promise.all(airlines.map(a => cachedText(`${VRS}/routes/schema-01/${a[0]}/${a}-all.csv`, fetchText)));
+  if (files.every(f => f === null) && !airline) throw new Error('Route data is unavailable right now.');
+  const pool = files.flatMap(f => parseVrsRoutes(f)).filter(l => (!from || l.from === from) && (!to || l.to === to));
+  for (let i = pool.length - 1; i > 0; i -= 1) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  const airports = new Map();
+  const airportFor = async icao => {
+    const url = `${VRS}/airports/schema-01/${icao[0]}/${icao.slice(0, 2)}.csv`;
+    if (!airports.has(url)) airports.set(url, cachedText(url, fetchText).then(parseVrsAirports));
+    return (await airports.get(url)).get(icao) || null;
+  };
+  const results = [];
+  let looked = 0;
+  const seen = new Set();
+  for (let i = 0; i < pool.length && results.length < limit && looked < 400; i += 12) {
+    const batch = pool.slice(i, i + 12).filter(l => !seen.has(l.callsign) && seen.add(l.callsign));
+    looked += batch.length;
+    const found = await Promise.all(batch.map(async l => [l, await airportFor(l.from), await airportFor(l.to)]));
+    for (const [l, origin, destination] of found) {
+      if (!origin || !destination || results.length >= limit) continue;
+      const nm = Math.round(distanceNm(origin, destination));
+      const minutes = blockMinutes(nm, type);
+      if (typeCanFly(type, nm) && matchesDuration(minutes, duration)) results.push({ callsign: l.callsign, airline: l.airline, number: l.number, type: String(type || '').toUpperCase(), registration: '', airlineName: '', origin, destination, distanceNm: nm, blockMinutes: minutes });
+    }
     onProgress({ looked, found: results.length, pool: pool.length });
   }
   return { results, pool: pool.length, looked };

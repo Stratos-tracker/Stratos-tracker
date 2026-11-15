@@ -727,7 +727,21 @@ body[data-airline]:not([data-airline=""]) .home-airline-logo { opacity: 1; }
 .hi-routes .hi-tile { background: linear-gradient(160deg, #2f7bff, #0b2f9f 80%); }
 /* Route Finder */
 .rf { display: flex; flex-direction: column; gap: 12px; max-width: 1100px; }
-.rf-filters { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(140px, 1fr) auto auto; gap: 12px; align-items: end; }
+.rf-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: end; }
+.rf-filters > div.rf-field { grid-column: span 2; }
+.rf-now { height: 36px; gap: 7px; }
+.rf-slider { display: flex; align-items: center; gap: 12px; height: 36px; }
+.rf-track { position: relative; flex: 1; height: 4px; border-radius: 2px; background: var(--efb-line); }
+.rf-track i { position: absolute; top: 0; bottom: 0; border-radius: 2px; background: var(--efb-accent); }
+.rf-track input { position: absolute; inset: -10px 0; width: 100%; margin: 0; background: none; pointer-events: none; -webkit-appearance: none; appearance: none; }
+.rf-track input::-webkit-slider-runnable-track { background: none; }
+.rf-track input::-webkit-slider-thumb { -webkit-appearance: none; pointer-events: auto; width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 3px solid var(--efb-accent); cursor: grab; }
+.rf-track input::-moz-range-thumb { pointer-events: auto; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 3px solid var(--efb-accent); cursor: grab; }
+.rf-track input:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px var(--efb-accent-line); }
+.rf-slider output { min-width: 112px; font: 600 12.5px/1 var(--efb-font); font-variant-numeric: tabular-nums; color: var(--efb-text, inherit); text-align: right; }
+.rf-now i { width: 8px; height: 8px; border-radius: 50%; background: var(--efb-faint, #64748b); flex: none; }
+.rf-now[aria-pressed="true"] { border-color: var(--efb-accent-line); color: var(--efb-accent); }
+.rf-now[aria-pressed="true"] i { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.2); }
 .rf-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .rf-field .e-input { text-transform: uppercase; font-weight: 600; letter-spacing: .04em; }
 .rf-go { height: 36px; }
@@ -752,7 +766,7 @@ body[data-airline]:not([data-airline=""]) .home-airline-logo { opacity: 1; }
 .rf-leg i::after { content: '✈'; position: absolute; left: 50%; top: -9px; transform: translateX(-50%); color: var(--efb-accent); font-size: 12px; font-style: normal; }
 .rf-actions { display: flex; gap: 8px; justify-content: flex-end; }
 .rf-source { margin: 2px; }
-@media (max-width: 900px) { .rf-filters { grid-template-columns: 1fr 1fr; } .rf-filters .e-seg { flex-wrap: wrap; } .rf-go { grid-column: 1 / -1; } .rf-results { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .rf-filters { grid-template-columns: 1fr 1fr; } .rf-filters .e-seg { flex-wrap: wrap; } .rf-results { grid-template-columns: 1fr; } }
 .hi-briefing .hi-tile { background: linear-gradient(160deg, #ffffff, #eef1f5); }
 .hi-weather .hi-tile { background: linear-gradient(160deg, #4fb0ff, #0a63d8 78%); }
 .hi-charts .hi-tile { background: linear-gradient(160deg, #ffffff, #eef1f5); }

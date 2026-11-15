@@ -1,9 +1,10 @@
-const { app, BrowserWindow, session, shell, ipcMain } = require('electron');
+const { app, BrowserWindow, session, shell, ipcMain, net: electronNet } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const http = require('node:http');
 const net = require('node:net');
 const { spawn, spawnSync } = require('node:child_process');
+const crypto = require('node:crypto');
 
 // Optional at runtime: a build that somehow shipped without the dependency still
 // opens, it just cannot update itself.
@@ -761,6 +762,49 @@ ipcMain.handle('updates:open-download', async (_event, url) => {
   await shell.openExternal(parsed.toString());
   note(`Opened the update download: ${parsed.toString()}`);
   return { ok: true };
+});
+
+// Windows: download the published installer, check it against the sha256 in
+// version.json, then run it silently and quit. The NSIS installer replaces the
+// app in place (user data lives in AppData and is untouched) and --force-run
+// reopens Stratos when it is done.
+let installing = false;
+ipcMain.handle('updates:install-download', async (_event, url, sha256) => {
+  if (process.platform !== 'win32' || !app.isPackaged) return { ok: false, unsupported: true, message: 'In-app install is for the packaged Windows app.' };
+  let parsed = null;
+  try { parsed = new URL(String(url || '')); } catch (_) { return { ok: false, message: 'That update link is not a URL.' }; }
+  if (parsed.protocol !== 'https:' || !/(^|\.)github\.com$/i.test(parsed.hostname)) return { ok: false, message: 'That update link does not point at the Stratos releases.' };
+  const want = String(sha256 || '').toLowerCase();
+  if (!/^[a-f0-9]{64}$/.test(want)) return { ok: false, message: 'This release has no checksum, so it cannot be installed automatically.' };
+  if (installing) return { ok: false, message: 'An update is already downloading.' };
+  installing = true;
+  try {
+    note(`Downloading the update installer: ${parsed}`);
+    const response = await electronNet.fetch(parsed.toString());
+    if (!response.ok) throw new Error(`The download failed (HTTP ${response.status}).`);
+    const total = Number(response.headers.get('content-length')) || 0;
+    const hash = crypto.createHash('sha256');
+    const chunks = [];
+    let got = 0, lastSent = 0;
+    for await (const chunk of response.body) {
+      hash.update(chunk); chunks.push(chunk); got += chunk.length;
+      if (total && Date.now() - lastSent > 250) { lastSent = Date.now(); broadcastUpdate({ state: 'downloading', percent: Math.round((got / total) * 100) }); }
+    }
+    if (hash.digest('hex') !== want) throw new Error('The downloaded installer did not match its published checksum; nothing was installed.');
+    const file = path.join(app.getPath('temp'), `Stratos-Setup-${Date.now()}.exe`);
+    fs.writeFileSync(file, Buffer.concat(chunks.map(c => Buffer.from(c))));
+    broadcastUpdate({ state: 'downloaded', percent: 100, installing: true });
+    note(`Installer verified; running ${file} silently and quitting.`);
+    spawn(file, ['/S', '--force-run'], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
+    setTimeout(() => app.quit(), 600);
+    return { ok: true };
+  } catch (error) {
+    installing = false;
+    const message = error && error.message ? error.message : String(error);
+    note(`Update install failed: ${message}`);
+    broadcastUpdate({ state: 'error', message });
+    return { ok: false, message };
+  }
 });
 
 ipcMain.handle('updater:install', () => {
