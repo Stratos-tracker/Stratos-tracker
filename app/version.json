@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-15",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.4/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.4/Stratos-Setup.exe",
+      "sha256": "4eadb9d8a137861daa82e9aff54076d3d61cb92635588ac1bec96d0b46d9bf32",
+      "size": 119003159
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.4/Stratos-2.2.4-mac-arm64.dmg",
+      "sha256": "c8013404725c18cc58117c8f76e208fbcf9a8f7f3cffe3a82fa855153f74519f",
+      "size": 137537622
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.4/Stratos-2.2.4-mac-x64.dmg",
+      "sha256": "bea97e3c0b85ad2e040fe81203ebcc62707e1c228e6e959217333daab5672d28",
+      "size": 143009740
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.4/Stratos-2.2.4-linux-x64.AppImage",
+      "sha256": "a225ba9bd5cc319e33b51160d20f00f1de5bb353a0bb43f64b27481bac4faf7a",
+      "size": 158939220
+    }
+  },
   "summary": "A new performance calculator: V1/VR/V2, FLEX and flaps for takeoff, VAPP, autobrake and stopping point for landing, drawn on a to-scale runway. Weight & Balance uplinks its weights to it.",
   "reason": "",
   "releaseNotes": [
