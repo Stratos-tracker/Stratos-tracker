@@ -380,25 +380,6 @@
       ]
     }
   },
-  "2.1.25": {
-    "summary": "The bag stands on its own on a tablet, and opening Stratos on a phone no longer strands you on a browser error page when the PC is off.",
-    "changelog": {
-      "features": [
-        "Stratos EFB installs to a tablet home screen as its own app: efb.html has its own manifest, a standalone window, its own id and icons, so an iPad keeps the Flight Deck icon too."
-      ],
-      "improvements": [
-        "Opening Stratos on a phone while the PC is idle now leaves you on the hosted Flight Deck, which works without a simulator, and offers one tap to the map the PC serves instead of claiming the address cannot be reached."
-      ],
-      "fixes": [
-        "The hop to the PC is a deliberate tap, never a navigation on load: an address the browser cannot answer can no longer replace the app with an error page it could not undo.",
-        "Connect on the hosted page opens the PC this phone already knows, or the fixed local name on a first visit, so the pairing page is not looked for again.",
-        "The phone keeps tracking once it is on the PC page: the live stream is same-origin there, reconnects after a suspend, and asks for no code, no URL and no button."
-      ],
-      "ui": [
-        "The offer names the machine it opens, is dismissible for the session, and appears only on a touch screen with a small viewport."
-      ]
-    }
-  },
   "2.1.37": {
     "summary": "SID paths now start on the runway and follow the published initial-climb heading to its altitude-gated turn, including SLEEK2 runway 8 at KDEN.",
     "changelog": {
@@ -584,6 +565,22 @@
       "fixes": [
         "MSFS 2020 and 2024 are tracked again: the desktop app now ships the SimConnect connector it needs, which earlier builds left out.",
         "The bridge no longer tells desktop users to run pip install SimConnect; the connector comes with the app."
+      ],
+      "performance": [],
+      "ui": [],
+      "compatibility": [],
+      "other": []
+    }
+  },
+  "2.2.9": {
+    "summary": "Website downloads always lead to an installer, and search results go to the Stratos homepage.",
+    "changelog": {
+      "features": [],
+      "improvements": [
+        "Searching for Stratos now leads to the homepage instead of inner app pages or an old preview address."
+      ],
+      "fixes": [
+        "The website's macOS download links work again: when a release has no build for a platform, the newest one that does is offered."
       ],
       "performance": [],
       "ui": [],

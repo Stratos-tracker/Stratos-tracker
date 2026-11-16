@@ -30,12 +30,18 @@ function isWebUrl(value) {
   }
 }
 
-/** The manifest's own table for one platform, or null. */
+/**
+ * The newest manifest entry with a file for one platform, or null. A release
+ * can ship without a platform (its build never got a runner), and that
+ * platform then keeps the last build it had instead of a dead button.
+ */
 export function resolveDownload(manifest, platform) {
-  const downloads = manifest && manifest.latest && manifest.latest.downloads;
-  const entry = downloads && downloads[platform];
-  if (!entry || !isWebUrl(entry.url)) return null;
-  return String(entry.url);
+  const releases = [manifest && manifest.latest, ...((manifest && Array.isArray(manifest.releases)) ? manifest.releases : [])];
+  for (const release of releases) {
+    const entry = release && release.downloads && release.downloads[platform];
+    if (entry && isWebUrl(entry.url)) return String(entry.url);
+  }
+  return null;
 }
 
 /** A platform's file among a release's attached assets, or null. */

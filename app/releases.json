@@ -3,36 +3,44 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.2.8",
+    "version": "2.2.9",
     "releasedAt": "2026-11-16",
     "severity": "normal",
-    "summary": "MSFS 2020 and 2024 tracking works in the desktop app.",
+    "summary": "Website downloads always lead to an installer, and search results go to the Stratos homepage.",
     "changelog": {
       "features": [],
-      "improvements": [],
+      "improvements": [
+        "Searching for Stratos now leads to the homepage instead of inner app pages or an old preview address."
+      ],
       "fixes": [
-        "MSFS 2020 and 2024 are tracked again: the desktop app now ships the SimConnect connector it needs, which earlier builds left out.",
-        "The bridge no longer tells desktop users to run pip install SimConnect; the connector comes with the app."
+        "The website's macOS download links work again: when a release has no build for a platform, the newest one that does is offered."
       ],
       "performance": [],
       "ui": [],
       "compatibility": [],
       "other": []
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.8/Stratos-Setup.exe",
-        "sha256": "8b790f5fd4a9891018df5ad959edf98f3e54644f55e5c3943d0aa44157df1daa",
-        "size": 119469348
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.8/Stratos-2.2.8-linux-x64.AppImage",
-        "sha256": "020001d48854da7d24a3e08dcae7dd7b6844fbbc29ab7a502d2113071ae9718a",
-        "size": 160295914
-      }
     }
   },
   "releases": [
+    {
+      "version": "2.2.9",
+      "releasedAt": "2026-11-16",
+      "severity": "normal",
+      "summary": "Website downloads always lead to an installer, and search results go to the Stratos homepage.",
+      "changelog": {
+        "features": [],
+        "improvements": [
+          "Searching for Stratos now leads to the homepage instead of inner app pages or an old preview address."
+        ],
+        "fixes": [
+          "The website's macOS download links work again: when a release has no build for a platform, the newest one that does is offered."
+        ],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.2.8",
       "releasedAt": "2026-11-16",
@@ -1235,53 +1243,6 @@
           "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.26/Stratos-2.1.26-linux-x64.AppImage",
           "sha256": "5d6cd8a4f5004352fc3ad62e98e2b555e64c9314c9c56ead2eaff13864e35d89",
           "size": 144489650
-        }
-      }
-    },
-    {
-      "version": "2.1.25",
-      "releasedAt": "2026-10-25",
-      "severity": "normal",
-      "summary": "The bag stands on its own on a tablet, and opening Stratos on a phone no longer strands you on a browser error page when the PC is off.",
-      "changelog": {
-        "features": [
-          "Stratos EFB installs to a tablet home screen as its own app: efb.html has its own manifest, a standalone window, its own id and icons, so an iPad keeps the Flight Deck icon too."
-        ],
-        "improvements": [
-          "Opening Stratos on a phone while the PC is idle now leaves you on the hosted Flight Deck, which works without a simulator, and offers one tap to the map the PC serves instead of claiming the address cannot be reached."
-        ],
-        "fixes": [
-          "The hop to the PC is a deliberate tap, never a navigation on load: an address the browser cannot answer can no longer replace the app with an error page it could not undo.",
-          "Connect on the hosted page opens the PC this phone already knows, or the fixed local name on a first visit, so the pairing page is not looked for again.",
-          "The phone keeps tracking once it is on the PC page: the live stream is same-origin there, reconnects after a suspend, and asks for no code, no URL and no button."
-        ],
-        "performance": [],
-        "ui": [
-          "The offer names the machine it opens, is dismissible for the session, and appears only on a touch screen with a small viewport."
-        ],
-        "compatibility": [],
-        "other": []
-      },
-      "downloads": {
-        "windows": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.25/Stratos-Setup.exe",
-          "sha256": "e0bf15d132edef626f6a84183c29fd57efe435b965e196df9f75eb7763b48459",
-          "size": 107334063
-        },
-        "mac-arm64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.25/Stratos-2.1.25-mac-arm64.dmg",
-          "sha256": "90f6fd799484d6ac9de36c87e4c1b05b8c015801d9d9aa86b18035781bcfd22f",
-          "size": 123128040
-        },
-        "mac-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.25/Stratos-2.1.25-mac-x64.dmg",
-          "sha256": "c41451faaf779b3d413173aaa83257b88560d00947886c463ccce074a0bbd7fa",
-          "size": 128443466
-        },
-        "linux-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.25/Stratos-2.1.25-linux-x64.AppImage",
-          "sha256": "bef7dab26e726f2f050a3bacfe6ad662fa3f1bc77dbf310a988648aee5157237",
-          "size": 144030589
         }
       }
     }

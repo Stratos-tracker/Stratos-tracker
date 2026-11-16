@@ -219,6 +219,17 @@ test('the site endpoint resolves a platform to the published installer', async (
   assert.equal(resolveDownload({ latest: { downloads: null } }, 'windows'), null);
   assert.equal(resolveDownload(published, 'amiga'), null);
   assert.equal(resolveDownload({ latest: { downloads: { windows: { url: 'ftp://x/y' } } } }, 'windows'), null);
+  // 2.2.8 shipped without Mac builds: Mac keeps the newest release that has one.
+  const partial = {
+    latest: { version: '2.2.8', downloads: { windows: { url: 'https://example.test/8.exe' } } },
+    releases: [
+      { version: '2.2.8', downloads: { windows: { url: 'https://example.test/8.exe' } } },
+      { version: '2.2.7', downloads: { 'mac-arm64': { url: 'https://example.test/7.dmg' } } },
+    ],
+  };
+  assert.equal(resolveDownload(partial, 'windows'), 'https://example.test/8.exe', 'the newest build still wins');
+  assert.equal(resolveDownload(partial, 'mac-arm64'), 'https://example.test/7.dmg');
+  assert.equal(resolveDownload(partial, 'mac-x64'), null);
 
   const release = { assets: [{ name: 'Stratos-Setup.exe', browser_download_url: 'https://example.test/Setup.exe' }] };
   assert.equal(resolveAsset(release, 'windows'), 'https://example.test/Setup.exe');
