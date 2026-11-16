@@ -128,3 +128,13 @@ test('ChromeOS is offered beside the Windows download, which stays the main butt
   const data = JSON.parse(home.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
   assert.match(data.operatingSystem, /ChromeOS/);
 });
+
+test('the Phone Mode steps name screens that exist', () => {
+  assert.doesNotMatch(home, /More → Simulator connection|five-section/, 'no More tab or Simulator connection screen exists');
+  assert.match(home, /href="app\/live\.html">Live<\/a> on the phone and tap <b>Connect to Simulator<\/b>/, 'the phone pairs from Live');
+  assert.match(home, /Pilot → Settings → Phone access/, 'the PC fallback code is under Phone access');
+  const live = fs.readFileSync(new URL('../app/js/live.js', import.meta.url), 'utf8');
+  const settings = fs.readFileSync(new URL('../app/js/pilot/settings.js', import.meta.url), 'utf8');
+  assert.match(live, />Connect to Simulator</, 'and those labels are the real ones');
+  assert.match(settings, /<h2>Phone access<\/h2>/);
+});
