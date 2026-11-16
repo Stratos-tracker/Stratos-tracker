@@ -118,3 +118,13 @@ test('search lands on the homepage: no app page or vercel.app copy is indexed', 
   assert.ok(appRule?.headers.some(h => h.key === 'X-Robots-Tag' && /noindex/.test(h.value)), 'app pages are not indexed');
   assert.equal(meta(appPage, 'name', 'robots'), 'noindex,follow', 'nor is /app/ or /phone, which serve the same page');
 });
+
+test('a Chromebook is offered the installable web app, not a Windows installer', () => {
+  assert.match(home, /<article class="card" id="chromeos">/, 'there is a ChromeOS install card');
+  assert.match(home, /Install page as app/, 'with the real Chrome install steps');
+  assert.ok(home.includes(String.raw`/\bCrOS\b/.test(navigator.userAgent`), 'Chromebooks are recognised by the CrOS user agent token');
+  assert.match(home, /\['pc-download', 'ac-download'\]/, 'both download buttons switch on a Chromebook');
+  assert.match(home, /<li>ChromeOS<\/li>/, 'ChromeOS is listed with the desktop platforms');
+  const data = JSON.parse(home.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+  assert.match(data.operatingSystem, /ChromeOS/);
+});

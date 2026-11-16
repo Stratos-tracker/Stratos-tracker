@@ -30,7 +30,7 @@
   "alternateName": "Stratos Flight Tracker",
   "applicationCategory": "SimulationApplication",
   "applicationSubCategory": "Flight tracking and electronic flight bag",
-  "operatingSystem": "Windows, macOS, Linux, Web",
+  "operatingSystem": "Windows, macOS, Linux, ChromeOS, Web",
   "url": "https://www.stratos-tracker.com/",
   "description": "Stratos is a free flight tracker and electronic flight bag for X-Plane 12 and Microsoft Flight Simulator 2020/2024: live maps, flight planning with SID, STAR and approach procedures, charts, airport information, weather briefings, logbook, replay and landing analytics.",
   "offers": {
@@ -97,7 +97,7 @@ h2{font-size:clamp(25px,3.4vw,34px);letter-spacing:-.03em;margin:0 0 8px}
 .card .icon{font-size:20px;color:var(--accent)}
 .card h3{font-size:16px;margin:10px 0 5px}
 .card p{font-size:13px;color:var(--muted);margin:0}
-.install{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.install{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .install .card{display:flex;flex-direction:column}
 .install ol{padding-left:18px;color:var(--muted);font-size:13px;margin:8px 0 14px}
 .install .card .btn{margin-top:auto;min-height:42px;font-size:14px}
@@ -200,9 +200,9 @@ footer a{color:var(--muted)}
         </div>
       </div>
       <p>Download Stratos for the complete desktop flight tracking experience.</p>
-      <ul class="ac-list"><li>Windows</li><li>macOS</li><li>Linux</li></ul>
-      <a class="btn primary" href="/api/download?p=windows">↓ Download for Windows</a>
-      <p class="small">Also for <a href="/api/download?p=mac-arm64">macOS (Apple silicon)</a>, <a href="/api/download?p=mac-x64">macOS (Intel)</a> and <a href="/api/download?p=linux-x64">Linux</a>.</p>
+      <ul class="ac-list"><li>Windows</li><li>macOS</li><li>Linux</li><li>ChromeOS</li></ul>
+      <a class="btn primary" id="ac-download" href="/api/download?p=windows">↓ Download for Windows</a>
+      <p class="small">Also for <a href="/api/download?p=mac-arm64">macOS (Apple silicon)</a>, <a href="/api/download?p=mac-x64">macOS (Intel)</a> and <a href="/api/download?p=linux-x64">Linux</a>, or <a href="#chromeos">ChromeOS</a>.</p>
     </article>
     <article class="access-card" aria-labelledby="access-phone">
       <div class="ac-top">
@@ -252,7 +252,7 @@ footer a{color:var(--muted)}
         <li>Launch Stratos. The simulator bridge starts with the app.</li>
       </ol>
       <a class="btn primary" href="/api/download?p=windows">Download installer</a>
-      <p class="small">Also for <a href="/api/download?p=mac-arm64">macOS (Apple silicon)</a>, <a href="/api/download?p=mac-x64">macOS (Intel)</a> and <a href="/api/download?p=linux-x64">Linux</a>.</p>
+      <p class="small">Also for <a href="/api/download?p=mac-arm64">macOS (Apple silicon)</a>, <a href="/api/download?p=mac-x64">macOS (Intel)</a> and <a href="/api/download?p=linux-x64">Linux</a>, or <a href="#chromeos">ChromeOS</a>.</p>
     </article>
     <article class="card">
       <span class="badge">Phone</span>
@@ -264,6 +264,17 @@ footer a{color:var(--muted)}
       </ol>
       <a class="btn secondary" href="/phone">Open Phone Mode ↗</a>
       <p class="small">Needs HTTPS for installation. Live telemetry needs the relay and the desktop bridge running.</p>
+    </article>
+    <article class="card" id="chromeos">
+      <span class="badge">ChromeOS</span>
+      <h3 style="margin-top:10px">Chromebook</h3>
+      <ol>
+        <li>Open <a href="app/">Stratos</a> in Chrome.</li>
+        <li>Click the <b>install</b> icon at the right of the address bar (or menu → <b>Cast, save and share</b> → <b>Install page as app</b>), then pin it to the shelf.</li>
+        <li>The simulator runs on your PC: sign in to the same Stratos account on both, then open <a href="app/live.html">Live</a> on the Chromebook to follow your flight.</li>
+      </ol>
+      <a class="btn secondary" href="app/">Open Stratos ↗</a>
+      <p class="small">Intel or AMD Chromebooks can also run the <a href="/api/download?p=linux-x64">Linux build</a> in ChromeOS's Linux environment.</p>
     </article>
     <article class="card">
       <span class="badge">Browser</span>
@@ -314,10 +325,25 @@ footer a{color:var(--muted)}
     .then(function (response) { return response.ok ? response.json() : null; })
     .then(function (manifest) {
       var version = manifest && manifest.latest && manifest.latest.version;
-      if (!version) return;
+      if (!version || note.getAttribute('data-chromeos')) return;
       note.textContent = 'Windows installer · version ' + version + ' · macOS and Linux builds on the tracker · Phone Mode installs from your mobile browser';
     })
     .catch(function () { /* keep the generic note */ });
+})();
+
+/* A Chromebook cannot run the Windows installer; its Stratos is the web app,
+   installed from Chrome. */
+(function () {
+  if (!/\bCrOS\b/.test(navigator.userAgent || '')) return;
+  ['pc-download', 'ac-download'].forEach(function (id) {
+    var button = document.getElementById(id);
+    if (!button) return;
+    button.href = '#chromeos';
+    button.textContent = 'Install on Chromebook';
+  });
+  var note = document.getElementById('download-note');
+  if (note) note.setAttribute('data-chromeos', '1');
+  if (note) note.textContent = 'On a Chromebook, Stratos installs from Chrome as an app · sign in to the same account as the PC running your simulator';
 })();
 
 /* The phone prompt is an offer, never a redirect. The answer is remembered in
