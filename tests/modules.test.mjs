@@ -166,6 +166,9 @@ test('the desktop app gives its bridge a network bind a phone can reach', () => 
   // The exe serves the phone's page itself, so the app files must be bundled.
   const workflow = read('.github/workflows/release.yml');
   assert.equal((workflow.match(/--add-data "\$GITHUB_WORKSPACE\/app[;:]app"/g) || []).length, 3, 'every packaged bridge build carries app/');
+  // MSFS tracking needs the SimConnect package and its DLL inside the Windows exe.
+  assert.match(workflow, /pip install [^\n]*pyinstaller SimConnect==/, 'the Windows bridge build installs the MSFS connector');
+  assert.match(workflow, /--collect-all SimConnect [^\n]*navdata\/cifp;navdata/, 'and bundles it, DLL included, into the Windows exe');
 });
 
 test('bridge runtime state cannot be committed again', () => {

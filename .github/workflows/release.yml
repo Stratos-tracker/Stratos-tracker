@@ -225,13 +225,17 @@ jobs:
 
       - name: Build standalone simulator bridge
         run: |
-          python -m pip install --disable-pip-version-check pyinstaller
+          # SimConnect is the MSFS 2020/2024 connector. Without it the bridge
+          # only logs "MSFS support not installed" and never tracks MSFS.
+          python -m pip install --disable-pip-version-check pyinstaller SimConnect==0.4.26
           # --specpath moves the spec file, and PyInstaller resolves --add-data
           # sources relative to that spec, so the dataset is given as an
           # absolute path.
           # app/ must travel with the exe: the bridge is what serves the phone's
           # live page, and without these files every static route answers 404.
-          pyinstaller --noconfirm --clean --onefile --name stratos-bridge --distpath bridge-dist --workpath build/pyinstaller --specpath build --add-data "$GITHUB_WORKSPACE/navdata/cifp;navdata/cifp" --add-data "$GITHUB_WORKSPACE/app;app" stratos_bridge.py
+          # --collect-all SimConnect: the package loads its own SimConnect.dll
+          # through ctypes, which PyInstaller cannot see from the imports.
+          pyinstaller --noconfirm --clean --onefile --name stratos-bridge --distpath bridge-dist --workpath build/pyinstaller --specpath build --collect-all SimConnect --add-data "$GITHUB_WORKSPACE/navdata/cifp;navdata/cifp" --add-data "$GITHUB_WORKSPACE/app;app" stratos_bridge.py
           test -f bridge-dist/stratos-bridge.exe || { echo "::error::PyInstaller did not produce stratos-bridge.exe"; exit 1; }
 
       - name: Build Windows installer

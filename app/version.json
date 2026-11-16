@@ -1,58 +1,23 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.2.7",
+  "latestVersion": "2.2.8",
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-16",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.7/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.7/Stratos-Setup.exe",
-      "sha256": "5d15535ae0579a9eb96dfe7e65f366177a1f99480b170b898dc47c79e8893f9d",
-      "size": 119008421
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.7/Stratos-2.2.7-mac-arm64.dmg",
-      "sha256": "9d66076f8d9ee0cebd253fe2b6e49e24262a65a3457b40850e81afece04db10f",
-      "size": 137543465
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.7/Stratos-2.2.7-mac-x64.dmg",
-      "sha256": "f581355a78298de64871e11a0d7a446d98f25dd9719fd8829044f7c87ab45810",
-      "size": 143005404
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.7/Stratos-2.2.7-linux-x64.AppImage",
-      "sha256": "e4c21be602bc0ce4a9be1bfa8f13b1f53cf74ab5b0c2f29bfd08a04c659c13df",
-      "size": 158942560
-    }
-  },
-  "summary": "A rebuilt Flight Planner: click the chart to draw the route, a DEP / route / ARR bar, a legs table and waypoints across the whole chart.",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "MSFS 2020 and 2024 tracking works in the desktop app.",
   "reason": "",
   "releaseNotes": [
-    "Flight Planner: every chart click adds the waypoint under it and draws the leg; the first click picks the departure airport.",
-    "A route bar with DEP, the route as text and ARR. Type fixes or coordinates and press Enter; unknown idents are named, not guessed.",
-    "A legs table with the route, track, leg distance and running total for every point.",
-    "Waypoints from the simulator data now cover the whole chart: the new Fit view radius follows the zoom, and fixes are hidden only when zoomed far out.",
-    "The planner is four tabs (Route, Procedures, Fuel, Review) instead of a six-step wizard, and the planned route is drawn in magenta.",
-    "Planned route lines were not drawn on the EFB maps since 2.2.0; the Flight Planner and the Navigator show them again.",
-    "The Flight Planner chart no longer freezes for most of a second each time it is panned or zoomed.",
-    "Reopening the Flight Planner starts the chart at the plan instead of the default map."
+    "MSFS 2020 and 2024 are tracked again: the desktop app now ships the SimConnect connector it needs, which earlier builds left out.",
+    "The bridge no longer tells desktop users to run pip install SimConnect; the connector comes with the app."
   ],
   "notes": {
-    "features": [
-      "Flight Planner: every chart click adds the waypoint under it and draws the leg; the first click picks the departure airport.",
-      "A route bar with DEP, the route as text and ARR. Type fixes or coordinates and press Enter; unknown idents are named, not guessed.",
-      "A legs table with the route, track, leg distance and running total for every point."
-    ],
-    "improvements": [
-      "Waypoints from the simulator data now cover the whole chart: the new Fit view radius follows the zoom, and fixes are hidden only when zoomed far out.",
-      "The planner is four tabs (Route, Procedures, Fuel, Review) instead of a six-step wizard, and the planned route is drawn in magenta."
-    ],
+    "features": [],
+    "improvements": [],
     "fixes": [
-      "Planned route lines were not drawn on the EFB maps since 2.2.0; the Flight Planner and the Navigator show them again.",
-      "The Flight Planner chart no longer freezes for most of a second each time it is panned or zoomed.",
-      "Reopening the Flight Planner starts the chart at the plan instead of the default map."
+      "MSFS 2020 and 2024 are tracked again: the desktop app now ships the SimConnect connector it needs, which earlier builds left out.",
+      "The bridge no longer tells desktop users to run pip install SimConnect; the connector comes with the app."
     ],
     "performance": [],
     "ui": [],

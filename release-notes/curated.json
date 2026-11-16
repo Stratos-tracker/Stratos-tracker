@@ -380,37 +380,6 @@
       ]
     }
   },
-  "2.1.24": {
-    "summary": "Stratos EFB arrives: an iPad-style flight bag beside the tracker, and a flown trail that no longer disappears when the wheels touch down.",
-    "changelog": {
-      "features": [
-        "Stratos EFB is a second product at efb.html: an aviation tablet with a home screen of app icons, a dock, a status bar and a Home control, opened from the Flight Deck rail and the top bar.",
-        "Eleven apps, each with its own layout: Briefing reads the stored SimBrief plan with procedures, runways, times, weights, fuel and the published OFP PDF, and labels where every value came from.",
-        "Charts uses the same FAA d-TPP catalogue, viewer, validity window and Premium rule as the tracker; Weather decodes NOAA METAR and TAF, with runway wind components and the observation time.",
-        "Performance computes pressure and density altitude, ISA deviation and wind components, and reads V-speeds and field lengths only from a validated dataset you import, without extrapolation.",
-        "Weight & Balance, Fuel, Documents, Airports, Live Flight, Logbook and Settings complete the bag over the tracker's own plan, weather, charts, telemetry and logbook."
-      ],
-      "improvements": [
-        "Fuel keeps each category separate, reconciles it against the filed block, unit-checks every value and names a component the plan does not state instead of treating it as zero.",
-        "Weight & Balance checks the plan's weights against the plan's own limits and refuses a centre of gravity without station data: a wrong trim figure is worse than a blank one.",
-        "EFB settings remember the default aircraft, weight unit, wallpaper, motion, SimBrief ID, weather refresh and chart source, and write each change as it is made."
-      ],
-      "fixes": [
-        "A flown trail no longer resets on landing: the rollout record the bridge opens is appended to the flight already drawn, on the Flight Deck, the phone and the EFB. A flight elsewhere still clears it.",
-        "The EFB chart catalogue loads again: the endpoint returns the records themselves, and the app read them as a field of a wrapper, so every airport said its catalogue was empty. KEWR lists 52 documents.",
-        "The EFB no longer draws a tablet inside a tablet: on an iPad, a touch screen or a tight window the screen fills the viewport, and the status bar and dock keep clear of the safe-area insets."
-      ],
-      "performance": [],
-      "ui": [
-        "The EFB home grid is sized like a tablet: six columns in landscape, five in tablet portrait and four on a phone, instead of eleven tiny tiles in a wide frame.",
-        "Every EFB app has its own icon and identity in one dark aviation language, with restrained transitions, a dock, clear empty states and a Home control in each view."
-      ],
-      "compatibility": [],
-      "other": [
-        "Sources and licensing record where each EFB figure comes from, including that no aircraft performance dataset is bundled or licensed and that the app is a simulator planning aid, not certified performance."
-      ]
-    }
-  },
   "2.1.25": {
     "summary": "The bag stands on its own on a tablet, and opening Stratos on a phone no longer strands you on a browser error page when the PC is off.",
     "changelog": {
@@ -600,6 +569,21 @@
         "Planned route lines were not drawn on the EFB maps since 2.2.0; the Flight Planner and the Navigator show them again.",
         "The Flight Planner chart no longer freezes for most of a second each time it is panned or zoomed.",
         "Reopening the Flight Planner starts the chart at the plan instead of the default map."
+      ],
+      "performance": [],
+      "ui": [],
+      "compatibility": [],
+      "other": []
+    }
+  },
+  "2.2.8": {
+    "summary": "MSFS 2020 and 2024 tracking works in the desktop app.",
+    "changelog": {
+      "features": [],
+      "improvements": [],
+      "fixes": [
+        "MSFS 2020 and 2024 are tracked again: the desktop app now ships the SimConnect connector it needs, which earlier builds left out.",
+        "The bridge no longer tells desktop users to run pip install SimConnect; the connector comes with the app."
       ],
       "performance": [],
       "ui": [],

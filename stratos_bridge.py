@@ -3159,7 +3159,8 @@ def main():
           % (MDNS_HOST, HTTP_PORT))
     print("  Access token: %s" % TOKEN)
     print("  X-Plane: no setting needed; position comes over the bridge's own X-Plane link")
-    print("  MSFS: start a flight (install the connector once with  pip install SimConnect )")
+    # The packaged exe carries the connector; only a source run needs pip.
+    print("  MSFS: start a flight" + ("" if getattr(sys, "frozen", False) else " (install the connector once with  pip install SimConnect )"))
     print("  Token file:   %s" % TOKEN_FILE)
     print("")
     try:

@@ -3,54 +3,42 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.2.7",
+    "version": "2.2.8",
     "releasedAt": "2026-11-16",
     "severity": "normal",
-    "summary": "A rebuilt Flight Planner: click the chart to draw the route, a DEP / route / ARR bar, a legs table and waypoints across the whole chart.",
+    "summary": "MSFS 2020 and 2024 tracking works in the desktop app.",
     "changelog": {
-      "features": [
-        "Flight Planner: every chart click adds the waypoint under it and draws the leg; the first click picks the departure airport.",
-        "A route bar with DEP, the route as text and ARR. Type fixes or coordinates and press Enter; unknown idents are named, not guessed.",
-        "A legs table with the route, track, leg distance and running total for every point."
-      ],
-      "improvements": [
-        "Waypoints from the simulator data now cover the whole chart: the new Fit view radius follows the zoom, and fixes are hidden only when zoomed far out.",
-        "The planner is four tabs (Route, Procedures, Fuel, Review) instead of a six-step wizard, and the planned route is drawn in magenta."
-      ],
+      "features": [],
+      "improvements": [],
       "fixes": [
-        "Planned route lines were not drawn on the EFB maps since 2.2.0; the Flight Planner and the Navigator show them again.",
-        "The Flight Planner chart no longer freezes for most of a second each time it is panned or zoomed.",
-        "Reopening the Flight Planner starts the chart at the plan instead of the default map."
+        "MSFS 2020 and 2024 are tracked again: the desktop app now ships the SimConnect connector it needs, which earlier builds left out.",
+        "The bridge no longer tells desktop users to run pip install SimConnect; the connector comes with the app."
       ],
       "performance": [],
       "ui": [],
       "compatibility": [],
       "other": []
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.7/Stratos-Setup.exe",
-        "sha256": "5d15535ae0579a9eb96dfe7e65f366177a1f99480b170b898dc47c79e8893f9d",
-        "size": 119008421
-      },
-      "mac-arm64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.7/Stratos-2.2.7-mac-arm64.dmg",
-        "sha256": "9d66076f8d9ee0cebd253fe2b6e49e24262a65a3457b40850e81afece04db10f",
-        "size": 137543465
-      },
-      "mac-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.7/Stratos-2.2.7-mac-x64.dmg",
-        "sha256": "f581355a78298de64871e11a0d7a446d98f25dd9719fd8829044f7c87ab45810",
-        "size": 143005404
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.7/Stratos-2.2.7-linux-x64.AppImage",
-        "sha256": "e4c21be602bc0ce4a9be1bfa8f13b1f53cf74ab5b0c2f29bfd08a04c659c13df",
-        "size": 158942560
-      }
     }
   },
   "releases": [
+    {
+      "version": "2.2.8",
+      "releasedAt": "2026-11-16",
+      "severity": "normal",
+      "summary": "MSFS 2020 and 2024 tracking works in the desktop app.",
+      "changelog": {
+        "features": [],
+        "improvements": [],
+        "fixes": [
+          "MSFS 2020 and 2024 are tracked again: the desktop app now ships the SimConnect connector it needs, which earlier builds left out.",
+          "The bridge no longer tells desktop users to run pip install SimConnect; the connector comes with the app."
+        ],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.2.7",
       "releasedAt": "2026-11-16",
@@ -1270,62 +1258,6 @@
           "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.25/Stratos-2.1.25-linux-x64.AppImage",
           "sha256": "bef7dab26e726f2f050a3bacfe6ad662fa3f1bc77dbf310a988648aee5157237",
           "size": 144030589
-        }
-      }
-    },
-    {
-      "version": "2.1.24",
-      "releasedAt": "2026-10-25",
-      "severity": "normal",
-      "summary": "Stratos EFB arrives: an iPad-style flight bag beside the tracker, and a flown trail that no longer disappears when the wheels touch down.",
-      "changelog": {
-        "features": [
-          "Stratos EFB is a second product at efb.html: an aviation tablet with a home screen of app icons, a dock, a status bar and a Home control, opened from the Flight Deck rail and the top bar.",
-          "Eleven apps, each with its own layout: Briefing reads the stored SimBrief plan with procedures, runways, times, weights, fuel and the published OFP PDF, and labels where every value came from.",
-          "Charts uses the same FAA d-TPP catalogue, viewer, validity window and Premium rule as the tracker; Weather decodes NOAA METAR and TAF, with runway wind components and the observation time.",
-          "Performance computes pressure and density altitude, ISA deviation and wind components, and reads V-speeds and field lengths only from a validated dataset you import, without extrapolation.",
-          "Weight & Balance, Fuel, Documents, Airports, Live Flight, Logbook and Settings complete the bag over the tracker's own plan, weather, charts, telemetry and logbook."
-        ],
-        "improvements": [
-          "Fuel keeps each category separate, reconciles it against the filed block, unit-checks every value and names a component the plan does not state instead of treating it as zero.",
-          "Weight & Balance checks the plan's weights against the plan's own limits and refuses a centre of gravity without station data: a wrong trim figure is worse than a blank one.",
-          "EFB settings remember the default aircraft, weight unit, wallpaper, motion, SimBrief ID, weather refresh and chart source, and write each change as it is made."
-        ],
-        "fixes": [
-          "A flown trail no longer resets on landing: the rollout record the bridge opens is appended to the flight already drawn, on the Flight Deck, the phone and the EFB. A flight elsewhere still clears it.",
-          "The EFB chart catalogue loads again: the endpoint returns the records themselves, and the app read them as a field of a wrapper, so every airport said its catalogue was empty. KEWR lists 52 documents.",
-          "The EFB no longer draws a tablet inside a tablet: on an iPad, a touch screen or a tight window the screen fills the viewport, and the status bar and dock keep clear of the safe-area insets."
-        ],
-        "performance": [],
-        "ui": [
-          "The EFB home grid is sized like a tablet: six columns in landscape, five in tablet portrait and four on a phone, instead of eleven tiny tiles in a wide frame.",
-          "Every EFB app has its own icon and identity in one dark aviation language, with restrained transitions, a dock, clear empty states and a Home control in each view."
-        ],
-        "compatibility": [],
-        "other": [
-          "Sources and licensing record where each EFB figure comes from, including that no aircraft performance dataset is bundled or licensed and that the app is a simulator planning aid, not certified performance."
-        ]
-      },
-      "downloads": {
-        "windows": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.24/Stratos-Setup.exe",
-          "sha256": "a353f056da97e38a0a3662e3d1df5eac98581b42db176892db30e699fc2fd806",
-          "size": 107327476
-        },
-        "mac-arm64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.24/Stratos-2.1.24-mac-arm64.dmg",
-          "sha256": "646c6560f0b4cc63ee9a408abe986fab0cdf82699593f6c0f0d74cf647b40bb6",
-          "size": 123123906
-        },
-        "mac-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.24/Stratos-2.1.24-mac-x64.dmg",
-          "sha256": "ac2fcdeb6d200278ac2a2fb1d633390f00f491fb11aa122f67c6123e2ac438d8",
-          "size": 128438232
-        },
-        "linux-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.24/Stratos-2.1.24-linux-x64.AppImage",
-          "sha256": "2f1a82f19faf3b2d94a2b6c4412d30b02489f7efc3132d6225456d89a8cf7367",
-          "size": 144022355
         }
       }
     }

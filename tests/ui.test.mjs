@@ -134,12 +134,19 @@ const settle = async (turns = 4) => {
 // These dispatch real bubbled clicks, so a listener that re-renders the page
 // mid-dispatch would hang the runner; the timeout turns that into a clean fail.
 test('a click on the settings page does not re-render it through the theme listener', { timeout: 10000 }, async () => {
+  // The page re-renders on purpose when its bridge and relay checks answer.
+  // Served from memory and settled first, so only the click can re-render it;
+  // over the real network a fast answer landed mid-test and failed CI.
+  stubUpdateFetch();
   const root = await mountSettings(null);
+  await settle();
   const card = root.querySelector('.card');
   assert.ok(card, 'the settings page rendered a card');
   card.dispatchEvent(new window.Event('click', { bubbles: true }));
   await new Promise(resolve => setTimeout(resolve, 0));
-  assert.equal(root.querySelector('.card'), card, 'a click elsewhere is not treated as a theme change');
+  // ok(===), not equal(): a failure must not print two whole DOM trees, which
+  // exhausted the runner's memory ("Array buffer allocation failed").
+  assert.ok(root.querySelector('.card') === card, 'a click elsewhere is not treated as a theme change');
 });
 
 test('the theme buttons still switch the theme', { timeout: 10000 }, async () => {
