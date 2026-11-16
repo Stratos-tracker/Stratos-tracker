@@ -4,8 +4,24 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-16",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.3.1/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.3.1/Stratos-Setup.exe",
+      "sha256": "9a6555f999093c2056fc4639a51e012b1a025807be0e736041c1e3c1e07a3e9c",
+      "size": 119468247
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.3.1/Stratos-2.3.1-mac-x64.dmg",
+      "sha256": "30a3df52f6d36c64b1c7f019d3bacc711413d3d9e8f676a9f704387ab719e180",
+      "size": 143011013
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.3.1/Stratos-2.3.1-linux-x64.AppImage",
+      "sha256": "2766dce1baea5660f9f0971499a8cca31a1075fa8ce5285e47b918236291efa1",
+      "size": 160295783
+    }
+  },
   "summary": "Stratos on Chromebook: install it from Chrome and follow your flight from the PC.",
   "reason": "",
   "releaseNotes": [
