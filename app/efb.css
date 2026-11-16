@@ -761,6 +761,8 @@ body[data-airline]:not([data-airline=""]) .home-airline-logo { opacity: 1; }
 .rf-apt { display: flex; flex-direction: column; }
 .rf-apt b { font: 700 22px/1 var(--efb-font); letter-spacing: .04em; }
 .rf-apt span { font-size: 11px; color: var(--efb-muted); margin-top: 3px; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rf-stand { margin-top: 5px; font: 600 11px/1.2 var(--efb-font); font-style: normal; letter-spacing: .03em; color: var(--efb-accent); }
+.rf-stand[hidden] { display: none; }
 .rf-arr { text-align: right; align-items: flex-end; }
 .rf-leg { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; color: var(--efb-muted); font-variant-numeric: tabular-nums; }
 .rf-leg i { display: block; width: 100%; height: 0; border-top: 1.5px dashed var(--efb-accent-line); position: relative; }

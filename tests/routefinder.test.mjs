@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  parkedAt, standAt, standQuery,
   parseCallsign, cruiseKt, blockMinutes, matchesDuration, fromAdsbdb, candidatesFrom, simbriefUrl, findRoutes,
 } from '../app/js/lib/routefinder.js';
 
@@ -126,4 +127,36 @@ test('every route gets an aircraft: seen today exactly, else the airline\'s typi
   assert.deepEqual(typeForLeg({ callsign: 'BAW902', airline: 'BAW' }, 6000, index, 'A388'), { type: 'A388', typical: true });
   assert.equal(typeForLeg({ callsign: 'XYZ1', airline: 'XYZ' }, 500, null).type, 'A320', 'an unknown airline gets a generic type');
   assert.equal(typeForLeg({ callsign: 'UAE1', airline: 'UAE' }, 6000, null).type, 'A388');
+});
+
+// Real geometry: JetBlue's JFK stand 521, where JBU225 was parked during testing.
+const JFK = { icao: 'KJFK', lat: 40.6398, lon: -73.7789 };
+const TPA = { icao: 'KTPA', lat: 27.9755, lon: -82.5332 };
+
+test('a stopped aircraft is parked at the end of its route it is standing at', () => {
+  const flight = { onGround: true, gs: 0, lat: 40.64633, lon: -73.775082, origin: JFK, destination: TPA };
+  assert.equal(parkedAt(flight), 'origin', 'still at the departure gate');
+  assert.equal(parkedAt({ ...flight, origin: TPA, destination: JFK }), 'destination', 'just arrived');
+  assert.equal(parkedAt({ ...flight, gs: 18 }), null, 'taxiing is not parked');
+  assert.equal(parkedAt({ ...flight, onGround: false }), null, 'airborne is not parked');
+  assert.equal(parkedAt({ ...flight, lat: 41.5 }), null, 'on the ground somewhere else');
+});
+
+test('the stand is the labelled one under the aircraft, or none', () => {
+  const entries = [
+    ['parking_position', '521', [[40.646, -73.7754]]],
+    ['gate', '21', [[40.6461, -73.7752]]],
+    ['parking_position', '', [[40.64633, -73.775082]]],      // unlabelled: never a stand
+    ['parking_position', 'H2', [[40.6419, -73.7739], [40.6420, -73.7738]]], // a way: its centre
+  ];
+  const at = { lat: 40.64633, lon: -73.775082 };
+  const stand = standAt(entries, at);
+  assert.equal(stand.ref, '521', 'a parking position beats a nearby gate');
+  assert.equal(stand.kind, 'parking_position');
+  assert.ok(stand.metres > 0 && stand.metres <= 60, 'and the distance is reported');
+  assert.equal(standAt([entries[1]], at).kind, 'gate', 'a gate when no stand is charted');
+  assert.equal(standAt(entries, { lat: 40.6309, lon: -73.7733 }), null, 'nothing within 60 m: no stand is guessed');
+  assert.equal(standAt(entries, { lat: 40.64195, lon: -73.77385 }).ref, 'H2');
+  assert.equal(standAt(null, at), null);
+  assert.match(standQuery(40.6398, -73.7789), /parking_position\|gate[\s\S]*\["ref"\]/, 'only labelled stands are asked for');
 });

@@ -3,37 +3,44 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.2.9",
+    "version": "2.3.0",
     "releasedAt": "2026-11-16",
     "severity": "normal",
-    "summary": "Website downloads always lead to an installer, and search results go to the Stratos homepage.",
+    "summary": "Route Finder shows the real stand a parked aircraft is at, so you can start your flight from the same gate.",
     "changelog": {
-      "features": [],
+      "features": [
+        "Route Finder (Flying now): an aircraft parked at its departure or arrival airport shows its real stand or gate, matched from its live position to the stands charted in OpenStreetMap."
+      ],
       "improvements": [
-        "Searching for Stratos now leads to the homepage instead of inner app pages or an old preview address."
+        "Flying now results say whether a flight is at the gate, has arrived, is taxiing or is airborne."
       ],
-      "fixes": [
-        "The website's macOS download links work again: when a release has no build for a platform, the newest one that does is offered."
-      ],
+      "fixes": [],
       "performance": [],
       "ui": [],
       "compatibility": [],
       "other": []
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.9/Stratos-Setup.exe",
-        "sha256": "ccaf4db5ea2149def16002c19bc1a7ea5e322f9ddfcdb130a5c394a39c8efca4",
-        "size": 119468975
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.9/Stratos-2.2.9-linux-x64.AppImage",
-        "sha256": "03558cad654112446e376f3c9f02ea67aa2efd9d7ace86c50003fecd34952283",
-        "size": 160295871
-      }
     }
   },
   "releases": [
+    {
+      "version": "2.3.0",
+      "releasedAt": "2026-11-16",
+      "severity": "normal",
+      "summary": "Route Finder shows the real stand a parked aircraft is at, so you can start your flight from the same gate.",
+      "changelog": {
+        "features": [
+          "Route Finder (Flying now): an aircraft parked at its departure or arrival airport shows its real stand or gate, matched from its live position to the stands charted in OpenStreetMap."
+        ],
+        "improvements": [
+          "Flying now results say whether a flight is at the gate, has arrived, is taxiing or is airborne."
+        ],
+        "fixes": [],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.2.9",
       "releasedAt": "2026-11-16",
@@ -1215,58 +1222,6 @@
           "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.27/Stratos-2.1.27-linux-x64.AppImage",
           "sha256": "06ddb00c8cea882c6036cee727aad689b1eebbcb6f8d998e1cfe33fe6019e107",
           "size": 144526880
-        }
-      }
-    },
-    {
-      "version": "2.1.26",
-      "releasedAt": "2026-10-27",
-      "severity": "normal",
-      "summary": "The Flight Deck map gets the same globe as the Flight Planner — real NASA imagery and real terrain shading, with the ground under the centre read from the tiles — and the EFB gains a Flight Planner that builds an IFR route from published navigation data.",
-      "changelog": {
-        "features": [
-          "The EFB Flight Planner builds a route on a real chart: choose a departure airport, add waypoints, VORs and fixes that exist in the data around the view, then an arrival, and continue to a separate SID and STAR page.",
-          "Navigation points around the chart come from OurAirports and the simulator’s own navigation data. A tap resolves to the published record nearest it, or to an exact custom coordinate — never a generated W01.",
-          "Globe mode on both maps: the tracker and the planner share one movable globe with four surfaces — bundled outlines that make no request, NASA Blue Marble imagery through NASA GIBS, and terrain from the AWS terrain tiles.",
-          "An explicit Read terrain action reports the ground at the centre with the level and ground resolution it was read at, and how many samples inside the radius actually had data."
-        ],
-        "improvements": [
-          "The tracker’s map gains Projection and Globe surface controls, a camera reset and its own attribution line, and remembers the projection and surface you chose.",
-          "The airline you are flying appears as its real mark in the EFB header and in Settings instead of its code text.",
-          "Reset plan clears the departure, route, procedures, fuel and alternate in one action, keeping your saved plans.",
-          "A georeferenced approach chart still opens flat on the tracker, and closing it returns to the globe with the route reframed."
-        ],
-        "fixes": [
-          "Touching down at the arrival airport no longer erases the trail behind the flight, and the place badge on the globe names a feature on the near side of the sphere.",
-          "Moving a waypoint works on the globe as it does on the flat chart."
-        ],
-        "performance": [
-          "The globe is painted at a level chosen from the sphere instead of from a temporary coarse frame, so turning it no longer fetches and shades a second set of tiles — measured zero image requests during a drag."
-        ],
-        "ui": [],
-        "compatibility": [],
-        "other": []
-      },
-      "downloads": {
-        "windows": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.26/Stratos-Setup.exe",
-          "sha256": "98a41ba51ad3675593127e03b1d20057b962259c80a925a4c584c54ba3f28f54",
-          "size": 107755277
-        },
-        "mac-arm64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.26/Stratos-2.1.26-mac-arm64.dmg",
-          "sha256": "3907af2ba70b104acce70dee7d4abe8a8cb7dad75bd583bfa0dc417449672c73",
-          "size": 123613998
-        },
-        "mac-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.26/Stratos-2.1.26-mac-x64.dmg",
-          "sha256": "cb24a788d9835a92cc847c5856f7df1c2796ea665ad8299c713de48c8ea41712",
-          "size": 128911434
-        },
-        "linux-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.26/Stratos-2.1.26-linux-x64.AppImage",
-          "sha256": "5d6cd8a4f5004352fc3ad62e98e2b555e64c9314c9c56ead2eaff13864e35d89",
-          "size": 144489650
         }
       }
     }

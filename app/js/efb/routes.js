@@ -8,7 +8,8 @@
 import { esc } from './common.js';
 import { AIRLINES } from '../lib/airlines.js';
 import { BUNDLED_AIRPORTS } from '../data/airports.js';
-import { ROUTE_TYPES, findRoutes, findAllRoutes, simbriefUrl } from '../lib/routefinder.js';
+import { ROUTE_TYPES, findRoutes, findAllRoutes, simbriefUrl, parkedAt, standAt, standQuery } from '../lib/routefinder.js';
+import { hedgedOverpass } from './groundchart.js';
 
 const PREFS = 'stratos.efb.routes';
 const fmtBlock = m => `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`;
@@ -74,7 +75,7 @@ export async function mount(root) {
       </form>
       <div id="rf-status" class="rf-status"></div>
       <div id="rf-results" class="rf-results"></div>
-      <div class="e-small e-faint rf-source">Routes: Virtual Radar Server standing data · live flights: adsb.lol, adsbdb · block time estimated from distance and type · not for real-world flight</div>
+      <div class="e-small e-faint rf-source">Routes: Virtual Radar Server standing data · live flights: adsb.lol, adsbdb · stands of parked aircraft © OpenStreetMap contributors · block time estimated from distance and type · not for real-world flight</div>
     </div>`;
 
   const status = root.querySelector('#rf-status');
@@ -101,18 +102,45 @@ export async function mount(root) {
   dMax.addEventListener('input', () => syncDur(dMax));
   syncDur();
 
-  function card(f, live) {
+  // One OpenStreetMap stand query per airport for the life of the page.
+  const standsByAirport = new Map();
+  const standsAt = apt => {
+    if (!standsByAirport.has(apt.icao)) standsByAirport.set(apt.icao, hedgedOverpass(standQuery(apt.lat, apt.lon)).then(r => r.ways));
+    return standsByAirport.get(apt.icao);
+  };
+  // A parked aircraft names its real stand under the airport it is parked at.
+  async function fillStands(results) {
+    await Promise.all(results.map(async (f, i) => {
+      const end = parkedAt(f);
+      if (!end) return;
+      const ways = await standsAt(f[end]).catch(() => null);
+      const slot = !destroyed && list.querySelector(`[data-stand="${i}-${end}"]`);
+      if (!slot) return;
+      const stand = ways && standAt(ways, f);
+      slot.textContent = stand ? `${stand.kind === 'gate' ? 'Gate' : 'Stand'} ${stand.ref}` : 'Parked · stand not charted';
+      slot.title = stand ? `Where the aircraft is parked now, matched to OpenStreetMap (${stand.metres} m)` : 'Parked here, but OpenStreetMap labels no stand at this spot';
+      slot.hidden = false;
+    }));
+  }
+
+  function card(f, live, i) {
     const logo = logoFor(f.airline);
+    const parked = live && parkedAt(f);
+    const slot = end => `<em class="rf-stand" data-stand="${i}-${end}" hidden></em>`;
     return `<article class="rf-card">
       <header class="rf-head">
         ${logo ? `<img class="rf-logo" src="${esc(logo)}" alt="">` : `<span class="rf-logo rf-code">${esc(f.airline)}</span>`}
         <div class="rf-id"><b>${esc(f.callsign)}</b><span>${esc(f.airlineName || AIRLINES.find(a => a.icao === f.airline)?.name || f.airline)}${f.type ? ` · ${esc(f.type)}${f.typical ? ' <i class="rf-typ" title="The type this airline usually flies on a route this long; this flight was not seen today">typical</i>' : ''}` : ''}${f.registration ? ` · ${esc(f.registration)}` : ''}</span></div>
-        ${live ? '<span class="e-badge good rf-live">Airborne now</span>' : '<span class="e-badge rf-live">Real route</span>'}
+        ${!live ? '<span class="e-badge rf-live">Real route</span>'
+          : parked === 'origin' ? '<span class="e-badge accent rf-live">At the gate</span>'
+          : parked === 'destination' ? '<span class="e-badge rf-live">Arrived</span>'
+          : f.onGround ? '<span class="e-badge good rf-live">Taxiing</span>'
+          : '<span class="e-badge good rf-live">Airborne now</span>'}
       </header>
       <div class="rf-route">
-        <div class="rf-apt"><b>${esc(f.origin.icao)}</b><span>${esc(f.origin.city || f.origin.name)}</span></div>
+        <div class="rf-apt"><b>${esc(f.origin.icao)}</b><span>${esc(f.origin.city || f.origin.name)}</span>${parked === 'origin' ? slot('origin') : ''}</div>
         <div class="rf-leg"><span>${f.distanceNm.toLocaleString('en-US')} nm</span><i></i><span>${fmtBlock(f.blockMinutes)}</span></div>
-        <div class="rf-apt rf-arr"><b>${esc(f.destination.icao)}</b><span>${esc(f.destination.city || f.destination.name)}</span></div>
+        <div class="rf-apt rf-arr"><b>${esc(f.destination.icao)}</b><span>${esc(f.destination.city || f.destination.name)}</span>${parked === 'destination' ? slot('destination') : ''}</div>
       </div>
       <footer class="rf-actions">
         <a class="e-btn primary small" href="${esc(simbriefUrl(f))}" target="_blank" rel="noopener">Uplink to SimBrief ↗</a>
@@ -138,7 +166,8 @@ export async function mount(root) {
         onProgress: p => { if (!destroyed) status.innerHTML = `<div class="e-loading"><i></i>Checking routes · ${p.found} found of ${p.looked} flights</div>`; },
       });
       if (destroyed) return;
-      list.innerHTML = results.map(f => card(f, live)).join('');
+      list.innerHTML = results.map((f, i) => card(f, live, i)).join('');
+      if (live) fillStands(results);
       status.innerHTML = results.length
         ? `<div class="e-small e-muted">${results.length} real flight${results.length === 1 ? '' : 's'} · from ${pool.toLocaleString('en-US')} ${live ? 'airborne now' : 'known routes'}</div>`
         : `<div class="e-notice">${live ? (pool ? 'No airborne flight with a known route matches these filters right now.' : 'No matching flight is airborne right now.') : (pool ? 'No route matches these filters.' : `No known route matches${prefs.airline ? '' : ' for the major airlines searched; pick an airline'}.`)} Widen the flight time or clear a filter.</div>`;

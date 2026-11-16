@@ -84,10 +84,55 @@ export function candidatesFrom(payloads, { airline = '' } = {}) {
     for (const ac of (payload && Array.isArray(payload.ac) ? payload.ac : [])) {
       const cs = parseCallsign(ac.flight);
       if (!cs || (want && cs.airline !== want) || seen.has(cs.callsign)) continue;
-      seen.set(cs.callsign, { ...cs, type: String(ac.t || '').toUpperCase(), registration: String(ac.r || '') });
+      seen.set(cs.callsign, {
+        ...cs, type: String(ac.t || '').toUpperCase(), registration: String(ac.r || ''),
+        // Where it is now: a parked aircraft's position names its stand (standAt).
+        lat: Number(ac.lat), lon: Number(ac.lon), onGround: ac.alt_baro === 'ground', gs: Number(ac.gs) || 0,
+      });
     }
   }
   return [...seen.values()];
+}
+
+/* ---- Stands: where a parked aircraft actually is ----
+ * No free source publishes assigned gates, but an aircraft parked on the ground
+ * is standing on one: its live position is matched to the stands OpenStreetMap
+ * charts at that airport. Nothing is guessed: no labelled stand nearby, no stand. */
+
+/** Which end of its route a stopped aircraft is parked at: 'origin', 'destination' or null. */
+export function parkedAt(flight, withinNm = 3) {
+  if (!flight || !flight.onGround || flight.gs > 5 || !Number.isFinite(flight.lat) || !Number.isFinite(flight.lon)) return null;
+  for (const end of ['origin', 'destination']) {
+    const airport = flight[end];
+    if (airport && Number.isFinite(airport.lat) && distanceNm(flight, airport) <= withinNm) return end;
+  }
+  return null;
+}
+
+/** OpenStreetMap's charted stands and gates around an airport. */
+export function standQuery(lat, lon, radiusM = 4000) {
+  const at = `(around:${radiusM},${Number(lat).toFixed(6)},${Number(lon).toFixed(6)})`;
+  return `[out:json][timeout:25];(node["aeroway"~"^(parking_position|gate)$"]["ref"]${at};way["aeroway"~"^(parking_position|gate)$"]["ref"]${at};);out geom;`;
+}
+
+/**
+ * The labelled stand under a position, from [aeroway, ref, [[lat, lon], ...]]
+ * entries (lib/groundchart.js waysFromOverpass). A parking position wins over a
+ * gate; either must lie within maxM metres (an ADS-B antenna sits a few tens of
+ * metres from the point a stand is charted at).
+ */
+export function standAt(entries, at, maxM = 60) {
+  let best = null;
+  for (const [aeroway, ref, points] of Array.isArray(entries) ? entries : []) {
+    if (!ref || !Array.isArray(points) || !points.length || (aeroway !== 'parking_position' && aeroway !== 'gate')) continue;
+    const lat = points.reduce((sum, p) => sum + p[0], 0) / points.length;
+    const lon = points.reduce((sum, p) => sum + p[1], 0) / points.length;
+    const metres = distanceNm(at, { lat, lon }) * 1852;
+    if (metres > maxM) continue;
+    const rank = aeroway === 'parking_position' ? 0 : 1;
+    if (!best || rank < best.rank || (rank === best.rank && metres < best.metres)) best = { ref: String(ref), kind: aeroway, metres, rank };
+  }
+  return best ? { ref: best.ref, kind: best.kind, metres: Math.round(best.metres) } : null;
 }
 
 /** SimBrief's dispatch page, prefilled (the documented redirect parameters). */

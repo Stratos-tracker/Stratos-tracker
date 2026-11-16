@@ -1,36 +1,25 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.2.9",
+  "latestVersion": "2.3.0",
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-16",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.9/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.9/Stratos-Setup.exe",
-      "sha256": "ccaf4db5ea2149def16002c19bc1a7ea5e322f9ddfcdb130a5c394a39c8efca4",
-      "size": 119468975
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.9/Stratos-2.2.9-linux-x64.AppImage",
-      "sha256": "03558cad654112446e376f3c9f02ea67aa2efd9d7ace86c50003fecd34952283",
-      "size": 160295871
-    }
-  },
-  "summary": "Website downloads always lead to an installer, and search results go to the Stratos homepage.",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "Route Finder shows the real stand a parked aircraft is at, so you can start your flight from the same gate.",
   "reason": "",
   "releaseNotes": [
-    "Searching for Stratos now leads to the homepage instead of inner app pages or an old preview address.",
-    "The website's macOS download links work again: when a release has no build for a platform, the newest one that does is offered."
+    "Route Finder (Flying now): an aircraft parked at its departure or arrival airport shows its real stand or gate, matched from its live position to the stands charted in OpenStreetMap.",
+    "Flying now results say whether a flight is at the gate, has arrived, is taxiing or is airborne."
   ],
   "notes": {
-    "features": [],
+    "features": [
+      "Route Finder (Flying now): an aircraft parked at its departure or arrival airport shows its real stand or gate, matched from its live position to the stands charted in OpenStreetMap."
+    ],
     "improvements": [
-      "Searching for Stratos now leads to the homepage instead of inner app pages or an old preview address."
+      "Flying now results say whether a flight is at the gate, has arrived, is taxiing or is airborne."
     ],
-    "fixes": [
-      "The website's macOS download links work again: when a release has no build for a platform, the newest one that does is offered."
-    ],
+    "fixes": [],
     "performance": [],
     "ui": [],
     "compatibility": [],
