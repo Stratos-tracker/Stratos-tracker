@@ -101,11 +101,20 @@ test('robots.txt points at the sitemap and keeps private account screens out', (
   assert.doesNotMatch(robots, /Disallow: \/\s*$/m, 'the whole site is not blocked');
 });
 
-test('the sitemap lists the landing page, Phone Mode and the public app pages', () => {
+test('the sitemap lists only the landing page, where every search should land', () => {
   assert.match(sitemap, /<loc>https:\/\/www\.stratos-tracker\.com\/<\/loc>/);
-  assert.match(sitemap, /<loc>https:\/\/www\.stratos-tracker\.com\/phone<\/loc>/);
-  assert.match(sitemap, /<loc>https:\/\/www\.stratos-tracker\.com\/app\/<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, (sitemap.match(/<\/url>/g) || []).length);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 1, 'no app page competes with the homepage');
   assert.doesNotMatch(sitemap, /vercel\.app/);
   assert.doesNotMatch(sitemap, /login\.html|signup\.html|account\.html/, 'private screens are not advertised');
+});
+
+test('search lands on the homepage: no app page or vercel.app copy is indexed', () => {
+  const vercel = JSON.parse(fs.readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'));
+  const toHome = (vercel.redirects || []).find(rule => rule.has?.some(h => h.type === 'host' && /vercel\\.app/.test(h.value)));
+  assert.ok(toHome, 'the vercel.app address redirects');
+  assert.equal(toHome.destination, 'https://www.stratos-tracker.com/:path*');
+  assert.equal(toHome.permanent, true, 'permanently, so search engines move the result to the real domain');
+  const appRule = (vercel.headers || []).find(rule => rule.source === '/app/(.*)');
+  assert.ok(appRule?.headers.some(h => h.key === 'X-Robots-Tag' && /noindex/.test(h.value)), 'app pages are not indexed');
+  assert.equal(meta(appPage, 'name', 'robots'), 'noindex,follow', 'nor is /app/ or /phone, which serve the same page');
 });

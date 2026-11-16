@@ -3,6 +3,14 @@
   "functions": {
     "api/procedures.js": { "includeFiles": "navdata/cifp/**" }
   },
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "(.*)\\.vercel\\.app" }],
+      "destination": "https://www.stratos-tracker.com/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/api/sigmets", "destination": "/api/weather?type=sigmets" },
     { "source": "/phone", "destination": "/app/index.html" },
@@ -36,6 +44,10 @@
         { "key": "Content-Type", "value": "application/manifest+json; charset=utf-8" },
         { "key": "Cache-Control", "value": "public, max-age=300, must-revalidate" }
       ]
+    },
+    {
+      "source": "/app/(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, follow" }]
     },
     {
       "source": "/(.*)",
