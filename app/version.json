@@ -4,8 +4,19 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-16",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.3.0/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.3.0/Stratos-Setup.exe",
+      "sha256": "7e3ec783d44768a0b6108455d9168d66a58cc28737812797e1ca803e9c3407be",
+      "size": 119470960
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.3.0/Stratos-2.3.0-linux-x64.AppImage",
+      "sha256": "887e313df9f70c908d795565aa974cfce4dd0e1dc125bac80e908569961020a4",
+      "size": 160295601
+    }
+  },
   "summary": "Route Finder shows the real stand a parked aircraft is at, so you can start your flight from the same gate.",
   "reason": "",
   "releaseNotes": [
