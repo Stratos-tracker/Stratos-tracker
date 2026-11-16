@@ -18,6 +18,18 @@
       "ui": [],
       "compatibility": [],
       "other": []
+    },
+    "downloads": {
+      "windows": {
+        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.8/Stratos-Setup.exe",
+        "sha256": "8b790f5fd4a9891018df5ad959edf98f3e54644f55e5c3943d0aa44157df1daa",
+        "size": 119469348
+      },
+      "linux-x64": {
+        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.8/Stratos-2.2.8-linux-x64.AppImage",
+        "sha256": "020001d48854da7d24a3e08dcae7dd7b6844fbbc29ab7a502d2113071ae9718a",
+        "size": 160295914
+      }
     }
   },
   "releases": [
@@ -37,6 +49,18 @@
         "ui": [],
         "compatibility": [],
         "other": []
+      },
+      "downloads": {
+        "windows": {
+          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.8/Stratos-Setup.exe",
+          "sha256": "8b790f5fd4a9891018df5ad959edf98f3e54644f55e5c3943d0aa44157df1daa",
+          "size": 119469348
+        },
+        "linux-x64": {
+          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.8/Stratos-2.2.8-linux-x64.AppImage",
+          "sha256": "020001d48854da7d24a3e08dcae7dd7b6844fbbc29ab7a502d2113071ae9718a",
+          "size": 160295914
+        }
       }
     },
     {
