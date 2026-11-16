@@ -201,7 +201,7 @@ footer a{color:var(--muted)}
       </div>
       <p>Download Stratos for the complete desktop flight tracking experience.</p>
       <ul class="ac-list"><li>Windows</li><li>macOS</li><li>Linux</li><li>ChromeOS</li></ul>
-      <a class="btn primary" id="ac-download" href="/api/download?p=windows">↓ Download for Windows</a>
+      <a class="btn primary" href="/api/download?p=windows">↓ Download for Windows</a>
       <p class="small">Also for <a href="/api/download?p=mac-arm64">macOS (Apple silicon)</a>, <a href="/api/download?p=mac-x64">macOS (Intel)</a> and <a href="/api/download?p=linux-x64">Linux</a>, or <a href="#chromeos">ChromeOS</a>.</p>
     </article>
     <article class="access-card" aria-labelledby="access-phone">
@@ -325,25 +325,10 @@ footer a{color:var(--muted)}
     .then(function (response) { return response.ok ? response.json() : null; })
     .then(function (manifest) {
       var version = manifest && manifest.latest && manifest.latest.version;
-      if (!version || note.getAttribute('data-chromeos')) return;
+      if (!version) return;
       note.textContent = 'Windows installer · version ' + version + ' · macOS and Linux builds on the tracker · Phone Mode installs from your mobile browser';
     })
     .catch(function () { /* keep the generic note */ });
-})();
-
-/* A Chromebook cannot run the Windows installer; its Stratos is the web app,
-   installed from Chrome. */
-(function () {
-  if (!/\bCrOS\b/.test(navigator.userAgent || '')) return;
-  ['pc-download', 'ac-download'].forEach(function (id) {
-    var button = document.getElementById(id);
-    if (!button) return;
-    button.href = '#chromeos';
-    button.textContent = 'Install on Chromebook';
-  });
-  var note = document.getElementById('download-note');
-  if (note) note.setAttribute('data-chromeos', '1');
-  if (note) note.textContent = 'On a Chromebook, Stratos installs from Chrome as an app · sign in to the same account as the PC running your simulator';
 })();
 
 /* The phone prompt is an offer, never a redirect. The answer is remembered in
