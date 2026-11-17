@@ -34,6 +34,23 @@
       ],
       "compatibility": [],
       "other": []
+    },
+    "downloads": {
+      "windows": {
+        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.4/Stratos-Setup.exe",
+        "sha256": "4d501141bf70b00a1f29963c8d40f94e3cb921d55651bab88acd47568ade7ab2",
+        "size": 119504971
+      },
+      "mac-x64": {
+        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.4/Stratos-2.4.4-mac-x64.dmg",
+        "sha256": "a1634cfc481c95fe911d0576e9e3417e2db8544908223434613a533cb9923ceb",
+        "size": 143039377
+      },
+      "linux-x64": {
+        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.4/Stratos-2.4.4-linux-x64.AppImage",
+        "sha256": "aaa8119138c605c86ce8b1e1fc3d057781a3c5aad3693ea30bc89af1a209299a",
+        "size": 160332650
+      }
     }
   },
   "releases": [
@@ -69,6 +86,23 @@
         ],
         "compatibility": [],
         "other": []
+      },
+      "downloads": {
+        "windows": {
+          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.4/Stratos-Setup.exe",
+          "sha256": "4d501141bf70b00a1f29963c8d40f94e3cb921d55651bab88acd47568ade7ab2",
+          "size": 119504971
+        },
+        "mac-x64": {
+          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.4/Stratos-2.4.4-mac-x64.dmg",
+          "sha256": "a1634cfc481c95fe911d0576e9e3417e2db8544908223434613a533cb9923ceb",
+          "size": 143039377
+        },
+        "linux-x64": {
+          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.4/Stratos-2.4.4-linux-x64.AppImage",
+          "sha256": "aaa8119138c605c86ce8b1e1fc3d057781a3c5aad3693ea30bc89af1a209299a",
+          "size": 160332650
+        }
       }
     },
     {
