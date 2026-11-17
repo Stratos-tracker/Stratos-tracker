@@ -21,6 +21,18 @@
       ],
       "compatibility": [],
       "other": []
+    },
+    "downloads": {
+      "windows": {
+        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.3/Stratos-Setup.exe",
+        "sha256": "677ea7269a53a18833829351f2bfd3215bd385bc37b69d4210e583e8d3b5854e",
+        "size": 119454382
+      },
+      "linux-x64": {
+        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.3/Stratos-2.4.3-linux-x64.AppImage",
+        "sha256": "e9f8d1092bfb25dc64a941f49f384c4224f8388917fabc99b0a0e5781e2a3a17",
+        "size": 160279701
+      }
     }
   },
   "releases": [
@@ -43,6 +55,18 @@
         ],
         "compatibility": [],
         "other": []
+      },
+      "downloads": {
+        "windows": {
+          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.3/Stratos-Setup.exe",
+          "sha256": "677ea7269a53a18833829351f2bfd3215bd385bc37b69d4210e583e8d3b5854e",
+          "size": 119454382
+        },
+        "linux-x64": {
+          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.3/Stratos-2.4.3-linux-x64.AppImage",
+          "sha256": "e9f8d1092bfb25dc64a941f49f384c4224f8388917fabc99b0a0e5781e2a3a17",
+          "size": 160279701
+        }
       }
     },
     {
