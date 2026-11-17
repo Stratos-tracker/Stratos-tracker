@@ -778,5 +778,9 @@ html.phone-mode #procpane, html.phone-mode #planpane { display: none !important;
   html[data-ui="new"] #tel { left: 64px; top: 92px; }
 }
 @media (max-width: 767px) {
-  #txbar { left: 10px; right: 10px; top: 64px; max-width: none; }
+  #txbar { left: 10px; right: 62px; top: 92px; max-width: none; }
+  /* The search stops short of the button column on the right (42 px buttons at 10 px). */
+  body #qbox, body #res { width: auto; right: 62px; }
+  /* The PLAN tab opens planning, so the old plan card no longer sits over the map (as on the desktop and in Phone Mode). */
+  body[data-mobile-section="map"] #fp, body[data-mobile-section="map"] #procpane, body[data-mobile-section="map"] #planpane { display: none !important; }
 }

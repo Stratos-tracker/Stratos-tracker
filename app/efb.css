@@ -820,6 +820,8 @@ body[data-airline]:not([data-airline=""]) .home-airline-logo { opacity: 1; }
 }
 .home-dock .hi-tile { width: 58px; height: 58px; }
 .home-dock .hi-label { display: none; }
+/* On a phone the tab bar (mobile.css) already holds these apps; the dock would only cover the grid. */
+@media (max-width: 767px) { .home-dock { display: none; } }
 .home-dock .hi { gap: 0; }
 
 /* iPadOS home layout: a column of widgets on the left, the app grid on the

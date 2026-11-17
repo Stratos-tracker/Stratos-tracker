@@ -7,7 +7,7 @@
    Design language: deep navy and charcoal, one cyan accent, hairline borders,
    square-line icons, generous but disciplined spacing, 46 px touch targets. */
 
-.m-nav, .m-grip, .m-plan, .m-install, .m-nav-fade { display: none; }
+.m-nav, .m-grip, .m-install, .m-nav-fade { display: none; }
 
 @media (max-width: 767px) {
   :root {
@@ -64,7 +64,7 @@
     bottom: 0;
     z-index: 90;
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 2px;
     padding: 5px 6px calc(5px + var(--m-safe-b));
     background: linear-gradient(180deg, rgba(18, 19, 22, .82), rgba(11, 12, 15, .98) 42%);
@@ -72,7 +72,12 @@
     backdrop-filter: blur(22px) saturate(1.25);
     border-top: 1px solid var(--m-line);
   }
-  .m-nav a {
+  .m-nav a, .m-nav button {
+    appearance: none;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    cursor: pointer;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -91,8 +96,9 @@
     transition: color .18s ease, background-color .18s ease, transform .18s ease;
   }
   .m-nav a svg { width: 21px; height: 21px; display: block; }
-  .m-nav a[aria-current="page"] { color: var(--m-cyan); }
-  .m-nav a[aria-current="page"]::after {
+  .m-nav button svg { width: 21px; height: 21px; display: block; }
+  .m-nav [aria-current="page"] { color: var(--m-cyan); }
+  .m-nav [aria-current="page"]::after {
     content: "";
     position: absolute;
     top: 0;
@@ -102,8 +108,8 @@
     background: var(--m-cyan);
     box-shadow: 0 0 10px rgba(34, 211, 238, .65);
   }
-  .m-nav a:active { background: rgba(34, 211, 238, .08); transform: scale(.96); }
-  .m-nav a:focus-visible { outline: 2px solid var(--m-cyan); outline-offset: -2px; }
+  .m-nav a:active, .m-nav button:active { background: rgba(34, 211, 238, .08); transform: scale(.96); }
+  .m-nav a:focus-visible, .m-nav button:focus-visible { outline: 2px solid var(--m-cyan); outline-offset: -2px; }
 
   /* ── Shared shell bar ──────────────────────────────────────────────
      The desktop bar keeps a wordmark, five links, a search, two status pills
@@ -214,34 +220,6 @@
   body[data-mobile-section="map"] #fab .fab:active { transform: scale(.94); }
   body[data-mobile-section="map"] #fab .fab.on { background: var(--m-cyan); color: #1b1c1f; border-color: transparent; }
 
-  /* Flight planning stays one tap away even though the rail is gone. */
-  .m-plan {
-    position: fixed;
-    left: var(--m-gutter);
-    bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 14px);
-    z-index: 46;
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    min-height: 40px;
-    padding: 0 14px;
-    border-radius: 12px;
-    font: inherit;
-    font-size: 11.5px;
-    font-weight: 700;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    color: var(--m-ink);
-    background: rgba(26, 27, 30, .92);
-    border: 1px solid var(--m-line-2);
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
-    transition: bottom .24s ease, border-color .16s ease;
-  }
-  .m-plan svg { width: 16px; height: 16px; color: var(--m-cyan); }
-  .m-plan:active { border-color: var(--m-cyan); }
-  body.m-flight .m-plan { bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 208px); }
 
   /* ── The flight sheet ─────────────────────────────────────────────
      The page keeps writing the card; the phone turns it into a sheet with
@@ -721,7 +699,7 @@
   @keyframes mFade { from { opacity: .35; } to { opacity: 1; } }
 
   @media (prefers-reduced-motion: reduce) {
-    .m-nav a, body[data-mobile-section="map"] #fc, .m-plan { transition: none !important; }
+    .m-nav a, body[data-mobile-section="map"] #fc { transition: none !important; }
     body.m-enter, body.m-leaving { animation: none !important; opacity: 1 !important; }
   }
 
@@ -772,7 +750,7 @@
      deck leaves it out rather than covering the chart with .exe downloads. */
   html.phone-mode #dlOffer, html.phone-mode #dlChip { display: none !important; }
   html.phone-mode #fc, html.phone-mode #fp, html.phone-mode #efbbar,
-  html.phone-mode .m-grip, html.phone-mode .m-plan { display: none !important; }
+  html.phone-mode .m-grip { display: none !important; }
   /* The retired card keeps its "expanded" class, and the desktop rule that hides
      the controls while it is open would hide them for good. Phone Mode owns the
      column, so it stays: the same follow / track / zoom controls as the PC. */
@@ -784,10 +762,74 @@
 }
 
 /* Tablets keep the desktop layout, but the sheet language is phone-only. */
+/* ── Phone Flight Deck layout (js/phonedeck.js) ──────────────────────
+   The map tools as one rail on the left, and a
+   tray above the tab bar with the plan's airports, their charts and Sync with
+   flight. Search opens on demand from the rail. */
+@media (max-width: 767px) {
+  /* The tools: one rail on the left. */
+  body.pd #app #fab {
+    /* !important: older Flight Deck rules (#app:has(#fp.show) #fab) outrank this selector. */
+    position: absolute !important; top: calc(env(safe-area-inset-top, 0px) + 8px) !important; bottom: auto !important;
+    left: 8px !important; right: auto !important; transform: none !important;
+    display: flex; flex-direction: column; gap: 2px; padding: 4px; border-radius: 12px;
+    background: rgba(16, 17, 20, .94); border: 1px solid var(--m-line-2); box-shadow: 0 6px 18px rgba(0, 0, 0, .35); z-index: 49;
+  }
+  body.pd #app #fab .fab { position: static; width: 40px; height: 40px; border: 0; border-radius: 9px; background: none; box-shadow: none; }
+  body.pd #app #fab .fab.on { background: var(--m-cyan); color: #04121e; }
+  /* Pinch zooms on a phone, so the rail keeps to the tools. */
+  body.pd #app #fab #bZi, body.pd #app #fab #bZo { display: none; }
+  body.pd #attr { display: block !important; top: auto !important; bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 106px) !important; left: auto !important; right: 8px !important; max-width: calc(100% - 16px); text-align: right; font-size: 9px; }
+  body.pd #app #fab .pd-style { font: 800 10.5px system-ui, sans-serif; letter-spacing: .04em; color: var(--m-ink); border: 1px solid var(--m-line-2); }
+
+  /* Search opens from the rail, beside it. */
+  body.pd #qbox { display: none; }
+  body.pd.pd-search #qbox { display: flex; top: calc(env(safe-area-inset-top, 0px) + 8px); left: 64px; right: 8px; width: auto; z-index: 51; }
+  body.pd #res { top: calc(env(safe-area-inset-top, 0px) + 84px); left: 64px; right: 8px; width: auto; }
+  body.pd #txbar { top: calc(env(safe-area-inset-top, 0px) + 8px); left: 64px; right: 8px; }
+
+  /* The tray: the plan's airports with their charts, and Sync with flight. */
+  body.pd #pd-tray {
+    position: fixed; z-index: 48; left: 0; right: 0; bottom: calc(var(--m-nav-h) + var(--m-safe-b));
+    display: grid; gap: 8px; padding: 10px 10px 8px;
+    background: linear-gradient(180deg, #141518, #0e0f12); border-top: 1px solid var(--m-line);
+  }
+  body.pd .pd-apts { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+  body.pd .pd-apt { flex: none; display: flex; border-radius: 10px; overflow: hidden; border: 1px solid var(--m-line-2); }
+  body.pd .pd-apt button { border: 0; height: 38px; padding: 0 12px; cursor: pointer; font: 700 13px system-ui, sans-serif; }
+  body.pd .pd-icao { background: #0f6e5e; color: #fff; letter-spacing: .04em; }
+  body.pd .pd-charts { background: rgba(255, 255, 255, .06); color: var(--m-ink); }
+  body.pd .pd-none { color: var(--m-faint); font-size: 12px; padding: 4px 2px; }
+  body.pd .pd-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  body.pd .pd-sync { display: flex; align-items: center; gap: 10px; color: var(--m-ink); font-size: 13px; font-weight: 600; cursor: pointer; }
+  body.pd .pd-sync input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  body.pd .pd-sync i { width: 42px; height: 24px; border-radius: 999px; background: rgba(255, 255, 255, .16); position: relative; transition: background .16s ease; }
+  body.pd .pd-sync i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .16s ease; }
+  body.pd .pd-sync input:checked + i { background: var(--m-cyan); }
+  body.pd .pd-sync input:checked + i::after { transform: translateX(18px); }
+  body.pd .pd-sync input:focus-visible + i { outline: 2px solid var(--m-cyan); outline-offset: 2px; }
+  body.pd .pd-edit { height: 30px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: 8px; background: #d97706; color: #fff; font-size: 12.5px; font-weight: 700; text-decoration: none; }
+
+  /* A chart sheet takes the whole map; the deck steps aside. */
+  body.pd.pd-chart #pd-tray { display: none; }
+
+  /* More: the sections that are not tabs, in a sheet above the bar. */
+  .m-more { position: fixed; inset: 0; z-index: 89; background: rgba(0, 0, 0, .35); }
+  .m-more[hidden] { display: none; }
+  .m-more-card {
+    position: absolute; right: 8px; bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 8px); min-width: 220px;
+    display: grid; padding: 6px; border-radius: 16px; background: rgba(22, 23, 27, .98); border: 1px solid var(--m-line-2);
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, .5);
+  }
+  .m-more-card a { display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 0 12px; border-radius: 10px; color: var(--m-ink); text-decoration: none; font-size: 14px; font-weight: 600; }
+  .m-more-card a svg { width: 20px; height: 20px; color: var(--m-cyan); }
+  .m-more-card a:active { background: rgba(34, 211, 238, .08); }
+}
+
 @media (min-width: 768px) {
-  .m-nav, .m-grip, .m-plan, .m-install { display: none !important; }
+  .m-nav, .m-grip, .m-install { display: none !important; }
 }
 
 @media print {
-  .m-nav, .m-grip, .m-plan { display: none !important; }
+  .m-nav, .m-grip { display: none !important; }
 }

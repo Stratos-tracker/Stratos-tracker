@@ -3,57 +3,60 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.4.4",
+    "version": "2.4.5",
     "releasedAt": "2026-11-17",
     "severity": "normal",
-    "summary": "EFB map displays: VFR, low and high IFR maps with real airspace, a taxi route you click on the ground chart, a flight and airport search with Go to, and a cleaner Flight Deck.",
+    "summary": "A phone layout built for the cockpit: map tools in one rail, your departure and arrival charts one tap away, and a cleaner map.",
     "changelog": {
       "features": [
-        "Map displays: VFR, IFR Low and IFR High vector maps, with terrain, airways and labels drawn for pilots.",
-        "Airspaces layer: controlled and special-use airspace from FAA data and your simulator, with class and altitude limits.",
-        "Taxi route: turn it on, click taxiways on the ground chart, and a green guide line follows the taxiways, listing them in order.",
-        "Search flights, airports and navaids from the Flight Deck; Go to takes the map there and tracks a flight, even one elsewhere on the network.",
-        "EFB airport ground chart: a Find taxiway search highlights a taxiway and zooms to it."
+        "Phone Flight Deck: a tray above the tab bar pins your departure and arrival airports with their charts, plus a Sync with flight switch."
       ],
       "improvements": [
-        "Your aircraft is a magenta arrowhead pointing along your track; the aircraft icon is still available in Settings.",
-        "The route draws as a cased line with boxed ident tags, leg distance and track labels, and chart symbols for each point.",
-        "Ground charts use chart colours, show stand numbers and name each taxiway once.",
-        "Navaids use enroute chart colours on every map: blue VORs (boxed with DME), purple NDBs, grey fixes and teal airports.",
-        "3D views place the trail and altitude stalk at the aircraft's exact height."
+        "Phone Flight Deck: the map tools sit in one rail on the left, with search opening beside it on demand.",
+        "Phone tab bar: Map, Plan, Flights, Charts and More, so every label has room; More holds the EFB apps, Airports, Weather and Profile.",
+        "Phone map labels no longer pile up: a label without room is left out, and navaids appear one zoom step later.",
+        "The EFB flight planner on a phone shows airports and your route when zoomed out, adding navaids and fixes as you zoom in."
       ],
       "fixes": [
-        "The EFB airport ground chart no longer stays on Loading: it reads the map tiles first and adds the bridge's data when it arrives.",
-        "Taxiway labels no longer keep a leading Taxiway or Twy."
+        "Phone: the Flight Deck search no longer runs under the map buttons.",
+        "Phone: the EFB home dock no longer covers the last row of apps."
       ],
       "performance": [],
       "ui": [
-        "The Flight Deck map runs to the top edge: the top bar is replaced by a search panel at the top left.",
-        "Map settings are grouped into Map, Weather, Aeronautical and Traffic sections.",
-        "Shared fonts, spacing and top bar across the Live, Logbook and Weather pages."
+        "Phone: the floating Plan button and the empty flight plan and procedures cards are gone from the map; the Plan tab opens the planner."
       ],
       "compatibility": [],
       "other": []
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.4/Stratos-Setup.exe",
-        "sha256": "4d501141bf70b00a1f29963c8d40f94e3cb921d55651bab88acd47568ade7ab2",
-        "size": 119504971
-      },
-      "mac-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.4/Stratos-2.4.4-mac-x64.dmg",
-        "sha256": "a1634cfc481c95fe911d0576e9e3417e2db8544908223434613a533cb9923ceb",
-        "size": 143039377
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.4/Stratos-2.4.4-linux-x64.AppImage",
-        "sha256": "aaa8119138c605c86ce8b1e1fc3d057781a3c5aad3693ea30bc89af1a209299a",
-        "size": 160332650
-      }
     }
   },
   "releases": [
+    {
+      "version": "2.4.5",
+      "releasedAt": "2026-11-17",
+      "severity": "normal",
+      "summary": "A phone layout built for the cockpit: map tools in one rail, your departure and arrival charts one tap away, and a cleaner map.",
+      "changelog": {
+        "features": [
+          "Phone Flight Deck: a tray above the tab bar pins your departure and arrival airports with their charts, plus a Sync with flight switch."
+        ],
+        "improvements": [
+          "Phone Flight Deck: the map tools sit in one rail on the left, with search opening beside it on demand.",
+          "Phone tab bar: Map, Plan, Flights, Charts and More, so every label has room; More holds the EFB apps, Airports, Weather and Profile.",
+          "Phone map labels no longer pile up: a label without room is left out, and navaids appear one zoom step later.",
+          "The EFB flight planner on a phone shows airports and your route when zoomed out, adding navaids and fixes as you zoom in."
+        ],
+        "fixes": [
+          "Phone: the Flight Deck search no longer runs under the map buttons.",
+          "Phone: the EFB home dock no longer covers the last row of apps."
+        ],
+        "performance": [],
+        "ui": [
+          "Phone: the floating Plan button and the empty flight plan and procedures cards are gone from the map; the Plan tab opens the planner."
+        ],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.4.4",
       "releasedAt": "2026-11-17",
@@ -1270,26 +1273,6 @@
           "Flight charts now include the plan alternates beside departure and arrival, and saved airports are pinned with the recent ones.",
           "Region and country pickers in the chart sidebar replace a bare airport box.",
           "Release pages now carry only the installers and the three update feeds: blockmaps, checksum sidecars and duplicate notes and manifests are gone."
-        ],
-        "fixes": [],
-        "performance": [],
-        "ui": [],
-        "compatibility": [],
-        "other": []
-      }
-    },
-    {
-      "version": "2.1.33",
-      "releasedAt": "2026-11-06",
-      "severity": "normal",
-      "summary": "Every chart is free: the paywall is gone from the tracker and the EFB.",
-      "changelog": {
-        "features": [
-          "Every published terminal procedure now opens for everyone — diagrams, SIDs, STARs, ILS/LOC, RNAV, VOR, NDB, minimums and hot spots — with no licence, account or payment."
-        ],
-        "improvements": [
-          "The catalogue drops its Free and Premium labels and its lock dialog, and reports document counts instead.",
-          "The EFB chart viewer opens the selected document directly instead of answering it with a licence panel."
         ],
         "fixes": [],
         "performance": [],

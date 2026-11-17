@@ -1661,6 +1661,7 @@ export class MiniMap {
     // Every fix on screen gets its symbol, so the waypoints cover the whole chart;
     // only the labels are budgeted, nearest the centre first, so text never walls it.
     const fixBudget = span == null ? 0 : span > 900 ? 0 : span > 400 ? 40 : span > 160 ? 110 : 200;
+    const sparse = this.width < 600 && span != null && span / this.width > 0.9;
     const placed = [];
     const fits = (x, y, width) => {
       const box = { x: x - 3, y: y - 11, w: width + 6, h: 14 };
@@ -1682,6 +1683,8 @@ export class MiniMap {
       const isRoute = routeIds.has(String(point.id || '').toUpperCase());
       const isFix = point.kind === 'fix' && !isRoute;
       if (isFix && span > 900) { hidden += 1; continue; }
+      // A phone-width chart zoomed out has no room for navaids and fixes: airports and the route only.
+      if (sparse && !isRoute && point.kind !== 'apt') { hidden += 1; continue; }
       const p = onScreen(point);
       if (!p) continue;
       if (isFix) fixesDrawn += 1;

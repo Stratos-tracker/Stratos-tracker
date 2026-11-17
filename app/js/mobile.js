@@ -23,6 +23,14 @@ const SECTIONS = [
   { id: 'weather', label: 'Weather', href: 'weather.html' },
   { id: 'profile', label: 'Profile', href: 'pilot.html#settings' },
 ];
+// Four tabs and More, so each label has room on a phone; the rest sit in the More sheet.
+const TABS = ['map', 'plan', 'flights', 'charts'];
+const MORE = [
+  { id: 'efb', label: 'EFB apps', href: 'efb.html' },
+  { id: 'airport', label: 'Airports', href: 'efb.html#/airport' },
+  { id: 'weather', label: 'Weather', href: 'weather.html' },
+  { id: 'profile', label: 'Profile & settings', href: 'pilot.html#settings' },
+];
 
 const svg = body => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 
@@ -36,6 +44,8 @@ const ICON = {
   efb: svg('<rect x="3.5" y="5" width="17" height="14" rx="2.4"/><path d="M3.5 9.5h17M8 5V3.2M16 5V3.2"/>'),
   weather: svg('<circle cx="8.5" cy="8.5" r="3"/><path d="M6 19h11a3.4 3.4 0 0 0 .3-6.98A5 5 0 0 0 7.4 13A3.6 3.6 0 0 0 6 19z"/>'),
   profile: svg('<circle cx="12" cy="8" r="3.6"/><path d="M4.6 20c0-3.7 3.4-6 7.4-6s7.4 2.3 7.4 6"/>'),
+  airport: svg('<path d="M12 3v18M7 21h10"/><path d="M5 9h14M8 6h8"/>'),
+  more: svg('<circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/>'),
 };
 
 /* The EFB is one document carrying three of the bar's destinations, so on that
@@ -80,11 +90,20 @@ function mountNav() {
   const nav = document.createElement('nav');
   nav.className = 'm-nav';
   nav.setAttribute('aria-label', 'Primary sections');
-  nav.innerHTML = SECTIONS.map(item => {
+  nav.innerHTML = SECTIONS.filter(item => TABS.includes(item.id)).map(item => {
     const current = item.id === section;
     return `<a href="${item.href}" data-mnav="${item.id}"${current ? ' aria-current="page"' : ''}>${ICON[item.id]}<span>${item.label}</span></a>`;
-  }).join('');
-  document.body.appendChild(nav);
+  }).join('') + `<button type="button" class="m-more-btn" data-mnav="more" aria-haspopup="true" aria-expanded="false"${TABS.includes(section) ? '' : ' aria-current="page"'}>${ICON.more}<span>More</span></button>`;
+  const more = document.createElement('div');
+  more.className = 'm-more';
+  more.hidden = true;
+  more.innerHTML = `<div class="m-more-card" role="menu">${MORE.map(item => `<a role="menuitem" href="${item.href}">${ICON[item.id]}<span>${item.label}</span></a>`).join('')}</div>`;
+  const moreBtn = nav.querySelector('.m-more-btn');
+  const setMore = open => { more.hidden = !open; moreBtn.setAttribute('aria-expanded', String(open)); };
+  moreBtn.addEventListener('click', () => setMore(more.hidden));
+  more.addEventListener('click', e => { if (!e.target.closest('a')) setMore(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') setMore(false); });
+  document.body.append(more, nav);
   document.body.classList.add('has-mnav');
 
   /* The EFB changes route without a reload, so the bar follows the hash: the
@@ -92,9 +111,11 @@ function mountNav() {
   const markCurrent = () => {
     const now = sectionNow();
     nav.querySelectorAll('[data-mnav]').forEach(link => {
-      if (link.dataset.mnav === now) link.setAttribute('aria-current', 'page');
+      const id = link.dataset.mnav === 'more' && !TABS.includes(now) ? 'more' : now;
+      if (link.dataset.mnav === id) link.setAttribute('aria-current', 'page');
       else link.removeAttribute('aria-current');
     });
+    setMore(false);
   };
   window.addEventListener('hashchange', markCurrent);
 
@@ -214,21 +235,6 @@ function mountSheet() {
   // children only, so scroll position and the sheet's rest survive an update.
   const observer = new MutationObserver(() => { ensureGrip(); syncFlight(); });
   observer.observe(card, { childList: true, attributes: true, attributeFilter: ['style'] });
-
-  // Flight planning lived on the desktop rail. One pill keeps it on a phone
-  // without adding a sixth tab or a menu.
-  const app = document.getElementById('app');
-  const plan = document.getElementById('bRoute');
-  if (app && plan && !document.querySelector('.m-plan')) {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'm-plan';
-    button.innerHTML = `${svg('<path d="M5 18 18 5"/><path d="M9 5h9v9"/>')}<span>Plan</span>`;
-    button.title = 'Flight planning';
-    button.setAttribute('aria-label', 'Open flight planning');
-    button.addEventListener('click', () => plan.click());
-    app.appendChild(button);
-  }
 }
 
 /* ── Installation ──────────────────────────────────────────────────────

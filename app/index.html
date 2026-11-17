@@ -1360,7 +1360,7 @@ for(let o=Math.ceil(a[0]/s)*s;o<b[0];o+=s){const x=sc(o,0)[0];cx.moveTo(x,0);cx.
 for(let t=Math.ceil(b[1]/s)*s;t<a[1];t+=s){const y=sc(0,t)[1];cx.moveTo(0,y);cx.lineTo(W,y);cx.fillText(t.toFixed(s<1?1:0)+'°',4,y-2)}cx.stroke()}
 if(L.atc&&!CH.on)atcTick();drawFaaCharts();drawAirspaces();drawWeather();drawDayNight();drawAirportWx();
 const ppn=lat=>SZ*2**V.z/360/(60*Math.cos(lat*R));MKL.length=0;
-if(L.nav&&!CH.on)N.forEach(n=>{const q=vis(n.lon,n.lat);if(!q||lblZ()<6)return;const[x,y]=q;if(x<-20||x>W+20||y<-20||y>H+20)return;const t=String(n.type||'').toUpperCase(),kind=/NDB/.test(t)?'ndb':/VOR|TACAN|DME/.test(t)?'vor':'int';mkDraw(kind,x,y,mkRz()*.8);if(lblZ()>5.5)mkText(n.id,x+Math.round(mkRz()*.55)-4,y+4,mkColor(kind),11,false)});
+if(L.nav&&!CH.on)N.forEach(n=>{const q=vis(n.lon,n.lat);if(!q||lblZ()<(W<600?7:6))return;const[x,y]=q;if(x<-20||x>W+20||y<-20||y>H+20)return;const t=String(n.type||'').toUpperCase(),kind=/NDB/.test(t)?'ndb':/VOR|TACAN|DME/.test(t)?'vor':'int';mkDraw(kind,x,y,mkRz()*.8);if(lblZ()>(W<600?7.5:5.5))mkText(n.id,x+Math.round(mkRz()*.55)-4,y+4,mkColor(kind),11,false)});
 if(L.apt&&clusterAirports()){}else if(L.apt)A.forEach(a=>{if(CH.on&&a!==CH.a)return;const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;if(a.x&&lblZ()<6)return;const mg=lblZ()>10?4000:60;if(x<-mg||x>W+mg||y<-mg||y>H+mg)return;
 if(V.mode!=='globe'&&V.z>8.5)drawReal(a,x,y);else a.det=false;if(0)pairs(a).forEach(pr=>{const n=pr[0],h=n*10,p=ppn(a.lat)*1.4,dx=Math.sin(h*R)*p,dy=-Math.cos(h*R)*p;cx.strokeStyle=C.ap;cx.lineWidth=Math.max(3,p/9);cx.lineCap='butt';cx.beginPath();cx.moveTo(x-dx,y-dy);cx.lineTo(x+dx,y+dy);cx.stroke()});
 if(a.det){}else if(V.mode!=='globe'&&V.z>8.5){cx.beginPath();cx.arc(x,y,3,0,7);cx.fillStyle=C.land;cx.fill();cx.strokeStyle=C.ap;cx.lineWidth=2.2;cx.stroke()}else mkRing(x,y,mkRz()*.9,mkColor('apt'),1);
@@ -1472,6 +1472,8 @@ function mkText(text,x,y,color,size,weight,halo){
   const bw=w+5,bh=size+3;
   let lx=x+8,top=y-size*.8;
   if(lx+bw>W-4)lx=x-8-bw;
+  // A phone has no room to slide a label off its symbol: one that would collide is left out.
+  if(W<600&&MKL.some(b=>lx<b.x+b.w&&lx+bw>b.x&&top<b.y+b.h&&top+bh>b.y)){cx.letterSpacing='0px';return null}
   for(let pass=0;pass<3;pass++){
     const hit=MKL.find(b=>lx<b.x+b.w&&lx+bw>b.x&&top<b.y+b.h&&top+bh>b.y);
     if(!hit)break;
@@ -2594,7 +2596,7 @@ function drawSat(){const Z=Math.min(18,Math.max(0,Math.ceil(V.z-.25))),s=256*2**
 for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const dx=x*s-c[0]+W/2,dy=y*s-c[1]+H/2,t=tileImg(Z,x,y);
 if(Z>0){const p=t.ok&&now-t.t>260?null:tileImg(Z-1,x>>1,y>>1);if(p&&p.ok)cx.drawImage(p.i,(x&1)*128,(y&1)*128,128,128,dx,dy,s+.5,s+.5)}
 if(t.ok){cx.globalAlpha=Math.min(1,(now-t.t)/220);cx.drawImage(t.i,dx,dy,s+.5,s+.5);cx.globalAlpha=1}}
-const tx='Imagery © Esri, Maxar, Earthstar Geographics';cx.font='10px sans-serif';cx.strokeStyle='rgba(0,0,0,.65)';cx.lineWidth=3;cx.strokeText(tx,8,H-84);cx.fillStyle='#fff';cx.fillText(tx,8,H-84)}
+const tx='Imagery © Esri, Maxar, Earthstar Geographics';cx.font='10px sans-serif';cx.strokeStyle='rgba(0,0,0,.65)';cx.lineWidth=3;const ty=H-(window.pdInset||84);cx.strokeText(tx,8,ty);cx.fillStyle='#fff';cx.fillText(tx,8,ty)}
 var fcS='',aTab='info';
 /* Weather and the terminator are model/solar overlays, never aeronautical
    warnings. The grid is fetched for the current view and cached for ten
@@ -4644,6 +4646,6 @@ navigator.serviceWorker.addEventListener('controllerchange',()=>{try{if(sessionS
       if (bridge) startPublisher(bridge.base, {});
     } catch (_) { /* publishing is optional; the map is unaffected */ }
   }
-</script><script type="module" src="js/mobile.js"></script>
+</script><script src="js/phonedeck.js"></script><script type="module" src="js/mobile.js"></script>
 </body>
 </html>

@@ -272,18 +272,6 @@
       ]
     }
   },
-  "2.1.33": {
-    "summary": "Every chart is free: the paywall is gone from the tracker and the EFB.",
-    "changelog": {
-      "features": [
-        "Every published terminal procedure now opens for everyone — diagrams, SIDs, STARs, ILS/LOC, RNAV, VOR, NDB, minimums and hot spots — with no licence, account or payment."
-      ],
-      "improvements": [
-        "The catalogue drops its Free and Premium labels and its lock dialog, and reports document counts instead.",
-        "The EFB chart viewer opens the selected document directly instead of answering it with a licence panel."
-      ]
-    }
-  },
   "2.1.37": {
     "summary": "SID paths now start on the runway and follow the published initial-climb heading to its altitude-gated turn, including SLEEK2 runway 8 at KDEN.",
     "changelog": {
@@ -632,6 +620,30 @@
         "The Flight Deck map runs to the top edge: the top bar is replaced by a search panel at the top left.",
         "Map settings are grouped into Map, Weather, Aeronautical and Traffic sections.",
         "Shared fonts, spacing and top bar across the Live, Logbook and Weather pages."
+      ],
+      "compatibility": [],
+      "other": []
+    }
+  },
+  "2.4.5": {
+    "summary": "A phone layout built for the cockpit: map tools in one rail, your departure and arrival charts one tap away, and a cleaner map.",
+    "changelog": {
+      "features": [
+        "Phone Flight Deck: a tray above the tab bar pins your departure and arrival airports with their charts, plus a Sync with flight switch."
+      ],
+      "improvements": [
+        "Phone Flight Deck: the map tools sit in one rail on the left, with search opening beside it on demand.",
+        "Phone tab bar: Map, Plan, Flights, Charts and More, so every label has room; More holds the EFB apps, Airports, Weather and Profile.",
+        "Phone map labels no longer pile up: a label without room is left out, and navaids appear one zoom step later.",
+        "The EFB flight planner on a phone shows airports and your route when zoomed out, adding navaids and fixes as you zoom in."
+      ],
+      "fixes": [
+        "Phone: the Flight Deck search no longer runs under the map buttons.",
+        "Phone: the EFB home dock no longer covers the last row of apps."
+      ],
+      "performance": [],
+      "ui": [
+        "Phone: the floating Plan button and the empty flight plan and procedures cards are gone from the map; the Plan tab opens the planner."
       ],
       "compatibility": [],
       "other": []

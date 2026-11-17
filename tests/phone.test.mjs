@@ -51,7 +51,9 @@ test('the phone nav carries the PC destinations and the EFB', () => {
   assert.match(mobileJs, /id: 'efb', label: 'EFB', href: 'efb\.html'/);
   assert.match(mobileJs, /id: 'profile', label: 'Profile', href: 'pilot\.html#settings'/);
   assert.match(mobileJs, /id: 'plan', label: 'Plan', href: 'efb\.html#\/flightplan'/, 'planning stays one tap away once the map bar is gone');
-  assert.match(mobileCss, /grid-template-columns: repeat\(7, 1fr\)/, 'seven items, including Plan and the EFB');
+  assert.match(mobileCss, /grid-template-columns: repeat\(5, 1fr\)/, 'four tabs and More, so every label has room');
+  assert.match(mobileJs, /const TABS = \['map', 'plan', 'flights', 'charts'\]/, 'Map, Plan, Flights and Charts are tabs');
+  assert.match(mobileJs, /id: 'efb', label: 'EFB apps', href: 'efb\.html'/, 'the EFB stays one tap away in More');
   assert.match(mobileCss, /\.m-nav a svg \{ width: 21px; height: 21px/, 'phone-sized icons, not desktop ones');
 });
 
