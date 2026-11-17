@@ -18,9 +18,11 @@
 .s-card__head h2, .s-card__head h3,
 .card-head h2, .card-head h3,
 .wx-section h2, .section h2, .dep-arr-card h3 {
-  color:var(--acc);
-  letter-spacing:.12em;
-  text-transform:uppercase;
+  /* Card titles read as titles; the small uppercase labels above sections stay the only caps. */
+  color:var(--txt);
+  font-weight:650;
+  letter-spacing:0;
+  text-transform:none;
 }
 
 .ac-stat, .detail-cell, .raw-metar, .wstat {
@@ -45,7 +47,8 @@
   border-radius:var(--s-radius-sm); overscroll-behavior:contain;
 }
 html,body {
-  font-family:"Bahnschrift","Segoe UI Variable","Segoe UI",system-ui,sans-serif;
+  /* One type family across every page (tokens.css, shell.css and the Flight Deck use the same list). */
+  font-family:"Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, system-ui, sans-serif;
   color:var(--txt);
   background:radial-gradient(ellipse at 48% -15%,rgba(121,201,187,.09),transparent 54%),var(--bg);
 }

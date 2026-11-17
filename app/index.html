@@ -41,6 +41,7 @@ html,body{height:100%;min-height:100%;margin:0;background:var(--bg);color:var(--
 #app{position:relative;height:100vh;height:100dvh;min-height:320px;overflow:hidden;isolation:isolate}
 canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
 #map3d{z-index:1;background:#08090c}
+#vbase{position:absolute;inset:0;pointer-events:none}#vbase[hidden]{display:none}
 #map3d[hidden]{display:none}
 .map3d-tip{position:absolute;z-index:2;pointer-events:none;display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:10px;background:rgba(10, 11, 14,.9);border:1px solid rgba(148,163,184,.28);box-shadow:0 8px 24px rgba(0,0,0,.3);color:#e2e8f0;font-size:11px;line-height:1.25;min-width:120px}
 .map3d-tip[hidden]{display:none}
@@ -92,7 +93,7 @@ html{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}textar
 @media (max-width:767px){#mc{left:8px;right:8px;top:118px;width:auto;max-height:52%;z-index:60}}
 @media(max-width:420px){#tel b{font-size:13px}#tel span{font-size:10px}#sb{padding:0 12px}#q{padding:12px 0;font-size:16px}#fab{right:8px;top:8px;gap:7px}.fab{width:42px;height:42px}#res{left:8px;right:8px}#sheet{left:8px;right:8px;bottom:72px;max-height:min(48dvh,420px);padding:12px;border-radius:16px}#tabs{padding-bottom:max(7px,env(safe-area-inset-bottom));}button{padding:8px 10px}}
 :root{--acc:#2563eb}:root[data-theme=contrast]{--acc:#fde047}
-html,body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif}
+html,body{font-family:"Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, system-ui, sans-serif}
 /* Instrument surfaces. Opaque instead of a per-frame backdrop blur: the map
    canvas repaints underneath, so blur would re-composite on every frame. */
 :root{--surface:#c3d8e0}
@@ -265,7 +266,7 @@ button.on{background:var(--acc);color:#fff;border-color:transparent}:root[data-t
 #cv{display:none;position:absolute;top:0;left:0;right:0;z-index:6;padding:10px 12px 8px;background:var(--surface);border-bottom:1px solid var(--ui2)}
 .chartmode #cv{display:block}.cvh{display:flex;align-items:center;gap:10px}.cvt{flex:1;min-width:0;display:flex;flex-direction:column}.cvt b{font-size:22px}.cvt span{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #ci{display:none;position:absolute;left:0;right:0;bottom:0;top:124px;background:var(--bg);color:var(--txt);z-index:5;overflow:auto;padding:14px 16px 30px}.chartinfo #ci{display:block}
-.chartmode #fab,.chartmode #tabs,.chartmode #sheet,.chartmode #fc,.chartmode #lay,.chartmode #res,.chartmode #fp{display:none!important}
+.chartmode #fab,.chartmode #qbox,.chartmode #txbar,.chartmode #tabs,.chartmode #sheet,.chartmode #fc,.chartmode #lay,.chartmode #res,.chartmode #fp{display:none!important}
 #attr{position:absolute;left:10px;bottom:62px;z-index:1;padding:2px 6px;border-radius:6px;background:color-mix(in srgb,var(--ui) 76%,transparent);color:var(--mut);font-size:10px;pointer-events:none}
 @media(min-width:768px){#attr{left:92px;bottom:8px}}
 .wxhead{display:flex;align-items:center;gap:8px;margin-bottom:8px}
@@ -535,12 +536,11 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
   #fab .fab{width:38px;height:38px}
 }
 </style><link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css"><link rel="stylesheet" href="mobile.css"><link rel="stylesheet" href="efb-hud.css"><script src="js/account/gate.js"></script></head><body data-mobile-section="map"><div class="app-shell">
-<header id="appbar" class="tb" data-title="Flight Deck" data-context="Live Map"></header>
 <nav id="tabs" aria-label="Sections"><button class="tab act" id="bMap" data-group="Fly" data-label="Flight Deck"><b>&#8982;</b><span>Flight Deck</span></button><button class="tab" id="bRoute" data-group="Fly" data-label="Flight Planning"><b>&#8599;</b><span>Flight Planning</span></button><a class="tab" href="logbook.html" data-group="Fly" data-label="Logbook"><b>&#9776;</b><span>Logbook</span></a><a class="tab" href="discover.html" data-group="Explore" data-label="Explore"><b>&#10022;</b><span>Explore</span></a><a class="tab" href="pilot.html#settings" data-group="Account" data-label="Profile &amp; Settings"><b>&#9881;</b><span>Profile</span></a><a class="rail-product" href="efb.html" title="Stratos EFB — electronic flight bag" aria-label="Open Stratos EFB"><b>&#9635;</b><span>Stratos EFB<small>Briefing · charts</small></span></a><button class="tab rail-toggle" data-rail-toggle type="button" title="Collapse sidebar" aria-label="Collapse sidebar"><b>&#8249;</b><span>Collapse</span></button></nav>
 <div class="app-main">
 <div id="app">
 <div id="efbbar" aria-label="Flight status"><span class="eb-id"><b id="ebCall">STRATOS</b><i id="ebType">No simulator</i></span><span class="eb-phase" id="ebPhase">OFFLINE</span><span class="eb-gap"></span><span class="eb-wx" id="ebWx"></span><span class="eb-utc" id="ebUtc">--:--Z</span><span class="eb-link" id="ebLink">No link</span></div>
-<canvas id="map" aria-label="Aviation chart map"></canvas>
+<div id="vbase" hidden aria-hidden="true"></div><canvas id="map" aria-label="Aviation chart map"></canvas>
 <canvas id="map3d" hidden aria-label="3D track view"></canvas>
 <div id="map3dtip" class="map3d-tip" hidden></div>
 <div id="globe3d" hidden aria-label="3D map"></div>
@@ -550,26 +550,27 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 <!-- The shell adopts these two: the search moves into the centred slot in the
      bar, and this button becomes the connection line under the brand. One of
      each, and the listeners and ids come along with the nodes. -->
-<div id="sb" data-shell-search><span>&#8981;</span><input id="q" placeholder="Search airports and navaids" autocomplete="off" aria-label="Search"></div>
-<button id="st" data-shell-status>No connection</button>
+<div id="qbox" role="search"><div id="sb"><span>&#8981;</span><input id="q" placeholder="Flight, airport or navaid" autocomplete="off" aria-label="Search flights, airports and navaids"><button id="qGo" type="button">Go to</button></div><button id="st" data-shell-status>No connection</button></div>
 <div id="res" class="box"></div>
 <div id="fc" class="box"></div>
 <div id="fp" class="box" aria-live="polite"></div>
 <div id="online" class="box"><b id="olPlace">–</b><span id="olCount">–</span></div>
 <div id="rose" aria-hidden="true"><svg viewBox="0 0 120 120"><defs><radialGradient id="roseFace" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="#203447"/><stop offset=".55" stop-color="#0c1926"/><stop offset="1" stop-color="#050d15"/></radialGradient><linearGradient id="roseRing" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7dd3fc" stop-opacity=".65"/><stop offset=".5" stop-color="#334155" stop-opacity=".55"/><stop offset="1" stop-color="#0f172a" stop-opacity=".9"/></linearGradient></defs><circle class="rose-shadow" cx="60" cy="60" r="57"/><circle class="rose-bezel" cx="60" cy="60" r="56"/><circle class="rose-face" cx="60" cy="60" r="50"/><circle class="rose-ring" cx="60" cy="60" r="45.5"/><g id="roseTicks"></g><g id="roseNeedle"><path class="rose-needle-n" d="M60 16 64.5 56 60 62 55.5 56Z"/><path class="rose-needle-s" d="M60 104 55.5 64 60 58 64.5 64Z"/><circle class="rose-hub" cx="60" cy="60" r="3.2"/></g><path class="rose-lub" d="M60 2.5 55.5 11.5 64.5 11.5Z"/></svg><span class="rose-hdg" id="roseHdg">—</span></div>
-<div id="fab"><button id="bLay" class="fab" title="Map settings" aria-label="Map settings" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><g class="layers-glyph" fill="currentColor" stroke="#081019" stroke-width="1.15" stroke-linejoin="round"><path d="M12 2.6c.3 0 .59.07.85.22l7.35 4.35c.53.31.53 1.09 0 1.4l-7.35 4.35a1.71 1.71 0 0 1-1.7 0L3.8 8.57c-.53-.31-.53-1.09 0-1.4l7.35-4.35c.26-.15.55-.22.85-.22Z" transform="translate(0 8.8)"/><path d="M12 2.6c.3 0 .59.07.85.22l7.35 4.35c.53.31.53 1.09 0 1.4l-7.35 4.35a1.71 1.71 0 0 1-1.7 0L3.8 8.57c-.53-.31-.53-1.09 0-1.4l7.35-4.35c.26-.15.55-.22.85-.22Z" transform="translate(0 4.4)"/><path d="M12 2.6c.3 0 .59.07.85.22l7.35 4.35c.53.31.53 1.09 0 1.4l-7.35 4.35a1.71 1.71 0 0 1-1.7 0L3.8 8.57c-.53-.31-.53-1.09 0-1.4l7.35-4.35c.26-.15.55-.22.85-.22Z"/></g></svg></button><button id="bFol" class="fab" title="Follow aircraft" aria-pressed="false">&#9992;</button><button id="bZi" class="fab" title="Zoom in">+</button><button id="bZo" class="fab" title="Zoom out">−</button>
-</div><aside id="lay" role="dialog" aria-label="Map settings" aria-hidden="true">
+<div id="fab"><button id="bLay" class="fab" title="Map settings" aria-label="Map settings" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><g class="layers-glyph" fill="currentColor" stroke="#081019" stroke-width="1.15" stroke-linejoin="round"><path d="M12 2.6c.3 0 .59.07.85.22l7.35 4.35c.53.31.53 1.09 0 1.4l-7.35 4.35a1.71 1.71 0 0 1-1.7 0L3.8 8.57c-.53-.31-.53-1.09 0-1.4l7.35-4.35c.26-.15.55-.22.85-.22Z" transform="translate(0 8.8)"/><path d="M12 2.6c.3 0 .59.07.85.22l7.35 4.35c.53.31.53 1.09 0 1.4l-7.35 4.35a1.71 1.71 0 0 1-1.7 0L3.8 8.57c-.53-.31-.53-1.09 0-1.4l7.35-4.35c.26-.15.55-.22.85-.22Z" transform="translate(0 4.4)"/><path d="M12 2.6c.3 0 .59.07.85.22l7.35 4.35c.53.31.53 1.09 0 1.4l-7.35 4.35a1.71 1.71 0 0 1-1.7 0L3.8 8.57c-.53-.31-.53-1.09 0-1.4l7.35-4.35c.26-.15.55-.22.85-.22Z"/></g></svg></button><button id="bFol" class="fab" title="Follow aircraft" aria-pressed="false">&#9992;</button><button id="bTaxi" class="fab" title="Taxi route: click taxiways to draw your path" aria-label="Taxi route" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 21V9a3 3 0 0 1 3-3h6a3 3 0 0 0 3-3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="6" cy="21" r="0" /><path d="M15 3h3v3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button id="bZi" class="fab" title="Zoom in">+</button><button id="bZo" class="fab" title="Zoom out">−</button>
+</div><div id="txbar" hidden aria-live="polite"><b>TAXI</b><span id="txNames">Click a taxiway to start</span><button id="txUndo" type="button">Undo</button><button id="txClear" type="button">Clear</button><button id="txDone" type="button">Done</button></div><aside id="lay" role="dialog" aria-label="Map settings" aria-hidden="true">
 <header class="lay-h"><b>Map settings</b><button type="button" class="lay-x" id="layX" aria-label="Close settings">&#10005;</button></header>
 <div class="lay-body">
   <section class="lay-s"><h3>Map display</h3><div id="ms" class="lay-grid"></div><p class="m" id="msnote" hidden></p>
     <div class="lay-theme"><button type="button" data-theme-set="day">Day</button><button type="button" data-theme-set="night">Night</button><button type="button" data-theme-set="contrast">High contrast</button></div></section>
-  <section class="lay-s"><h3>Layers</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="trf" class="on">Traffic</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="trl">Trails</button><button type="button" data-l="grid">Grid</button><button type="button" data-l="wxrain">Rain</button><button type="button" data-l="wxwind">Wind</button><button type="button" data-l="wxturb">Turbulence</button><button type="button" data-l="wxsig">SIGMETs</button><button type="button" data-l="wxapt">Airport weather</button><button type="button" data-l="ifrlo">IFR Low</button><button type="button" data-l="ifrhi">IFR High</button><button type="button" data-l="faavfr">US Sectional</button><button type="button" data-l="faatac">US Terminal</button><button type="button" data-l="faalo">US IFR Low</button><button type="button" data-l="faahi">US IFR High</button><button type="button" data-l="atc">VATSIM ATC</button><button type="button" data-l="dn">Day / night</button><button type="button" id="bMc" aria-expanded="false" title="Find a chart and lay it on the map">Charts</button></div><p class="m">US charts: FAA Aeronautical Information Services (public domain). Airport weather: NOAA Aviation Weather Center. Rain <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a> · wind, turbulence Open-Meteo (estimate) · SIGMETs NOAA AWC · ATC data.vatsim.net, <a href="https://github.com/vatsimnetwork/simaware-tracon-project" target="_blank" rel="noopener">SimAware TRACON Project</a> (CC BY-SA 4.0)</p></section>
+  <section class="lay-s"><h3>Map</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="grid">Grid</button><button type="button" data-l="dn">Day / night</button><button type="button" id="bMc" aria-expanded="false" title="Find a chart and lay it on the map">Charts</button></div></section>
+  <section class="lay-s"><h3>Weather</h3><div class="lay-chips"><button type="button" data-l="wxrain">Rain</button><button type="button" data-l="wxwind">Wind</button><button type="button" data-l="wxturb">Turbulence</button><button type="button" data-l="wxsig">SIGMETs</button><button type="button" data-l="wxapt">Airport weather</button></div></section>
+  <section class="lay-s"><h3>Aeronautical</h3><div class="lay-chips"><button type="button" data-l="asp">Airspaces</button><button type="button" data-l="ifrlo">Airways low</button><button type="button" data-l="ifrhi">Airways high</button><button type="button" data-l="faavfr">FAA Sectional</button><button type="button" data-l="faatac">FAA Terminal</button><button type="button" data-l="faalo">FAA IFR Low</button><button type="button" data-l="faahi">FAA IFR High</button></div><p class="m">Airspaces: your simulator's airspace data (X-Plane, through the bridge) and, in the US, the FAA (public domain). US charts: FAA Aeronautical Information Services (public domain). Airport weather: NOAA Aviation Weather Center. Rain <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a> · wind, turbulence Open-Meteo (estimate) · SIGMETs NOAA AWC · ATC data.vatsim.net, <a href="https://github.com/vatsimnetwork/simaware-tracon-project" target="_blank" rel="noopener">SimAware TRACON Project</a> (CC BY-SA 4.0)</p></section>
   <section class="lay-s"><h3>Projection</h3><div id="pj"></div>
     <div class="lay-grid" id="t3mode"><button type="button" id="bMap3d" aria-pressed="false" title="3D globe with satellite imagery, real terrain and aircraft altitude">3D globe</button><button type="button" id="bMap3dFlat" aria-pressed="false" title="Tilted flat map with real terrain and aircraft altitude">3D flat map</button><button type="button" id="bMap3dChase" aria-pressed="false" title="Watch your aircraft in 3D: the camera follows it from behind over real terrain">3D chase</button></div><label class="lay-check" for="t3low"><input type="checkbox" id="t3low"><span>Low-power 3D</span></label><p class="m">Turns off terrain and renders at 1× pixel density for slower GPUs.</p>
     <div id="gwrap" hidden><div class="lay-sub">Globe surface</div><div id="gs"></div><p class="m" id="gn"></p>
       <div class="lay-row"><button type="button" id="gReset" title="Centre the globe on the route again">Reset view</button><button type="button" id="gRead" title="Read terrain elevations around the centre">Read terrain</button></div></div>
     <p class="m">The flat map is the chart tilted over real terrain; the globe adds the Earth's curvature. Both keep the same live aircraft and route.</p></section>
-  <section class="lay-s"><h3>Traffic</h3><label class="lay-f"><span>Source</span><select id="trs" aria-label="Traffic source"><option value="vatsim">VATSIM — live pilots</option><option value="adsb">ADS-B — community feeds</option><option value="ivao">IVAO — live pilots</option></select></label><p class="m" id="trsnote">Both sources are keyless and free.</p></section>
+  <section class="lay-s"><h3>Traffic</h3><div class="lay-chips"><button type="button" data-l="trf" class="on">Traffic</button><button type="button" data-l="trl">Trails</button><button type="button" data-l="atc">VATSIM ATC</button></div><label class="lay-f"><span>Source</span><select id="trs" aria-label="Traffic source"><option value="vatsim">VATSIM — live pilots</option><option value="adsb">ADS-B — community feeds</option><option value="ivao">IVAO — live pilots</option></select></label><p class="m" id="trsnote">Both sources are keyless and free.</p></section>
   <section class="lay-s"><h3>Procedures</h3><div id="dklay" class="lay-chips"><button type="button" data-dk-layer="sid" class="on">SID</button><button type="button" data-dk-layer="star" class="on">STAR</button><button type="button" data-dk-layer="approach" class="on">Approach</button><button type="button" data-dk-layer="missed">Missed</button></div><p class="m" id="dkproctip"></p></section>
   <section class="lay-s"><h3>Workspaces</h3><div id="mwtools"><button id="bLive" type="button">Live tracking</button><button id="bCh" type="button">Charts</button><button id="bWx" type="button">Weather</button><button id="bData" type="button">Data</button><button id="bEfb" type="button" title="Electronic flight bag">Stratos EFB</button></div>
     </section>
@@ -817,6 +818,7 @@ ORD|O'Hare|VORTAC|41.99|-87.98|113.9
 BOS|Boston|VORTAC|42.36|-70.99|112.7`.split('\n').map(l=>{const p=l.split('|');return{k:'nav',id:p[0],name:p[1],type:p[2],lat:+p[3],lon:+p[4],freq:p[5]}});
 const LAND=[[-124.7,48.4],[-124,46.3],[-124.4,43],[-124.2,40.4],[-122.5,37.8],[-120.6,34.5],[-117.1,32.5],[-114.7,32.7],[-111,31.3],[-108.2,31.3],[-106.5,31.8],[-104.5,29.6],[-102.4,29.8],[-99.5,27.5],[-97.2,25.9],[-97.4,27.8],[-94.7,29.4],[-91.5,29.5],[-89.2,29.1],[-89.4,30.2],[-85.3,29.7],[-84,30],[-82.8,28],[-81.8,26],[-80.4,25.2],[-80,26.8],[-81.3,30.7],[-79.2,33.2],[-76,35],[-75.5,37.5],[-74,39.7],[-74,40.6],[-71.5,41.2],[-70,41.7],[-70.7,43],[-67,44.8],[-69,47.4],[-71.5,45],[-75,45],[-79,43.3],[-83,42],[-82.5,45.3],[-84.5,46.5],[-88,48],[-95,49],[-123,49]];
 const $=s=>document.querySelector(s),R=Math.PI/180,SZ=256,WARP=30,CRUISE=145;
+const TX={on:false,a:null,pts:[],legs:[]};// taxi route state (see txGraph)
 /* Resource profile (Settings → Resource profile). Recording is unaffected. */
 const RP=(()=>{let m='normal';try{m=localStorage.getItem('stratos.resourceMode')||'normal'}catch(_){}
 const P={normal:{fps:60,trail:900,wt:6000,tiles:true},low:{fps:30,trail:350,wt:12000,tiles:true},minimal:{fps:15,trail:0,wt:20000,tiles:false}};
@@ -824,7 +826,7 @@ return{...(P[m]||P.normal),mode:m}})();
 let deskStatus=null;
 try{if(window.stratosDesktop){window.stratosDesktop.getStatus().then(v=>{deskStatus=v}).catch(()=>{});window.stratosDesktop.onStatus(v=>{deskStatus=v})}}catch(_){}
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-N.length=0;const TRL=new Map(),CH={on:false,pg:'paper',a:null,prev:null},TS={ok:0,err:0},TC=new Map(),MS={sat:{n:'Satellite',m:18,a:'Imagery (c) Esri, Maxar, Earthstar Geographics'},tr:{n:'Terrain',m:17,a:'(c) OpenStreetMap contributors, SRTM | style (c) OpenTopoMap (CC-BY-SA)'},world:{n:'World',m:18,a:'Natural Earth (public domain)'},vfr:{n:'VFR',m:12,z:8,a:'FAA VFR Sectional Charts (public domain)'},lowifr:{n:'Low IFR',m:12,z:8,a:'FAA IFR Enroute Low Altitude Charts (public domain)'},highifr:{n:'High IFR',m:9,z:7,a:'FAA IFR Enroute High Altitude Charts (public domain)'}},CHART_TILE_CAP=1600,CHART_TILE_CACHE=1700;const live={on:false,d:null,es:null,at:0,seen:0};
+N.length=0;const TRL=new Map(),CH={on:false,pg:'paper',a:null,prev:null},TS={ok:0,err:0},TC=new Map(),MS={sat:{n:'Satellite',m:18,a:'Imagery (c) Esri, Maxar, Earthstar Geographics'},tr:{n:'Terrain',m:17,a:'(c) OpenStreetMap contributors, SRTM | style (c) OpenTopoMap (CC-BY-SA)'},world:{n:'World',m:18,a:'Natural Earth (public domain)'},vfr:{n:'VFR',m:18,vec:'vfr',a:'OpenFreeMap © OpenMapTiles · Data © OpenStreetMap contributors · Terrain: AWS Terrain Tiles (Mapzen)'},lowifr:{n:'Low IFR',m:18,vec:'ifrlo',a:'OpenFreeMap © OpenMapTiles · Data © OpenStreetMap contributors'},highifr:{n:'High IFR',m:18,vec:'ifrhi',a:'OpenFreeMap © OpenMapTiles · Data © OpenStreetMap contributors'}},CHART_TILE_CAP=1600,CHART_TILE_CACHE=1700;const live={on:false,d:null,es:null,at:0,seen:0};
 const EX=[[[-123,49],[-125,50],[-130,54.5],[-133,58],[-137,59],[-141,60],[-141,69.6],[-135,69],[-128,70],[-115,68.5],[-105,68],[-95,71],[-90,69],[-85,70],[-82,66],[-87,64],[-94,60],[-93,57],[-85,55.5],[-82,53],[-79,51.5],[-79,55],[-77,60],[-70,59],[-65,60],[-61,56],[-56,52],[-60,50],[-65,49.2],[-66,48],[-61,46],[-64,45],[-66,44.5],[-67,45],[-70,47],[-71.5,45],[-75,45],[-79,43.3],[-83,42],[-82.5,45.3],[-84.5,46.5],[-88,48],[-95,49]],[[-59,47.6],[-56,51.6],[-53,47],[-55,46.9]],
 [[-9.5,43],[-9,37],[-6,36.2],[-2,36.7],[0,38.5],[3,42.5],[7,43.7],[9,44.4],[10,44],[12.5,41.5],[16,38],[18.5,40],[16,41.9],[12.5,44.5],[13.7,45.6],[15,44],[19,41.5],[21,39],[23,36.5],[24,38],[23.5,40.5],[26,40.8],[29,41],[28,43.5],[30,45.3],[33,46],[37,47],[40,47.5],[40,56],[40,60.5],[30,60.5],[28,60.5],[23.5,59.2],[21,57],[20,54.5],[18,54.8],[14,54],[10.5,54.3],[8.5,57],[8.2,55],[8.7,54],[7,53.5],[5,53],[4,51.5],[2,51],[1.5,50.2],[-1.5,49.7],[-1.5,48.7],[-4.5,48.5],[-2,47],[-1.2,46],[-1.8,43.5]],
 [[8,58],[5,59],[5,62],[12,66],[18,70],[28,71],[31,70],[30,67],[30,61],[28,60.5],[23,60],[21.5,61],[21.5,63],[25,65.5],[22,65.8],[18,62.5],[17.5,60.5],[19,59.5],[16.5,56.5],[14,55.5],[12.5,56],[11,58],[10.5,59.5]],
@@ -834,10 +836,10 @@ const RL={KSFO:[11870,8650],KOAK:[10520],KSJC:[11000],KSAC:[8600],KRNO:[11002],K
 function pairs(a){const o=[];a.rw.forEach(n=>{if(!o.some(p=>p[0]==n||p[1]==n))o.push([n,(n+17)%36+1])});return o}
 function liveOk(){return live.on&&live.d&&live.d.lat!=null&&live.d.age<3&&performance.now()-live.at<3000}
 const cv=$('#map'),cx=cv.getContext('2d');let W,H,dpr,C={};
-const V={lon:-119.5,lat:38.8,z:6,fol:false,mode:'plane',gz:1,gs:'vector'},L={apt:1,nav:1,trf:1,grid:0,rte:1,procSid:1,procStar:1,procApproach:1,procMissed:0,wxrain:0,wxwind:0,wxturb:0,wxsig:0,ifrlo:0,ifrhi:0,atc:0,dn:0,wxapt:0,faavfr:0,faatac:0,faalo:0,faahi:0,style:(function(){try{const s=localStorage.getItem('dl.style')||'sat';return MS[s]?s:'sat'}catch(e){return'sat'}})()};
+const V={lon:-119.5,lat:38.8,z:6,fol:false,mode:'plane',gz:1,gs:'vector'},L={apt:1,nav:1,trf:1,grid:0,rte:1,procSid:1,procStar:1,procApproach:1,procMissed:0,wxrain:0,wxwind:0,wxturb:0,wxsig:0,ifrlo:0,ifrhi:0,atc:0,dn:0,wxapt:0,faavfr:0,faatac:0,faalo:0,faahi:0,asp:0,style:(function(){try{const s=localStorage.getItem('dl.style')||'sat';return MS[s]?s:'sat'}catch(e){return'sat'}})()};
 let plan=false,panel=null,sel=null,route=[],trav=0,own={lat:0,lon:0,hdg:0,alt:0,vs:0};
-const MAP_DEFAULTS={color:'#fbbf24',size:1.35,halo:false,trail:true,trailWidth:1};
-function readMapPrefs(){try{const raw=JSON.parse(localStorage.getItem('stratos.mapSettings')||'null')||{};const col=typeof raw.color==='string'&&/^#[0-9a-f]{6}$/i.test(raw.color.trim())?raw.color.trim():MAP_DEFAULTS.color;const size=Number(raw.size);const width=Number(raw.trailWidth);return{color:col,size:Number.isFinite(size)?Math.min(2,Math.max(.7,size)):MAP_DEFAULTS.size,halo:typeof raw.halo==='boolean'?raw.halo:MAP_DEFAULTS.halo,trail:typeof raw.trail==='boolean'?raw.trail:MAP_DEFAULTS.trail,trailWidth:Number.isFinite(width)?Math.min(2,Math.max(.5,width)):MAP_DEFAULTS.trailWidth}}catch(_){return{...MAP_DEFAULTS}}}
+const MAP_DEFAULTS={color:'#e040fb',size:1.35,halo:false,trail:true,trailWidth:1,icon:'triangle'};
+function readMapPrefs(){try{const raw=JSON.parse(localStorage.getItem('stratos.mapSettings')||'null')||{};const col=typeof raw.color==='string'&&/^#[0-9a-f]{6}$/i.test(raw.color.trim())?raw.color.trim():MAP_DEFAULTS.color;const size=Number(raw.size);const width=Number(raw.trailWidth);return{color:col,size:Number.isFinite(size)?Math.min(2,Math.max(.7,size)):MAP_DEFAULTS.size,halo:typeof raw.halo==='boolean'?raw.halo:MAP_DEFAULTS.halo,trail:typeof raw.trail==='boolean'?raw.trail:MAP_DEFAULTS.trail,trailWidth:Number.isFinite(width)?Math.min(2,Math.max(.5,width)):MAP_DEFAULTS.trailWidth,icon:raw.icon==='aircraft'?'aircraft':'triangle'}}catch(_){return{...MAP_DEFAULTS}}}
 let MP=readMapPrefs();
 const byId=id=>A.find(a=>a.id==id)||N.find(a=>a.id==id);
 const wp=o=>({id:o.id,name:o.name,lat:o.lat,lon:o.lon,k:o.k||'fix',elev:o.elev||0,ss:o.ss||'',aw:o.aw||''});
@@ -1347,52 +1349,51 @@ const el=route.length>1?t-trav:0;$('#tGS').textContent=CRUISE;$('#tAL').textCont
 if(V.fol){const q=(sel&&sel.k=='trf')?sel:own;V.lon=q.lon;V.lat=q.lat}}
 /* drawing */
 const ACI=new Map();function acImg(t,col){const key=t+'|'+col;if(ACI.has(key))return ACI.get(key);const icon=window.aircraftIcon?.(t,col);if(icon)ACI.set(key,icon);return icon}
+/* Ownship as an EFB arrowhead: a notched triangle pointing along the track, dark-edged so it reads on any base map. */
+function drawOwnTri(x,y,heading,color,k){const s=11*k;cx.save();cx.translate(x,y);cx.rotate((Number(heading)||0)*R);cx.beginPath();cx.moveTo(0,-1.25*s);cx.lineTo(.95*s,s);cx.lineTo(0,.5*s);cx.lineTo(-.95*s,s);cx.closePath();cx.lineJoin='round';cx.lineWidth=3;cx.strokeStyle='#1b0a2a';cx.stroke();cx.fillStyle=color;cx.fill();cx.restore()}
 function drawAircraft(type,x,y,heading,color,size){const im=type&&acImg(type,color);cx.save();cx.translate(x,y);cx.rotate(((Number(heading)||0)*R));if(im){cx.drawImage(im,-size/2,-size/2,size,size)}else{cx.strokeStyle=color;cx.lineWidth=2;cx.beginPath();PL.forEach((p,i)=>i?cx.lineTo(p[0]*.7,p[1]*.7):cx.moveTo(p[0]*.7,p[1]*.7));cx.closePath();cx.fillStyle=color;cx.fill()}cx.restore()}
-function draw(){procTick();if(wpCard){const ck=V.lon.toFixed(5)+','+V.lat.toFixed(5)+','+V.z.toFixed(4)+','+W+'x'+H;if(ck!==cardView){cardView=ck;positionRouteCard()}}cx.setTransform(dpr,0,0,dpr,0,0);cx.fillStyle=C.bg;cx.fillRect(0,0,W,H);
-if(CH.on&&CH.pg!='sat'){cx.fillStyle='#fbfaf6';cx.fillRect(0,0,W,H)}else if(V.mode==='globe'){globeBase()}else if(L.style=='world'){worldLayer()}else{cx.beginPath();[LAND,...EX].forEach(po=>{po.forEach((p,i)=>{const[x,y]=sc(p[0],p[1]);i?cx.lineTo(x,y):cx.moveTo(x,y)});cx.closePath()});if(!SAT()){cx.fillStyle=C.land;cx.fill();cx.strokeStyle=C.coast;cx.lineWidth=1.5;cx.stroke()}else drawTiles()}
+function draw(){procTick();if(wpCard){const ck=V.lon.toFixed(5)+','+V.lat.toFixed(5)+','+V.z.toFixed(4)+','+W+'x'+H;if(ck!==cardView){cardView=ck;positionRouteCard()}}cx.setTransform(dpr,0,0,dpr,0,0);const vecBase=vecSync();if(vecBase)cx.clearRect(0,0,W,H);else{cx.fillStyle=C.bg;cx.fillRect(0,0,W,H)}
+if(CH.on&&CH.pg!='sat'){cx.fillStyle='#fbfaf6';cx.fillRect(0,0,W,H)}else if(V.mode==='globe'){globeBase()}else if(vecBase){}else if(L.style=='world'){worldLayer()}else{cx.beginPath();[LAND,...EX].forEach(po=>{po.forEach((p,i)=>{const[x,y]=sc(p[0],p[1]);i?cx.lineTo(x,y):cx.moveTo(x,y)});cx.closePath()});if(!SAT()){cx.fillStyle=C.land;cx.fill();cx.strokeStyle=C.coast;cx.lineWidth=1.5;cx.stroke()}else drawTiles()}
 const tl=wpx(V.lon,V.lat);
 if(L.grid&&V.z<12&&!CH.on&&V.mode!=='globe'){const s=V.z<4?10:V.z<5.5?5:V.z<7?2:V.z<8.5?1:V.z<10?.5:.1,a=wun(tl[0]-W/2,tl[1]-H/2),b=wun(tl[0]+W/2,tl[1]+H/2);cx.strokeStyle=C.grid;cx.lineWidth=1;cx.fillStyle=C.coast;cx.font='10px sans-serif';cx.beginPath();
 for(let o=Math.ceil(a[0]/s)*s;o<b[0];o+=s){const x=sc(o,0)[0];cx.moveTo(x,0);cx.lineTo(x,H);cx.fillText(o.toFixed(s<1?1:0)+'°',x+2,H-100)}
 for(let t=Math.ceil(b[1]/s)*s;t<a[1];t+=s){const y=sc(0,t)[1];cx.moveTo(0,y);cx.lineTo(W,y);cx.fillText(t.toFixed(s<1?1:0)+'°',4,y-2)}cx.stroke()}
-if(L.atc&&!CH.on)atcTick();drawFaaCharts();drawWeather();drawDayNight();drawAirportWx();
+if(L.atc&&!CH.on)atcTick();drawFaaCharts();drawAirspaces();drawWeather();drawDayNight();drawAirportWx();
 const ppn=lat=>SZ*2**V.z/360/(60*Math.cos(lat*R));MKL.length=0;
 if(L.nav&&!CH.on)N.forEach(n=>{const q=vis(n.lon,n.lat);if(!q||lblZ()<6)return;const[x,y]=q;if(x<-20||x>W+20||y<-20||y>H+20)return;const t=String(n.type||'').toUpperCase(),kind=/NDB/.test(t)?'ndb':/VOR|TACAN|DME/.test(t)?'vor':'int';mkDraw(kind,x,y,mkRz()*.8);if(lblZ()>5.5)mkText(n.id,x+Math.round(mkRz()*.55)-4,y+4,mkColor(kind),11,false)});
 if(L.apt&&clusterAirports()){}else if(L.apt)A.forEach(a=>{if(CH.on&&a!==CH.a)return;const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;if(a.x&&lblZ()<6)return;const mg=lblZ()>10?4000:60;if(x<-mg||x>W+mg||y<-mg||y>H+mg)return;
 if(V.mode!=='globe'&&V.z>8.5)drawReal(a,x,y);else a.det=false;if(0)pairs(a).forEach(pr=>{const n=pr[0],h=n*10,p=ppn(a.lat)*1.4,dx=Math.sin(h*R)*p,dy=-Math.cos(h*R)*p;cx.strokeStyle=C.ap;cx.lineWidth=Math.max(3,p/9);cx.lineCap='butt';cx.beginPath();cx.moveTo(x-dx,y-dy);cx.lineTo(x+dx,y+dy);cx.stroke()});
 if(a.det){}else if(V.mode!=='globe'&&V.z>8.5){cx.beginPath();cx.arc(x,y,3,0,7);cx.fillStyle=C.land;cx.fill();cx.strokeStyle=C.ap;cx.lineWidth=2.2;cx.stroke()}else mkRing(x,y,mkRz()*.9,mkColor('apt'),1);
 if(lblZ()>(a.x?7:4.8)&&x>-40&&x<W+40&&y>-40&&y<H+40&&!(L.rte&&planTocTod().ids.has(String(a.id).toUpperCase())))mkText(a.id,x+Math.round(mkRz()*.62)-3,y-6,SAT()?(DKM()?'#fff':'#111'):C.txt,12.5,true)});
-drawMapChart();drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.strokeStyle=C.route;cx.lineCap='round';cx.lineJoin='round';if(sp.flown.length>1){cx.globalAlpha=.34;cx.lineWidth=12;drawPlanLine(sp.flown)}if(sp.ahead.length>1){cx.globalAlpha=.62;cx.lineWidth=12;drawPlanLine(sp.ahead)}cx.restore()
+drawMapChart();drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.lineCap='round';cx.lineJoin='round';if(sp.flown.length>1){cx.globalAlpha=.5;cx.strokeStyle=C.route;cx.lineWidth=5;cx.setLineDash([10,9]);drawPlanLine(sp.flown);cx.setLineDash([])}if(sp.ahead.length>1){cx.globalAlpha=.9;cx.strokeStyle=RTE_CASE;cx.lineWidth=10;drawPlanLine(sp.ahead);cx.globalAlpha=1;cx.strokeStyle=C.route;cx.lineWidth=6;drawPlanLine(sp.ahead)}cx.restore()
 drawProcedureRouteLine();drawRouteMarkers();}
 trails();if(L.trf&&!CH.on)T.forEach(a=>{const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;drawAircraft(a.type,x,y,a.hdg,C.trf,32);if(lblZ()>6&&x>-40&&x<W+40&&y>-20&&y<H+20)mkText(a.id+(a.type?' '+a.type:'')+' '+Math.round(a.alt/100),x+4,y+4,C.trf,10,false)});
-if(L.atc&&!CH.on){drawTracon();drawAtc()}if(liveOk()){const q=vis(own.lon,own.lat);if(q){const[x,y]=q;if(MP.halo){cx.beginPath();cx.arc(x,y,19+6*MP.size,0,7);cx.strokeStyle=MP.color;cx.globalAlpha=.32;cx.lineWidth=1.5;cx.stroke();cx.globalAlpha=1}drawAircraft(live.d?.type||live.d?.aircraft||live.d?.aircraftType,x,y,(own.trk!=null&&(own.gs||live.d?.gs)>20)?own.trk:own.hdg,MP.color,42*MP.size)}}
+if(L.atc&&!CH.on){drawTracon();drawAtc()}if(liveOk()){const q=vis(own.lon,own.lat);if(q){const[x,y]=q;if(MP.halo){cx.beginPath();cx.arc(x,y,19+6*MP.size,0,7);cx.strokeStyle=MP.color;cx.globalAlpha=.32;cx.lineWidth=1.5;cx.stroke();cx.globalAlpha=1}const oh=(own.trk!=null&&(own.gs||live.d?.gs)>20)?own.trk:own.hdg;if(MP.icon==='aircraft')drawAircraft(live.d?.type||live.d?.aircraft||live.d?.aircraftType,x,y,oh,MP.color,42*MP.size);else drawOwnTri(x,y,oh,MP.color,MP.size)}}
 if(view3d)sync3d();if(CH.on)chartFx();if(sel&&!CH.on&&sel.k!='own'){const s0=sel.k=='own'?own:sel,p0=vis(s0.lon,s0.lat);if(p0){const[x,y]=p0;cx.strokeStyle=C.txt;cx.lineWidth=2;cx.beginPath();cx.arc(x,y,16+(tk?3*Math.sin(performance.now()/260):0),0,7);cx.stroke()}}}
 
 /* ── Waypoint markers ─────────────────────────────────────────────────
-   One chart-style symbol per aeronautical meaning: a blue crosshair for an
-   ordinary en-route fix, a teal star for a fix on an airway, a purple
-   triangle for a departure procedure, an amber diamond for an arrival, a
-   white ring for an airport, amber for a VOR, pink for an NDB, a grey
-   hexagon for a navaid the data cannot classify, and cyan/amber climb and
-   descent symbols for TOC and TOD.
+   Standard chart symbols (ICAO Annex 4): a hexagon for a VOR, a dotted circle
+   for an NDB, a square for a DME, a triangle for a fix, a four-point star for
+   an RNAV waypoint on an airway and a ringed circle for an airport; climb and
+   descent symbols mark TOC and TOD. On the route each point sits on a white
+   disc with its ident in a boxed tag (navy en route, teal for airports, the
+   procedure colour on a SID, STAR or approach), and legs of 50 nm or more
+   carry their distance and course on a tag laid along the line.
 
-   This is a separate visual layer. The route line above keeps its own
-   colour, width, opacity, dash pattern and point order; nothing here adds,
-   moves or removes a waypoint, and nothing is written back to the route.
-   Sizes follow the zoom so a fix stays legible without covering the map,
-   and every label is checked against the labels already placed this frame,
-   so names give way instead of overprinting. Legs of 50 nm or more also
-   carry a heading-and-distance tag at their midpoint, and all of it is set
-   in the shell's condensed technical face rather than a default UI sans. */
-const MKN={wp:'#3b82f6',sid:'#c084fc',star:'#f59e0b',app:'#22c55e',approach:'#22c55e',air:'#2dd4bf',apt:'#eef4fa',vor:'#f5a524',ndb:'#fb7185',int:'#94a3b8',toc:'#22d3ee',tod:'#f59e0b'};
+   This is a separate visual layer: nothing here adds, moves or removes a
+   waypoint or writes back to the route, and every label is checked against
+   the labels already placed this frame, so names give way instead of
+   overprinting. */
+const MKN={wp:'#3b82f6',sid:'#c084fc',star:'#f59e0b',app:'#22c55e',approach:'#22c55e',air:'#2dd4bf',apt:'#eef4fa',vor:'#4aa3df',ndb:'#b57edc',int:'#9fb0bd',toc:'#22d3ee',tod:'#f59e0b'};
 /* The same meanings, darkened for a light base map: the night palette washes
    out over beige land and pale satellite imagery. */
-const MKD={wp:'#2563eb',sid:'#9333ea',star:'#b45309',app:'#15803d',approach:'#15803d',air:'#0f766e',apt:'#1f2937',vor:'#a16207',ndb:'#e11d48',int:'#64748b',toc:'#0e7490',tod:'#c2410c'};
+const MKD={wp:'#2563eb',sid:'#9333ea',star:'#b45309',app:'#15803d',approach:'#15803d',air:'#0f766e',apt:'#1f2937',vor:'#1d6fa5',ndb:'#7e3aa8',int:'#5b6b78',toc:'#0e7490',tod:'#c2410c'};
 const MKL=[],MKW=new Map(),NTP=new Map();
 /* Symbols sit a clear step above the route line's 12 px band: the glyph is
    roughly one and a half times that width at every zoom, so a fix reads as a
    mark on the line rather than a thickening of it. */
 function mkR(){return V.z>=12?16:V.z>=9.5?15:V.z>=7.5?13.8:V.z>=5.5?12.4:11.2}
-function mkLightBg(){const t=document.documentElement.dataset.theme;return !DKM()&&t!='night'&&t!='contrast'}
+function mkLightBg(){if(!CH.on&&V.mode!=='globe'&&MS[L.style]&&MS[L.style].vec)return true;const t=document.documentElement.dataset.theme;return !DKM()&&t!='night'&&t!='contrast'}
 function mkColor(kind){const p=mkLightBg()?MKD:MKN;return p[kind]||p.wp}
 function mkPen(c,w){cx.strokeStyle=c;cx.lineWidth=w;cx.lineCap='round';cx.lineJoin='round';cx.beginPath()}
 function mkDot(x,y,c,r){cx.fillStyle=c;cx.beginPath();cx.arc(x,y,r,0,7);cx.fill()}
@@ -1421,15 +1422,41 @@ function mkSelHalo(x,y,r){
   cx.strokeStyle=c;cx.lineWidth=2.4;cx.stroke();
   cx.strokeStyle=mkLightBg()?'rgba(124,58,237,.5)':'rgba(216,180,254,.55)';cx.lineWidth=1;
   cx.beginPath();cx.arc(x,y,r*1.72,0,7);cx.stroke()}
+/* Standard chart symbology (ICAO Annex 4): VOR hexagon, NDB dotted circle,
+   DME square, fix triangle, RNAV waypoint four-point star, airport ringed
+   circle. Procedure points keep the fix triangle in their procedure colour. */
+function mkNdb(x,y,r,c){for(let k=0;k<12;k++){const a=k*Math.PI/6;mkDot(x+Math.cos(a)*r*.72,y+Math.sin(a)*r*.72,c,Math.max(1,r*.11))}for(let k=0;k<8;k++){const a=k*Math.PI/4;mkDot(x+Math.cos(a)*r*.42,y+Math.sin(a)*r*.42,c,Math.max(.9,r*.09))}mkDot(x,y,c,Math.max(1.4,r*.16))}
+function mkApt(x,y,r,c){mkPen(c,1.9);cx.arc(x,y,r*.56,0,7);cx.stroke();mkPen(c,2.2);for(let k=0;k<4;k++){const a=k*Math.PI/2+Math.PI/4;cx.moveTo(x+Math.cos(a)*r*.56,y+Math.sin(a)*r*.56);cx.lineTo(x+Math.cos(a)*r*.86,y+Math.sin(a)*r*.86)}cx.stroke();mkDot(x,y,c,Math.max(1.5,r*.18))}
+function mkFix(x,y,r,c){mkPen(c,1.9);cx.moveTo(x,y-r*.82);cx.lineTo(x+r*.74,y+r*.5);cx.lineTo(x-r*.74,y+r*.5);cx.closePath();cx.stroke()}
 function mkDraw(kind,x,y,r,override){
   const c=override||mkColor(kind);
-  if(kind=='apt'||kind=='vor')mkRing(x,y,r,c,1);
-  else if(kind=='ndb')mkSquare(x,y,r,c);
-  else if(kind=='int')mkHex(x,y,r,c);
-  else if(kind=='sid')mkTri(x,y,r,c);
-  else if(kind=='star')mkDiamond(x,y,r,c);
+  if(kind=='apt')mkApt(x,y,r,c);
+  else if(kind=='vor'){mkHex(x,y,r,c);mkDot(x,y,c,Math.max(1.4,r*.16))}
+  else if(kind=='ndb')mkNdb(x,y,r,c);
+  else if(kind=='int')mkSquare(x,y,r*.85,c);
   else if(kind=='air')mkStar4(x,y,r,c);
-  else mkCross(x,y,r,c)}
+  else mkFix(x,y,r,c)}
+/* A route point: its symbol on a white disc, so it reads over any base map
+   and over the route line it sits on. */
+const RTE_CASE='#0b1726',RTE_INK='#0f2742';
+function mkRoutePoint(kind,x,y,r,override){
+  cx.beginPath();cx.arc(x,y,r*1.02,0,7);cx.fillStyle='#f8fafc';cx.fill();
+  cx.lineWidth=1.6;cx.strokeStyle=override||RTE_CASE;cx.stroke();
+  mkDraw(kind,x,y,r*.74,override||(kind=='apt'?'#0f6e5e':RTE_INK))}
+/* An ident tag above a route point: a filled box with white monospaced text,
+   coloured by what the point belongs to, moved up past tags already placed. */
+const TAG_FILL={apt:'#0f6e5e',sid:'#8a2f78',star:'#2f7a3d',app:'#9a5a12',approach:'#9a5a12'},TAG_FONT='700 13px Consolas,"Cascadia Mono","SF Mono",ui-monospace,monospace';
+function mkTag(text,x,y,r,kind,override){
+  const t=String(text||'').toUpperCase();if(!t)return null;
+  cx.font=TAG_FONT;cx.letterSpacing='0.6px';const w=Math.ceil(cx.measureText(t).width)+12,h=20;cx.letterSpacing='0px';
+  let lx=Math.round(x-w/2),top=Math.round(y-r-h-5);
+  for(let pass=0;pass<3;pass++){const hit=MKL.find(b=>lx<b.x+b.w&&lx+w>b.x&&top<b.y+b.h&&top+h>b.y);if(!hit)break;top=hit.y-h-2}
+  if(top<2||lx<2||lx+w>W-2)return null;
+  MKL.push({x:lx,y:top,w,h});
+  cx.beginPath();if(cx.roundRect)cx.roundRect(lx,top,w,h,3);else cx.rect(lx,top,w,h);
+  cx.fillStyle=override||TAG_FILL[kind]||'#12355b';cx.fill();cx.lineWidth=1;cx.strokeStyle='rgba(255,255,255,.28)';cx.stroke();
+  cx.font=TAG_FONT;cx.letterSpacing='0.6px';cx.fillStyle='#fff';cx.textBaseline='middle';cx.fillText(t,lx+6,top+h/2+.5);cx.textBaseline='alphabetic';cx.letterSpacing='0px';
+  return {x:lx,y:top,w,h}}
 /* Map type is set in the shell's own technical face — a condensed DIN-style
    stack — instead of the default UI sans. It is narrower per character, so a
    name covers less of the chart, and the slight tracking keeps 4-letter
@@ -1451,45 +1478,26 @@ function mkText(text,x,y,color,size,weight,halo){
     top=hit.y+bh+1;
     if(top+bh>H-6){cx.letterSpacing='0px';return null}}
   MKL.push({x:lx,y:top,w:bw,h:bh});
-  cx.font=font;cx.lineWidth=3;cx.strokeStyle=halo||(DKM()?'rgba(0,0,0,.72)':'rgba(255,255,255,.85)');
+  cx.font=font;cx.lineWidth=3;cx.strokeStyle=halo||(mkLightBg()?'rgba(255,255,255,.85)':'rgba(0,0,0,.72)');
   cx.strokeText(t,lx,top+size*.8);cx.fillStyle=color;cx.fillText(t,lx,top+size*.8);
   cx.letterSpacing='0px';
   return {x:lx,y:top,w:bw,h:bh}}
-/* A long leg carries its own distance and initial heading on a small tag at
-   the midpoint. Navigraph writes this rotated along the course; here it stays
-   horizontal and is held off the line, on whichever side is free, so nothing
-   has to be read at an angle and the course itself is never covered. */
+/* A long leg carries its distance and initial course on a tag laid on the
+   line itself, turned along it and filled in the route colour, so it reads as
+   part of the route; a leg too short for the tag is left bare. */
 const LEG_MIN_NM=50,LEG_MIN_PX=92;
 function mkLegTag(ax,ay,bx,by,nm,hdg){
   const len=Math.hypot(bx-ax,by-ay);if(len<LEG_MIN_PX)return;
+  const t=Math.round(nm)+'NM '+String(((Math.round(hdg)%360)+360)%360).padStart(3,'0')+'°';
+  cx.font=TAG_FONT;cx.letterSpacing='0.4px';const w=Math.ceil(cx.measureText(t).width)+12,h=17;cx.letterSpacing='0px';
+  if(w>len*.7)return;
+  let ang=Math.atan2(by-ay,bx-ax);if(ang>Math.PI/2)ang-=Math.PI;else if(ang<-Math.PI/2)ang+=Math.PI;
   const mx=(ax+bx)/2,my=(ay+by)/2;
-  let nx=-(by-ay)/len,ny=(bx-ax)/len;
-  if(ny<0){nx=-nx;ny=-ny}
-  const dm=Math.round(nm)+' NM',hd=String(((Math.round(hdg)%360)+360)%360).padStart(3,'0')+'°';
-  const size=10.5,font='600 '+size+'px '+MKF;
-  cx.font=font;cx.letterSpacing='0.3px';
-  const wd=cx.measureText(dm).width,wh=cx.measureText(hd).width;
-  cx.letterSpacing='0px';
-  const tw=Math.round(wd+5+wh+12),th=17,light=mkLightBg();
-  // How far the tag has to stand off the course so its own box clears the
-  // 12 px band: a horizontal leg needs only the tag's height, a vertical one
-  // the whole width, so the same tag never lands across the line.
-  const off=Math.max(18,(Math.abs(nx)*tw+Math.abs(ny)*th)/2+12);
-  for(const side of [1,-1]){
-    const x=Math.round(mx+nx*off*side-tw/2),y=Math.round(my+ny*off*side-th/2);
-    if(x<4||x+tw>W-4||y<4||y+th>H-4)continue;
-    if(MKL.some(b=>x<b.x+b.w+2&&x+tw>b.x-2&&y<b.y+b.h+2&&y+th>b.y-2))continue;
-    cx.beginPath();
-    if(cx.roundRect)cx.roundRect(x,y,tw,th,4);else cx.rect(x,y,tw,th);
-    cx.fillStyle=light?'rgba(255,255,255,.82)':'rgba(9,15,23,.68)';cx.fill();
-    cx.strokeStyle=light?'rgba(30,41,59,.22)':'rgba(148,163,184,.28)';cx.lineWidth=1;cx.stroke();
-    cx.font=font;cx.letterSpacing='0.3px';
-    cx.fillStyle=light?'#1f2937':'#e2e8f0';cx.fillText(dm,x+6,y+th/2+size*.36);
-    cx.fillStyle=light?'#5b6b7f':'#9fb0c4';cx.fillText(hd,x+6+wd+5,y+th/2+size*.36);
-    cx.letterSpacing='0px';
-    MKL.push({x,y,w:tw,h:th});
-    return}
-}
+  cx.save();cx.translate(mx,my);cx.rotate(ang);
+  cx.beginPath();if(cx.roundRect)cx.roundRect(-w/2,-h/2,w,h,3);else cx.rect(-w/2,-h/2,w,h);
+  cx.fillStyle=C.route;cx.fill();cx.lineWidth=1.5;cx.strokeStyle=RTE_CASE;cx.stroke();
+  cx.font=TAG_FONT;cx.letterSpacing='0.4px';cx.fillStyle='#fff';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(t,0,.5);
+  cx.textAlign='left';cx.textBaseline='alphabetic';cx.letterSpacing='0px';cx.restore()}
 /* The navaid type behind a route point, looked up once and remembered. */
 function navType(id){const key=String(id||'');if(!NTP.has(key)){const n=N.find(v=>v.id==key);NTP.set(key,n?String(n.type||'').toUpperCase():'')}return NTP.get(key)}
 /* Which symbol a route point earns. Only what the plan actually reports is
@@ -1746,8 +1754,8 @@ function drawRouteMarkers(){
       mkPlanLabel(kind,x,y,r*1.05,kind=='toc'?(Number(p.elev)||plan.cruise):(Number(route[n-1].elev)||0),chosen?'plan':'');
       continue}
     if(chosen)mkSelHalo(x,y,kind=='apt'?r*1.05:r);
-    mkDraw(kind,x,y,kind=='apt'?r*1.05:r,col);
-    if(V.z>=4||end||chosen)mkText(String(p.id||'').toUpperCase(),x+Math.round(r*.55)-4,y+14,col||mkColor(kind),12,end||chosen)}
+    mkRoutePoint(kind,x,y,kind=='apt'?r*1.05:r,col);
+    if(V.z>=4||end||chosen)mkTag(p.id,x,y,r,kind,col)}
   const planPoint=(kind,m,alt,src)=>{const q=vis(m.lon,m.lat);if(!q)return;const[x,y]=q;if(x<-30||x>W+30||y<-30||y>H+30)return;mkPlanLabel(kind,x,y,r*1.05,alt,src)};
   if(plan.toc&&!plan.hasToc)planPoint('toc',plan.toc,plan.toc.altFt||plan.cruise,plan.toc.source);
   if(plan.tod&&!plan.hasTod)planPoint('tod',plan.tod,plan.tod.altFt||Number(route[n-1].elev)||0,plan.tod.source);
@@ -1820,7 +1828,7 @@ function t3Sync(force){
   if((force||now-t3TrfAt>250)&&typeof t3d.setTraffic==='function'){t3TrfAt=now;t3d.setTraffic(t3TrafficList(),active)}
   if((force||now-t3SelAt>500)&&typeof t3d.setSelectedTraffic==='function'){t3SelAt=now;t3d.setSelectedTraffic(t3SelectedDetail())}
 }
-function setT3(on,mode){const next=!!on;if(mode==='flat'||mode==='globe'||mode==='chase'){t3mode=mode;try{localStorage.setItem('stratos.t3mode',mode)}catch(_){}}if(next&&!ensureT3())return;if(next)set3d(false);if(next&&t3d)t3d.setMode(t3mode);viewT3=next;if(viewT3)t3d.show();else t3d.hide();const state=(b,on)=>{if(!b)return;b.classList.toggle('on',!!on);b.setAttribute('aria-pressed',on?'true':'false')};state($('#bMap3d'),viewT3&&t3mode==='globe');state($('#bMap3dFlat'),viewT3&&t3mode==='flat');state($('#bMap3dChase'),viewT3&&t3mode==='chase');$('#p3dctl').hidden=!viewT3;const low=$('#t3low');if(low)low.checked=t3Low();const msc=document.getElementById('mapscl');if(msc)msc.style.display=viewT3?'none':'';if(viewT3){setLay(false);V.fol=true;t3d.setFollow(true);const fb=$('#bFol');if(fb){fb.classList.add('on');fb.setAttribute('aria-pressed','true')}t3Sync(true);t3d.resize()}render()}
+function setT3(on,mode){const next=!!on;if(mode==='flat'||mode==='globe'||mode==='chase'){t3mode=mode;try{localStorage.setItem('stratos.t3mode',mode)}catch(_){}}if(next&&!ensureT3())return;if(next)set3d(false);if(next&&t3d)t3d.setMode(t3mode);viewT3=next;if(viewT3)t3d.show();else t3d.hide();const state=(b,on)=>{if(!b)return;b.classList.toggle('on',!!on);b.setAttribute('aria-pressed',on?'true':'false')};state($('#bMap3d'),viewT3&&t3mode==='globe');state($('#bMap3dFlat'),viewT3&&t3mode==='flat');state($('#bMap3dChase'),viewT3&&t3mode==='chase');$('#p3dctl').hidden=!viewT3;const low=$('#t3low');if(low)low.checked=t3Low();const msc=document.getElementById('mapscl');if(msc)msc.style.display=viewT3?'none':'';const at=document.getElementById('attr');if(at)at.style.visibility=viewT3?'hidden':'';if(viewT3){setLay(false);V.fol=true;t3d.setFollow(true);const fb=$('#bFol');if(fb){fb.classList.add('on');fb.setAttribute('aria-pressed','true')}t3Sync(true);t3d.resize()}render()}
 $('#bMap3d')&&($('#bMap3d').onclick=()=>setT3(!(viewT3&&t3mode==='globe'),'globe'));
 $('#bMap3dFlat')&&($('#bMap3dFlat').onclick=()=>setT3(!(viewT3&&t3mode==='flat'),'flat'));
 $('#bMap3dChase')&&($('#bMap3dChase').onclick=()=>setT3(!(viewT3&&t3mode==='chase'),'chase'));
@@ -2132,7 +2140,7 @@ function procAt(x,y){
   return best
 }
 function selectTrafficById(key){const want=String(key==null?'':key).toLowerCase();if(!want)return false;const best=T.find(a=>a&&a.k=='trf'&&(String(a.hx||'').toLowerCase()==want||String(a.id||'').toLowerCase()==want));if(!best)return false;sel=best;best._trackAt=Date.now();tk=true;trafficBackfill(best);if(best.source=='vatsim'||best.source=='ivao')loadNet().then(vatsimTraffic);panel=null;render();fCard();if(viewT3)t3Sync(true);return true}
-function tap(x,y){if(CH.on)return;const rect=cv.getBoundingClientRect();
+function tap(x,y){if(CH.on)return;if(TX.on){txTap(x,y);return}const rect=cv.getBoundingClientRect();
 if(route.length&&L.rte){const wi=wpAt(x,y);if(wi>=0){wpIdx=wi;openRouteCard({kind:'wp',index:wi},x,y);return}const pc=procAt(x,y);if(pc){wpIdx=null;openRouteCard(pc,x,y);return}const li=legAt(x,y);if(li>=0){wpIdx=li;openRouteCard({kind:'leg',index:li},x,y);return}}
 closeRouteCard();wpIdx=null;sel=null;
 x-=rect.left;y-=rect.top;let best=null,bestD=Infinity;
@@ -2141,10 +2149,28 @@ items.forEach(([o,rad])=>{const q=vis(o.lon,o.lat);if(!q)return;let d=Math.hypot
 if(best){sel=best;if(best.k=='trf'){best._trackAt=Date.now();tk=true;setFol(false);trafficBackfill(best);if(best.source=='vatsim')loadVatsim().then(vatsimTraffic)}panel=null;render();fCard()}
 else{panel=null;render()}}
 /* search */
-$('#q').oninput=e=>{const q=e.target.value.trim().toLowerCase(),r=$('#res');if(!q){r.style.display='none';return}
-const m=[...A,...N].filter(o=>o.id.toLowerCase().includes(q)||o.name.toLowerCase().includes(q)).sort((a,b)=>b.id.toLowerCase().startsWith(q)-a.id.toLowerCase().startsWith(q)).slice(0,8);
-r.innerHTML=m.map(o=>`<div data-id="${esc(o.id)}" data-k="${esc(o.k)}"><b>${esc(o.id)}</b> ${esc(o.name)} <span class="m">${o.k=='apt'?'airport':esc(o.type||'')}</span></div>`).join('')||'<div class="m">No match in bundled data</div>';r.style.display='block'};
-$('#res').onclick=e=>{const d=e.target.closest('[data-id]');if(!d)return;const o=[...A,...N].find(x=>x.id==d.dataset.id&&x.k==d.dataset.k);setFol(false);V.lon=o.lon;V.lat=o.lat;V.tz=null;focusZoom(o.k=='apt'?11.5:9);sel=o;panel='sel';$('#res').style.display='none';$('#q').value='';render();if(o.k=='apt')openCharts(o)};
+/* Search flights (traffic on the map, then every pilot on the VATSIM/IVAO feed),
+   airports and navaids. Enter or Go to flies to the best match. */
+function netPilots(){const f=netFeed();if(!f||f.error||!window.VATSIM)return[];try{return TRS=='ivao'?window.VATSIM.parseIvaoPilots(f):window.VATSIM.parsePilots(f)}catch(_){return[]}}
+function qFind(raw){const q=raw.trim().toLowerCase();if(!q)return[];const hit=o=>o.id.toLowerCase().includes(q)||(o.name||'').toLowerCase().includes(q),rank=o=>(o.id.toLowerCase()==q?2:0)+(o.id.toLowerCase().startsWith(q)?1:0);
+const seen=new Set(),fl=[];T.forEach(o=>{if(o.id&&o.id.toLowerCase().includes(q)){seen.add(o.id);fl.push({k:'flt',id:o.id,name:[o.type,o.dep&&o.arr?o.dep+'–'+o.arr:''].filter(Boolean).join(' · '),lat:o.lat,lon:o.lon,t:o})}});
+netPilots().forEach(p=>{if(!seen.has(p.id)&&p.id.toLowerCase().includes(q)){seen.add(p.id);fl.push({k:'flt',id:p.id,name:[p.aircraft,p.dep&&p.arr?p.dep+'–'+p.arr:''].filter(Boolean).join(' · '),lat:p.lat,lon:p.lon})}});
+return[...fl,...A.filter(hit),...N.filter(hit)].sort((a,b)=>rank(b)-rank(a)).slice(0,8)}
+function qGo(o){if(!o)return;$('#res').style.display='none';$('#q').value='';$('#q').blur();closeRouteCard();if(CH.on)closeCharts();
+if(o.k=='flt'){V.lon=o.lon;V.lat=o.lat;V.tz=null;focusZoom(Math.max(V.z,8));if(!o.t&&TRS!='adsb')vatsimTraffic();const t=o.t||T.find(a=>a.id==o.id);if(t){sel=t;t._trackAt=Date.now();tk=true;setFol(false);trafficBackfill(t);panel=null;render();fCard()}else{sel=null;setFol(false);render()}return}
+setFol(false);V.lon=o.lon;V.lat=o.lat;V.tz=null;focusZoom(o.k=='apt'?11.5:9);sel=o;panel='sel';render()}
+let qHits=[];
+$('#q').oninput=e=>{const r=$('#res');qHits=qFind(e.target.value);if(!e.target.value.trim()){r.style.display='none';return}
+r.innerHTML=qHits.map((o,i)=>`<div data-qi="${i}"><b>${esc(o.id)}</b> ${esc(o.name||'')} <span class="m">${o.k=='flt'?'flight':o.k=='apt'?'airport':esc(o.type||'')}</span></div>`).join('')||'<div class="m">No flight, airport or navaid matches</div>';r.style.display='block'};
+$('#q').onkeydown=e=>{if(e.key=='Enter'){e.preventDefault();$('#qGo').onclick()}else if(e.key=='Escape'){$('#res').style.display='none';e.target.blur()}};
+$('#qGo').onclick=async()=>{const v=$('#q').value;if(!v.trim()){$('#q').focus();return}let o=qFind(v)[0];
+// A callsign that is not on screen may still be on the network: fetch the feed once and look again.
+if(!o&&TRS!='adsb'){await(TRS=='ivao'?loadIvao():loadVatsim());o=qFind(v)[0]}if(o)qGo(o);else{$('#res').innerHTML='<div class="m">Nothing called '+esc(v.trim().toUpperCase())+' on the map or the network right now</div>';$('#res').style.display='block'}};
+$('#res').onclick=e=>{const d=e.target.closest('[data-qi]');if(d)qGo(qHits[+d.dataset.qi])};
+$('#bTaxi').onclick=()=>{TX.on=!TX.on;txUi()};
+$('#txDone').onclick=()=>{TX.on=false;txUi()};
+$('#txUndo').onclick=()=>{TX.pts.pop();TX.legs.length=Math.max(0,TX.pts.length-1);if(!TX.pts.length)TX.a=null;txUi();render()};
+$('#txClear').onclick=()=>{TX.pts=[];TX.legs=[];TX.a=null;txUi();render()};
 /* flight summary: built from the route and the saved SimBrief plan (flightpanel.js) */
 let fsTab='overview';
 function fsumHtml(){const stored=window.FP?FP.loadOfp(localStorage):null;const metars={};A.forEach(a=>{if(a.metar&&a.mt)metars[a.id]={metar:a.metar,fetchedAt:a.mt,source:'METAR'}});const position=liveOk()?{lat:own.lat,lon:own.lon}:null;const body=window.FP?FP.flightSummaryHtml({route,ofp:stored?stored.ofp:null,cruiseKts:CRUISE,weightUnit:'kg',metars,position,tab:fsTab}):'<div class="m">The summary is still loading. Try again in a moment.</div>';return'<h3>Flight summary</h3>'+body+'<div class="row"><button onclick="fsRefresh()">Refresh OFP</button><button onclick="panel=\'route\';render()">Back to route</button></div>'}
@@ -2228,18 +2254,57 @@ cx.save();cx.translate(x,y);cx.scale(pf,-pf);cx.lineJoin='round';
 const mn=1.4/pf,lw=f=>Math.max(f,mn),Y='#facc15',os=a.osm||[],
 poly=(p,c,al)=>{cx.globalAlpha=al;cx.fillStyle=c;cx.beginPath();p.forEach((q,i)=>i?cx.lineTo(q[0],q[1]):cx.moveTo(q[0],q[1]));cx.closePath();cx.fill();cx.globalAlpha=1},
 line=(p,w,c,al,cap)=>{cx.lineCap=cap||'round';cx.globalAlpha=al||1;cx.strokeStyle=c;cx.lineWidth=lw(w);cx.beginPath();p.forEach((q,i)=>i?cx.lineTo(q[0],q[1]):cx.moveTo(q[0],q[1]));cx.stroke();cx.globalAlpha=1};
-if(T>1){os.forEach(o=>{if(o.t=='apron')poly(o.p,C.coast,.28)});os.forEach(o=>{if(o.t=='terminal')poly(o.p,C.ap,.75)})}
-os.forEach(o=>{if(o.t=='taxiway'||(T>1&&o.t=='taxilane'))line(o.p,o.t=='taxiway'?75:40,TWC(),TWA())});
-os.forEach(o=>{if(o.t=='taxiway'||(T>1&&o.t=='taxilane'))line(o.p,3,Y,.95)});
-rl.forEach(r=>{line([r.a,r.b],r.W+50,C.coast,.5,'butt');line([r.a,r.b],r.W,PVC(),PVA(),'butt');
+if(T>1){os.forEach(o=>{if(o.t=='apron')poly(o.p,GND.apron,.9)});os.forEach(o=>{if(o.t=='terminal')poly(o.p,GND.term,.95)})}
+os.forEach(o=>{if(o.t=='taxiway'||(T>1&&o.t=='taxilane'))line(o.p,o.t=='taxiway'?75:40,GND.twy,.95)});
+os.forEach(o=>{if(o.t=='taxiway'||(T>1&&o.t=='taxilane'))line(o.p,2.4,Y,.95)});
+rl.forEach(r=>{line([r.a,r.b],r.W+60,GND.strip,.75,'butt');line([r.a,r.b],r.W,GND.rwy,1,'butt');
 if(T>1){cx.setLineDash([140,110]);line([[r.a[0]+r.u[0]*260,r.a[1]+r.u[1]*260],[r.b[0]-r.u[0]*260,r.b[1]-r.u[1]*260]],6,WHT(),1,'butt');cx.setLineDash([])}
 if(T>2)for(let j=-3.5;j<=3.5;j++){const o=j*r.W/8,v=[r.u[1],-r.u[0]];[[r.a,1],[r.b,-1]].forEach(([e,s])=>{const P=k=>[e[0]+v[0]*o+r.u[0]*s*k,e[1]+v[1]*o+r.u[1]*s*k];line([P(40),P(170)],r.W/14,WHT(),1,'butt')})}});
+if(TX.a===a&&TX.pts.length){const g=txGraph(a),pts=[g.P[TX.pts[0]]];TX.legs.forEach(l=>l.slice(1).forEach(k=>pts.push(g.P[k])));if(pts.length>1){line(pts,Math.max(95,10/pf),'#0b3d1e',.6);line(pts,Math.max(70,6/pf),'#22c55e',.92)}[[pts[0],'#22c55e'],[pts[pts.length-1],'#e040fb']].forEach(([q,c])=>{cx.beginPath();cx.arc(q[0],q[1],7/pf,0,7);cx.fillStyle=c;cx.fill();cx.lineWidth=2/pf;cx.strokeStyle='#0b1726';cx.stroke()})}
 cx.restore();
 if(T>1){const S=(e,n)=>[x+e*pf,y-n*pf];cx.textAlign='center';cx.textBaseline='middle';
 rl.forEach(r=>{[[r.a,1,r.le,0],[r.b,-1,r.he,Math.PI]].forEach(([e,s,t,rot])=>{if(!t)return;const[sx,sy]=S(e[0]+r.u[0]*s*210,e[1]+r.u[1]*s*210);cx.save();cx.translate(sx,sy);cx.rotate(r.hd+rot);cx.fillStyle=WHT();cx.font='bold '+Math.max(10,70*pf)+'px "Arial Narrow",Arial,sans-serif';cx.fillText(t,0,0);cx.restore()})});
-if(T>1)os.forEach(o=>{if(o.t!='taxiway'||!o.r||o.p.length<2)return;const q=o.p[o.p.length>>1],[sx,sy]=S(q[0],q[1]),w=8+o.r.length*7;if(sx<0||sx>W||sy<0||sy>H)return;cx.fillStyle=Y;cx.fillRect(sx-w/2,sy-8,w,16);cx.fillStyle='#111';cx.font='bold 11px sans-serif';cx.fillText(o.r,sx,sy+1)});
-if(pf>.07){const lab=pf>.14;os.forEach(o=>{if(o.t!='gate')return;const[sx,sy]=S(o.p[0][0],o.p[0][1]);if(sx<-20||sx>W+20||sy<-20||sy>H+20)return;cx.beginPath();cx.arc(sx,sy,Math.max(3,Math.min(9,22*pf)),0,7);cx.fillStyle=Y;cx.fill();cx.lineWidth=2;cx.strokeStyle='#111';cx.stroke();if(lab&&o.r){cx.font='bold 11px sans-serif';cx.textAlign='left';cx.lineWidth=3;cx.strokeStyle='rgba(0,0,0,.75)';cx.strokeText(o.r,sx+8,sy);cx.fillStyle='#fff';cx.fillText(o.r,sx+8,sy)}})}
+/* Taxiway names, as on a ground chart: short ("B", not "Taxiway B"), once per
+   stretch of taxiway, and never on top of another name. */
+if(T>1){const seen=[],placed=[];cx.font='700 11px Consolas,"Cascadia Mono",ui-monospace,monospace';os.forEach(o=>{if(o.t!='taxiway'||!o.r||o.p.length<2)return;const t=String(o.r).replace(/^(taxiway|twy)\s+/i,'').trim();if(!t||t.length>8)return;const q=o.p[o.p.length>>1],[sx,sy]=S(q[0],q[1]);if(sx<0||sx>W||sy<0||sy>H)return;if(seen.some(v=>v.t===t&&Math.hypot(v.x-sx,v.y-sy)<220))return;const w=Math.ceil(cx.measureText(t).width)+8,b={x:sx-w/2,y:sy-8,w,h:16};if(placed.some(p=>b.x<p.x+p.w+4&&b.x+b.w+4>p.x&&b.y<p.y+p.h+3&&b.y+b.h+3>p.y))return;placed.push(b);seen.push({t,x:sx,y:sy});cx.fillStyle=Y;cx.fillRect(b.x,b.y,w,16);cx.strokeStyle='#111';cx.lineWidth=1;cx.strokeRect(b.x+.5,b.y+.5,w-1,15);cx.fillStyle='#111';cx.fillText(t,sx,sy+.5)})}
+if(pf>.07){const lab=pf>.14;cx.font='700 10.5px Consolas,"Cascadia Mono",ui-monospace,monospace';os.forEach(o=>{if(o.t!='gate')return;const[sx,sy]=S(o.p[0][0],o.p[0][1]);if(sx<-30||sx>W+30||sy<-20||sy>H+20)return;if(lab&&o.r){const w=Math.ceil(cx.measureText(o.r).width)+8;cx.fillStyle='#111418';cx.fillRect(sx-w/2,sy-8,w,16);cx.strokeStyle='rgba(255,255,255,.35)';cx.lineWidth=1;cx.strokeRect(sx-w/2+.5,sy-7.5,w-1,15);cx.fillStyle='#fff';cx.fillText(o.r,sx,sy+.5)}else{cx.fillStyle='#111418';cx.fillRect(sx-3,sy-3,6,6)}})}
 cx.textAlign='left';cx.textBaseline='alphabetic'}}
+/* Taxi route: in taxi mode each click snaps to the nearest taxiway, and the
+   route follows the taxiway network (shortest path) from the previous click,
+   drawn as a green guide line with the taxiway names in order. */
+function txGraph(a){if(a._tg&&a._tg.src===a.osm)return a._tg;const P=[],E=[],idx=new Map(),ends=[];
+const node=q=>{const k=Math.round(q[0]*2)+','+Math.round(q[1]*2);let i=idx.get(k);if(i==null){i=P.length;idx.set(k,i);P.push([q[0],q[1]]);E.push([])}return i};
+// Each edge keeps its name and how far (ft) a stray taxiway end may sit from it and still join it.
+const link=(i,j,r,w)=>{if(i===j)return;const d=Math.hypot(P[i][0]-P[j][0],P[i][1]-P[j][1]);E[i].push([j,d,r,w]);E[j].push([i,d,r,w])};
+// Long ways are split every ~120 ft so a click mid-taxiway snaps close to where it landed.
+const way=(pts,r,w)=>{let prev=null;pts.forEach(q=>{if(prev){const n=Math.max(1,Math.ceil(Math.hypot(q[0]-prev[0],q[1]-prev[1])/120));let last=node(prev);for(let k=1;k<=n;k++){const t=k/n,m=node([prev[0]+(q[0]-prev[0])*t,prev[1]+(q[1]-prev[1])*t]);link(last,m,r,w);last=m}}prev=q})};
+(a.osm||[]).forEach(o=>{if(o.t!='taxiway'&&o.t!='taxilane'||o.p.length<2)return;way(o.p,o.t=='taxiway'&&o.r?String(o.r).replace(/^(taxiway|twy)\s+/i,'').trim():'',40);ends.push(o.p[0],o.p[o.p.length-1])});
+// Runways are part of the network: a taxi route may cross or use one.
+rwList(a).forEach(r=>way([r.a,r.b],[r.le,r.he].filter(Boolean).join('/'),r.W/2+60));
+// OSM often stops a taxiway a few feet short of the one it meets, or at the runway edge:
+// join each loose end to the nearest edge within that edge's reach.
+const joins=[];ends.forEach(q=>{const e=idx.get(Math.round(q[0]*2)+','+Math.round(q[1]*2));let best=null;
+for(let i=0;i<P.length;i++)for(const[j,,r,w]of E[i]){if(j<i||i===e||j===e)continue;const ax=P[i][0],ay=P[i][1],dx=P[j][0]-ax,dy=P[j][1]-ay,t=Math.max(0,Math.min(1,((q[0]-ax)*dx+(q[1]-ay)*dy)/(dx*dx+dy*dy||1e-9))),x=ax+dx*t,y=ay+dy*t,d=Math.hypot(q[0]-x,q[1]-y);if(d>.5&&d<w&&(!best||d<best.d))best={i,j,x,y,d,r,w}}
+if(best)joins.push([e,best])});
+joins.forEach(([e,b])=>{const m=node([b.x,b.y]);link(m,b.i,b.r,b.w);link(m,b.j,b.r,b.w);link(e,m,'',40)});
+return a._tg={src:a.osm,P,E}}
+// Runway edges cost 8x their length: a route crosses a runway rather than taxiing along it.
+function txPath(g,s,t){const n=g.P.length,D=new Float64Array(n).fill(Infinity),B=new Int32Array(n).fill(-1),done=new Uint8Array(n),h=[[0,s]];D[s]=0;
+const push=(d,i)=>{h.push([d,i]);let c=h.length-1;while(c){const p=(c-1)>>1;if(h[p][0]<=h[c][0])break;[h[p],h[c]]=[h[c],h[p]];c=p}};
+const pop=()=>{const top=h[0],last=h.pop();if(h.length){h[0]=last;let c=0;for(;;){const l=2*c+1,r=l+1;let m=c;if(l<h.length&&h[l][0]<h[m][0])m=l;if(r<h.length&&h[r][0]<h[m][0])m=r;if(m==c)break;[h[m],h[c]]=[h[c],h[m]];c=m}}return top};
+while(h.length){const[d,i]=pop();if(done[i])continue;done[i]=1;if(i===t)break;for(const[j,len,,reach]of g.E[i]){const w=reach>40?len*8:len;if(d+w<D[j]){D[j]=d+w;B[j]=i;push(D[j],j)}}}
+if(!done[t])return null;const out=[];for(let i=t;i!=-1;i=B[i])out.push(i);return out.reverse()}
+function txPf(a){return SZ*2**V.z/360/(60*Math.cos(a.lat*R))/6076.12}
+function txAirport(x,y){let best=null,bd=Infinity;A.forEach(a=>{if(!a.det||!(a.osm||[]).length)return;const q=vis(a.lon,a.lat);if(!q)return;const d=Math.hypot(q[0]-x,q[1]-y)-(a.rpx||0);if(d<bd){bd=d;best=a}});return bd<200?best:null}
+function txNames(){const g=TX.a&&txGraph(TX.a),out=[];if(!g)return out;TX.legs.forEach(l=>{for(let k=1;k<l.length;k++){const e=g.E[l[k-1]].find(x=>x[0]===l[k]),r=e&&e[2];if(r&&out[out.length-1]!==r)out.push(r)}});return out}
+function txUi(msg){const b=$('#bTaxi');b.classList.toggle('on',TX.on);b.setAttribute('aria-pressed',TX.on?'true':'false');$('#txbar').hidden=!TX.on;cv.style.cursor=TX.on?'crosshair':'';
+const n=txNames();$('#txNames').textContent=msg||(n.length?n.join(' '):TX.pts.length?(TX.a?TX.a.id+': click the next taxiway':''):'Click a taxiway to start');$('#txUndo').disabled=!TX.pts.length;$('#txClear').disabled=!TX.pts.length}
+function txTap(X,Y){const rect=cv.getBoundingClientRect(),x=X-rect.left,y=Y-rect.top,a=TX.a&&TX.a.det&&TX.pts.length?TX.a:txAirport(x,y);if(!a){txUi('Zoom in on an airport ground chart, then click a taxiway');return}
+const q=vis(a.lon,a.lat);if(!q)return;const pf=txPf(a),e=(x-q[0])/pf,n=(q[1]-y)/pf,g=txGraph(a);let bi=-1,bd=Infinity;g.P.forEach((p,i)=>{if(!g.E[i].some(x=>x[3]==40))return;const d=Math.hypot(p[0]-e,p[1]-n);if(d<bd){bd=d;bi=i}});
+if(bi<0||bd*pf>40){txUi('Click closer to a taxiway');return}
+if(TX.a!==a){TX.a=a;TX.pts=[];TX.legs=[]}
+if(TX.pts.length){const leg=txPath(g,TX.pts[TX.pts.length-1],bi);if(!leg){txUi('Those taxiways are not connected in the map data');return}TX.legs.push(leg)}
+TX.pts.push(bi);txUi();render()}
 /* Offline data pack (built by the bridge with --pack), stored in this browser */
 const pk={info:''};
 const idb=(m,v,k)=>new Promise((ok,no)=>{try{const q=indexedDB.open('dl',1);q.onupgradeneeded=()=>q.result.createObjectStore('k');q.onerror=()=>no();q.onsuccess=()=>{const s=q.result.transaction('k',m=='get'?'readonly':'readwrite').objectStore('k'),r=m=='get'?s.get(k||'pack'):s.put(v,k||'pack');r.onsuccess=()=>ok(r.result);r.onerror=()=>no()}}catch(e){no(e)}});
@@ -2290,7 +2355,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&layOpen())setLay(fa
 /* The pilots' layers survive a reload, like every other map setting. */
 const LKEY='stratos.mapLayers';
 (function restoreLayers(){
-  try{const s=JSON.parse(localStorage.getItem(LKEY)||'null');if(s&&typeof s==='object')for(const k of ['apt','nav','trf','trl','rte','grid','wxrain','wxwind','wxturb','wxsig','ifrlo','ifrhi','atc','dn','wxapt','faavfr','faatac','faalo','faahi'])if(typeof s[k]==='boolean')L[k]=s[k]?1:0}catch(_){}
+  try{const s=JSON.parse(localStorage.getItem(LKEY)||'null');if(s&&typeof s==='object')for(const k of ['apt','nav','trf','trl','rte','grid','wxrain','wxwind','wxturb','wxsig','ifrlo','ifrhi','atc','dn','wxapt','faavfr','faatac','faalo','faahi','asp'])if(typeof s[k]==='boolean')L[k]=s[k]?1:0}catch(_){}
   document.querySelectorAll('[data-l]').forEach(b=>b.classList.toggle('on',!!L[b.dataset.l]))
   turbLegendToggle()
 })();
@@ -2300,7 +2365,7 @@ document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{L[b.dataset.l]^=
   // IFR Low and IFR High are two views of one chart: one at a time.
   const other={ifrlo:'ifrhi',ifrhi:'ifrlo'}[b.dataset.l];if(other&&L[b.dataset.l]){L[other]=0;const ob=document.querySelector('[data-l="'+other+'"]');if(ob)ob.classList.remove('on');IFR.key=''}
   b.classList.toggle('on',!!L[b.dataset.l]);turbLegendToggle();
-  try{localStorage.setItem(LKEY,JSON.stringify({apt:!!L.apt,nav:!!L.nav,trf:!!L.trf,trl:!!L.trl,rte:!!L.rte,grid:!!L.grid,wxrain:!!L.wxrain,wxwind:!!L.wxwind,wxturb:!!L.wxturb,wxsig:!!L.wxsig,ifrlo:!!L.ifrlo,ifrhi:!!L.ifrhi,atc:!!L.atc,dn:!!L.dn,wxapt:!!L.wxapt,faavfr:!!L.faavfr,faatac:!!L.faatac,faalo:!!L.faalo,faahi:!!L.faahi}))}catch(_){}
+  try{localStorage.setItem(LKEY,JSON.stringify({apt:!!L.apt,nav:!!L.nav,trf:!!L.trf,trl:!!L.trl,rte:!!L.rte,grid:!!L.grid,wxrain:!!L.wxrain,wxwind:!!L.wxwind,wxturb:!!L.wxturb,wxsig:!!L.wxsig,ifrlo:!!L.ifrlo,ifrhi:!!L.ifrhi,atc:!!L.atc,dn:!!L.dn,wxapt:!!L.wxapt,faavfr:!!L.faavfr,faatac:!!L.faatac,faalo:!!L.faalo,faahi:!!L.faahi,asp:!!L.asp}))}catch(_){}
   render()});
 /* Quick regions: a place and the scale it reads at, nothing else. */
 const REGIONS=[['World',18,-12,2.2],['Europe',50,10,4.4],['North America',39,-98,3.7],['South America',-16,-60,3.5],['Africa',4,20,3.3],['Middle East',27,45,4.1],['Asia',34,100,3.3],['Oceania',-25,141,3.5]];
@@ -2320,16 +2385,12 @@ function TILED(){if(!RP.tiles)return false;if(CH.on)return CH.pg=='sat'&&!(TS.ok
    the readable one. An outlines globe is vector land, so it follows the theme. */
 function SAT(){return V.mode==='globe'?globePicture():TILED()}
 function DKM(){return V.mode==='globe'?globePicture():(TILED()&&L.style=='sat')}
-function PVC(){const s=L.style;return !TILED()?C.txt:s=='sat'?'#d8d8d8':'#4a4f55'}
-function PVA(){const s=L.style;return !TILED()?1:s=='sat'?.45:.92}
-function TWC(){const s=L.style;return !TILED()?C.coast:s=='sat'?'#ffe27a':'#8a8f96'}
-function TWA(){const s=L.style;return !TILED()?.75:s=='sat'?.5:.9}
+/* Airport diagram colours: grey aprons, lighter taxiway pavement under yellow
+   centrelines, dark runways on a brown strip and blue-violet terminals. */
+const GND={apron:'#8f949a',twy:'#b3b7bc',rwy:'#43474d',strip:'#8a6b62',term:'#4b4f8c'};
 function WHT(){return TILED()?'#fff':C.land}
 function tileUrl(l,z,x,y){const h=location.protocol=='http:',s='abc'[(x+y)%3];
 if(l=='sat')return h?'/tile/'+z+'/'+x+'/'+y+'.jpg':'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/'+z+'/'+y+'/'+x;
-if(l=='vfr')return 'https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/VFR_Sectional/MapServer/tile/'+z+'/'+y+'/'+x;
-if(l=='lowifr')return 'https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/IFR_AreaLow/MapServer/tile/'+z+'/'+y+'/'+x;
-if(l=='highifr')return 'https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/IFR_High/MapServer/tile/'+z+'/'+y+'/'+x;
 return 'https://'+s+'.tile.opentopomap.org/'+z+'/'+x+'/'+y+'.png'}
 function tImg(l,z,x,y){const k=l+'/'+z+'/'+x+'/'+y;let t=TC.get(k);if(!t){t={i:new Image(),ok:0,t:0};if(MS[l]&&MS[l].z)t.i.crossOrigin='anonymous';t.i.onload=()=>{t.ok=1;t.t=performance.now();TS.ok++};t.i.onerror=()=>{TS.err++};t.i.src=tileUrl(l,z,x,y);TC.set(k,t);const limit=MS[l]&&MS[l].z?CHART_TILE_CACHE:600;if(TC.size>limit)TC.delete(TC.keys().next().value)}return t}
 function tl(l){const cfg=MS[l]||MS.sat,mz=l=='lab'?18:cfg.m,mn=cfg.z||0,Z=Math.min(mz,Math.max(mn,mn?Math.ceil(V.z+1):Math.ceil(V.z-.25))),s=256*2**(V.z-Z),c=wpx(V.lon,V.lat),n=2**Z,now=performance.now(),x0=Math.max(0,Math.floor((c[0]-W/2)/s)),x1=Math.min(n-1,Math.floor((c[0]+W/2)/s)),y0=Math.max(0,Math.floor((c[1]-H/2)/s)),y1=Math.min(n-1,Math.floor((c[1]+H/2)/s)),cols=x1-x0+1,rows=y1-y0+1;if(mn&&cols*rows>CHART_TILE_CAP)return false;
@@ -2473,9 +2534,25 @@ function buildWorld(g){
     }
   }
 }
+/* Vector base maps (the VFR display): a MapLibre map behind the transparent
+   canvas, moved to the canvas's centre and zoom every frame. MapLibre's tiles
+   are 512 px, so its zoom is one less than this map's. Everything aeronautical
+   is still drawn on the canvas above it. */
+let VB=null;
+function vecSync(){
+  const el=document.getElementById('vbase'),on=!CH.on&&V.mode!=='globe'&&!!(MS[L.style]&&MS[L.style].vec)&&!!window.maplibregl&&!!window.VFRSTYLE;
+  if(!el)return false;
+  if(!on){if(!el.hidden)el.hidden=true;return false}
+  if(el.hidden)el.hidden=false;
+  const kind=MS[L.style].vec;
+  if(VB&&VB._kind!==kind){VB._kind=kind;VB.setStyle(window.VFRSTYLE.styleFor(kind))}
+  if(!VB){try{VB=new maplibregl.Map({container:el,style:window.VFRSTYLE.styleFor(kind),interactive:false,attributionControl:false,center:[V.lon,V.lat],zoom:Math.max(0,V.z-1),fadeDuration:0,renderWorldCopies:true});VB._kind=kind}catch(_){VB=null;el.hidden=true;return false}}
+  if(VB._sw!==W||VB._sh!==H){VB._sw=W;VB._sh=H;VB.resize()}
+  VB.jumpTo({center:[wrapLon(V.lon),V.lat],zoom:Math.max(0,V.z-1),bearing:0,pitch:0});
+  return true}
 function drawTiles(){const l=L.style,shown=tl(l);const tx=(MS[l]||MS.sat).a||'';cx.font='10px sans-serif';cx.lineWidth=3;cx.strokeStyle='rgba(0,0,0,.65)';cx.strokeText(tx,8,H-84);cx.fillStyle='#fff';cx.fillText(tx,8,H-84);if(!shown){cx.font='600 12px system-ui,sans-serif';cx.textAlign='center';cx.fillStyle='#dbe7f2';cx.fillText('Zoom in to load this chart',W/2,H/2);cx.textAlign='left'}}
 function msUi(){const e=$('#ms');if(!e)return;e.innerHTML=Object.keys(MS).map(k=>'<button data-ms="'+k+'" class="'+(L.style==k?'on':'')+'">'+MS[k].n+'</button>').join('');const note=$('#msnote');if(note){const chart=!!(MS[L.style]&&MS[L.style].z);note.hidden=!chart;note.textContent=chart?'FAA raster charts cover the U.S. only. Zoom in to load the chart where needed.':''}const a=$('#attr');if(a&&!viewT3&&V.mode!=='globe')a.textContent=(MS[L.style]||MS.sat).a||'© OpenStreetMap contributors'}
-$('#ms').onclick=e=>{const k=e.target.dataset&&e.target.dataset.ms;if(!k)return;L.style=k;try{localStorage.setItem('dl.style',k)}catch(_){}if(MS[k]&&MS[k].z){if(viewT3)setT3(false);if(V.mode==='globe')globeMode('plane')}TS.err=0;msUi()};
+$('#ms').onclick=e=>{const k=e.target.dataset&&e.target.dataset.ms;if(!k)return;L.style=k;try{localStorage.setItem('dl.style',k)}catch(_){}{const pre={lowifr:'ifrlo',highifr:'ifrhi'}[k];if(pre&&!L[pre]){const b=document.querySelector('[data-l="'+pre+'"]');if(b)b.click()}}if(MS[k]&&MS[k].z){if(viewT3)setT3(false);if(V.mode==='globe')globeMode('plane')}TS.err=0;msUi()};
 msUi();
 /* Flat chart or globe, and what the globe is painted with. The buttons are built
    from the module's own style table, so a surface cannot be offered here that
@@ -2600,7 +2677,7 @@ function drawRadar(){
    each service publishes a fixed zoom range, so the map asks for the nearest
    level it has and stretches it, and asks the pilot to zoom in below it. */
 const FAA_TILE_BASE='https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/';
-const FAA_CHARTS={faavfr:['VFR_Sectional',8,12,'US Sectional'],faatac:['VFR_Terminal',10,12,'US Terminal'],faalo:['IFR_AreaLow',7,12,'US IFR Low'],faahi:['IFR_High',5,9,'US IFR High']};
+const FAA_CHARTS={faavfr:['VFR_Sectional',8,12,'FAA Sectional'],faatac:['VFR_Terminal',10,12,'FAA Terminal'],faalo:['IFR_AreaLow',7,12,'FAA IFR Low'],faahi:['IFR_High',5,9,'FAA IFR High']};
 const FAATILE=new Map();
 function faaTile(url){
   let t=FAATILE.get(url);
@@ -2622,6 +2699,62 @@ function drawFaaCharts(){
     }
     cx.restore()
   }
+}
+/* ── Airspaces ────────────────────────────────────────────────────────
+   Controlled and special-use airspace as an EFB shows it: tinted by class,
+   with class-coloured borders and the vertical limits on a tag. Two sources:
+   the simulator's own airspace file through the bridge (worldwide with
+   X-Plane) and the FAA's public-domain airspace for the United States, so a
+   pilot without the bridge still has US airspace. Where the FAA covers an
+   area its data is used and the simulator's copy of it is left out. */
+const ASPD={key:'',list:[],busy:false,at:0,err:''};
+function aspFetch(box){
+  const key=box.join(',');
+  if(ASPD.busy||(key===ASPD.key&&Date.now()-ASPD.at<600000))return;
+  ASPD.busy=true;ASPD.key=key;
+  const lib=window.ASP,jobs=[],sim=[],faa=[],base=ifrBase(),useFaa=lib.inFaaCoverage(box);
+  if(base){
+    const lat=(box[0]+box[2])/2,lon=(box[1]+box[3])/2,nm=Math.min(600,Math.max(30,Math.round(Math.max(box[2]-box[0],(box[3]-box[1])*Math.cos(lat*R))*30+20)));
+    jobs.push(fetch(base.replace(/\/+$/,'')+'/navdata/airspace?lat='+lat.toFixed(3)+'&lon='+lon.toFixed(3)+'&nm='+nm,{cache:'no-store'}).then(r=>r.json()).then(d=>{if(!d||!d.ok)throw new Error((d&&d.error)||'bridge');(d.airspace||[]).forEach(a=>{const x=lib.fromSim(a);if(x)sim.push(x)})}))}
+  if(useFaa){const tol=V.z>=9?0.0005:V.z>=7?0.002:0.005;
+    for(const svc of ['Class_Airspace','Special_Use_Airspace'])jobs.push(fetch(window.ASP.faaUrl(svc,box,tol)).then(r=>r.ok?r.json():Promise.reject(new Error('HTTP '+r.status))).then(j=>{if(j.error)throw new Error('FAA '+(j.error.code||''));(j.features||[]).forEach(f=>{const x=lib.fromFaa(f);if(x)faa.push(x)})}))}
+  Promise.allSettled(jobs).then(rs=>{
+    // The FAA's copy wins inside its coverage; the simulator fills in everywhere else.
+    const keep=useFaa?sim.filter(a=>{const r=a.rings[0],c=r.reduce((m,q)=>[m[0]+q[0]/r.length,m[1]+q[1]/r.length],[0,0]);return !lib.inFaaCoverage([c[1],c[0],c[1],c[0]])}):sim;
+    ASPD.list=faa.concat(keep);
+    ASPD.err=!jobs.length?'none':rs.every(r=>r.status==='rejected')?'unavailable':''
+  }).finally(()=>{ASPD.at=Date.now();ASPD.busy=false;draw()})
+}
+function drawAirspaces(){
+  if(!L.asp||V.mode==='globe'||CH.on||!window.ASP)return;
+  const c=wpx(V.lon,V.lat),a=wun(c[0]-W/2,c[1]-H/2),b=wun(c[0]+W/2,c[1]+H/2);
+  const box=[Math.floor(b[1]*2)/2,Math.floor(a[0]*2)/2,Math.ceil(a[1]*2)/2,Math.ceil(b[0]*2)/2];
+  if(box[2]-box[0]>8||box[3]-box[1]>12){wxNotice('Zoom in to see airspaces');return}
+  aspFetch(box);
+  if(ASPD.err==='none'){wxNotice('Airspaces: connect the bridge (X-Plane) outside the US');return}
+  if(ASPD.err==='unavailable'&&!ASPD.list.length){wxNotice('Airspaces unavailable');return}
+  const S=window.ASP.STYLES,O=window.ASP.ORDER,list=ASPD.list.slice().sort((p,q)=>O.indexOf(p.cls)-O.indexOf(q.cls)),tags=[];
+  cx.save();cx.lineJoin='round';
+  for(const ar of list){const st=S[ar.cls];
+    for(const ring of ar.rings){
+      const pts=[];let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9,sx=0,sy=0;
+      for(const p of ring){const q=vis(p[0],p[1]);if(!q){pts.length=0;break}pts.push(q);sx+=q[0];sy+=q[1];if(q[0]<x0)x0=q[0];if(q[0]>x1)x1=q[0];if(q[1]<y0)y0=q[1];if(q[1]>y1)y1=q[1]}
+      if(pts.length<3||x1<0||x0>W||y1<0||y0>H)continue;
+      cx.beginPath();pts.forEach((q,i)=>i?cx.lineTo(q[0],q[1]):cx.moveTo(q[0],q[1]));cx.closePath();
+      if(st.fill){cx.fillStyle=st.fill;cx.fill()}
+      cx.setLineDash(st.dash);cx.lineWidth=st.width;cx.strokeStyle=st.stroke;cx.stroke();cx.setLineDash([]);
+      if((x1-x0)>70&&(y1-y0)>40)tags.push({ar,st,x:Math.max(60,Math.min(W-60,sx/pts.length)),y:Math.max(30,Math.min(H-30,sy/pts.length))})}}
+  // One tag per area: the class in its colour, then the limits.
+  const placed=[],seen=new Set(),font='700 11px Consolas,"Cascadia Mono",ui-monospace,monospace';cx.font=font;cx.textBaseline='middle';
+  for(const t of tags){const lab=window.ASP.labelFor(t.ar),k=t.ar.name+'|'+lab.limits;if(seen.has(k))continue;
+    const cw=Math.ceil(cx.measureText(lab.cls).width)+10,lw=Math.ceil(cx.measureText(lab.limits).width)+10,w=cw+lw,h=18,bx={x:t.x-w/2,y:t.y-h/2,w,h};
+    if(placed.some(p=>bx.x<p.x+p.w+4&&bx.x+bx.w+4>p.x&&bx.y<p.y+p.h+4&&bx.y+bx.h+4>p.y))continue;
+    placed.push(bx);seen.add(k);
+    cx.fillStyle=t.st.stroke;cx.fillRect(bx.x,bx.y,cw,h);
+    cx.fillStyle='rgba(11,23,38,.88)';cx.fillRect(bx.x+cw,bx.y,lw,h);
+    cx.strokeStyle=t.st.stroke;cx.lineWidth=1;cx.strokeRect(bx.x+.5,bx.y+.5,w-1,h-1);
+    cx.fillStyle='#fff';cx.fillText(lab.cls,bx.x+5,bx.y+h/2+.5);cx.fillText(lab.limits,bx.x+cw+5,bx.y+h/2+.5)}
+  cx.textBaseline='alphabetic';cx.restore()
 }
 /* ── Airport weather ───────────────────────────────────────────────────
    Every reporting station in view (NOAA Aviation Weather Center), coloured by
@@ -3423,9 +3556,6 @@ EX.push([[26,40.8],[29,41],[36,41.5],[41,41],[41.5,43],[37.5,45],[39,47],[40,47.
 [[113.2,-22],[114.2,-26.4],[115,-30],[115.5,-33.5],[118,-35],[123,-34],[126,-32.3],[131,-31.5],[134,-32.8],[135,-34.8],[137.8,-32.7],[138.5,-35.5],[140,-38],[143.5,-38.8],[146.3,-39],[150,-37.5],[151.2,-34],[153,-30],[153.5,-27],[152.8,-25],[150.5,-22.5],[148,-20],[146,-17.5],[145.4,-15],[143.5,-13.8],[142.5,-10.7],[141.5,-13],[141.5,-17],[139,-17.3],[136,-15.5],[135.5,-12.2],[132.5,-11.5],[130,-12.3],[129.7,-14.8],[127,-14],[125,-15.3],[122.2,-17.5],[121,-19.5],[117.5,-20.7],[114,-21.8]],
 [[144.7,-40.7],[148.3,-40.9],[148,-43],[146,-43.6],[145.2,-42]],[[172.7,-34.4],[174.5,-36.3],[176,-37.5],[178.5,-37.7],[177,-39.5],[175,-41.6],[174.7,-39.5],[173.8,-39.3],[174.7,-37.2]],[[172.7,-40.5],[174.3,-41.3],[173,-43.7],[171,-44.5],[168,-46.6],[166.5,-45.8],[168,-44],[170.5,-43],[172,-41.2]],
 [[-77.3,8.7],[-75.5,10.5],[-72,12],[-71.5,10.8],[-68,10.6],[-64,10.6],[-61,10.5],[-60,8.5],[-57,6],[-54,5.8],[-52,4.8],[-50,1.8],[-50,0],[-48,-1],[-44.5,-2.5],[-41,-2.9],[-38,-4],[-35,-5.5],[-34.8,-8],[-37,-11.5],[-38.9,-14],[-39,-17.7],[-41,-22],[-43.2,-23],[-46.5,-24],[-48.5,-26],[-48.6,-28.5],[-52,-32],[-53.5,-34],[-56,-34.8],[-57.3,-36.5],[-57.5,-38.2],[-62,-39],[-62.3,-41],[-65,-41],[-64.5,-42.6],[-65.5,-45],[-67.5,-46.5],[-66,-48],[-68.5,-50.5],[-69,-52.5],[-65.5,-55],[-71,-54.5],[-74.5,-52],[-75.5,-47.5],[-73.5,-42.5],[-73.8,-37],[-71.6,-33],[-71.5,-30],[-70.2,-26],[-70.3,-18.5],[-75.5,-14.5],[-77.5,-11],[-79.5,-7.5],[-81.3,-5.5],[-80.2,-3.5],[-80,-1],[-80.2,1],[-78.9,1.5],[-77.5,4],[-77.4,6.5]]);
-const RGN={'N. America':[-98,39,4.3],Europe:[12,49,4.6],Asia:[105,28,3.7],'S. America':[-60,-17,3.6],Oceania:[145,-27,4]};
-$('#lay').insertAdjacentHTML('beforeend','<b>Go to region</b><div id="rg" style="display:grid;grid-template-columns:1fr 1fr;gap:6px"></div>');
-Object.keys(RGN).forEach(k=>{const b=document.createElement('button');b.textContent=k;b.onclick=()=>{const r=RGN[k];setFol(false);V.in=null;V.lon=r[0];V.lat=r[1];V.tz=null;focusZoom(r[2]);$('#lay').style.display='none'};$('#rg').appendChild(b)});
 const AIP={Y:['Australia AIP','https://www.airservicesaustralia.com/aip/aip.asp'],NZ:['New Zealand AIP','https://www.aip.net.nz'],SB:['Brazil AIS','https://aisweb.decea.mil.br'],SD:['Brazil AIS','https://aisweb.decea.mil.br'],SI:['Brazil AIS','https://aisweb.decea.mil.br'],SJ:['Brazil AIS','https://aisweb.decea.mil.br'],SN:['Brazil AIS','https://aisweb.decea.mil.br'],SS:['Brazil AIS','https://aisweb.decea.mil.br'],SW:['Brazil AIS','https://aisweb.decea.mil.br'],VI:['India AIP','https://aim-india.aai.gov.in'],RJ:['Japan AIP','https://www.aisjapan.mlit.go.jp'],RO:['Japan AIP','https://www.aisjapan.mlit.go.jp']};
 {const trs=document.getElementById('trs');if(trs){trs.value=TRS;trs.onchange=()=>applyTrafficSource(trs.value,true)}}
 if(TRS!='adsb')startVatsimTraffic();else wtPoll();
@@ -4458,11 +4588,15 @@ navigator.serviceWorker.addEventListener('controllerchange',()=>{try{if(sessionS
   import * as PROFILE from './js/lib/profile.js';
   import * as PROC from './js/lib/procedures.js';
   import * as FSTATUS from './js/lib/flightstatus.js';
+  import * as ASP from './js/lib/airspace.js';
+  import * as VFRSTYLE from './js/lib/vfrstyle.js';
   import * as TRAILC from './js/lib/trailcolor.js';
   import * as TRAILP from './js/lib/trailpath.js';
   window.PROFILE = PROFILE;
   window.PROC = PROC;
   window.FSTATUS = FSTATUS;
+  window.ASP = ASP;
+  window.VFRSTYLE = VFRSTYLE;
   window.TRAILC = TRAILC;
   window.TRAILP = TRAILP;
   window.VATSIM = VATSIM;

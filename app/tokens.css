@@ -26,7 +26,7 @@
   --line:rgba(255,255,255,.08);
   --focus:#2f9bff;
   color-scheme:dark;
-  font-family:"Segoe UI Variable Text","Bahnschrift","Segoe UI",system-ui,sans-serif;
+  font-family:"Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, system-ui, sans-serif;
   font-synthesis:none;
 }
 :root[data-theme="day"] {
@@ -73,8 +73,8 @@
 }
 
 :root {
-  /* One type family for every surface: Bahnschrift is a DIN, the face of
-     cockpit labels; Segoe UI Variable carries the body text. */
-  --s-font:"Segoe UI Variable Text","Bahnschrift","Segoe UI",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  /* One type family for every surface, the same list the other pages use;
+     the condensed DIN face is kept only for map labels and big airport codes. */
+  --s-font:"Segoe UI Variable Text","Segoe UI",-apple-system,BlinkMacSystemFont,"SF Pro Text",Roboto,system-ui,sans-serif;
   --s-font-mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
 }

@@ -20,7 +20,7 @@ body {
     radial-gradient(1200px 600px at 85% -10%, rgba(121, 201, 187, .06), transparent 60%),
     var(--bg);
   color: var(--txt);
-  font: 14px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
+  font: 14px/1.5 "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 a { color: var(--acc); text-decoration: none; }

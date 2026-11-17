@@ -261,7 +261,8 @@ def ils_from_rows(rows):
 # (earth_mora.dat), all from the simulator's own data. Built on first use,
 # separately from the point index so a point query never waits on it.
 
-ENROUTE_CLASSES = {"B", "C", "D", "CTR", "R", "P"}
+# Q is a danger area; the IFR layers ignore classes they have no style for.
+ENROUTE_CLASSES = {"B", "C", "D", "CTR", "R", "P", "Q"}
 _ENROUTE = None
 _ENROUTE_LOCK = threading.Lock()
 
@@ -455,6 +456,39 @@ def enroute(lat, lon, nm=80.0, level="low", limit=3000):
     return {"ok": True, "level": level, "airways": airways, "airspace": airspace, "mora": mora,
             "available": data["available"], "source": "X-Plane 12 nav data" if data["available"] else "",
             "cycle": data["cycle"]}
+
+
+def airspace(lat, lon, nm=120.0, limit=800):
+    """Only the airspace polygons inside a box around a position, for the
+    Airspaces map layer (no airways or MORA, so it stays light)."""
+    try:
+        lat, lon, nm = float(lat), float(lon), float(nm)
+    except (TypeError, ValueError):
+        return {"ok": False, "error": "A latitude, a longitude and a radius are required."}
+    if not (-90.0 <= lat <= 90.0) or not (-180.0 <= lon <= 180.0) or not (0.0 < nm <= 600.0):
+        return {"ok": False, "error": "That position or radius is outside the range this map covers."}
+    global _ENROUTE
+    with _ENROUTE_LOCK:
+        if _ENROUTE is None:
+            _ENROUTE = _build_enroute()
+        data = _ENROUTE
+    dlat = nm / 60.0
+    dlon = nm / (60.0 * max(0.15, math.cos(math.radians(lat))))
+    south, north, west, east = lat - dlat, lat + dlat, lon - dlon, lon + dlon
+    out = []
+    for area in data["airspace"]:
+        b = area["bbox"]
+        if b[2] < south or b[0] > north:
+            continue
+        west_edge = lon + ((b[1] - lon + 540.0) % 360.0) - 180.0
+        east_edge = west_edge + (b[3] - b[1])
+        if east_edge < west or west_edge > east:
+            continue
+        out.append({k: area[k] for k in ("class", "name", "lower", "upper", "points")})
+        if len(out) >= limit:
+            break
+    return {"ok": True, "airspace": out, "available": data["available"],
+            "source": "X-Plane 12 nav data" if data["available"] else "", "cycle": data["cycle"]}
 
 
 def ils(airport):

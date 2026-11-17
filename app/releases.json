@@ -3,39 +3,74 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.4.3",
+    "version": "2.4.4",
     "releasedAt": "2026-11-17",
     "severity": "normal",
-    "summary": "The 3D views go back to the aircraft symbol on its altitude stalk; the 3D aircraft models are removed.",
+    "summary": "EFB map displays: VFR, low and high IFR maps with real airspace, a taxi route you click on the ground chart, a flight and airport search with Go to, and a cleaner Flight Deck.",
     "changelog": {
-      "features": [],
+      "features": [
+        "Map displays: VFR, IFR Low and IFR High vector maps, with terrain, airways and labels drawn for pilots.",
+        "Airspaces layer: controlled and special-use airspace from FAA data and your simulator, with class and altitude limits.",
+        "Taxi route: turn it on, click taxiways on the ground chart, and a green guide line follows the taxiways, listing them in order.",
+        "Search flights, airports and navaids from the Flight Deck; Go to takes the map there and tracks a flight, even one elsewhere on the network.",
+        "EFB airport ground chart: a Find taxiway search highlights a taxiway and zooms to it."
+      ],
       "improvements": [
-        "The 3D chase view follows your aircraft symbol on its altitude stalk again."
+        "Your aircraft is a magenta arrowhead pointing along your track; the aircraft icon is still available in Settings.",
+        "The route draws as a cased line with boxed ident tags, leg distance and track labels, and chart symbols for each point.",
+        "Ground charts use chart colours, show stand numbers and name each taxiway once.",
+        "Navaids use enroute chart colours on every map: blue VORs (boxed with DME), purple NDBs, grey fixes and teal airports.",
+        "3D views place the trail and altitude stalk at the aircraft's exact height."
       ],
-      "fixes": [],
-      "performance": [
-        "The 3D aircraft models are removed, making the app about 18 MB smaller and the 3D views lighter."
+      "fixes": [
+        "The EFB airport ground chart no longer stays on Loading: it reads the map tiles first and adds the bridge's data when it arrives.",
+        "Taxiway labels no longer keep a leading Taxiway or Twy."
       ],
+      "performance": [],
       "ui": [
-        "3D views: aircraft are drawn as symbols again, with the selected flight's altitude trail."
+        "The Flight Deck map runs to the top edge: the top bar is replaced by a search panel at the top left.",
+        "Map settings are grouped into Map, Weather, Aeronautical and Traffic sections.",
+        "Shared fonts, spacing and top bar across the Live, Logbook and Weather pages."
       ],
       "compatibility": [],
       "other": []
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.3/Stratos-Setup.exe",
-        "sha256": "677ea7269a53a18833829351f2bfd3215bd385bc37b69d4210e583e8d3b5854e",
-        "size": 119454382
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.3/Stratos-2.4.3-linux-x64.AppImage",
-        "sha256": "e9f8d1092bfb25dc64a941f49f384c4224f8388917fabc99b0a0e5781e2a3a17",
-        "size": 160279701
-      }
     }
   },
   "releases": [
+    {
+      "version": "2.4.4",
+      "releasedAt": "2026-11-17",
+      "severity": "normal",
+      "summary": "EFB map displays: VFR, low and high IFR maps with real airspace, a taxi route you click on the ground chart, a flight and airport search with Go to, and a cleaner Flight Deck.",
+      "changelog": {
+        "features": [
+          "Map displays: VFR, IFR Low and IFR High vector maps, with terrain, airways and labels drawn for pilots.",
+          "Airspaces layer: controlled and special-use airspace from FAA data and your simulator, with class and altitude limits.",
+          "Taxi route: turn it on, click taxiways on the ground chart, and a green guide line follows the taxiways, listing them in order.",
+          "Search flights, airports and navaids from the Flight Deck; Go to takes the map there and tracks a flight, even one elsewhere on the network.",
+          "EFB airport ground chart: a Find taxiway search highlights a taxiway and zooms to it."
+        ],
+        "improvements": [
+          "Your aircraft is a magenta arrowhead pointing along your track; the aircraft icon is still available in Settings.",
+          "The route draws as a cased line with boxed ident tags, leg distance and track labels, and chart symbols for each point.",
+          "Ground charts use chart colours, show stand numbers and name each taxiway once.",
+          "Navaids use enroute chart colours on every map: blue VORs (boxed with DME), purple NDBs, grey fixes and teal airports.",
+          "3D views place the trail and altitude stalk at the aircraft's exact height."
+        ],
+        "fixes": [
+          "The EFB airport ground chart no longer stays on Loading: it reads the map tiles first and adds the bridge's data when it arrives.",
+          "Taxiway labels no longer keep a leading Taxiway or Twy."
+        ],
+        "performance": [],
+        "ui": [
+          "The Flight Deck map runs to the top edge: the top bar is replaced by a search panel at the top left.",
+          "Map settings are grouped into Map, Weather, Aeronautical and Traffic sections.",
+          "Shared fonts, spacing and top bar across the Live, Logbook and Weather pages."
+        ],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.4.3",
       "releasedAt": "2026-11-17",
@@ -1227,51 +1262,6 @@
         "ui": [],
         "compatibility": [],
         "other": []
-      }
-    },
-    {
-      "version": "2.1.32",
-      "releasedAt": "2026-11-06",
-      "severity": "normal",
-      "summary": "Worldwide SID, STAR, approach and missed-approach geometry on the map, from the pilot's own simulator.",
-      "changelog": {
-        "features": [
-          "The Flight Deck draws the published SID, STAR, approach and missed-approach paths for the planned route.",
-          "Procedure geometry now comes from the pilot's own simulator (X-Plane 12 CIFP, worldwide) when the bridge can read it, not only the bundled FAA dataset.",
-          "A planned procedure the data cycle does not publish is named, with the ones it does publish."
-        ],
-        "improvements": [],
-        "fixes": [
-          "A procedure published as a single runway leg draws without a runway being chosen first.",
-          "The Missed layer starts off, matching what the map actually draws.",
-          "The aircraft photo backup stays, without the orange BACKUP badge."
-        ],
-        "performance": [],
-        "ui": [],
-        "compatibility": [],
-        "other": []
-      },
-      "downloads": {
-        "windows": {
-          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.32/Stratos-Setup.exe",
-          "sha256": "9765f9fbed0ee194594f05c90cf04d58fa96e5992313f6ae6900e9fed97ed3e6",
-          "size": 109237681
-        },
-        "mac-arm64": {
-          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.32/Stratos-2.1.32-mac-arm64.dmg",
-          "sha256": "d06f08c610f01cc7765e2125b6a02620459efadce249a45bcd27deaabe38d295",
-          "size": 125024389
-        },
-        "mac-x64": {
-          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.32/Stratos-2.1.32-mac-x64.dmg",
-          "sha256": "ec4297e4b3f0d19be29c01a936bca84f153781a4d50f7c5a69f974bc678fae95",
-          "size": 130502083
-        },
-        "linux-x64": {
-          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.32/Stratos-2.1.32-linux-x64.AppImage",
-          "sha256": "29b04e93692b442fafcdd067398040500d4947b471f318ba99252cbd0e75b0be",
-          "size": 146100351
-        }
       }
     }
   ]

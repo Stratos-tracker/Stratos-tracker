@@ -2596,6 +2596,16 @@ body.view-nav .efb-main { background: #07080b; }
   cursor: pointer;
 }
 .gc-tools button:hover { color: var(--efb-text); border-color: var(--efb-accent-line); }
+.gc-find {
+  display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 8px; margin-right: 4px;
+  border-radius: 7px; border: 1px solid var(--efb-line); background: var(--efb-panel-2); color: var(--efb-muted);
+}
+.gc-find:focus-within { border-color: var(--efb-accent-line); }
+.gc-find input {
+  width: 118px; min-width: 0; border: 0; padding: 0; background: none; outline: none;
+  color: var(--efb-text); font: 650 11.5px/1 system-ui, sans-serif; text-transform: uppercase;
+}
+.gc-find input::placeholder { text-transform: none; color: var(--efb-muted); }
 .gc-wrap {
   position: relative;
   border-radius: 12px;

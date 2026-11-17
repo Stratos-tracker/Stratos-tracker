@@ -15,7 +15,7 @@
   --shell-accent: #2f9bff;
   --shell-good: #34d399;
   --shell-warn: #f6c453;
-  --shell-font: "Bahnschrift", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --shell-font: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, system-ui, sans-serif;
 }
 
 /* ── Top bar ─────────────────────────────────────────────────────── */
@@ -52,6 +52,7 @@
 }
 .tb-nav { display: flex; gap: 2px; margin-left: 4px; }
 .tb-nav a {
+  white-space: nowrap;
   color: var(--shell-mute); font-size: 12px; font-weight: 650; text-decoration: none;
   padding: 6px 9px; border-radius: 8px; border: 1px solid transparent;
 }
@@ -216,7 +217,7 @@
   --shell-accent-soft: rgba(56, 189, 248, .12);
   --shell-good: #3ecf8e;
   --shell-warn: #e9c05e;
-  --shell-font: "Bahnschrift", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --shell-font: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, system-ui, sans-serif;
 }
 
 /* ── Top bar ─────────────────────────────────────────────────────── */
@@ -586,8 +587,22 @@
 @media (max-width: 1024px) {
   .tb-support, .tb-perf-wrap { display: none; }
 }
-@media (max-width: 800px) {
+/* Narrower windows give up the clock, then the status words (the coloured dot
+   stays, the full text is in its tooltip), then the theme button (also in
+   Settings) and the wordmark, so the five destinations never wrap or clip. */
+.tb-status { flex-shrink: 0; }
+@media (max-width: 1500px) {
+  .tb .status span { display: none; }
+  .tb .status { padding: 0 9px; }
+}
+@media (max-width: 1150px) {
   .tb-clock { display: none; }
+}
+@media (max-width: 1000px) {
+  #shell-theme { display: none; }
+}
+@media (min-width: 768px) and (max-width: 900px) {
+  .tb-brand .tb-name { display: none; }
 }
 
 /* ── Phone ─────────────────────────────────────────────────────────

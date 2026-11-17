@@ -15,10 +15,11 @@ test('map settings normalise malformed values to safe defaults', () => {
 
 test('map settings preserve valid user choices', () => {
   assert.deepEqual(normalizeMapSettings({
-    color: '#38BDF8', size: 1.6, halo: true, trail: false, trailWidth: 1.4,
+    color: '#38BDF8', size: 1.6, halo: true, trail: false, trailWidth: 1.4, icon: 'aircraft',
   }), {
-    color: '#38bdf8', size: 1.6, halo: true, trail: false, trailWidth: 1.4,
+    color: '#38bdf8', size: 1.6, halo: true, trail: false, trailWidth: 1.4, icon: 'aircraft',
   });
+  assert.equal(normalizeMapSettings({ icon: 'blimp' }).icon, 'triangle', 'unknown symbols fall back to the triangle');
 });
 
 test('map settings round-trip through storage', () => {

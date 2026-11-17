@@ -8,11 +8,13 @@
 export const MAP_SETTINGS_KEY = 'stratos.mapSettings';
 
 export const DEFAULT_MAP_SETTINGS = Object.freeze({
-  color: '#fbbf24',
+  color: '#e040fb',
   size: 1.35,
   halo: false,
   trail: true,
   trailWidth: 1,
+  // 'triangle' is the EFB arrowhead; 'aircraft' draws the type's silhouette.
+  icon: 'triangle',
 });
 
 const COLOR = /^#[0-9a-f]{6}$/i;
@@ -36,6 +38,7 @@ export function normalizeMapSettings(value) {
     halo: typeof raw.halo === 'boolean' ? raw.halo : DEFAULT_MAP_SETTINGS.halo,
     trail: typeof raw.trail === 'boolean' ? raw.trail : DEFAULT_MAP_SETTINGS.trail,
     trailWidth: Math.round(trailWidth * 100) / 100,
+    icon: raw.icon === 'aircraft' ? 'aircraft' : 'triangle',
   };
 }
 

@@ -2451,6 +2451,10 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(nav_near.enroute(q.get("lat", [""])[0], q.get("lon", [""])[0],
                                             q.get("nm", ["80"])[0], q.get("level", ["low"])[0]))
             return
+        if path == "/navdata/airspace":
+            q = urllib.parse.parse_qs(parsed.query)
+            self.send_json(nav_near.airspace(q.get("lat", [""])[0], q.get("lon", [""])[0], q.get("nm", ["120"])[0]))
+            return
         if path == "/navdata/ils":
             code = re.sub(r"[^A-Za-z0-9]", "", urllib.parse.parse_qs(parsed.query).get("icao", [""])[0])[:5]
             if not code:

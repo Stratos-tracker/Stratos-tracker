@@ -7,7 +7,7 @@
    Design language: deep navy and charcoal, one cyan accent, hairline borders,
    square-line icons, generous but disciplined spacing, 46 px touch targets. */
 
-.m-nav, .m-grip, .m-plan, .m-install, .m-nav-fade, .m-enav { display: none; }
+.m-nav, .m-grip, .m-plan, .m-install, .m-nav-fade { display: none; }
 
 @media (max-width: 767px) {
   :root {
@@ -552,56 +552,6 @@
     border-bottom: 1px solid var(--m-line);
   }
   body[data-mobile-section="charts"] .efb-nav::-webkit-scrollbar { display: none; }
-  /* The EFB's own grouped rail is replaced on a phone by .m-enav, a single row
-     built from the same links. Hiding it also keeps its grouped markup from
-     forcing a tall column above the charts. */
-  body[data-mobile-section="charts"] #efb-nav { display: none !important; }
-  body[data-mobile-section="charts"] .efb-main { padding-top: 84px; }
-  .m-enav {
-    position: fixed;
-    top: calc(52px + var(--m-safe-t));
-    left: 0;
-    right: 0;
-    z-index: 22;
-    display: flex;
-    gap: 4px;
-    padding: 6px 8px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    background: rgba(15, 16, 19, .96);
-    -webkit-backdrop-filter: blur(16px);
-    backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--m-line);
-  }
-  .m-enav::-webkit-scrollbar { display: none; }
-  .m-enav a {
-    flex: 0 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    min-height: 48px;
-    min-width: 64px;
-    padding: 5px 9px;
-    border-radius: 11px;
-    border: 1px solid transparent;
-    color: var(--m-faint);
-    text-decoration: none;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: .07em;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-  .m-enav a svg { width: 19px; height: 19px; }
-  .m-enav a[aria-current="page"] {
-    color: var(--m-cyan);
-    background: var(--m-cyan-soft);
-    border-color: rgba(34, 211, 238, .26);
-  }
   body[data-mobile-section="charts"] .efb-nav .en-home,
   body[data-mobile-section="charts"] .efb-nav .en-item {
     flex: 0 0 auto;
@@ -647,6 +597,8 @@
   }
   body[data-mobile-section="charts"] .efb-page-head h1 { font-size: 19px; }
   body[data-mobile-section="charts"] .efb-page-head p { font-size: 11.5px; }
+  /* The EFB's sidebar rail has no place on a phone; the tab bar and the EFB home button replace it. */
+  body[data-mobile-section="charts"] #efb-nav { display: none !important; }
   body[data-mobile-section="charts"] .efb-body,
   body[data-mobile-section="charts"] .efb-body * { min-width: 0; }
   body[data-mobile-section="charts"] .efb-body { font-size: 13.5px; }

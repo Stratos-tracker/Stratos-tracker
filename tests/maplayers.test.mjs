@@ -34,11 +34,11 @@ test('the area METAR query validates its box and reduces each station', () => {
 });
 
 test('the map offers the new layers and keeps their state', () => {
-  for (const [key, label] of [['wxapt', 'Airport weather'], ['faavfr', 'US Sectional'], ['faatac', 'US Terminal'], ['faalo', 'US IFR Low'], ['faahi', 'US IFR High']]) {
+  for (const [key, label] of [['wxapt', 'Airport weather'], ['faavfr', 'FAA Sectional'], ['faatac', 'FAA Terminal'], ['faalo', 'FAA IFR Low'], ['faahi', 'FAA IFR High']]) {
     assert.ok(page.includes(`data-l="${key}">${label}</button>`), `${label} is a layer chip`);
     assert.ok(page.includes(`${key}:!!L.${key}`), `${label} is remembered`);
   }
-  assert.match(page, /drawFaaCharts\(\);drawWeather\(\);drawDayNight\(\);drawAirportWx\(\);/, 'FAA charts under the weather, stations on top');
+  assert.match(page, /drawFaaCharts\(\);drawAirspaces\(\);drawWeather\(\);drawDayNight\(\);drawAirportWx\(\);/, 'FAA charts and airspaces under the weather, stations on top');
   assert.match(page, /<option value="ivao">IVAO/, 'IVAO is a traffic source');
   assert.match(page, /window\.VATSIM\.parseIvaoPilots\(feed\)/);
   assert.ok(page.includes('FAA Aeronautical Information Services (public domain)'), 'the charts are credited');

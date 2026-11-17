@@ -464,6 +464,9 @@
 #globe3d .maplibregl-ctrl-bottom-left,
 #globe3d .maplibregl-ctrl-bottom-right { display: none; }
 .g3-credit {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   position: absolute;
   left: 12px;
   top: 42px;
@@ -549,7 +552,7 @@ html.phone-mode #procpane, html.phone-mode #planpane { display: none !important;
   html[data-ui="new"] #online { display: none !important; }
 
   html[data-ui="new"] #tel {
-    left: 110px;
+    left: 362px;
     right: 12px;
     top: 8px;
     bottom: auto;
@@ -593,7 +596,7 @@ html.phone-mode #procpane, html.phone-mode #planpane { display: none !important;
   /* The screenshot's top-left stack: +/- share one capsule, layers below. */
   html[data-ui="new"] #bZi {
     left: 10px;
-    top: 42px;
+    top: 88px;
     border-radius: 11px 11px 0 0;
     border-bottom-color: rgba(120, 150, 175, .12);
     font-size: 23px;
@@ -601,14 +604,19 @@ html.phone-mode #procpane, html.phone-mode #planpane { display: none !important;
   }
   html[data-ui="new"] #bZo {
     left: 10px;
-    top: 86px;
+    top: 132px;
     border-radius: 0 0 11px 11px;
     font-size: 23px;
     font-weight: 500;
   }
   html[data-ui="new"] #bLay {
     left: 10px;
-    top: 140px;
+    top: 186px;
+    border-radius: 11px;
+  }
+  html[data-ui="new"] #bTaxi {
+    left: 10px;
+    top: 240px;
     border-radius: 11px;
   }
   html[data-ui="new"] #bLay .layers-glyph path { stroke: #101114; }
@@ -729,3 +737,46 @@ html.phone-mode #procpane, html.phone-mode #planpane { display: none !important;
 /* Chase view: where the map draws nothing between the sky and the far terrain,
    the container shows the horizon haze instead of black. */
 #globe3d.g3-chase { background: #c9dcee; }
+
+/* ── Flight Deck search (replaces the top bar) ─────────────────────
+   Top left: flights, airports and navaids, with a Go to button. The
+   connection line sits under it. */
+#qbox { position: absolute; left: 10px; top: 10px; width: min(340px, calc(100% - 20px)); z-index: 6; display: flex; flex-direction: column; gap: 5px; }
+#qbox #sb {
+  display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 5px 0 13px; border-radius: 11px;
+  background: rgba(16, 17, 20, .94); border: 1px solid rgba(120, 150, 175, .3); box-shadow: 0 7px 20px rgba(0, 0, 0, .4);
+}
+#qbox #sb:focus-within { border-color: #38bdf8; }
+#qbox #sb:has(#q:focus-visible) { box-shadow: 0 0 0 3px rgba(56, 189, 248, .45); }
+#qbox #sb span { font-size: 15px; color: #8299ae; }
+#qbox #q { flex: 1; min-width: 0; padding: 0; border: 0; background: none; color: #e8f1fa; font: inherit; font-size: 13px; outline: none; }
+#qbox #q::placeholder { color: #8299ae; }
+#qGo { flex: none; height: 32px; padding: 0 13px; border: 0; border-radius: 8px; background: #38bdf8; color: #04121e; font: 700 12.5px "Segoe UI", system-ui, sans-serif; cursor: pointer; white-space: nowrap; }
+#qGo:hover { background: #7dd3fc; }
+#qGo:focus-visible { outline: 2px solid #e8f1fa; outline-offset: 2px; }
+#qbox [data-shell-status] {
+  align-self: flex-start; max-width: 100%; padding: 3px 10px; min-height: 0; border-radius: 999px;
+  background: rgba(16, 17, 20, .88); border: 1px solid rgba(120, 150, 175, .22); box-shadow: none;
+  color: #9fb3c6; font-size: 11px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
+}
+#res { top: 86px; left: 10px; right: auto; margin: 0; width: min(340px, calc(100% - 20px)); z-index: 7; }
+
+/* Taxi route bar, beside the taxi button while taxi mode is on. */
+#txbar {
+  position: absolute; left: 64px; top: 240px; z-index: 6; display: flex; align-items: center; gap: 6px;
+  max-width: calc(100% - 80px); height: 44px; padding: 0 6px 0 12px; border-radius: 11px;
+  background: rgba(16, 17, 20, .94); border: 1px solid rgba(34, 197, 94, .45); box-shadow: 0 7px 20px rgba(0, 0, 0, .4);
+  color: #e8f1fa; font: 600 12px "Segoe UI", system-ui, sans-serif;
+}
+#txbar[hidden] { display: none; }
+#txbar b { color: #22c55e; letter-spacing: .08em; font-size: 11px; }
+#txNames { font: 700 13px Consolas, "Cascadia Mono", ui-monospace, monospace; letter-spacing: .03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; padding-right: 4px; }
+#txbar button { height: 30px; padding: 0 10px; border-radius: 7px; border: 1px solid rgba(120, 150, 175, .3); background: rgba(255, 255, 255, .05); color: #dbe7f2; font: inherit; cursor: pointer; }
+#txbar button:disabled { opacity: .4; cursor: default; }
+#txbar #txDone { background: #22c55e; border-color: transparent; color: #04140a; }
+@media (min-width: 768px) and (max-width: 1199px) {
+  html[data-ui="new"] #tel { left: 64px; top: 92px; }
+}
+@media (max-width: 767px) {
+  #txbar { left: 10px; right: 10px; top: 64px; max-width: none; }
+}

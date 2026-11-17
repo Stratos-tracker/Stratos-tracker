@@ -361,9 +361,11 @@ test('the map engine draws route points as chart symbols without label pile-ups'
   const source = fs.readFileSync(new URL('../app/js/minimap.js', import.meta.url), 'utf8');
 
   assert.match(source, /function drawNavPoint/, 'one symbol per point type');
-  assert.match(source, /ctx\.arc\(0, 0, 5\.2/, 'an airport is a ringed dot');
-  assert.match(source, /Math\.PI \/ 3/, 'a navaid is a hexagon');
-  assert.match(source, /ctx\.moveTo\(0, -4\.8\)/, 'a fix is a triangle');
+  assert.match(source, /ctx\.arc\(0, 0, 5\.4/, 'an airport is a ringed dot');
+  assert.match(source, /Math\.PI \/ 3/, 'a VOR is a hexagon');
+  assert.match(source, /DME\|TAC/, 'a VOR with a DME is boxed');
+  assert.match(source, /family === 'ndb'/, 'an NDB is its own dotted symbol');
+  assert.match(source, /ctx\.moveTo\(0, -4\.2\)/, 'a fix is a triangle');
   assert.match(source, /const taken = \[\]/, 'labels share one occupancy list');
   assert.match(source, /if \(clash\)/, 'a label that would collide is dropped');
   assert.match(source, /important\.forEach\(labelFor\)/, 'endpoints and the next waypoint are placed first');
@@ -371,6 +373,17 @@ test('the map engine draws route points as chart symbols without label pile-ups'
   assert.match(source, /chartTheme === 'day'/, 'a page can choose a day chart');
   assert.match(source, /panBy\(dx, dy\)/, 'the chart pans');
   assert.match(source, /zoomAt\(x, y,/, 'wheel zoom keeps the point under the pointer');
+});
+
+test('navaids are inked by family, as on an enroute chart', async () => {
+  const { navFamily, navInk } = await import('../app/js/minimap.js');
+  assert.equal(navFamily('nav', 'NDB'), 'ndb');
+  assert.equal(navFamily('nav', 'VOR-DME'), 'vor');
+  assert.equal(navFamily('fix', ''), 'fix');
+  assert.equal(navFamily('apt', 'AIRPORT'), 'apt');
+  const inks = ['vor', 'ndb', 'fix', 'apt'].map(f => navInk(f).stroke);
+  assert.equal(new Set(inks).size, 4, 'each family has its own colour');
+  assert.notEqual(navInk('vor', true).stroke, navInk('vor').stroke, 'the light theme has its own, deeper ink');
 });
 
 test('airline callsigns are parsed strictly and only a known designator is applied', async () => {

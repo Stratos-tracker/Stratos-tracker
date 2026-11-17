@@ -278,7 +278,7 @@ test('weather center boots and its watchlist adds, dedupes and removes stations'
   define('Event', window.Event);
   define('CustomEvent', window.CustomEvent);
 
-  const inline = [...window.document.querySelectorAll('script:not([src])')].map(node => node.textContent).join('\n');
+  const inline = [...window.document.querySelectorAll('script:not([src]):not([type="module"])')].map(node => node.textContent).join('\n');
   assert.match(inline, /renderWatch/, 'watchlist code is present in the page');
 
   // Running the page script is itself the test: it wires every element by id,
@@ -353,7 +353,7 @@ test('weather center names the airport when the lookup answers and falls back to
   define('Event', window.Event);
   define('CustomEvent', window.CustomEvent);
 
-  const inline = [...window.document.querySelectorAll('script:not([src])')].map(node => node.textContent).join('\n');
+  const inline = [...window.document.querySelectorAll('script:not([src]):not([type="module"])')].map(node => node.textContent).join('\n');
   new Function(inline)();
   // The button's handler is an inline onclick attribute, which linkedom does not
   // execute, so drive the search the way a keyboard user does.
@@ -398,7 +398,7 @@ test('weather center drops its own chrome only when embedded', async () => {
     define('HTMLElement', window.HTMLElement);
     define('Event', window.Event);
     define('CustomEvent', window.CustomEvent);
-    const inline = [...window.document.querySelectorAll('script:not([src])')].map(node => node.textContent).join('\n');
+    const inline = [...window.document.querySelectorAll('script:not([src]):not([type="module"])')].map(node => node.textContent).join('\n');
     new Function(inline)();
     return window;
   };
@@ -482,21 +482,16 @@ test('the home sidebar is a real rail that collapses and remembers the choice', 
       assert.ok(document.getElementById(id).closest('#lay'), `${id} lives in the map tools menu`);
     }
     assert.equal(document.getElementById('bPlan'), null, 'the pencil-circle control is gone');
-    // The Flight Deck bar carries the page's own state line rather than two
-    // duplicate pills: one honest sentence about the feed it is actually reading.
+    // The Flight Deck has no top bar: the map runs to the top edge and the
+    // search (flights, airports, navaids, with Go to) sits top left over it.
+    assert.equal(document.querySelector('#appbar'), null, 'the Flight Deck has no top bar');
     assert.equal(document.querySelectorAll('[data-status]').length, 0, 'no duplicate status pills beside the state line');
-    const state = document.querySelector('#appbar [data-shell-status]');
-    assert.ok(state, 'the connection state moves into the bar');
-    assert.ok(state.closest('.tb-brand'), 'the state line sits under the wordmark');
-    assert.ok(document.querySelector('#appbar #sb'), 'the search field sits in the bar');
-    const support = document.querySelector('[data-support]');
-    assert.ok(support, 'Support Us / Go Premium is in the bar');
-    assert.match(support.textContent, /support us/i);
-    assert.match(support.textContent, /go premium/i);
-    const clock = document.querySelector('[data-clock]');
-    assert.ok(clock, 'the UTC clock is in the bar');
-    assert.match(clock.querySelector('b').textContent, /^\d{4}Z$/, 'the clock reads HHMMZ');
-    assert.ok(document.querySelector('#appbar').classList.contains('tb--rail'), 'the rail pages centre the search on the bar');
+    const box = document.querySelector('#app #qbox');
+    assert.ok(box, 'the search panel floats on the map');
+    assert.ok(box.querySelector('#sb #q'), 'the search field is in the panel');
+    assert.match(box.querySelector('#qGo').textContent, /^go to$/i, 'one Go to button');
+    assert.match(box.querySelector('#q').getAttribute('placeholder'), /flight/i, 'the field says it finds flights');
+    assert.ok(box.querySelector('[data-shell-status]'), 'the connection line sits under the search');
 
     const toggle = rail.querySelector('.rail-toggle');
     assert.equal(document.querySelector('.app-shell').dataset.collapsed, '1', 'the rail opens icon-only');
@@ -573,6 +568,7 @@ test('the icon rail names itself on hover and keyboard focus', async () => {
 test('the expanded rail is a labelled sidebar and the focus ring stays inside it', async () => {
   const fs = await import('node:fs');
   const css = fs.readFileSync(new URL('../app/shell.css', import.meta.url), 'utf8');
+  const hud = fs.readFileSync(new URL('../app/efb-hud.css', import.meta.url), 'utf8');
   const desktop = css.match(/@media \(min-width: 768px\) \{([\s\S]*?)\n\}/);
   assert.ok(desktop, 'the rail has a desktop block');
   const rules = desktop[1];
@@ -582,7 +578,7 @@ test('the expanded rail is a labelled sidebar and the focus ring stays inside it
   assert.match(rules, /\.app-shell\[data-collapsed="1"\] #tabs \.tab span \{ display: none; \}/, 'the icon rail hides its labels');
   assert.match(rules, /#tabs \.tab\.on:not\(\.act\)[^{]*\{ background: none;/, 'a live feed hint is not a second current page');
   assert.match(css, /#tabs \.tab:focus-visible \{ outline-offset: -2px; \}/, 'the rail draws its ring inside the pill');
-  assert.match(css, /#appbar #sb:has\(#q:focus-visible\) \{[^}]*box-shadow:/, 'the search field shows a keyboard-focus ring, not only a border');
+  assert.match(hud, /#qbox #sb:has\(#q:focus-visible\) \{[^}]*box-shadow:/, 'the search field shows a keyboard-focus ring, not only a border');
   assert.match(css, /\.rail-tip \{[^}]*position: fixed;/, 'the icon tooltip escapes the rail clip');
 });
 
@@ -601,7 +597,8 @@ test('the rebuilt bar centres its search and the phone row stays inside the view
   assert.match(css, /\.tb--rail \.tb-search \{[^}]*position:\s*absolute;[^}]*left:\s*50%/, 'the rail pages centre the search on the bar');
   assert.match(css, /@media \(max-width: 767px\) \{[^}]*\.tb-support,[^{]*\.tb-clock,[^{]*\.tb-perf-wrap \{ display: none; \}/, 'the phone bar drops the wide controls');
   assert.match(css, /@media \(max-width: 1024px\) \{[^}]*\.tb-support,[^{]*\.tb-perf-wrap \{ display: none; \}/, 'a narrow desktop drops the invitation and the profile before the row widens the page');
-  assert.match(css, /@media \(max-width: 800px\) \{[^}]*\.tb-clock \{ display: none; \}/, 'the clock goes once the nav needs the room');
+  assert.match(css, /@media \(max-width: 1150px\) \{[^}]*\.tb-clock \{ display: none; \}/, 'the clock goes once the nav needs the room');
+  assert.match(css, /\.tb-nav a \{\s*white-space: nowrap;/, 'the five destinations never wrap onto two lines');
   assert.match(css, /\.tb-btn \{[^}]*white-space: nowrap;/, 'a bar label never wraps into a clipped second line');
   const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
   assert.match(page, /grid-template-columns:minmax\(0,1fr\);grid-template-rows:auto minmax\(0,1fr\) auto/, 'the shell column cannot be widened by its content');
@@ -1154,7 +1151,7 @@ test('the map draws waypoint symbols over a route line it never rewrites', async
   // the one this test names, and it is painted before any marker. It draws the
   // plan through the sampled, date-line-aware path helper rather than joining
   // projected points, which is what made a Pacific leg sweep the whole chart.
-  const line = 'if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.strokeStyle=C.route;cx.lineCap=\'round\';cx.lineJoin=\'round\';if(sp.flown.length>1){cx.globalAlpha=.34;cx.lineWidth=12;drawPlanLine(sp.flown)}if(sp.ahead.length>1){cx.globalAlpha=.62;cx.lineWidth=12;drawPlanLine(sp.ahead)}cx.restore()';
+  const line = 'if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.lineCap=\'round\';cx.lineJoin=\'round\';if(sp.flown.length>1){cx.globalAlpha=.5;cx.strokeStyle=C.route;cx.lineWidth=5;cx.setLineDash([10,9]);drawPlanLine(sp.flown);cx.setLineDash([])}if(sp.ahead.length>1){cx.globalAlpha=.9;cx.strokeStyle=RTE_CASE;cx.lineWidth=10;drawPlanLine(sp.ahead);cx.globalAlpha=1;cx.strokeStyle=C.route;cx.lineWidth=6;drawPlanLine(sp.ahead)}cx.restore()';
   assert.ok(page.includes(line), 'the route line statement is unchanged');
   assert.ok(page.indexOf(line) < page.indexOf('drawRouteMarkers();}'), 'markers are painted after the line');
   // The whole plan stays on the chart. The legs already flown are dimmed rather
@@ -1184,7 +1181,7 @@ test('the map draws waypoint symbols over a route line it never rewrites', async
   assert.match(markerLayer, /function routeKind\(p\)/, 'symbols come from the point type, not from its position');
 
   // One shape per aeronautical meaning, in the reference palette.
-  for (const [shape, colour] of [['mkCross', '#3b82f6'], ['mkTri', '#c084fc'], ['mkDiamond', '#f59e0b'], ['mkStar4', '#2dd4bf'], ['mkRing', '#'], ['mkSquare', '#fb7185'], ['mkHex', '#94a3b8']]) {
+  for (const [shape, colour] of [['mkCross', '#3b82f6'], ['mkTri', '#c084fc'], ['mkDiamond', '#f59e0b'], ['mkStar4', '#2dd4bf'], ['mkRing', '#'], ['mkSquare', '#b57edc'], ['mkHex', '#9fb0bd']]) {
     assert.ok(page.includes(`function ${shape}(`), `${shape} exists`);
     assert.ok(page.includes(colour), `${colour} is in the palette`);
   }
@@ -1193,7 +1190,9 @@ test('the map draws waypoint symbols over a route line it never rewrites', async
   // the idents at each end are not crowded.
   assert.match(markerLayer, /const LEG_MIN_NM=50,LEG_MIN_PX=92/, 'only legs of 50 nm or more get a tag, and only when they are long on screen');
   assert.match(markerLayer, /function mkLegTag\(ax,ay,bx,by,nm,hdg\)/, 'the leg tag is drawn by its own helper');
-  assert.match(markerLayer, /Math\.round\(nm\)\+' NM'/, 'the tag carries the leg distance');
+  assert.match(markerLayer, /Math\.round\(nm\)\+'NM '/, 'the tag carries the leg distance');
+  assert.match(markerLayer, /cx\.rotate\(ang\)/, 'the tag lies along the course, on the line');
+  assert.match(markerLayer, /function mkTag\(text,x,y,r,kind,override\)/, 'route idents sit in boxed tags');
   assert.match(markerLayer, /Math\.round\(hdg\)/, 'the tag carries the initial heading');
   // Map labels use the shell's condensed technical face, not a default UI sans.
   assert.match(markerLayer, /const MKF='"Bahnschrift SemiCondensed"/, 'labels are set in the condensed chart face');
@@ -1221,7 +1220,7 @@ test('a selected waypoint turns purple without touching the route line', async (
   assert.match(page, /if\(act=='close'\)\{wpIdx=null;/, 'closing the card clears the selection');
   assert.match(page, /if\(e\.key=='Escape'\)\{if\(wpCard\)closeRouteCard\(\);wpIdx=null\}/, 'Escape clears it too');
   // The same statement that paints the line must still be there.
-  assert.match(page, /if\(sp\.ahead\.length>1\)\{cx\.globalAlpha=\.62;cx\.lineWidth=12;drawPlanLine\(sp\.ahead\)\}/, 'the route line is unchanged');
+  assert.ok(page.includes('cx.strokeStyle=C.route;cx.lineWidth=6;drawPlanLine(sp.ahead)'), 'the route line is never recoloured by a selection');
 });
 
 test('the tracking card minimizes to a SID and STAR summary', async () => {
@@ -1695,12 +1694,12 @@ test('low-power 3D turns off terrain and caps pixel density', async () => {
 test('the map offers real FAA VFR and IFR chart options', async () => {
   const fs = await import('node:fs');
   const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
-  assert.match(page, /vfr:\{n:'VFR',m:12,z:8,a:'FAA VFR Sectional Charts \(public domain\)'\}/, 'the VFR sectional is a map style');
-  assert.match(page, /lowifr:\{n:'Low IFR',m:12,z:8,a:'FAA IFR Enroute Low Altitude Charts \(public domain\)'\}/, 'low IFR is its own style');
-  assert.match(page, /highifr:\{n:'High IFR',m:9,z:7,a:'FAA IFR Enroute High Altitude Charts \(public domain\)'\}/, 'high IFR is its own style');
-  assert.match(page, /VFR_Sectional\/MapServer\/tile\//, 'VFR tiles come from the FAA service');
-  assert.match(page, /IFR_AreaLow\/MapServer\/tile\//, 'low IFR tiles come from the FAA service');
-  assert.match(page, /IFR_High\/MapServer\/tile\//, 'high IFR tiles come from the FAA service');
+  assert.match(page, /vfr:\{n:'VFR',m:18,vec:'vfr',/, 'VFR is the worldwide vector map; the FAA sectional is an overlay layer');
+  assert.match(page, /lowifr:\{n:'Low IFR',m:18,vec:'ifrlo',/, 'low IFR is a worldwide vector map');
+  assert.match(page, /highifr:\{n:'High IFR',m:18,vec:'ifrhi',/, 'high IFR is a worldwide vector map');
+  assert.match(page, /faavfr:\['VFR_Sectional',/, 'the FAA VFR sectional is still offered, as the FAA Sectional layer');
+  assert.match(page, /faalo:\['IFR_AreaLow',/, 'the FAA low IFR chart is still offered, as an overlay layer');
+  assert.match(page, /faahi:\['IFR_High',/, 'the FAA high IFR chart is still offered, as an overlay layer');
   assert.match(page, /if\(MS\[l\]&&MS\[l\]\.z\)t\.i\.crossOrigin='anonymous'/, 'chart images use CORS instead of being blocked as opaque responses');
   assert.match(page, /const cfg=MS\[l\]\|\|MS\.sat,mz=l=='lab'\?18:cfg\.m,mn=cfg\.z\|\|0/, 'chart styles use their service tile levels');
   assert.match(page, /mn\?Math\.ceil\(V\.z\+1\)/, 'a chart asks for a level above the view instead of a blank overview level');

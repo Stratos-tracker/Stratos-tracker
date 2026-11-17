@@ -66,48 +66,13 @@ window.addEventListener('beforeinstallprompt', event => {
 });
 
 /**
- * The EFB draws its rail from grouped markup. On a phone it is one strip, so
- * the groups are flattened here as well as in mobile.css: the EFB's own
- * stylesheet has media rules for coarse pointers, and this keeps the strip
- * correct in a narrow desktop window and in mobile emulation too.
+ * On a phone the EFB's sidebar rail is hidden and not replaced: the bottom
+ * tab bar's EFB tab and the EFB's own home button already lead to every app,
+ * and a second row of links only competed with them.
  */
 function mountEfbStrip() {
   const rail = document.getElementById('efb-nav');
-  if (!rail) return;
-
-  // The EFB's grouped rail is a sidebar. On a phone the same destinations are
-  // rebuilt as one row: same hrefs, same icons, same labels, taken from the
-  // rail itself so the two navigations can never disagree.
-  let strip = null;
-  let last = '';
-  const build = () => {
-    const links = [...rail.querySelectorAll('a[data-app], a.en-home')];
-    if (!links.length) return;
-    if (!strip) {
-      strip = document.createElement('nav');
-      strip.className = 'm-enav';
-      strip.setAttribute('aria-label', 'EFB sections');
-      rail.after(strip);
-    }
-    const current = location.hash || '#/home';
-    const html = links.map(link => {
-      const glyph = link.querySelector('svg')?.outerHTML || '';
-      const label = (link.querySelector('.en-label')?.textContent || link.getAttribute('title') || '').trim();
-      const href = link.getAttribute('href') || '';
-      const active = href === current ? ' aria-current="page"' : '';
-      return `<a href="${href}"${active}>${glyph}<span>${label}</span></a>`;
-    }).join('');
-    if (html === last) return;
-    last = html;
-    strip.innerHTML = html;
-  };
-
-  rail.style.display = 'none';
-  build();
-  // The rail is filled from the EFB's route table after this module runs, and
-  // rebuilt when the EFB changes modes, so the strip follows it.
-  new MutationObserver(build).observe(rail, { childList: true, subtree: true });
-  window.addEventListener('hashchange', build);
+  if (rail) rail.style.display = 'none';
 }
 
 function mountNav() {

@@ -52,6 +52,7 @@ a { color: var(--acc); }
   overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
 }
 #tab-bar::-webkit-scrollbar { display: none; }
+.tab-export { margin-left: auto; }
 .tab-btn {
   flex-shrink: 0; padding: 12px 16px; font: inherit; font-size: 13px; font-weight: 600;
   color: var(--mut); background: none; border: none; border-bottom: 2px solid transparent;
@@ -259,19 +260,14 @@ a { color: var(--acc); }
 }
 </style>
 <link rel="stylesheet" href="stratos-ui.css">
+<link rel="stylesheet" href="shell.css">
 <script src="js/account/gate.js"></script><link rel="stylesheet" href="mobile.css">
 </head>
 <body data-mobile-section="flights">
 <div id="app">
 
 <!-- Topbar -->
-<header id="topbar">
-  <a class="home" href="index.html">STRA<span>T</span>OS</a>
-  <h1>Logbook</h1>
-  <div class="spacer"></div>
-  <a class="topbar-btn" href="pilot.html">Pilot</a>
-  <button class="topbar-btn" onclick="exportCSV()">Export CSV</button>
-</header>
+<header id="appbar" class="tb"></header>
 
 <!-- Live flight status bar -->
 <div id="live-bar">
@@ -290,6 +286,7 @@ a { color: var(--acc); }
   <button class="tab-btn" data-tab="airports" onclick="switchTab(this)">Airports</button>
   <button class="tab-btn" data-tab="achievements" onclick="switchTab(this)">Achievements</button>
   <button class="tab-btn" data-tab="profile" onclick="switchTab(this)">Profile</button>
+  <button class="tab-btn tab-export" type="button" onclick="exportCSV()">Export CSV</button>
 </div>
 
 <div id="main">
@@ -1522,6 +1519,11 @@ window.showCloudSetup = showCloudSetup;
 window.renderFlights = renderFlights;
 window.switchTab = switchTab;
 window.fetchMini = typeof fetchMini !== 'undefined' ? fetchMini : () => {};
+</script>
+<script type="module">
+  // The same app bar as every other page: one set of destinations, one look.
+  import { mountShell } from './js/shell.js';
+  mountShell({ page: 'logbook' });
 </script>
 <script type="module" src="js/mobile.js"></script>
 </body>

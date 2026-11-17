@@ -14,11 +14,22 @@ import {
   LINE_TYPES, OVERPASS_MIRRORS,
 } from '../lib/groundchart.js';
 import { defaultBridgeBase, isHostedPage } from '../bridge.js';
+import { aerowaysFromTiles } from '../lib/aerotiles.js';
 
 const esc = value => String(value == null ? '' : value)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+/** "Taxiway B" and "twy b" are both taxiway B. */
+const cleanRef = ref => String(ref || '').replace(/^(taxiway|twy)\s+/i, '').trim();
+
+/** The distinct taxiway names on the chart, in natural order (A, A1, A2, B, …). */
+export function taxiwayNames(local) {
+  const names = new Set();
+  for (const way of local) if (LINE_TYPES.has(way.type) && way.type !== 'runway' && cleanRef(way.ref)) names.add(cleanRef(way.ref).toUpperCase());
+  return [...names].sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
+}
 
 /** Direction (radians, local east/north) of the charted taxiway nearest a point, or null beyond 40 m. */
 function taxiAngleAt(localWays, at) {
@@ -133,6 +144,8 @@ export class GroundChart {
       <div class="gc-head">
         <div class="gc-title"><b>Ground chart</b><span class="gc-status" data-gc-status>Loading the charted geometry…</span></div>
         <div class="gc-tools">
+          <label class="gc-find"><span aria-hidden="true">&#8981;</span><input data-gc-find list="gc-twys-${esc(airport.id)}" placeholder="Find taxiway" aria-label="Find a taxiway by name" autocomplete="off" spellcheck="false"></label>
+          <datalist id="gc-twys-${esc(airport.id)}" data-gc-list></datalist>
           <button type="button" data-gc="in" title="Zoom in" aria-label="Zoom in">+</button>
           <button type="button" data-gc="out" title="Zoom out" aria-label="Zoom out">−</button>
           <button type="button" data-gc="fit" title="Fit the airfield" aria-label="Fit the airfield">Fit</button>
@@ -157,6 +170,11 @@ export class GroundChart {
     this.tip = container.querySelector('.gc-tip');
     this.empty = container.querySelector('.gc-empty');
     this.statusEl = container.querySelector('[data-gc-status]');
+    this.findEl = container.querySelector('[data-gc-find]');
+    this.found = new Set();
+    this.findEl.addEventListener('input', () => { if (!this.findEl.value.trim()) this.findTaxiway(''); });
+    this.findEl.addEventListener('change', () => this.findTaxiway(this.findEl.value));
+    this.findEl.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); this.findTaxiway(this.findEl.value); } });
 
     this.onWheel = event => {
       event.preventDefault();
@@ -246,20 +264,27 @@ export class GroundChart {
       return;
     }
     this.setStatus('Loading the charted geometry…');
-    if (!isHostedPage()) {
-      try {
-        const base = defaultBridgeBase().replace(/\/+$/, '');
-        const response = await fetch(`${base}/osm?id=${encodeURIComponent(id)}&lat=${Number(lat)}&lon=${Number(lon)}`, {
-          credentials: location.protocol === 'file:' ? 'omit' : 'include',
-          cache: 'no-store',
-        });
-        if (response.ok) {
-          const ways = await response.json();
-          if (Array.isArray(ways) && ways.length) { this.useWays(ways); return; }
-        }
-      } catch (_) { /* bridge offline: read OpenStreetMap directly below */ }
-    }
+    // The bridge has the richest data (holding points, terminals) but a cold
+    // airfield makes it ask Overpass, which can take minutes. The map tiles
+    // answer in a second, so: the bridge if it is quick, else the tiles now and
+    // the bridge's version swapped in whenever it arrives.
+    const bridge = isHostedPage() ? Promise.resolve(null) : fetch(
+      `${defaultBridgeBase().replace(/\/+$/, '')}/osm?id=${encodeURIComponent(id)}&lat=${Number(lat)}&lon=${Number(lon)}`,
+      { credentials: location.protocol === 'file:' ? 'omit' : 'include', cache: 'no-store' },
+    ).then(r => (r.ok ? r.json() : null)).then(w => (Array.isArray(w) && w.length ? w : null)).catch(() => null);
+    const quick = await Promise.race([bridge, new Promise(r => setTimeout(r, 4000))]);
     if (this.destroyed) return;
+    if (quick) { this.useWays(quick); return; }
+    const tiles = await aerowaysFromTiles(Number(lat), Number(lon)).catch(() => null);
+    if (this.destroyed) return;
+    if (tiles) {
+      this.useWays(tiles, 'from map tiles, holding points still loading');
+      bridge.then(ways => { if (ways && !this.destroyed) this.useWays(ways, '', true); });
+      return;
+    }
+    const late = await bridge;
+    if (this.destroyed) return;
+    if (late) { this.useWays(late); return; }
     this.setStatus('Bridge offline: reading OpenStreetMap directly…');
     const { ways, lastError } = await hedgedOverpass(overpassQuery(lat, lon));
     if (this.destroyed) return;
@@ -268,7 +293,7 @@ export class GroundChart {
     this.showEmpty('Ground geometry unavailable');
   }
 
-  useWays(raw) {
+  useWays(raw, source = '', keepView = false) {
     const ways = normaliseWays(raw);
     if (!ways.length) {
       this.ways = [];
@@ -288,10 +313,37 @@ export class GroundChart {
     });
     this.container.classList.remove('is-empty');
     this.empty.hidden = true;
-    this.baseStatus = `${ways.length} charted ways · ${ways.filter(way => way.type === 'taxiway').length} taxiways · ${this.holds.length} holding points`;
+    this.baseStatus = `${ways.length} charted ways · ${ways.filter(way => way.type === 'taxiway').length} taxiways · ${this.holds.length} holding points${source ? ` · ${source}` : ''}`;
     this.setStatus(this.baseStatus);
-    this.fit();
+    const list = this.container.querySelector('[data-gc-list]');
+    if (list) list.innerHTML = taxiwayNames(this.local).map(name => `<option value="${esc(name)}"></option>`).join('');
+    if (!keepView) this.fit();
     this.updateRoute();
+    // A search made before the richer data arrived stays applied to it.
+    const query = this.findEl ? this.findEl.value : '';
+    if (query.trim()) this.findTaxiway(query, keepView);
+  }
+
+  /** Highlight every charted way of one taxiway and zoom to it; an empty name clears it. */
+  findTaxiway(name, keepView = false) {
+    const want = cleanRef(name).toUpperCase();
+    this.found = new Set(want ? this.local.filter(way => way.type !== 'runway' && LINE_TYPES.has(way.type) && cleanRef(way.ref).toUpperCase() === want) : []);
+    if (!want) { this.setStatus(this.baseStatus); this.requestDraw(); return; }
+    if (!this.found.size) {
+      this.setStatus(`No taxiway ${want} charted at ${this.airport.id}`);
+      this.requestDraw();
+      return;
+    }
+    this.setStatus(`Taxiway ${want} · ${this.found.size} charted segment${this.found.size === 1 ? '' : 's'}`);
+    if (!keepView) {
+      const b = geometryBounds([...this.found]);
+      const all = this.bounds;
+      this.zoom = clamp(Math.min(all.width / Math.max(b.width, 60), all.height / Math.max(b.height, 60)) * 0.75, 1, 9);
+      const { scale, cx, cy } = this.transform();
+      this.panX = -((b.minX + b.maxX) / 2 - cx) * scale;
+      this.panY = ((b.minY + b.maxY) / 2 - cy) * scale;
+    }
+    this.requestDraw();
   }
 
   showEmpty(text) {
@@ -492,7 +544,20 @@ export class GroundChart {
     };
 
     for (const way of [...byType.taxilane, ...byType.taxiway]) {
-      taxiStyle(way, way === this.selected);
+      if (!this.found.has(way)) taxiStyle(way, way === this.selected);
+    }
+    // A searched taxiway is drawn last, wide and green, so it reads at any zoom.
+    for (const way of this.found) {
+      pathFor(way);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = 'rgba(34, 197, 94, .3)';
+      ctx.lineWidth = 12;
+      ctx.stroke();
+      pathFor(way);
+      ctx.strokeStyle = '#22c55e';
+      ctx.lineWidth = 3;
+      ctx.stroke();
     }
 
     // Runways: casing, asphalt, centreline, threshold bars.
@@ -593,7 +658,7 @@ export class GroundChart {
         const length = Math.hypot(b.x - a.x, b.y - a.y);
         if (!best || length > best.length) best = { length, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
       }
-      if (best && best.length >= 18) labels.push({ text: way.ref, x: best.x, y: best.y, route: routeRefs.has(way.ref), type: 'taxi' });
+      if (best && best.length >= 18) labels.push({ text: way.ref, x: best.x, y: best.y, route: routeRefs.has(way.ref) || this.found.has(way), type: 'taxi' });
     }
     for (const way of byType.runway) {
       if (!way.ref) continue;

@@ -134,15 +134,39 @@ function drawAircraftSymbol(ctx, p, heading = 0, label = '') {
   ctx.restore();
 }
 
+/* Enroute-chart inks: VOR family blue, NDB purple, fixes grey, airports teal.
+   Muted so the route line stays the brightest thing on the chart; the light
+   theme uses deeper versions of the same hues. */
+const NAV_INK = {
+  dark: { vor: '#4aa3df', ndb: '#b57edc', fix: '#9fb0bd', apt: '#3fbfae', label: { vor: '#9ccdf0', ndb: '#d6b3ef', fix: '#b4c0ca', apt: '#8fdccf' } },
+  light: { vor: '#1d6fa5', ndb: '#7e3aa8', fix: '#5b6b78', apt: '#0f7a6c', label: { vor: '#155a87', ndb: '#6a2f8f', fix: '#3f4c57', apt: '#0b5f54' } },
+};
+
+/** Which symbol family a nav point belongs to: vor, ndb, fix or apt. */
+export function navFamily(kind, type) {
+  if (kind === 'apt') return 'apt';
+  if (kind !== 'nav') return 'fix';
+  return /NDB/i.test(String(type || '')) ? 'ndb' : 'vor';
+}
+
+export function navInk(family, light = false) {
+  const set = light ? NAV_INK.light : NAV_INK.dark;
+  return { stroke: set[family] || set.fix, label: set.label[family] || set.label.fix };
+}
+
 /* One waypoint symbol, drawn in screen space so it stays the same size at every
-   zoom. Airport is a ringed dot, a navaid a hexagon and a fix a triangle — the
-   shapes an enroute chart uses, so the type of a point is readable before its
-   label is. */
+   zoom, in the chart symbology: VOR a hexagon with a centre dot (boxed when it
+   has a DME), NDB a dotted circle, fix a small triangle, airport a ringed dot
+   with four ticks. The shape gives the type before the label does. */
 function drawNavPoint(ctx, x, y, options) {
-  const { kind, accent, end, isNext, active, invert } = options;
-  const base = invert ? '#0f172a' : '#eaf3ff';
+  const { kind, type, accent, end, isNext, active, invert } = options;
+  const family = navFamily(kind, type);
+  const ink = navInk(family, invert).stroke;
+  const shade = invert ? 'rgba(255, 255, 255, .85)' : 'rgba(4, 9, 15, .78)';
   ctx.save();
   ctx.translate(x, y);
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
 
   if (isNext) {
     ctx.beginPath();
@@ -156,44 +180,54 @@ function drawNavPoint(ctx, x, y, options) {
     ctx.setLineDash([]);
   }
 
-  const shape = () => {
+  const color = end === 'origin' ? '#34d399' : end === 'destination' ? '#f87171' : ink;
+  const dot = (px, py, r) => { ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill(); };
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = end ? 2 : 1.4;
+
+  if (family === 'apt') {
+    ctx.beginPath(); ctx.arc(0, 0, 5.4, 0, Math.PI * 2);
+    ctx.save(); ctx.fillStyle = shade; ctx.fill(); ctx.restore();
+    ctx.stroke();
     ctx.beginPath();
-    if (kind === 'apt') {
-      ctx.arc(0, 0, 5.2, 0, Math.PI * 2);
-    } else if (kind === 'nav') {
-      for (let i = 0; i < 6; i += 1) {
-        const angle = (Math.PI / 3) * i - Math.PI / 2;
-        const px = Math.cos(angle) * 4.6;
-        const py = Math.sin(angle) * 4.6;
-        i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
-      }
-      ctx.closePath();
-    } else {
-      ctx.moveTo(0, -4.8);
-      ctx.lineTo(4.4, 3.6);
-      ctx.lineTo(-4.4, 3.6);
-      ctx.closePath();
+    for (let i = 0; i < 4; i += 1) {
+      const a = (Math.PI / 2) * i;
+      ctx.moveTo(Math.cos(a) * 5.4, Math.sin(a) * 5.4);
+      ctx.lineTo(Math.cos(a) * 7.8, Math.sin(a) * 7.8);
     }
-  };
-
-  shape();
-  ctx.fillStyle = 'rgba(4, 9, 15, .82)';
-  ctx.fill();
-  shape();
-  ctx.strokeStyle = end === 'origin' ? '#34d399' : end === 'destination' ? '#f87171' : base;
-  ctx.lineWidth = end ? 2 : 1.5;
-  ctx.stroke();
-
-  if (kind === 'apt') {
+    ctx.stroke();
+    dot(0, 0, 1.6);
+  } else if (family === 'vor') {
+    if (/DME|TAC/i.test(String(type || ''))) {
+      ctx.save(); ctx.fillStyle = shade; ctx.fillRect(-5, -5, 10, 10); ctx.restore();
+      ctx.strokeRect(-5, -5, 10, 10);
+    }
     ctx.beginPath();
-    ctx.arc(0, 0, 1.7, 0, Math.PI * 2);
-    ctx.fillStyle = base;
-    ctx.fill();
+    for (let i = 0; i < 6; i += 1) {
+      const a = (Math.PI / 3) * i;
+      i ? ctx.lineTo(Math.cos(a) * 3.9, Math.sin(a) * 3.9) : ctx.moveTo(Math.cos(a) * 3.9, Math.sin(a) * 3.9);
+    }
+    ctx.closePath();
+    ctx.save(); ctx.fillStyle = shade; ctx.fill(); ctx.restore();
+    ctx.stroke();
+    dot(0, 0, 1.3);
+  } else if (family === 'ndb') {
+    for (let i = 0; i < 10; i += 1) dot(Math.cos((Math.PI * i) / 5) * 4.4, Math.sin((Math.PI * i) / 5) * 4.4, 0.7);
+    dot(0, 0, 1.4);
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(0, -4.2);
+    ctx.lineTo(3.8, 3);
+    ctx.lineTo(-3.8, 3);
+    ctx.closePath();
+    ctx.save(); ctx.fillStyle = shade; ctx.fill(); ctx.restore();
+    ctx.stroke();
   }
 
   if (active) {
     ctx.beginPath();
-    ctx.arc(0, 0, 8.6, 0, Math.PI * 2);
+    ctx.arc(0, 0, 9.4, 0, Math.PI * 2);
     ctx.strokeStyle = accent;
     ctx.lineWidth = 1.6;
     ctx.stroke();
@@ -1657,8 +1691,11 @@ export class MiniMap {
       // texture of waypoints instead of a wall of triangles.
       ctx.translate(p.x, p.y);
       if (isFix && !labelled) { ctx.scale(0.62, 0.62); ctx.globalAlpha = 0.6; }
+      // Zoomed out, the background navaids step back so the chart is not a wall of symbols.
+      else if (!isRoute && span > 250) { ctx.scale(0.85, 0.85); ctx.globalAlpha = 0.72; }
       drawNavPoint(ctx, 0, 0, {
         kind: point.kind,
+        type: point.type,
         accent: '#22d3ee',
         end: point.kind === 'apt' ? null : null,
         invert: this.theme() === 'light',
@@ -1668,9 +1705,10 @@ export class MiniMap {
       ctx.font = isFix ? '600 9.5px system-ui, sans-serif' : '600 10.5px system-ui, sans-serif';
       const width = ctx.measureText(label).width;
       if (labelled && fits(p.x + 8, p.y + 3.5, width)) {
-        ctx.fillStyle = 'rgba(4,9,15,.6)';
+        const light = this.theme() === 'light';
+        ctx.fillStyle = light ? 'rgba(255,255,255,.72)' : 'rgba(4,9,15,.6)';
         ctx.fillRect(p.x + 6, p.y - 6, width + 5, 12);
-        ctx.fillStyle = this.theme() === 'light' ? '#0f172a' : '#cfe9f5';
+        ctx.fillStyle = navInk(navFamily(point.kind, point.type), light).label;
         ctx.fillText(label, p.x + 8, p.y + 3.5);
       } else {
         hidden += 1;
@@ -1897,6 +1935,7 @@ export class MiniMap {
       const end = node.index === 0 ? 'origin' : node.index === points.length - 1 ? 'destination' : '';
       drawNavPoint(ctx, node.x, node.y, {
         kind: end || node.point.kind === 'apt' ? 'apt' : node.point.kind === 'nav' ? 'nav' : 'fix',
+        type: node.point.type,
         accent,
         end,
         isNext: node.index === nextIndex,

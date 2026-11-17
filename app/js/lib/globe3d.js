@@ -442,6 +442,10 @@
       self.ready = true;
       try { self.map.setProjection({ type: self.mode === 'flat' ? 'mercator' : 'globe' }); } catch (_) {}
       self._applyTerrain();
+      // A no-op layer that records the camera matrix, so overlays can place points at true altitude.
+      try {
+        self.map.addLayer({ id: 'g3-proj', type: 'custom', renderingMode: '3d', render: function (gl, args) { self._mvp = args && args.defaultProjectionData && args.defaultProjectionData.mainMatrix; } });
+      } catch (_) {}
       self._applyPixelRatio();
       self._addTrafficIcons();
       if (self.onTraffic) {
@@ -553,7 +557,7 @@
     this.fx = canvas;
     this.fxCtx = canvas.getContext('2d');
     var self = this;
-    this._onMapRender = function () { self._queueFx(); };
+    this._onMapRender = function () { self._updateAltitude(); self._queueFx(); };
     if (this.map) this.map.on('render', this._onMapRender);
     this._resizeFx();
   };
@@ -638,7 +642,8 @@
       var ground = this.map.project([lon, lat]);
       var mpp = Math.max(1e-6, scale * Math.max(0.05, Math.cos(lat * RAD)));
       var lift = Math.max(0, alt) * FT_TO_M / mpp * pitch;
-      points.push({ gx: ground.x, gy: ground.y, tx: ground.x, ty: ground.y - lift, alt: Math.max(0, alt) });
+      var air = this._airPoint(lon, lat, alt);
+      points.push({ gx: ground.x, gy: ground.y, tx: air ? air.x : ground.x, ty: air ? air.y : ground.y - lift, alt: Math.max(0, alt) });
     }
     if (points.length < 2) {
       this._fxDrawn = false;
@@ -986,6 +991,20 @@
     this._updateAltitude();
   };
 
+  /** Screen position of a point at an altitude (ft), exactly as the 3D scene
+      draws it (terrain exaggeration included); null before the first frame or
+      when the point is behind the camera. */
+  StratosGlobe3D.prototype._airPoint = function (lon, lat, feet) {
+    var mvp = this._mvp;
+    if (!mvp || !this.map || !this.map.transform || !this.map.transform.getMatrixForModel) return null;
+    var terrain = this.map.getTerrain && this.map.getTerrain();
+    var m = this.map.transform.getMatrixForModel([lon, lat], Math.max(0, Number(feet) || 0) * FT_TO_M * ((terrain && terrain.exaggeration) || 1));
+    var c = [0, 1, 2, 3].map(function (r) { return mvp[r] * m[12] + mvp[4 + r] * m[13] + mvp[8 + r] * m[14] + mvp[12 + r] * m[15]; });
+    if (!(c[3] > 0)) return null;
+    var canvas = this.map.getCanvas();
+    return { x: (c[0] / c[3] + 1) / 2 * canvas.clientWidth, y: (1 - c[1] / c[3]) / 2 * canvas.clientHeight };
+  };
+
   StratosGlobe3D.prototype._updateAltitude = function () {
     if (!this.marker || !this.aircraft || !this.map) return;
     var el = this.marker.getElement();
@@ -993,6 +1012,9 @@
     var zoom = this.map.getZoom();
     var nmPerPx = (360 * 60 * Math.cos(Math.max(-85, Math.min(85, this.aircraft.lat)) * RAD)) / (512 * 2 ** zoom);
     var px = Math.max(0, Math.min(150, alt / 6076.12 / Math.max(1e-6, nmPerPx)));
+    // shortcut: the stalk stays vertical on screen; under strong perspective the true line leans a little.
+    var air = this._airPoint(this.aircraft.lon, this.aircraft.lat, alt);
+    if (air) px = Math.max(0, Math.min(1200, this.map.project([this.aircraft.lon, this.aircraft.lat]).y - air.y));
     var stalk = el.querySelector('.g3-stalk');
     if (stalk) stalk.style.height = px.toFixed(1) + 'px';
     var tag = el.querySelector('.g3-tag');
@@ -1101,6 +1123,7 @@
     this.credit.textContent = 'Imagery: Esri, Maxar · ' +
       (this.lowPower ? 'low-power: terrain off, 1x pixels' : 'Elevation: AWS Terrain Tiles (Mapzen)') +
       ' · display only, not for navigation';
+    this.credit.title = this.credit.textContent;
   };
 
   /** Turn off terrain and cap the 3D render surface at 1x for slower GPUs. */

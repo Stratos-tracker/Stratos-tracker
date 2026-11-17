@@ -284,21 +284,6 @@
       ]
     }
   },
-  "2.1.32": {
-    "summary": "Worldwide SID, STAR, approach and missed-approach geometry on the map, from the pilot's own simulator.",
-    "changelog": {
-      "features": [
-        "The Flight Deck draws the published SID, STAR, approach and missed-approach paths for the planned route.",
-        "Procedure geometry now comes from the pilot's own simulator (X-Plane 12 CIFP, worldwide) when the bridge can read it, not only the bundled FAA dataset.",
-        "A planned procedure the data cycle does not publish is named, with the ones it does publish."
-      ],
-      "fixes": [
-        "A procedure published as a single runway leg draws without a runway being chosen first.",
-        "The Missed layer starts off, matching what the map actually draws.",
-        "The aircraft photo backup stays, without the orange BACKUP badge."
-      ]
-    }
-  },
   "2.1.37": {
     "summary": "SID paths now start on the runway and follow the published initial-climb heading to its altitude-gated turn, including SLEEK2 runway 8 at KDEN.",
     "changelog": {
@@ -616,6 +601,37 @@
       ],
       "ui": [
         "3D views: aircraft are drawn as symbols again, with the selected flight's altitude trail."
+      ],
+      "compatibility": [],
+      "other": []
+    }
+  },
+  "2.4.4": {
+    "summary": "EFB map displays: VFR, low and high IFR maps with real airspace, a taxi route you click on the ground chart, a flight and airport search with Go to, and a cleaner Flight Deck.",
+    "changelog": {
+      "features": [
+        "Map displays: VFR, IFR Low and IFR High vector maps, with terrain, airways and labels drawn for pilots.",
+        "Airspaces layer: controlled and special-use airspace from FAA data and your simulator, with class and altitude limits.",
+        "Taxi route: turn it on, click taxiways on the ground chart, and a green guide line follows the taxiways, listing them in order.",
+        "Search flights, airports and navaids from the Flight Deck; Go to takes the map there and tracks a flight, even one elsewhere on the network.",
+        "EFB airport ground chart: a Find taxiway search highlights a taxiway and zooms to it."
+      ],
+      "improvements": [
+        "Your aircraft is a magenta arrowhead pointing along your track; the aircraft icon is still available in Settings.",
+        "The route draws as a cased line with boxed ident tags, leg distance and track labels, and chart symbols for each point.",
+        "Ground charts use chart colours, show stand numbers and name each taxiway once.",
+        "Navaids use enroute chart colours on every map: blue VORs (boxed with DME), purple NDBs, grey fixes and teal airports.",
+        "3D views place the trail and altitude stalk at the aircraft's exact height."
+      ],
+      "fixes": [
+        "The EFB airport ground chart no longer stays on Loading: it reads the map tiles first and adds the bridge's data when it arrives.",
+        "Taxiway labels no longer keep a leading Taxiway or Twy."
+      ],
+      "performance": [],
+      "ui": [
+        "The Flight Deck map runs to the top edge: the top bar is replaced by a search panel at the top left.",
+        "Map settings are grouped into Map, Weather, Aeronautical and Traffic sections.",
+        "Shared fonts, spacing and top bar across the Live, Logbook and Weather pages."
       ],
       "compatibility": [],
       "other": []
