@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-17",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.1/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.1/Stratos-Setup.exe",
+      "sha256": "7398cc96e5af34d78edc4d2988fe183f2da1a3981a4f6ab742b999bad569517a",
+      "size": 137732139
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.1/Stratos-2.4.1-mac-arm64.dmg",
+      "sha256": "0e0cdf647a1f7fb0bf05ea098c49e08634e90587e570fb9cbaef79757e9096cd",
+      "size": 163132126
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.1/Stratos-2.4.1-mac-x64.dmg",
+      "sha256": "9c4972fdd792976a7ffe0e256a8fb015f29aad6127571e0b8e7b1fae90ca2210",
+      "size": 168609889
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.1/Stratos-2.4.1-linux-x64.AppImage",
+      "sha256": "b3adb8f2cac8144a41f8da7669b2f0f64c8caf9a1b159bb266bd81c19822af0a",
+      "size": 185920143
+    }
+  },
   "summary": "Watch your flight in 3D: real 3D aircraft models, a chase camera that follows your plane, and a live Status line.",
   "reason": "",
   "releaseNotes": [
