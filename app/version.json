@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-17",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.0/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.0/Stratos-Setup.exe",
+      "sha256": "d5706cfb8488fbbc1615eb4db65bd0b1c472fc06a097fbb2b80ccd724596cf95",
+      "size": 119447610
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.0/Stratos-2.4.0-mac-arm64.dmg",
+      "sha256": "1d686c763329a69b4ebef9ca79c44585a63320f864eecc901b9c4c7acb75a2a7",
+      "size": 137549423
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.0/Stratos-2.4.0-mac-x64.dmg",
+      "sha256": "e5bba4bf1f6b3577a87311f996ef79c542573e8ea5ddcc3ff6f0ca959ee5df6c",
+      "size": 142972708
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.0/Stratos-2.4.0-linux-x64.AppImage",
+      "sha256": "bb2f76c2cbe394b5941f5e454cb5df4ab69a52afbe2c021d15457a82dbd8430b",
+      "size": 160267385
+    }
+  },
   "summary": "Charts on the map with a search bar, UAE charts, IVAO traffic, airport weather, FAA chart layers and a cleaner World map.",
   "reason": "",
   "releaseNotes": [
