@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-17",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.5/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.5/Stratos-Setup.exe",
+      "sha256": "0a54ff684d6f9006b9b9f5341006dc2d140e4cb8726c6ba88b9047c3b74da1d0",
+      "size": 119513323
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.5/Stratos-2.4.5-mac-arm64.dmg",
+      "sha256": "c9c787477e36f49a608e5a5ff03d20a8fac5f61b7f441478f8d1fa0393fc465c",
+      "size": 137622587
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.5/Stratos-2.4.5-mac-x64.dmg",
+      "sha256": "bda6ec7810959b68e1ff7a37097e8b4706aa8b68fac08626cbc5d2eecfb6a6e6",
+      "size": 143046340
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.5/Stratos-2.4.5-linux-x64.AppImage",
+      "sha256": "426d66ce2fe24ba60203aea9f7e2e3ee77ca358b89909625946124e981968b34",
+      "size": 160345052
+    }
+  },
   "summary": "A phone layout built for the cockpit: map tools in one rail, your departure and arrival charts one tap away, and a cleaner map.",
   "reason": "",
   "releaseNotes": [
