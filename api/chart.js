@@ -3,6 +3,7 @@
 //        /api/chart?source=austrocontrol&icao=LOWW&cycle=261030&pdf=LO_AD_2_LOWW_1-1_en.pdf
 //        /api/chart?source=sia-france&icao=LFPG&edition=eAIP_29_OCT_2026&pdf=AD_2_LFPG_SID_...pdf
 //        /api/chart?source=sia-france&icao=LFPG&edition=eAIP_29_OCT_2026   (aerodrome sheet)
+//        /api/chart?source=gcaa&icao=OMDB&pkg=2026-P12&pdf=OMDB-AD-2-21_2026-08.pdf
 //
 // A deliberately narrow pass-through. The only hosts, path shapes and document
 // names that can be requested are those the publishing authority actually
@@ -10,9 +11,10 @@
 //   - FAA d-TPP: U.S. Government work, public domain.
 //   - AIP Austria: CC BY 4.0, attribution shown beside the chart.
 //   - AIP France: Licence Ouverte, attribution shown beside the chart.
+//   - AIP UAE: CC BY 4.0 under the GCAA open data policy, attribution shown.
 // No other URL, header or credential is forwarded.
 
-import { EAIP_SOURCES, franceChartUrl, francePdfUrl, isEaipPdfName } from '../app/js/lib/eaip.js';
+import { EAIP_SOURCES, franceChartUrl, francePdfUrl, isEaipPdfName, uaeChartUrl } from '../app/js/lib/eaip.js';
 import { airmateDocument } from './airmate.js';
 
 const ALLOWED_FILE = /^[A-Z0-9]{1,12}\.PDF$/;
@@ -71,6 +73,15 @@ export function documentUrl(query) {
     // this edition's Cartes folder: the URL is built here, never taken from the
     // caller, so a chart cannot be fetched from another aerodrome's folder.
     const url = pdf ? franceChartUrl(provider, edition, icao, pdf) : francePdfUrl(provider, edition, icao);
+    return url ? { url, credit: provider.attribution } : null;
+  }
+  if (source === 'gcaa') {
+    // Rebuilt from a package folder, the ICAO and a file name the GCAA uses for
+    // that very airport; nothing else from the query reaches the upstream URL.
+    const icao = String(query.icao || '').trim().toUpperCase();
+    if (!ALLOWED_ICAO.test(icao)) return null;
+    const provider = EAIP_SOURCES['gcaa-uae'];
+    const url = uaeChartUrl(provider, String(query.pkg || '').trim(), icao, String(query.pdf || '').trim());
     return url ? { url, credit: provider.attribution } : null;
   }
   if (source === 'airmate') {

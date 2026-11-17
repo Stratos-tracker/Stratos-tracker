@@ -47,6 +47,18 @@ export function isHostedPage() {
   return location.protocol === 'https:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 }
 
+/**
+ * The site's own API for a path such as "/api/charts?icao=OMDB". The desktop app
+ * loads its pages from files, where a relative path reaches nothing, so it asks
+ * the deployed site (Electron allows that origin); every other page stays relative.
+ */
+export function siteApi(path) {
+  const relative = String(path || '');
+  return typeof location !== 'undefined' && location.protocol === 'file:'
+    ? `https://www.stratos-tracker.com${relative}`
+    : relative;
+}
+
 async function readJsonResponse(response) {
   const type = response.headers.get('content-type') || '';
   if (!type.includes('application/json')) {

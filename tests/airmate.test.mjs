@@ -176,7 +176,7 @@ test('airmate: the app asks the proxy by airport and document, never by URL', ()
     'a chart points at the proxy, not at Airmate');
   assert.ok(proxy.includes('return airmateDocument(icao, doc)'), 'the proxy looks the address up itself');
   assert.ok(!/airmate.*url\s*=\s*String\(query/i.test(proxy), 'no address is ever taken from the query string');
-  assert.ok(lib.includes("if (chart.url) return String(chart.url).replace("), 'the app follows the address the catalogue gives');
+  assert.ok(lib.includes("if (/^\\/api\\/chart\\?/.test(String(chart.url || ''))) return String(chart.url).replace("), 'the app follows the proxy address the catalogue gives');
   assert.ok(AIRMATE_ATTRIBUTION.includes('Airmate'), 'the credit names the publisher');
 });
 

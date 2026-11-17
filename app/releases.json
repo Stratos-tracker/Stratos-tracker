@@ -3,40 +3,60 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.3.1",
-    "releasedAt": "2026-11-16",
+    "version": "2.4.0",
+    "releasedAt": "2026-11-17",
     "severity": "normal",
-    "summary": "Stratos on Chromebook: install it from Chrome and follow your flight from the PC.",
+    "summary": "Charts on the map with a search bar, UAE charts, IVAO traffic, airport weather, FAA chart layers and a cleaner World map.",
     "changelog": {
       "features": [
-        "ChromeOS: the website explains how to install Stratos on a Chromebook from Chrome and follow your flight from the PC running the simulator."
+        "Charts on the map: a new Charts button in Map settings → Layers opens one panel with a search bar. Pick a STAR, SID or approach and it is laid over the map in the right place, with an opacity slider.",
+        "UAE charts: Dubai, Abu Dhabi, Sharjah and Al Maktoum charts from the GCAA, shown inside Stratos.",
+        "IVAO traffic: choose IVAO as the traffic source to see live IVAO pilots on the map.",
+        "Airport weather layer: every reporting station in view, coloured by flight category, with wind, visibility, ceiling and temperature as you zoom in.",
+        "US chart layers: FAA Sectional, Terminal, IFR Low and IFR High charts as map layers."
       ],
-      "improvements": [],
-      "fixes": [],
+      "improvements": [
+        "The desktop app can now open charts outside the US."
+      ],
+      "fixes": [
+        "Phone mode: the EFB dock no longer covers the app icons, Settings titles use the full width, and the Flight Plan chart card no longer hides half the map."
+      ],
       "performance": [],
-      "ui": [],
+      "ui": [
+        "The World map has a cleaner chart style in night and day: muted water, plain land, crisp coastlines, quiet borders and a light grid."
+      ],
       "compatibility": [],
       "other": []
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.3.1/Stratos-Setup.exe",
-        "sha256": "9a6555f999093c2056fc4639a51e012b1a025807be0e736041c1e3c1e07a3e9c",
-        "size": 119468247
-      },
-      "mac-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.3.1/Stratos-2.3.1-mac-x64.dmg",
-        "sha256": "30a3df52f6d36c64b1c7f019d3bacc711413d3d9e8f676a9f704387ab719e180",
-        "size": 143011013
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.3.1/Stratos-2.3.1-linux-x64.AppImage",
-        "sha256": "2766dce1baea5660f9f0971499a8cca31a1075fa8ce5285e47b918236291efa1",
-        "size": 160295783
-      }
     }
   },
   "releases": [
+    {
+      "version": "2.4.0",
+      "releasedAt": "2026-11-17",
+      "severity": "normal",
+      "summary": "Charts on the map with a search bar, UAE charts, IVAO traffic, airport weather, FAA chart layers and a cleaner World map.",
+      "changelog": {
+        "features": [
+          "Charts on the map: a new Charts button in Map settings → Layers opens one panel with a search bar. Pick a STAR, SID or approach and it is laid over the map in the right place, with an opacity slider.",
+          "UAE charts: Dubai, Abu Dhabi, Sharjah and Al Maktoum charts from the GCAA, shown inside Stratos.",
+          "IVAO traffic: choose IVAO as the traffic source to see live IVAO pilots on the map.",
+          "Airport weather layer: every reporting station in view, coloured by flight category, with wind, visibility, ceiling and temperature as you zoom in.",
+          "US chart layers: FAA Sectional, Terminal, IFR Low and IFR High charts as map layers."
+        ],
+        "improvements": [
+          "The desktop app can now open charts outside the US."
+        ],
+        "fixes": [
+          "Phone mode: the EFB dock no longer covers the app icons, Settings titles use the full width, and the Flight Plan chart card no longer hides half the map."
+        ],
+        "performance": [],
+        "ui": [
+          "The World map has a cleaner chart style in night and day: muted water, plain land, crisp coastlines, quiet borders and a light grid."
+        ],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.3.1",
       "releasedAt": "2026-11-16",
@@ -1187,51 +1207,6 @@
           "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.29/Stratos-2.1.29-linux-x64.AppImage",
           "sha256": "25b7a7da229d54f4250b9ded6c7c5ca545a400d342839c43d5110b9d8b6155e4",
           "size": 144883216
-        }
-      }
-    },
-    {
-      "version": "2.1.28",
-      "releasedAt": "2026-10-28",
-      "severity": "normal",
-      "summary": "Every operator in the EFB's airline picker now wears its own mark — 49 real logos in place of two-letter initials — with the source and licence of each one recorded in the app.",
-      "changelog": {
-        "features": [
-          "Airline appearance draws 49 operators with their own mark on the deck and in the settings preview, up from nine."
-        ],
-        "improvements": [
-          "Marks are single-tone masks, so each logo takes its airline's accent colour instead of bringing its own palette onto the deck.",
-          "The four operators with no freely licensed mark — United, China Eastern, Malaysia and Garuda — keep a designator roundel, and ATTRIBUTION.md names each one and the reason."
-        ],
-        "fixes": [
-          "Ryanair's bundled wordmark masked as a solid block; it now shows the letters.",
-          "WestJet's bundled artwork drew nothing at all; it is replaced with a mark that renders."
-        ],
-        "performance": [],
-        "ui": [],
-        "compatibility": [],
-        "other": []
-      },
-      "downloads": {
-        "windows": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.28/Stratos-Setup.exe",
-          "sha256": "32aa406f834faa3be320a9861a64ea76cfcbf2afeda4743f8f3c3397fe47709b",
-          "size": 108086794
-        },
-        "mac-arm64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.28/Stratos-2.1.28-mac-arm64.dmg",
-          "sha256": "bc1b0f8adc6fef791287c55eaffaa98186929e0950fa6f992b7a85f825ecce8f",
-          "size": 123993270
-        },
-        "mac-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.28/Stratos-2.1.28-mac-x64.dmg",
-          "sha256": "daa15b2df124aaf54644571b8fa2314e4ad5432960efa4b38f558728d92857df",
-          "size": 129266073
-        },
-        "linux-x64": {
-          "url": "https://github.com/Nyclyy/stratos-tracker/releases/download/v2.1.28/Stratos-2.1.28-linux-x64.AppImage",
-          "sha256": "700acf97fc89f4513d877c91d32b3d3e05e6029b5eda3856c46e6479e1301a1f",
-          "size": 144854815
         }
       }
     }

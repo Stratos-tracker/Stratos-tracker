@@ -663,8 +663,10 @@
   body[data-mobile-section="charts"] .efb-body [class$="-card"] { border-radius: 14px; }
   /* The EFB's own deck keeps four columns instead of shrinking to specks. */
   body[data-mobile-section="charts"] .home-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-  body[data-mobile-section="charts"] .home-stage { padding: 0 12px 90px; }
-  body[data-mobile-section="charts"] .home-dock { bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 8px); }
+  body[data-mobile-section="charts"] .home-stage { padding: 0 12px 12px; }
+  /* The dock sits in the column above the tab bar; the wallpaper still runs under it. */
+  body[data-mobile-section="charts"] .efb-home { padding-bottom: calc(var(--m-nav-h) + var(--m-safe-b)); }
+  body[data-mobile-section="charts"] .home-dock { margin-bottom: 10px; }
 
   /* ── Profile: account and settings as a settings app ─────────────── */
   body[data-mobile-section="profile"] .page {

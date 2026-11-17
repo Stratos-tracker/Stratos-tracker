@@ -518,9 +518,8 @@ body.view-plan .efb-main { background: #07080b; }
 .map-pick-row.is-ghost { justify-content: center; color: var(--efb-muted); font-size: 10.5px; }
 
 @media (max-width: 700px) {
-  /* On a phone the readout keeps the numbers a pilot is flying by and drops the
-     explanations, so it never covers the chart it is describing. */
-  .map-readout { width: 246px; padding: 8px 9px; }
-  .map-readout-row i { display: none; }
-  .map-readout-note { display: none; }
+  /* On a phone the readout keeps only its controls: even trimmed, the fact rows
+     covered half the chart they describe. */
+  .map-readout { left: 8px; bottom: 8px; width: auto; max-width: calc(100% - 64px); padding: 7px 9px; }
+  .map-readout-facts, .map-readout-note { display: none; }
 }

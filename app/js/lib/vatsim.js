@@ -125,6 +125,38 @@ export function parsePilots(feed) {
   return out;
 }
 
+/** IVAO's public tracker (api.ivao.aero/v2/tracker/whazzup) in the same pilot shape. */
+export function parseIvaoPilots(feed) {
+  const list = feed && feed.clients && Array.isArray(feed.clients.pilots) ? feed.clients.pilots : [];
+  const out = [];
+  for (const pilot of list) {
+    const track = pilot && pilot.lastTrack;
+    if (!track) continue;
+    const lat = Number(track.latitude);
+    const lon = Number(track.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) continue;
+    const callsign = String(pilot.callsign || '').toUpperCase().trim();
+    if (!callsign) continue;
+    const plan = pilot.flightPlan || {};
+    const level = /^F(\d{2,3})$/.exec(String(plan.level || ''));
+    out.push({
+      id: callsign,
+      source: 'ivao',
+      lat,
+      lon,
+      alt: Number.isFinite(Number(track.altitude)) ? Number(track.altitude) : null,
+      gs: Number.isFinite(Number(track.groundSpeed)) ? Number(track.groundSpeed) : null,
+      hdg: Number.isFinite(Number(track.heading)) ? Number(track.heading) : 0,
+      aircraft: String(plan.aircraftId || (plan.aircraft && plan.aircraft.icaoCode) || '').trim() || null,
+      dep: String(plan.departureId || '').toUpperCase() || null,
+      arr: String(plan.arrivalId || '').toUpperCase() || null,
+      cruiseFt: level ? Number(level[1]) * 100 : null,
+      route: String(plan.route || '').trim() || null,
+    });
+  }
+  return out;
+}
+
 /** Online position count and every facility seen, for the list header. */
 export function summarize(controllers) {
   const byKind = {};

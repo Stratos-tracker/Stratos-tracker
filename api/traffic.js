@@ -13,6 +13,7 @@ const ALLOWED_HOSTS = new Set([
   'api.airplanes.live',
   'opensky-network.org',
   'data.vatsim.net',
+  'api.ivao.aero',
 ]);
 
 function allowedTarget(value) {

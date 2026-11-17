@@ -63,33 +63,33 @@ code,pre{font:12px ui-monospace,Consolas,monospace;background:var(--ui2);padding
 textarea{width:100%;height:150px;box-sizing:border-box;background:var(--ui2);color:var(--txt);border:0;border-radius:6px;font:12px ui-monospace,monospace}
 html{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}textarea,input{-webkit-user-select:text;user-select:text}button{min-height:36px}
 #chart{position:absolute;inset:0;background:var(--bg);z-index:5;display:none;overflow:auto;padding:10px}#chart svg{width:100%;max-height:60vh;display:block}
-/* The plate is a chart layer, not a window: its document is drawn on the map in
-   map space, so the route and the aircraft pass over it. The sources publish no
-   corner coordinates, so the placement is the pilot's own alignment (two picked
-   reference points); before that it is drawn centred and says so. The panel is
-   reduced to its controls. */
-#plate{position:absolute;z-index:8;left:12px;bottom:92px;width:min(360px,calc(100% - 24px));display:flex;flex-direction:column;background:color-mix(in srgb,var(--surface) 94%,transparent);border:1px solid color-mix(in srgb,var(--coast) 48%,transparent);border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.5);overflow:hidden;backdrop-filter:blur(10px)}
-#plate[hidden]{display:none}
-#plate header{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:8px 10px;font:600 12px/1 system-ui,sans-serif}
-#plate header b{color:var(--txt);letter-spacing:.04em}
-#plate header .m{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--mut)}
-#plate .pl-op{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}
-#plate .pl-op input{width:96px;accent-color:var(--acc)}
-#plate .pl-acts{display:flex;gap:6px;margin-left:auto}
-#plate .pl-acts button{width:auto;padding:4px 8px;font:600 10px/1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;background:none;border:1px solid color-mix(in srgb,var(--coast) 40%,transparent);color:var(--mut);cursor:pointer}
-#plate .pl-acts button:hover{color:var(--txt);border-color:var(--acc)}
-#plate #plateX{padding:4px 6px}
-#plate .pl-pick{display:flex;align-items:center;gap:6px;padding:0 10px 8px;font:600 10px/1 system-ui,sans-serif;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}
-#plate .pl-pick select{flex:1;min-width:0;background:var(--ui2);color:var(--txt);border:1px solid color-mix(in srgb,var(--coast) 34%,transparent);border-radius:6px;padding:4px 6px;font:500 11px/1.2 system-ui,sans-serif;text-transform:none;letter-spacing:0}
-#plate .pl-pick select[hidden]{display:none}
-#plate .pl-lock{display:flex;gap:6px;padding:6px 10px 8px;border-top:1px solid color-mix(in srgb,var(--coast) 20%,transparent)}
-#plate .pl-lock button{flex:1;padding:6px 0;font:600 11px/1 system-ui,sans-serif;border-radius:6px;background:none;border:1px solid color-mix(in srgb,var(--coast) 34%,transparent);color:var(--mut);cursor:pointer}
-#plate .pl-lock button:hover{color:var(--txt);border-color:var(--acc)}
-#plate .pl-lock button[aria-pressed="true"]{color:var(--acc);border-color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,transparent)}
-#plate .pl-note{margin:0;padding:6px 10px;font:10.5px/1.35 system-ui,sans-serif;color:var(--mut);border-top:1px solid color-mix(in srgb,var(--coast) 24%,transparent)}
-#platePick{position:absolute;inset:0;z-index:9;cursor:crosshair;background:rgba(56,189,248,.03)}
-#platePick[hidden]{display:none}
-@media (max-width:767px){#plate{left:8px;right:8px;bottom:84px;width:auto}}
+/* Charts on the map: one panel with a search bar; the chart itself is drawn in
+   map space under the route and the aircraft. */
+#mc{position:absolute;z-index:8;right:72px;top:10px;width:min(340px,calc(100% - 88px));max-height:calc(100% - 120px);display:flex;flex-direction:column;background:color-mix(in srgb,var(--surface) 95%,transparent);border:1px solid color-mix(in srgb,var(--coast) 48%,transparent);border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.5);overflow:hidden}
+#mc[hidden]{display:none}
+#mc header{display:flex;align-items:center;gap:8px;padding:10px 12px 6px;font:700 13px/1 system-ui,sans-serif;color:var(--txt)}
+#mc header button{margin-left:auto;width:28px;height:28px;padding:0;border-radius:7px;background:none;border:1px solid transparent;color:var(--mut);font-size:14px;cursor:pointer}
+#mc header button:hover{color:var(--txt);border-color:color-mix(in srgb,var(--coast) 50%,transparent)}
+#mcQ{margin:0 12px 8px;padding:9px 11px;border-radius:8px;border:1px solid color-mix(in srgb,var(--coast) 55%,transparent);background:color-mix(in srgb,var(--surface) 60%,#000);color:var(--txt);font:600 13px/1.2 system-ui,sans-serif;outline:none}
+#mcQ:focus{border-color:var(--acc)}
+#mcList{flex:1;min-height:0;overflow-y:auto;padding:0 6px 6px}
+#mcList h4{margin:8px 6px 4px;font:700 10px/1 system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+#mcList button{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 8px;width:100%;padding:7px 8px;border:0;border-radius:7px;background:none;color:var(--txt);text-align:left;cursor:pointer}
+#mcList button:hover{background:color-mix(in srgb,var(--acc) 10%,transparent)}
+#mcList button[aria-current="true"]{background:color-mix(in srgb,var(--acc) 18%,transparent)}
+#mcList button i{grid-row:span 2;align-self:center;font:700 9.5px/1 system-ui,sans-serif;font-style:normal;letter-spacing:.06em;color:var(--acc);min-width:42px}
+#mcList button b{font:600 12px/1.25 system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mcList button span{font-size:10.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mcList p{margin:8px 8px;font-size:11.5px;color:var(--mut)}
+#mcNow{border-top:1px solid color-mix(in srgb,var(--coast) 40%,transparent);padding:9px 12px 11px;display:flex;flex-direction:column;gap:7px}
+#mcNow[hidden]{display:none}
+#mcNow b{font:700 12px/1.3 system-ui,sans-serif;color:var(--txt)}
+#mcMsg{font-size:11px;line-height:1.4;color:var(--mut)}
+#mcMsg a{color:var(--acc)}
+#mcNow .mc-ctl{display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--mut)}
+#mcNow .mc-ctl input{flex:1;accent-color:var(--acc)}
+#mcNow .mc-ctl button{padding:5px 9px;border-radius:6px;border:1px solid color-mix(in srgb,var(--coast) 50%,transparent);background:none;color:var(--txt);font:600 11px/1 system-ui,sans-serif;cursor:pointer}
+@media (max-width:767px){#mc{left:8px;right:8px;top:118px;width:auto;max-height:52%;z-index:60}}
 @media(max-width:420px){#tel b{font-size:13px}#tel span{font-size:10px}#sb{padding:0 12px}#q{padding:12px 0;font-size:16px}#fab{right:8px;top:8px;gap:7px}.fab{width:42px;height:42px}#res{left:8px;right:8px}#sheet{left:8px;right:8px;bottom:72px;max-height:min(48dvh,420px);padding:12px;border-radius:16px}#tabs{padding-bottom:max(7px,env(safe-area-inset-bottom));}button{padding:8px 10px}}
 :root{--acc:#2563eb}:root[data-theme=contrast]{--acc:#fde047}
 html,body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif}
@@ -563,13 +563,13 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 <div class="lay-body">
   <section class="lay-s"><h3>Map display</h3><div id="ms" class="lay-grid"></div><p class="m" id="msnote" hidden></p>
     <div class="lay-theme"><button type="button" data-theme-set="day">Day</button><button type="button" data-theme-set="night">Night</button><button type="button" data-theme-set="contrast">High contrast</button></div></section>
-  <section class="lay-s"><h3>Layers</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="trf" class="on">Traffic</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="trl">Trails</button><button type="button" data-l="grid">Grid</button><button type="button" data-l="wxrain">Rain</button><button type="button" data-l="wxwind">Wind</button><button type="button" data-l="wxturb">Turbulence</button><button type="button" data-l="wxsig">SIGMETs</button><button type="button" data-l="ifrlo">IFR Low</button><button type="button" data-l="ifrhi">IFR High</button><button type="button" data-l="atc">VATSIM ATC</button><button type="button" data-l="dn">Day / night</button></div><p class="m">Rain <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a> · wind, turbulence Open-Meteo (estimate) · SIGMETs NOAA AWC · ATC data.vatsim.net, <a href="https://github.com/vatsimnetwork/simaware-tracon-project" target="_blank" rel="noopener">SimAware TRACON Project</a> (CC BY-SA 4.0)</p></section>
+  <section class="lay-s"><h3>Layers</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="trf" class="on">Traffic</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="trl">Trails</button><button type="button" data-l="grid">Grid</button><button type="button" data-l="wxrain">Rain</button><button type="button" data-l="wxwind">Wind</button><button type="button" data-l="wxturb">Turbulence</button><button type="button" data-l="wxsig">SIGMETs</button><button type="button" data-l="wxapt">Airport weather</button><button type="button" data-l="ifrlo">IFR Low</button><button type="button" data-l="ifrhi">IFR High</button><button type="button" data-l="faavfr">US Sectional</button><button type="button" data-l="faatac">US Terminal</button><button type="button" data-l="faalo">US IFR Low</button><button type="button" data-l="faahi">US IFR High</button><button type="button" data-l="atc">VATSIM ATC</button><button type="button" data-l="dn">Day / night</button><button type="button" id="bMc" aria-expanded="false" title="Find a chart and lay it on the map">Charts</button></div><p class="m">US charts: FAA Aeronautical Information Services (public domain). Airport weather: NOAA Aviation Weather Center. Rain <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a> · wind, turbulence Open-Meteo (estimate) · SIGMETs NOAA AWC · ATC data.vatsim.net, <a href="https://github.com/vatsimnetwork/simaware-tracon-project" target="_blank" rel="noopener">SimAware TRACON Project</a> (CC BY-SA 4.0)</p></section>
   <section class="lay-s"><h3>Projection</h3><div id="pj"></div>
     <div class="lay-grid" id="t3mode"><button type="button" id="bMap3d" aria-pressed="false" title="3D globe with satellite imagery, real terrain and aircraft altitude">3D globe</button><button type="button" id="bMap3dFlat" aria-pressed="false" title="Tilted flat map with real terrain and aircraft altitude">3D flat map</button></div><label class="lay-check" for="t3low"><input type="checkbox" id="t3low"><span>Low-power 3D</span></label><p class="m">Turns off terrain and renders at 1× pixel density for slower GPUs.</p>
     <div id="gwrap" hidden><div class="lay-sub">Globe surface</div><div id="gs"></div><p class="m" id="gn"></p>
       <div class="lay-row"><button type="button" id="gReset" title="Centre the globe on the route again">Reset view</button><button type="button" id="gRead" title="Read terrain elevations around the centre">Read terrain</button></div></div>
     <p class="m">The flat map is the chart tilted over real terrain; the globe adds the Earth's curvature. Both keep the same live aircraft and route.</p></section>
-  <section class="lay-s"><h3>Traffic</h3><label class="lay-f"><span>Source</span><select id="trs" aria-label="Traffic source"><option value="vatsim">VATSIM — live pilots</option><option value="adsb">ADS-B — community feeds</option></select></label><p class="m" id="trsnote">Both sources are keyless and free.</p></section>
+  <section class="lay-s"><h3>Traffic</h3><label class="lay-f"><span>Source</span><select id="trs" aria-label="Traffic source"><option value="vatsim">VATSIM — live pilots</option><option value="adsb">ADS-B — community feeds</option><option value="ivao">IVAO — live pilots</option></select></label><p class="m" id="trsnote">Both sources are keyless and free.</p></section>
   <section class="lay-s"><h3>Procedures</h3><div id="dklay" class="lay-chips"><button type="button" data-dk-layer="sid" class="on">SID</button><button type="button" data-dk-layer="star" class="on">STAR</button><button type="button" data-dk-layer="approach" class="on">Approach</button><button type="button" data-dk-layer="missed">Missed</button></div><p class="m" id="dkproctip"></p></section>
   <section class="lay-s"><h3>Workspaces</h3><div id="mwtools"><button id="bLive" type="button">Live tracking</button><button id="bCh" type="button">Charts</button><button id="bWx" type="button">Weather</button><button id="bData" type="button">Data</button><button id="bEfb" type="button" title="Electronic flight bag">Stratos EFB</button></div>
     </section>
@@ -578,7 +578,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 
 <div id="cv"><div class="cvh"><button id="cvx" aria-label="Back">&#8592;</button><div class="cvt"><b id="cvi"></b><span id="cvn"></span><span id="cvm"></span></div><button id="cvf">Fit</button></div><div class="seg" id="cvs"></div></div><div id="ci"></div>
 <div id="chart"></div>
-<div id="plate" hidden aria-label="Chart over the map"><header><b id="plateT">Chart</b><span class="m" id="plateN"></span><label class="pl-op">Opacity<input id="plateO" type="range" min="0" max="100" value="70" aria-label="Chart opacity"></label><span class="pl-acts"><button type="button" id="plateAlign" title="Pick two runway ends on the chart and the same thresholds on the map">Align</button><button type="button" id="plateClear" title="Forget this chart's alignment">Clear</button><button type="button" id="plateX" aria-label="Close the chart">&#10005;</button></span></header><label class="pl-op" style="padding:0 10px 8px"><input id="plateShow" type="checkbox" checked aria-label="Show the chart on the map">Show</label><label class="pl-pick"><span>Chart</span><select id="plateSel" aria-label="Chart to show over the map"></select></label><div class="pl-lock"><button type="button" id="plateLock" aria-pressed="false" title="Unlock to drag the chart over the map">&#128274; Locked</button></div><label class="pl-op" style="padding:0 10px 8px">Turn<input id="plateTurn" type="range" min="-180" max="180" step="0.5" value="0" aria-label="Turn the chart clockwise"></label><label class="pl-op" style="padding:0 10px 8px">Size<input id="plateSize" type="range" min="1" max="400" step="1" value="100" aria-label="Chart size as a percentage"></label><p class="pl-note" id="plateHint">Loading the published chart…</p></div><div id="platePick" hidden aria-label="Pick an alignment point"></div>
+<div id="mc" hidden role="dialog" aria-label="Charts on the map"><header>Charts on map<button type="button" id="mcX" aria-label="Close the charts panel">&#10005;</button></header><input id="mcQ" type="search" autocomplete="off" spellcheck="false" placeholder="Search: OMDB, OMDB STAR, EHAM ILS 18R" aria-label="Search charts"><div id="mcList"></div><div id="mcNow" hidden><b id="mcName"></b><span id="mcMsg"></span><div class="mc-ctl"><label for="mcO">Opacity</label><input id="mcO" type="range" min="10" max="100" value="80"><button type="button" id="mcHide">Hide</button><button type="button" id="mcOff">Remove</button></div></div></div>
 <div id="sheet" class="box"></div>
 <div id="tel" class="box" aria-label="Live flight telemetry">
 <div class="tel-main">
@@ -833,7 +833,7 @@ const RL={KSFO:[11870,8650],KOAK:[10520],KSJC:[11000],KSAC:[8600],KRNO:[11002],K
 function pairs(a){const o=[];a.rw.forEach(n=>{if(!o.some(p=>p[0]==n||p[1]==n))o.push([n,(n+17)%36+1])});return o}
 function liveOk(){return live.on&&live.d&&live.d.lat!=null&&live.d.age<3&&performance.now()-live.at<3000}
 const cv=$('#map'),cx=cv.getContext('2d');let W,H,dpr,C={};
-const V={lon:-119.5,lat:38.8,z:6,fol:false,mode:'plane',gz:1,gs:'vector'},L={apt:1,nav:1,trf:1,grid:0,rte:1,procSid:1,procStar:1,procApproach:1,procMissed:0,wxrain:0,wxwind:0,wxturb:0,wxsig:0,ifrlo:0,ifrhi:0,atc:0,dn:0,style:(function(){try{const s=localStorage.getItem('dl.style')||'sat';return MS[s]?s:'sat'}catch(e){return'sat'}})()};
+const V={lon:-119.5,lat:38.8,z:6,fol:false,mode:'plane',gz:1,gs:'vector'},L={apt:1,nav:1,trf:1,grid:0,rte:1,procSid:1,procStar:1,procApproach:1,procMissed:0,wxrain:0,wxwind:0,wxturb:0,wxsig:0,ifrlo:0,ifrhi:0,atc:0,dn:0,wxapt:0,faavfr:0,faatac:0,faalo:0,faahi:0,style:(function(){try{const s=localStorage.getItem('dl.style')||'sat';return MS[s]?s:'sat'}catch(e){return'sat'}})()};
 let plan=false,panel=null,sel=null,route=[],trav=0,own={lat:0,lon:0,hdg:0,alt:0,vs:0};
 const MAP_DEFAULTS={color:'#fbbf24',size:1.35,halo:false,trail:true,trailWidth:1};
 function readMapPrefs(){try{const raw=JSON.parse(localStorage.getItem('stratos.mapSettings')||'null')||{};const col=typeof raw.color==='string'&&/^#[0-9a-f]{6}$/i.test(raw.color.trim())?raw.color.trim():MAP_DEFAULTS.color;const size=Number(raw.size);const width=Number(raw.trailWidth);return{color:col,size:Number.isFinite(size)?Math.min(2,Math.max(.7,size)):MAP_DEFAULTS.size,halo:typeof raw.halo==='boolean'?raw.halo:MAP_DEFAULTS.halo,trail:typeof raw.trail==='boolean'?raw.trail:MAP_DEFAULTS.trail,trailWidth:Number.isFinite(width)?Math.min(2,Math.max(.5,width)):MAP_DEFAULTS.trailWidth}}catch(_){return{...MAP_DEFAULTS}}}
@@ -1330,6 +1330,7 @@ function refreshRoute(fit){
   trav=0;
   if(fit&&route.length>1)fitRoute();
   if(panel=='route')render();
+  if(typeof mcRefreshRoute==='function')mcRefreshRoute();
 }
 addEventListener('storage',e=>{if(!e.key||e.key=='stratos.activeRoute'||e.key=='dl.route')refreshRoute(false)});
 addEventListener('focus',()=>refreshRoute(true));
@@ -1352,14 +1353,14 @@ const tl=wpx(V.lon,V.lat);
 if(L.grid&&V.z<12&&!CH.on&&V.mode!=='globe'){const s=V.z<4?10:V.z<5.5?5:V.z<7?2:V.z<8.5?1:V.z<10?.5:.1,a=wun(tl[0]-W/2,tl[1]-H/2),b=wun(tl[0]+W/2,tl[1]+H/2);cx.strokeStyle=C.grid;cx.lineWidth=1;cx.fillStyle=C.coast;cx.font='10px sans-serif';cx.beginPath();
 for(let o=Math.ceil(a[0]/s)*s;o<b[0];o+=s){const x=sc(o,0)[0];cx.moveTo(x,0);cx.lineTo(x,H);cx.fillText(o.toFixed(s<1?1:0)+'°',x+2,H-100)}
 for(let t=Math.ceil(b[1]/s)*s;t<a[1];t+=s){const y=sc(0,t)[1];cx.moveTo(0,y);cx.lineTo(W,y);cx.fillText(t.toFixed(s<1?1:0)+'°',4,y-2)}cx.stroke()}
-if(L.atc&&!CH.on)atcTick();drawWeather();drawDayNight();
+if(L.atc&&!CH.on)atcTick();drawFaaCharts();drawWeather();drawDayNight();drawAirportWx();
 const ppn=lat=>SZ*2**V.z/360/(60*Math.cos(lat*R));MKL.length=0;
 if(L.nav&&!CH.on)N.forEach(n=>{const q=vis(n.lon,n.lat);if(!q||lblZ()<6)return;const[x,y]=q;if(x<-20||x>W+20||y<-20||y>H+20)return;const t=String(n.type||'').toUpperCase(),kind=/NDB/.test(t)?'ndb':/VOR|TACAN|DME/.test(t)?'vor':'int';mkDraw(kind,x,y,mkRz()*.8);if(lblZ()>5.5)mkText(n.id,x+Math.round(mkRz()*.55)-4,y+4,mkColor(kind),11,false)});
 if(L.apt&&clusterAirports()){}else if(L.apt)A.forEach(a=>{if(CH.on&&a!==CH.a)return;const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;if(a.x&&lblZ()<6)return;const mg=lblZ()>10?4000:60;if(x<-mg||x>W+mg||y<-mg||y>H+mg)return;
 if(V.mode!=='globe'&&V.z>8.5)drawReal(a,x,y);else a.det=false;if(0)pairs(a).forEach(pr=>{const n=pr[0],h=n*10,p=ppn(a.lat)*1.4,dx=Math.sin(h*R)*p,dy=-Math.cos(h*R)*p;cx.strokeStyle=C.ap;cx.lineWidth=Math.max(3,p/9);cx.lineCap='butt';cx.beginPath();cx.moveTo(x-dx,y-dy);cx.lineTo(x+dx,y+dy);cx.stroke()});
 if(a.det){}else if(V.mode!=='globe'&&V.z>8.5){cx.beginPath();cx.arc(x,y,3,0,7);cx.fillStyle=C.land;cx.fill();cx.strokeStyle=C.ap;cx.lineWidth=2.2;cx.stroke()}else mkRing(x,y,mkRz()*.9,mkColor('apt'),1);
 if(lblZ()>(a.x?7:4.8)&&x>-40&&x<W+40&&y>-40&&y<H+40&&!(L.rte&&planTocTod().ids.has(String(a.id).toUpperCase())))mkText(a.id,x+Math.round(mkRz()*.62)-3,y-6,SAT()?(DKM()?'#fff':'#111'):C.txt,12.5,true)});
-drawPlate();drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.strokeStyle=C.route;cx.lineCap='round';cx.lineJoin='round';if(sp.flown.length>1){cx.globalAlpha=.34;cx.lineWidth=12;drawPlanLine(sp.flown)}if(sp.ahead.length>1){cx.globalAlpha=.62;cx.lineWidth=12;drawPlanLine(sp.ahead)}cx.restore()
+drawMapChart();drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.strokeStyle=C.route;cx.lineCap='round';cx.lineJoin='round';if(sp.flown.length>1){cx.globalAlpha=.34;cx.lineWidth=12;drawPlanLine(sp.flown)}if(sp.ahead.length>1){cx.globalAlpha=.62;cx.lineWidth=12;drawPlanLine(sp.ahead)}cx.restore()
 drawProcedureRouteLine();drawRouteMarkers();}
 trails();if(L.trf&&!CH.on)T.forEach(a=>{const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;drawAircraft(a.type,x,y,a.hdg,C.trf,32);if(lblZ()>6&&x>-40&&x<W+40&&y>-20&&y<H+20)mkText(a.id+(a.type?' '+a.type:'')+' '+Math.round(a.alt/100),x+4,y+4,C.trf,10,false)});
 if(L.atc&&!CH.on){drawTracon();drawAtc()}if(liveOk()){const q=vis(own.lon,own.lat);if(q){const[x,y]=q;if(MP.halo){cx.beginPath();cx.arc(x,y,19+6*MP.size,0,7);cx.strokeStyle=MP.color;cx.globalAlpha=.32;cx.lineWidth=1.5;cx.stroke();cx.globalAlpha=1}drawAircraft(live.d?.type||live.d?.aircraft||live.d?.aircraftType,x,y,(own.trk!=null&&(own.gs||live.d?.gs)>20)?own.trk:own.hdg,MP.color,42*MP.size)}}
@@ -1954,18 +1955,18 @@ document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{L[b.dataset.l]^=
 /* Traffic source. VATSIM publishes a keyless feed of its live pilots, and the
    community ADS-B mirrors need no key either, so these are the only two
    sources the picker offers. */
-let TRS=(()=>{try{const v=localStorage.getItem('stratos.trafficSource');return v=='adsb'?'adsb':'vatsim'}catch(_){return'vatsim'}})();
-const TR_LABEL={vatsim:'VATSIM',adsb:'ADS-B'};
+let TRS=(()=>{try{const v=localStorage.getItem('stratos.trafficSource');return v=='adsb'||v=='ivao'?v:'vatsim'}catch(_){return'vatsim'}})();
+const TR_LABEL={vatsim:'VATSIM',adsb:'ADS-B',ivao:'IVAO'};
 function trsLabel(){return TR_LABEL[TRS]||TRS}
 function applyTrafficSource(next,save){
-  TRS=next=='adsb'?'adsb':'vatsim';
+  TRS=next=='adsb'||next=='ivao'?next:'vatsim';
   if(save){try{localStorage.setItem('stratos.trafficSource',TRS)}catch(_){}}
   T.length=0;WT.n=0;WT.fail=0;WT.src='';
   const el=document.getElementById('trs');if(el&&el.value!=TRS)el.value=TRS;
-  if(TRS=='vatsim'){
+  if(TRS!='adsb'){
     startVatsimTraffic();
     // A cached feed is applied at once; otherwise the 15 s timer is the first fetch.
-    if(vatsimFeed&&!vatsimFeed.error&&Date.now()-vatsimAt<VATSIM_TTL)vatsimTraffic();else loadVatsim().then(vatsimTraffic);
+    if(netFeed()&&!netFeed().error&&Date.now()-netAt()<VATSIM_TTL)vatsimTraffic();else loadNet().then(vatsimTraffic);
   } else wtPoll();
   const t=wtTxt();if(panel=='live'||panel=='sel')render();
   const st=document.getElementById('st');if(st&&!liveOk()&&!deskStatus)st.textContent=t;
@@ -2128,7 +2129,7 @@ function procAt(x,y){
   }
   return best
 }
-function selectTrafficById(key){const want=String(key==null?'':key).toLowerCase();if(!want)return false;const best=T.find(a=>a&&a.k=='trf'&&(String(a.hx||'').toLowerCase()==want||String(a.id||'').toLowerCase()==want));if(!best)return false;sel=best;best._trackAt=Date.now();tk=true;trafficBackfill(best);if(best.source=='vatsim')loadVatsim().then(vatsimTraffic);panel=null;render();fCard();if(viewT3)t3Sync(true);return true}
+function selectTrafficById(key){const want=String(key==null?'':key).toLowerCase();if(!want)return false;const best=T.find(a=>a&&a.k=='trf'&&(String(a.hx||'').toLowerCase()==want||String(a.id||'').toLowerCase()==want));if(!best)return false;sel=best;best._trackAt=Date.now();tk=true;trafficBackfill(best);if(best.source=='vatsim'||best.source=='ivao')loadNet().then(vatsimTraffic);panel=null;render();fCard();if(viewT3)t3Sync(true);return true}
 function tap(x,y){if(CH.on)return;const rect=cv.getBoundingClientRect();
 if(route.length&&L.rte){const wi=wpAt(x,y);if(wi>=0){wpIdx=wi;openRouteCard({kind:'wp',index:wi},x,y);return}const pc=procAt(x,y);if(pc){wpIdx=null;openRouteCard(pc,x,y);return}const li=legAt(x,y);if(li>=0){wpIdx=li;openRouteCard({kind:'leg',index:li},x,y);return}}
 closeRouteCard();wpIdx=null;sel=null;
@@ -2287,7 +2288,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&layOpen())setLay(fa
 /* The pilots' layers survive a reload, like every other map setting. */
 const LKEY='stratos.mapLayers';
 (function restoreLayers(){
-  try{const s=JSON.parse(localStorage.getItem(LKEY)||'null');if(s&&typeof s==='object')for(const k of ['apt','nav','trf','trl','rte','grid','wxrain','wxwind','wxturb','wxsig','ifrlo','ifrhi','atc','dn'])if(typeof s[k]==='boolean')L[k]=s[k]?1:0}catch(_){}
+  try{const s=JSON.parse(localStorage.getItem(LKEY)||'null');if(s&&typeof s==='object')for(const k of ['apt','nav','trf','trl','rte','grid','wxrain','wxwind','wxturb','wxsig','ifrlo','ifrhi','atc','dn','wxapt','faavfr','faatac','faalo','faahi'])if(typeof s[k]==='boolean')L[k]=s[k]?1:0}catch(_){}
   document.querySelectorAll('[data-l]').forEach(b=>b.classList.toggle('on',!!L[b.dataset.l]))
   turbLegendToggle()
 })();
@@ -2297,7 +2298,7 @@ document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{L[b.dataset.l]^=
   // IFR Low and IFR High are two views of one chart: one at a time.
   const other={ifrlo:'ifrhi',ifrhi:'ifrlo'}[b.dataset.l];if(other&&L[b.dataset.l]){L[other]=0;const ob=document.querySelector('[data-l="'+other+'"]');if(ob)ob.classList.remove('on');IFR.key=''}
   b.classList.toggle('on',!!L[b.dataset.l]);turbLegendToggle();
-  try{localStorage.setItem(LKEY,JSON.stringify({apt:!!L.apt,nav:!!L.nav,trf:!!L.trf,trl:!!L.trl,rte:!!L.rte,grid:!!L.grid,wxrain:!!L.wxrain,wxwind:!!L.wxwind,wxturb:!!L.wxturb,wxsig:!!L.wxsig,ifrlo:!!L.ifrlo,ifrhi:!!L.ifrhi,atc:!!L.atc,dn:!!L.dn}))}catch(_){}
+  try{localStorage.setItem(LKEY,JSON.stringify({apt:!!L.apt,nav:!!L.nav,trf:!!L.trf,trl:!!L.trl,rte:!!L.rte,grid:!!L.grid,wxrain:!!L.wxrain,wxwind:!!L.wxwind,wxturb:!!L.wxturb,wxsig:!!L.wxsig,ifrlo:!!L.ifrlo,ifrhi:!!L.ifrhi,atc:!!L.atc,dn:!!L.dn,wxapt:!!L.wxapt,faavfr:!!L.faavfr,faatac:!!L.faatac,faalo:!!L.faalo,faahi:!!L.faahi}))}catch(_){}
   render()});
 /* Quick regions: a place and the scale it reads at, nothing else. */
 const REGIONS=[['World',18,-12,2.2],['Europe',50,10,4.4],['North America',39,-98,3.7],['South America',-16,-60,3.5],['Africa',4,20,3.3],['Middle East',27,45,4.1],['Asia',34,100,3.3],['Oceania',-25,141,3.5]];
@@ -2365,9 +2366,13 @@ const WSHORT={'United States of America':'United States',"People's Republic of C
 function buildWorld(g){
   g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W+WM*2,H+WM*2);g.translate(WM,WM);
   const night=document.documentElement.dataset.theme!=='day';
-  const landC=night?'#16212c':C.land,coastC=night?'rgba(122,160,200,.34)':C.coast;
-  g.fillStyle=C.bg;g.fillRect(-WM,-WM,W+WM*2,H+WM*2);
-  const labelBg=C.ui||C.bg, M=WM+40;
+  /* An aeronautical world chart: desaturated water, neutral land, a crisp
+     coastline, quiet borders and a faint graticule on the water only. */
+  const P=night
+    ?{sea:'#0b1520',land:'#1b2631',coast:'rgba(132,176,214,.62)',border:'rgba(160,176,196,.26)',grid:'rgba(140,175,210,.09)',sea_t:'rgba(120,160,200,.55)',label:'rgba(214,224,236,.62)'}
+    :{sea:'#cddfeb',land:'#f4f2ed',coast:'#7e9bb2',border:'#c7c0b3',grid:'rgba(70,110,150,.14)',sea_t:'rgba(60,100,140,.62)',label:'rgba(51,65,85,.78)'};
+  g.fillStyle=P.sea;g.fillRect(-WM,-WM,W+WM*2,H+WM*2);
+  const labelBg=P.sea, M=WM+40;
   /* Heaviest outlines first so a dropped label is never a big country's. */  const order=WD.countries.slice().sort((a,b)=>(a.k||8)-(b.k||8));
   /* A coastline that crosses the date line arrives as 179° followed by -179°.
      Projected as it comes, the closing line sweeps the whole chart and paints
@@ -2387,6 +2392,14 @@ function buildWorld(g){
     if(pts.length){const mean=pts.reduce((s,p)=>s+p[0],0)/pts.length,shift=Math.round((V.lon-mean)/360)*360;for(const p of pts)p[0]+=shift}
     return pts.map(p=>projectWorld(p[0],p[1]))
   });
+  /* Graticule, every 10° (5° once zoomed in), under the land so it reads on the water. */
+  const step=V.z>=5?5:10;
+  g.strokeStyle=P.grid;g.lineWidth=1;g.beginPath();
+  const lonA=Math.floor((V.lon-200)/step)*step,lonB=Math.ceil((V.lon+200)/step)*step;
+  for(let lon=lonA;lon<=lonB;lon+=step){const a=projectWorld(lon,84),b=projectWorld(lon,-84);if(a[0]<-M||a[0]>W+M)continue;g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1])}
+  for(let lat=-80;lat<=80;lat+=step){const a=projectWorld(V.lon-200,lat),b=projectWorld(V.lon+200,lat);if(a[1]<-M||a[1]>H+M)continue;g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1])}
+  g.stroke();
+  const shapes=[];
   for(const co of order){
     const rings=ringsOf(co);
     let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
@@ -2396,14 +2409,20 @@ function buildWorld(g){
     if(x1<-M||x0>W+M||y1<-M||y0>H+M)continue;
     const k0=Math.ceil((-M-x1)/worldPx),k1=Math.floor((W+M-x0)/worldPx);
     for(let k=k0;k<=k1;k++){
-      g.beginPath();
+      const path=new Path2D();
       for(const ring of rings){
-        for(let i=0;i<ring.length;i++){const [x,y]=ring[i];i?g.lineTo(x+k*worldPx,y):g.moveTo(x+k*worldPx,y)}
-        g.closePath()
+        for(let i=0;i<ring.length;i++){const [x,y]=ring[i];i?path.lineTo(x+k*worldPx,y):path.moveTo(x+k*worldPx,y)}
+        path.closePath()
       }
-      g.fillStyle=landC;g.fill();g.strokeStyle=coastC;g.lineWidth=1;g.stroke()
+      shapes.push(path)
     }
   }
+  /* Coastline: each outline stroked wide, then the land filled over it, so only
+     the seaward half survives; shared borders are buried and drawn thin last. */
+  g.lineJoin='round';
+  g.strokeStyle=P.coast;g.lineWidth=2.2;for(const path of shapes)g.stroke(path);
+  g.fillStyle=P.land;for(const path of shapes)g.fill(path);
+  g.strokeStyle=P.border;g.lineWidth=.8;for(const path of shapes)g.stroke(path);
   const taken=[];
   const fits=(x,y,w,h)=>!taken.some(r=>x<r[2]&&x+w>r[0]&&y<r[3]&&y+h>r[1]);
   const wrap=(text,max)=>{const bits=String(text).split(' '),lines=[];let line='';for(const bit of bits){const next=line?line+' '+bit:bit;if(line&&g.measureText(next).width>max){lines.push(line);line=bit}else line=next}if(line)lines.push(line);return lines.slice(0,3)};
@@ -2434,11 +2453,11 @@ function buildWorld(g){
     if(zo<6.4)for(const o of WD.oceans){
       if(o.r>0&&zo<4.4)continue;
       const pt=sc(o.x,o.y);
-      place(o.n,pt[0],pt[1],{size:o.r>0?11:13,color:C.mut,italic:true,serif:true,track:.3})
+      place(o.n,pt[0],pt[1],{size:o.r>0?11:13,color:P.sea_t,italic:true,serif:true,track:.6})
     }
     if(zo<5.4)for(const c of WD.continents){
       const pt=sc(c.x,c.y);
-      place(c.n.toUpperCase(),pt[0],pt[1],{size:Math.max(11,Math.min(19,11+(5.4-zo)*2.4)),color:C.mut,track:2,weight:700})
+      place(c.n.toUpperCase(),pt[0],pt[1],{size:Math.max(11,Math.min(19,11+(5.4-zo)*2.4)),color:P.label,track:3,weight:700})
     }
     for(const co of order){
       const k=co.k||8,limit=zo>=5?99:zo>=3.6?5:zo>=2.9?3:2;
@@ -2447,7 +2466,8 @@ function buildWorld(g){
       /* Country names grow with the zoom: 10.5 px reads on a world view, but by
          the time one country fills the screen it would be unreadably small. */
       const size=zo<4.6?10.5:Math.min(18,10.5+(zo-4.6)*1.15);
-      place(WSHORT[co.n]||co.n,pt[0],pt[1],{size,color:zo>=5?C.txt:C.mut,weight:500,maxWidth:Math.max(88,size*9)})
+      // Spaced capitals, the way a chart names a state.
+      place((WSHORT[co.n]||co.n).toUpperCase(),pt[0],pt[1],{size:size*.86,color:P.label,weight:600,track:1.4,maxWidth:Math.max(96,size*10)})
     }
   }
 }
@@ -2541,8 +2561,8 @@ function wxFetch(){
     WX.grid=U.parseGrid(data,pts,level,box,cols,rows);WX.key=key;WX.at=Date.now();WX.err=''
   }).catch(e=>{WX.err=e.message||'unavailable';WX.failAt=Date.now();WX.key=key;WX.at=Date.now()}).finally(()=>{WX.busy=false;updateWxLegend();render()})
 }
-function wxNotice(text){
-  cx.save();cx.font='11px system-ui,sans-serif';cx.fillStyle='rgba(226,232,240,.76)';cx.fillText(text,12,22);cx.restore()
+function wxNotice(text,row=0){
+  cx.save();cx.font='11px system-ui,sans-serif';cx.fillStyle='rgba(226,232,240,.76)';cx.fillText(text,12,22+row*15);cx.restore()
 }
 function radarFetch(){
   if(!L.wxrain||RADAR.busy||Date.now()-RADAR.at<600000)return;
@@ -2572,6 +2592,72 @@ function drawRadar(){
     if(t.ok)cx.drawImage(t.i,x*s-c[0]+W/2,y*s-c[1]+H/2,s+.5,s+.5)
   }
   cx.restore();return true
+}
+/* ── FAA charts (US) ───────────────────────────────────────────────────
+   The FAA's own raster charts, public domain, as tiles from its map service:
+   each service publishes a fixed zoom range, so the map asks for the nearest
+   level it has and stretches it, and asks the pilot to zoom in below it. */
+const FAA_TILE_BASE='https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/';
+const FAA_CHARTS={faavfr:['VFR_Sectional',8,12,'US Sectional'],faatac:['VFR_Terminal',10,12,'US Terminal'],faalo:['IFR_AreaLow',7,12,'US IFR Low'],faahi:['IFR_High',5,9,'US IFR High']};
+const FAATILE=new Map();
+function faaTile(url){
+  let t=FAATILE.get(url);
+  if(!t){t={i:new Image(),ok:false};t.i.onload=()=>{t.ok=true;draw()};t.i.src=url;FAATILE.set(url,t);if(FAATILE.size>800)FAATILE.delete(FAATILE.keys().next().value)}
+  return t
+}
+function drawFaaCharts(){
+  if(V.mode==='globe')return;
+  for(const [key,[service,min,max,label]] of Object.entries(FAA_CHARTS)){
+    if(!L[key])continue;
+    if(V.z<min-.5){wxNotice('Zoom in to see '+label,1);continue}
+    const z=Math.max(min,Math.min(max,Math.round(V.z))),s=256*2**(V.z-z),c=wpx(V.lon,V.lat),n=2**z;
+    const x0=Math.max(0,Math.floor((c[0]-W/2)/s)),x1=Math.min(n-1,Math.floor((c[0]+W/2)/s));
+    const y0=Math.max(0,Math.floor((c[1]-H/2)/s)),y1=Math.min(n-1,Math.floor((c[1]+H/2)/s));
+    cx.save();cx.imageSmoothingEnabled=true;
+    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+      const t=faaTile(FAA_TILE_BASE+service+'/MapServer/tile/'+z+'/'+y+'/'+x);
+      if(t.ok)cx.drawImage(t.i,x*s-c[0]+W/2,y*s-c[1]+H/2,s+.5,s+.5)
+    }
+    cx.restore()
+  }
+}
+/* ── Airport weather ───────────────────────────────────────────────────
+   Every reporting station in view (NOAA Aviation Weather Center), coloured by
+   its flight category, with its wind, and visibility, ceiling and
+   temperature once zoomed in. Nothing is drawn for a station that reports none. */
+const WXAPT={stations:[],key:'',at:0,busy:false,err:''};
+const WXAPT_INK={VFR:'#22c55e',MVFR:'#3b82f6',IFR:'#ef4444',LIFR:'#d946ef'};
+function wxAptFetch(box){
+  const key=box.join(',');
+  if(WXAPT.busy||(key===WXAPT.key&&Date.now()-WXAPT.at<300000))return;
+  WXAPT.busy=true;WXAPT.key=key;
+  // The desktop app loads from files: it asks the site, which it is allowed to reach.
+  fetch((location.protocol==='file:'?'https://www.stratos-tracker.com':'')+'/api/weather?type=metars&bbox='+key,{cache:'no-store'})
+    .then(r=>r.ok?r.json():Promise.reject(new Error('HTTP '+r.status)))
+    .then(j=>{WXAPT.stations=Array.isArray(j.stations)?j.stations:[];WXAPT.err=''})
+    .catch(e=>{WXAPT.err=e.message||'unavailable'})
+    .finally(()=>{WXAPT.at=Date.now();WXAPT.busy=false;draw()})
+}
+function drawAirportWx(){
+  if(!L.wxapt||V.mode==='globe')return;
+  const c=wpx(V.lon,V.lat),a=wun(c[0]-W/2,c[1]-H/2),b=wun(c[0]+W/2,c[1]+H/2);
+  const box=[Math.max(-90,Math.floor(b[1])),Math.max(-180,Math.floor(a[0])),Math.min(90,Math.ceil(a[1])),Math.min(180,Math.ceil(b[0]))];
+  if(box[2]-box[0]>30||box[3]-box[1]>30){wxNotice('Zoom in to see airport weather',2);return}
+  wxAptFetch(box);
+  if(WXAPT.err&&!WXAPT.stations.length){wxNotice('Airport weather unavailable',2);return}
+  cx.save();cx.font='600 10px system-ui,sans-serif';cx.textBaseline='middle';cx.lineJoin='round';
+  for(const st of WXAPT.stations){
+    const q=vis(st.lon,st.lat);if(!q)continue;const[x,y]=q;
+    if(x<-30||y<-30||x>W+30||y>H+30)continue;
+    cx.fillStyle=WXAPT_INK[st.cat]||'#94a3b8';cx.strokeStyle='rgba(0,0,0,.65)';cx.lineWidth=1.5;
+    cx.beginPath();cx.arc(x,y,V.z>=7?5:3.5,0,7);cx.fill();cx.stroke();
+    if(V.z<7)continue;
+    const wind=st.wspd==null?'':(typeof st.wdir==='number'?String(st.wdir).padStart(3,'0'):'VRB')+'/'+st.wspd+(st.wgst?'G'+st.wgst:'')+'KT';
+    const lines=[st.icao+(st.cat?' '+st.cat:''),wind];
+    if(V.z>=8)lines.push([st.visib!=null?'VIS '+st.visib+' SM':'',st.ceiling!=null?'CIG '+st.ceiling:'',st.temp!=null?st.temp+'/'+(st.dewp??'–')+'°C':''].filter(Boolean).join(' · '));
+    lines.filter(Boolean).forEach((text,i)=>{const ty=y-4+i*12;cx.strokeStyle='rgba(5,10,16,.85)';cx.lineWidth=3;cx.strokeText(text,x+9,ty);cx.fillStyle=i?'#cbd5e1':'#f1f5f9';cx.fillText(text,x+9,ty)});
+  }
+  cx.restore()
 }
 /* A model field painted under the chart: one texel per ~3 screen pixels,
    sampled bilinearly from the grid and placed through the map's own
@@ -2960,11 +3046,18 @@ function routeProg(){let best=1e9,acc=0,at=0;for(let i=0;i<route.length-1;i++){c
 const VATSIM_URL='https://data.vatsim.net/v3/vatsim-data.json',VATSIM_TTL=15000;
 let vatsimFeed=null,vatsimAt=0;
 async function loadVatsim(){if(vatsimFeed&&Date.now()-vatsimAt<VATSIM_TTL)return vatsimFeed;try{const r=await fetch(location.protocol=='https:'?'/api/traffic?url='+encodeURIComponent(VATSIM_URL):VATSIM_URL);if(!r.ok)throw new Error('HTTP '+r.status);vatsimFeed=await r.json();vatsimAt=Date.now();return vatsimFeed}catch(e){vatsimFeed={error:e.message||'unreachable'};vatsimAt=Date.now();return vatsimFeed}}
-/* VATSIM pilots go into the same traffic list the map already draws, marked by source. */
+/* IVAO's public tracker, polled the same way. VATSIM keeps its own feed for the ATC layer. */
+const IVAO_URL='https://api.ivao.aero/v2/tracker/whazzup';
+let ivaoFeed=null,ivaoAt=0;
+async function loadIvao(){if(ivaoFeed&&Date.now()-ivaoAt<VATSIM_TTL)return ivaoFeed;try{const r=await fetch(location.protocol=='https:'?'/api/traffic?url='+encodeURIComponent(IVAO_URL):IVAO_URL);if(!r.ok)throw new Error('HTTP '+r.status);ivaoFeed=await r.json();ivaoAt=Date.now();return ivaoFeed}catch(e){ivaoFeed={error:e.message||'unreachable'};ivaoAt=Date.now();return ivaoFeed}}
+function netFeed(){return TRS=='ivao'?ivaoFeed:vatsimFeed}
+function netAt(){return TRS=='ivao'?ivaoAt:vatsimAt}
+function loadNet(){return TRS=='ivao'?loadIvao():loadVatsim()}
+/* Network pilots go into the same traffic list the map already draws, marked by source. */
 let vatsimTimer=null;
 /* The VATSIM parser is a module, so it is not on window yet while this classic
    script runs. A tick that arrives first waits for it instead of throwing. */
-function startVatsimTraffic(){if(vatsimTimer)return;const tick=()=>{if(TRS!='vatsim')return;if(!window.VATSIM){setTimeout(tick,200);return}loadVatsim().then(vatsimTraffic)};tick();vatsimTimer=setInterval(tick,VATSIM_TTL)}
+function startVatsimTraffic(){if(vatsimTimer)return;const tick=()=>{if(TRS=='adsb')return;if(!window.VATSIM){setTimeout(tick,200);return}loadNet().then(vatsimTraffic)};tick();vatsimTimer=setInterval(tick,VATSIM_TTL)}
 /* Only pilots in or just outside the view are kept, so the map stays readable
    and the badge counts what is actually on screen. The next poll fills in the
    view after a pan; nothing is invented for gaps. */
@@ -2999,22 +3092,23 @@ function trafficBackfill(o){
    objects are updated in place so an open card, a selection and its trail
    survive the refresh instead of being replaced by new objects. */
 function vatsimTraffic(){
-  if(TRS!='vatsim'||!vatsimFeed||vatsimFeed.error||!window.VATSIM){WT.n=T.length;return}
-  const pilots=window.VATSIM.parsePilots(vatsimFeed);const pad=.75,inView=p=>{if(!W||!H)return true;const q=vis(p.lon,p.lat);if(!q)return false;const[x,y]=q;return x>=-W*pad&&x<=W*(1+pad)&&y>=-H*pad&&y<=H*(1+pad)};
+  const src=TRS,feed=netFeed();
+  if(src=='adsb'||!feed||feed.error||!window.VATSIM){WT.n=T.length;return}
+  const pilots=src=='ivao'?window.VATSIM.parseIvaoPilots(feed):window.VATSIM.parsePilots(feed);const pad=.75,inView=p=>{if(!W||!H)return true;const q=vis(p.lon,p.lat);if(!q)return false;const[x,y]=q;return x>=-W*pad&&x<=W*(1+pad)&&y>=-H*pad&&y<=H*(1+pad)};
   const seen=new Map();
   pilots.filter(inView).forEach(p=>{trlAdd(p.id,p.lat,p.lon,p.alt,400);seen.set(p.id,p)});
-  const known=new Map();T.forEach(a=>{if(a.source=='vatsim')known.set(a.id,a)});
+  const known=new Map();T.forEach(a=>{if(a.source==src)known.set(a.id,a)});
   const out=[];
   seen.forEach((p,id)=>{
-    const a=known.get(id)||{k:'trf',source:'vatsim'};
-    Object.assign(a,{seen:vatsimAt,id,lat:p.lat,lon:p.lon,alt:p.alt==null?0:p.alt,altKnown:p.alt!=null,gs:p.gs==null?0:p.gs,gsKnown:p.gs!=null,hdg:p.hdg,hx:id,type:p.aircraft,dep:p.dep||'',arr:p.arr||'',cruiseFt:p.cruiseFt||null,route:p.route||''});
+    const a=known.get(id)||{k:'trf',source:src};
+    Object.assign(a,{seen:netAt(),id,lat:p.lat,lon:p.lon,alt:p.alt==null?0:p.alt,altKnown:p.alt!=null,gs:p.gs==null?0:p.gs,gsKnown:p.gs!=null,hdg:p.hdg,hx:id,type:p.aircraft,dep:p.dep||'',arr:p.arr||'',cruiseFt:p.cruiseFt||null,route:p.route||''});
     out.push(a)
   });
   // A selected aircraft that has left the view stays until the user clears it.
-  if(sel&&sel.k=='trf'&&sel.source=='vatsim'&&!out.includes(sel))out.push(sel);
-  const kept=T.filter(a=>a.source!='vatsim');
+  if(sel&&sel.k=='trf'&&sel.source==src&&!out.includes(sel))out.push(sel);
+  const kept=T.filter(a=>a.source!=src);
   T.length=0;kept.forEach(a=>T.push(a));out.forEach(a=>T.push(a));
-  WT.n=T.length;WT.src='vatsim';trlGC();trafficPost()
+  WT.n=T.length;WT.src=src;trlGC();trafficPost()
 }
 /* A VATSIM pilot reports one position and the route filed in the network
    flight plan. Resolve that route against the airports and navaids already
@@ -3125,7 +3219,7 @@ function trafficHud(o){
   const up=v=>String(v||'').trim().toUpperCase();
   const dep=up(o.dep)||up(pts[0]&&pts[0].id),arr=up(o.arr)||up(pts.length?pts[pts.length-1].id:'');
   const alt=o.altKnown===false?null:Number(o.alt),gs=o.gsKnown===false?null:Number(o.gs),hdg=Number(o.hdg);
-  const src=o.source==='vatsim'?'VATSIM':o.source==='adsb'?'ADS-B':'TRAFFIC';
+  const src=o.source==='vatsim'?'VATSIM':o.source==='ivao'?'IVAO':o.source==='adsb'?'ADS-B':'TRAFFIC';
   const stale=Date.now()-(o.seen||0)>45000;
   const nx=nextFiledFix(o),dest=pts.length?pts[pts.length-1]:null,dst=dest?dist(o,dest):NaN;
   tset('tIA','—');tset('tGS',gs==null?'—':tkts(gs));
@@ -3309,7 +3403,7 @@ function wtApi(u){return'/api/traffic?url='+encodeURIComponent(u)}
 async function wtUseProxy(){if(wtProxy!==null)return wtProxy;if(location.protocol=='https:'){wtProxy=true;return true}try{const r=await fetch('/api/traffic',{cache:'no-store'});wtProxy=r.status==400}catch(_){wtProxy=false}return wtProxy}
 function wtAdsb(j){const ac=j&&(j.ac||j.aircraft);return Array.isArray(ac)?ac.filter(a=>a.lat!=null&&a.lon!=null&&a.alt_baro!='ground').slice(0,400).map(a=>({hx:a.hex,id:((a.flight||'').trim()||a.r||a.hex||'?').toUpperCase(),lat:a.lat,lon:a.lon,hdg:a.track??a.true_heading??0,gs:a.gs||0,alt:typeof a.alt_baro=='number'?a.alt_baro:0,vs:a.baro_rate||0,reg:a.r||'',type:a.t||'',source:'adsb',cc:[a.t,a.r].filter(Boolean).join(' · ')})):null}
 function wtSky(j){return j&&Array.isArray(j.states)?j.states.filter(s=>s[5]!=null&&s[6]!=null&&!s[8]).slice(0,400).map(s=>({hx:s[0],id:((s[1]||'').trim()||s[0]).toUpperCase(),lon:s[5],lat:s[6],alt:Math.round((s[7]||0)*3.281),gs:Math.round((s[9]||0)*1.944),hdg:s[10]||0,vs:Math.round((s[11]||0)*196.85),source:'adsb',cc:s[2]||''})):(j&&j.states===null?[]:null)}
-function wtTxt(){if(TRS=='vatsim'){if(WT.n)return'● VATSIM · '+WT.n+' pilot'+(WT.n==1?'':'s');if(vatsimFeed&&vatsimFeed.error)return'VATSIM unavailable ('+vatsimFeed.error+')';return vatsimFeed&&!vatsimFeed.error?'No VATSIM pilots in view':'Loading VATSIM…'}const hint=wtProxy===false&&location.protocol=='http:';
+function wtTxt(){if(TRS!='adsb'){const net=trsLabel(),f=netFeed();if(WT.n)return'● '+net+' · '+WT.n+' pilot'+(WT.n==1?'':'s');if(f&&f.error)return net+' unavailable ('+f.error+')';return f&&!f.error?'No '+net+' pilots in view':'Loading '+net+'…'}const hint=wtProxy===false&&location.protocol=='http:';
 return WT.n?'● Live ADS-B · '+WT.n+' aircraft':WT.busy?'Loading traffic…':WT.fail>=2?(hint?'Live ADS-B needs the dev server (npm run dev) or the desktop app':'Live ADS-B unavailable (check your connection)'):live.on?'Connecting…':'No traffic in view'}
 function wtMerge(l){const m=new Map(T.map(a=>[a.hx,a])),n=[];l.forEach(o=>{o.seen=Date.now();trlAdd(o.hx||o.id,o.lat,o.lon,o.alt,400);const a=m.get(o.hx);if(a){Object.assign(a,o);n.push(a)}else n.push({k:'trf',...o})});if(sel&&sel.k=='trf'&&!n.includes(sel))n.push(sel);T.length=0;n.forEach(a=>T.push(a));WT.n=T.length;trlGC();trafficPost()}
 async function wtPoll(){if(TRS!='adsb'||WT.busy||document.hidden||liveOk())return;WT.busy=1;const la=+V.lat.toFixed(3),lo=+V.lon.toFixed(3),r=Math.min(250,Math.max(25,Math.ceil(Math.hypot(W,H)/2*40075016*Math.cos(la*R)/(SZ*2**V.z)/1852)));let l=null;
@@ -3331,7 +3425,7 @@ $('#lay').insertAdjacentHTML('beforeend','<b>Go to region</b><div id="rg" style=
 Object.keys(RGN).forEach(k=>{const b=document.createElement('button');b.textContent=k;b.onclick=()=>{const r=RGN[k];setFol(false);V.in=null;V.lon=r[0];V.lat=r[1];V.tz=null;focusZoom(r[2]);$('#lay').style.display='none'};$('#rg').appendChild(b)});
 const AIP={Y:['Australia AIP','https://www.airservicesaustralia.com/aip/aip.asp'],NZ:['New Zealand AIP','https://www.aip.net.nz'],SB:['Brazil AIS','https://aisweb.decea.mil.br'],SD:['Brazil AIS','https://aisweb.decea.mil.br'],SI:['Brazil AIS','https://aisweb.decea.mil.br'],SJ:['Brazil AIS','https://aisweb.decea.mil.br'],SN:['Brazil AIS','https://aisweb.decea.mil.br'],SS:['Brazil AIS','https://aisweb.decea.mil.br'],SW:['Brazil AIS','https://aisweb.decea.mil.br'],VI:['India AIP','https://aim-india.aai.gov.in'],RJ:['Japan AIP','https://www.aisjapan.mlit.go.jp'],RO:['Japan AIP','https://www.aisjapan.mlit.go.jp']};
 {const trs=document.getElementById('trs');if(trs){trs.value=TRS;trs.onchange=()=>applyTrafficSource(trs.value,true)}}
-if(TRS=='vatsim')startVatsimTraffic();else wtPoll();
+if(TRS!='adsb')startVatsimTraffic();else wtPoll();
 setInterval(()=>{if(TRS=='adsb')wtPoll()},RP.wt);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&TRS=='adsb')wtPoll()});
 loadOA();
 if(location.protocol=='http:')connect(location.origin);
@@ -3353,7 +3447,7 @@ const c=wpx(V.lon,V.lat,V.z);
 const scan=list=>{for(const it of list){const q=wpx(it.x,it.y,V.z),dx=q[0]-c[0],dy=q[1]-c[1],d=dx*dx+dy*dy;if(d<bd){bd=d;best=it.n}}};
 scan(wd.countries);scan(wd.continents);scan(wd.oceans);return best}
 function olTick(){const now=performance.now();if(now-olAt<900)return;olAt=now;
-const place=olPlace(),n=T.length,unit=TRS=='vatsim'?'pilot':'aircraft',count=n?(n===1?'1 '+unit+' online':n+(unit=='aircraft'?' aircraft':' pilots')+' online'):liveOk()?'Simulator online':TRS=='vatsim'?(vatsimFeed?'No VATSIM pilots in view':'Loading VATSIM…'):WT.fail>=2?'Traffic offline':WT.n?'No aircraft in view':'Connecting…';
+const place=olPlace(),n=T.length,unit=TRS!='adsb'?'pilot':'aircraft',count=n?(n===1?'1 '+unit+' online':n+(unit=='aircraft'?' aircraft':' pilots')+' online'):liveOk()?'Simulator online':TRS!='adsb'?(netFeed()?'No '+trsLabel()+' pilots in view':'Loading '+trsLabel()+'…'):WT.fail>=2?'Traffic offline':WT.n?'No aircraft in view':'Connecting…';
 const key=place+'|'+count;if(key===olKey)return;olKey=key;
 $('#olPlace').textContent=place;$('#olPlace').style.display=place?'':'none';
 $('#olCount').textContent=count;
@@ -3634,7 +3728,7 @@ function fcNoRegHtml(o){
   return '<div class="fcph none"><span class="fcph-t">'+label+'</span><span class="fcph-c">'+esc(note)+'</span></div>';
 }
 function fcType(o){const io=o.k=='own',t=io?((live.d&&live.d.aircraft)||''):(o.type||'');return String(t).trim()}
-function fcSource(o){if(o.k=='own')return 'LIVE FROM '+String((live.d&&live.d.src)||'SIM').toUpperCase();if(o.source=='vatsim')return 'VATSIM';if(o.source=='adsb')return 'ADS-B'+(WT.src?' VIA '+String(WT.src).toUpperCase():'');return String(o.cc||'TRAFFIC').toUpperCase()}
+function fcSource(o){if(o.k=='own')return 'LIVE FROM '+String((live.d&&live.d.src)||'SIM').toUpperCase();if(o.source=='vatsim')return 'VATSIM';if(o.source=='ivao')return 'IVAO';if(o.source=='adsb')return 'ADS-B'+(WT.src?' VIA '+String(WT.src).toUpperCase():'');return String(o.cc||'TRAFFIC').toUpperCase()}
 function fcPick(list){return list&&list.length?list[Math.floor(Math.random()*list.length)]:null}
 /* The backup search: use a matching aircraft already on the map when one is
    there, otherwise ask the live ADS-B type feed for one. Only the callsign's
@@ -4174,761 +4268,133 @@ function fpTick(){const n=performance.now();if(n-fpTickAt<900)return;fpTickAt=n;
   });
 })();
 /* The native Charts workspace owns chart viewing now. */
-function chartLauncherHtml(a){const id=(a&&a.id)||'';const url='pilot.html#charts'+(id?'?icao='+encodeURIComponent(id):'');let h='<div style="margin-top:12px"><b>'+esc(id)+'</b> <span class="m">'+esc((a&&a.name)||'')+'</span></div>';h+='<div class="m" style="margin-top:8px">Official terminal procedures open in the integrated Charts workspace: zoom, pan, fit, pages and full screen, without leaving Stratos.</div><div class="row" style="margin-top:10px"><a href="'+url+'"><button class="on">Open Charts'+(id?' for '+esc(id):'')+'</button></a><button type="button" data-plate="'+esc(id)+'" data-plate-name="'+esc((a&&a.name)||'')+'" title="Show this airport\'s chart in a window over the map">Show over map</button></div>';return h}
+function chartLauncherHtml(a){const id=(a&&a.id)||'';const url='pilot.html#charts'+(id?'?icao='+encodeURIComponent(id):'');let h='<div style="margin-top:12px"><b>'+esc(id)+'</b> <span class="m">'+esc((a&&a.name)||'')+'</span></div>';h+='<div class="m" style="margin-top:8px">Official terminal procedures open in the integrated Charts workspace: zoom, pan, fit, pages and full screen, without leaving Stratos.</div><div class="row" style="margin-top:10px"><a href="'+url+'"><button class="on">Open Charts'+(id?' for '+esc(id):'')+'</button></a><button type="button" data-mapchart="'+esc(id)+'" title="Show this airport\'s chart in a window over the map">Show over map</button></div>';return h}
 function openChartsPage(icao){location.href='pilot.html#charts'+(icao?'?icao='+encodeURIComponent(icao):'')}
-/* ── Chart over the map ──────────────────────────────────────────────────
-   The published charts are documents, not georeferenced layers: no source in
-   the catalogue supplies corner coordinates, so warping a plate onto the chart
-   would mean inventing an alignment. This instead puts the real document, from
-   the real viewer, in a floating window at the pilot's chosen opacity, and
-   says so in the frame. The route and the aircraft stay visible beside it. */
-/* ── Chart plate, georeferenced by the pilot ───────────────────────────────
-   The document is drawn on the map in map space, so the route, the traffic and
-   the aircraft pass over it. The authorities publish plates without corner
-   coordinates, so the placement comes from two reference points the pilot
-   picks: a feature on the chart (a runway end, a navaid) and the same feature
-   on the map. Two pairs define scale, rotation and position, which is stored
-   per airport and chart. Nothing is inferred from a chart the pilot has not
-   placed, and until then the plate is drawn centred and labelled unaligned. */
-const PLATE={on:false,visible:true,icao:'',name:'',title:'',canvas:null,opacity:70,align:null,pend:null,pairs:[],err:'',busy:false};
-function plateKey(){return (PLATE.icao||'')+'|'+(PLATE.title||'')}
-/* Everything about the sheet is measured in its own page points, not in the
-   pixels it happens to be rendered with: the page can be rasterised again at a
-   higher resolution for a zoomed map or a big screen without moving a stored
-   point or changing a placement. */
-function plateW(){return PLATE.pageW||(PLATE.canvas?PLATE.canvas.width:0)}
-function plateH(){return PLATE.pageH||(PLATE.canvas?PLATE.canvas.height:0)}
-function plateUnit(){return PLATE.canvas&&PLATE.pageW?PLATE.pageW/PLATE.canvas.width:1}
-function plateStore(){
-  try{return JSON.parse(localStorage.getItem('stratos.plateAlign')||'{}')||{}}catch(_){return {}}
+/* ── Charts on the map ─────────────────────────────────────────────────
+   One panel: a search bar, the route's own charts first, one tap to lay a chart
+   on the map. A chart is placed from the names it prints (lib/chartfit.js) and
+   only when three or more agree on one scale and rotation, which a chart not
+   drawn to scale cannot do; that one stays off the map and opens in Charts. */
+const MC={canvas:null,fit:null,opacity:80,visible:true,route:[],results:[],current:'',token:0,query:''};
+let mcPlate=null,mcFitLib=null,mcPick=null;
+async function mcLibs(){
+  if(!mcPlate)[mcPlate,mcFitLib,mcPick]=await Promise.all([import('./js/lib/plate.js'),import('./js/lib/chartfit.js'),import('./js/lib/routecharts.js')]);
 }
-function plateSave(){
-  if(typeof plateSyncTurn==='function')plateSyncTurn();
-  const all=plateStore();
-  if(PLATE.align){PLATE.align.v=2;all[plateKey()]=PLATE.align}else delete all[plateKey()];
-  try{localStorage.setItem('stratos.plateAlign',JSON.stringify(all))}catch(_){}
+const MC_KIND={diagram:'AIRPORT',sid:'SID',star:'STAR',approach:'APP',other:'CHART'};
+function mcItem(icao,chart,label){
+  const kind=mcPick.chartFamily(chart);
+  return {icao,chart,kind:label||MC_KIND[kind]||'CHART',title:String(chart.title||chart.code||'Chart')};
 }
-function plateHint(text){const el=$('#plateHint');if(el)el.textContent=text}
-/* Chart pixel -> world pixel, as a similarity solved from the two picked pairs
-   in the map's own projection. Mercator is what the chart under the plate is
-   drawn in, so solving there keeps the plate glued to the ground through every
-   zoom and pan instead of drifting away from it as the latitude scale grows. */
-function plateWorldTransform(){
-  const a=PLATE.align;if(!a)return null;
-  const W1=wpx(Number(a.g1[0]),Number(a.g1[1]),0),W2=wpx(Number(a.g2[0]),Number(a.g2[1]),0);
-  const dc=[a.c2[0]-a.c1[0],a.c2[1]-a.c1[1]],dw=[W2[0]-W1[0],W2[1]-W1[1]];
-  const cd=Math.hypot(dc[0],dc[1]),wd=Math.hypot(dw[0],dw[1]);
-  if(!cd||!wd)return null;
-  const s=wd/cd,th=Math.atan2(dw[1],dw[0])-Math.atan2(dc[1],dc[0]);
-  const cs=Math.cos(th)*s,sn=Math.sin(th)*s;
-  /* The pilot's correction is applied to the result, about the midpoint of the
-     two reference points, so it shifts and turns the whole sheet rather than
-     moving the points it was placed by. A nudge of one chart pixel is worth
-     one chart pixel of ground at every zoom. */
-  const n=a.nudge||{};
-  const ns=Number(n.scale)||1,nth=(Number(n.rot)||0)*Math.PI/180;
-  const offx=(Number(n.dx)||0)*s,offy=(Number(n.dy)||0)*s;
-  const mx=(W1[0]+W2[0])/2,my=(W1[1]+W2[1])/2;
-  const nc=Math.cos(nth)*ns,nsin=Math.sin(nth)*ns;
-  return (x,y)=>{
-    const dx=x-a.c1[0],dy=y-a.c1[1];
-    const X=W1[0]+cs*dx-sn*dy,Y=W1[1]+sn*dx+cs*dy;
-    if(!nth&&ns===1&&!offx&&!offy)return[X,Y];
-    const ux=X-mx,uy=Y-my;
-    return[mx+ux*nc-uy*nsin+offx,my+ux*nsin+uy*nc+offy]
-  }
+/* The route's charts: departure aerodrome and SID, arrival STAR, approach and aerodrome. */
+async function mcRefreshRoute(){
+  const plan=deckProcedurePlan()||{},o=plan.origin||{},d=plan.destination||{};
+  const dep=String(o.icao||(route.length&&route[0].k==='apt'?route[0].id:'')||'').toUpperCase();
+  const arr=String(d.icao||(route.length>1&&route[route.length-1].k==='apt'?route[route.length-1].id:'')||'').toUpperCase();
+  const items=[];
+  try{
+    await mcLibs();
+    for(const [icao,want,order] of [[dep,{sid:o.sid,runway:o.rwy},['diagram','sid']],[arr,{star:d.star,approach:d.approach,runway:d.rwy||d.approachRwy},['star','approach','diagram']]]){
+      if(!icao)continue;
+      let entry=null;try{entry=await mcPlate.plateChart(icao)}catch(_){continue}
+      const picks=mcPick.pickRouteCharts(entry.charts,want);
+      for(const kind of order)if(picks[kind]!=null)items.push(mcItem(icao,entry.charts[picks[kind]]));
+    }
+  }catch(_){/* no catalogue: the search still works */}
+  MC.route=items;
+  if(!$('#mc').hidden)mcRender();
 }
-/* Read the runway designators the document itself prints, and pair each with the
-   runway end the airport publishes. A designator is printed at its threshold, so
-   two of them are enough to place the sheet and the pilot only nudges. Returns
-   null when the labels cannot be read with confidence — nothing is invented
-   from the airport's position or the chart's size. */
-function plateNormIdent(value){return String(value||'').toUpperCase().replace(/^0+(?=\d)/,'')}
-/* A 2-D similarity solved by least squares over every matched pair:
-   world = W̄ + [[a,−b],[b,a]]·(chart − c̄). With two points it is exact; with
-   more it averages the print's own label offsets instead of trusting one
-   designator's placement on the sheet. */
-function plateSimilarity(pairs){
-  const n=pairs.length;if(n<2)return null;
-  let cx=0,cy=0,WX=0,WY=0;
-  for(const p of pairs){cx+=p.chart[0];cy+=p.chart[1];WX+=p.w[0];WY+=p.w[1]}
-  cx/=n;cy/=n;WX/=n;WY/=n;
-  let den=0,numA=0,numB=0;
-  for(const p of pairs){
-    const x=p.chart[0]-cx,y=p.chart[1]-cy,X=p.w[0]-WX,Y=p.w[1]-WY;
-    den+=x*x+y*y;numA+=x*X+y*Y;numB+=x*Y-y*X;
-  }
-  if(!den)return null;
-  const a=numA/den,b=numB/den;
-  if(!a&&!b)return null;
-  const f=(x,y)=>{const dx=x-cx,dy=y-cy;return[WX+a*dx-b*dy,WY+b*dx+a*dy]};
-  f.scale=Math.hypot(a,b);
-  return f
-}
-function platePair(point){return{chart:point.chart,w:wpx(point.geo[0],point.geo[1],0),geo:point.geo,ident:point.ident,kind:point.kind}}
-function plateErrorPx(fit,point){
-  const w=fit(point.chart[0],point.chart[1]);
-  const t=wpx(point.geo[0],point.geo[1],0);
-  return Math.hypot(w[0]-t[0],w[1]-t[1])/fit.scale
-}
-/* How many chart pixels a metre is worth under a given fit, so "a label agrees"
-   can be asked in metres. A designator is printed beside its threshold with a
-   size of its own: on a big sheet that is a few pixels, on a small one tens. */
-function platePxPerMetre(fit,lat){
-  const worldPerNm=SZ/360/(60*Math.cos(lat*R));
-  return worldPerNm/(fit.scale*1852)
-}
-function plateGate(fit,lat){return Math.max(10,Math.min(120,400*platePxPerMetre(fit,lat)))}
-/* Designators are printed along the runway, so their glyphs are grouped along
-   the label's own direction rather than assumed to run left to right. */
-function plateRunwayCandidates(toks,refs){
-  const out=[];
-  const digits=toks.filter(t=>/^\d$/.test(t.t));
-  for(const letter of toks){
-    if(!/^[LRC]$/.test(letter.t))continue;
-    const ux=Math.cos(letter.angle),uy=Math.sin(letter.angle);
-    /* Half of the designators are printed upside-down along their runway, so
-       the digits can sit on either side of the letter: only the distance along
-       the baseline is trusted, and both glyph orders are offered to the runway
-       list, which accepts exactly one of them. */
-    const near=digits.map(d=>{
-      const ox=d.x-letter.x,oy=d.y-letter.y;
-      return{d,along:ox*ux+oy*uy,perp:Math.abs(-ox*uy+oy*ux)}
-    }).filter(row=>{
-      let da=Math.abs(row.d.angle-letter.angle)%(Math.PI*2);
-      if(da>Math.PI)da=Math.PI*2-da;
-      /* Glyphs of one designator share a text run: a tight baseline, a short
-         advance and the same direction. Anything looser starts inventing
-         designators out of stray letters and taxiway numbers. */
-      return row.perp<8&&Math.abs(row.along)<40&&da<0.12
-    }).sort((p,q)=>Math.abs(p.along)-Math.abs(q.along)).map(row=>row.d);
-    if(!near.length)continue;
-    const runs=[[near[0]]];
-    if(near.length>1){runs.push([near[0],near[1]]);runs.push([near[1],near[0]])}
-    for(const run of runs){
-      const ident=plateNormIdent(run.map(d=>d.t).join('')+letter.t);
-      const ref=refs.get(ident);
-      if(!ref||ref.kind!=='runway')continue;
-      const all=[...run,letter];
-      out.push({ident,chart:[all.reduce((s,i)=>s+i.x,0)/all.length,all.reduce((s,i)=>s+i.y,0)/all.length],geo:[ref.lon,ref.lat],kind:'runway'});
-      break
+/* "OMDB", "OMDB STAR", "EHAM ILS 18R", or words alone to search the route's airports. */
+async function mcSearch(text){
+  const token=++MC.token;MC.query=text;
+  const words=String(text||'').toUpperCase().split(/\s+/).filter(Boolean);
+  if(!words.length){MC.results=[];mcRender();return}
+  const icao=/^[A-Z]{4}$/.test(words[0])?words[0]:'';
+  const terms=icao?words.slice(1):words;
+  const airports=icao?[icao]:[...new Set(MC.route.map(item=>item.icao))];
+  const found=[];
+  await mcLibs();
+  for(const code of airports){
+    let entry=null;try{entry=await mcPlate.plateChart(code)}catch(error){if(icao&&token===MC.token){MC.results=[];mcRender(String(error.message||error));return}continue}
+    for(const chart of entry.charts){
+      const item=mcItem(code,chart);
+      const hay=(item.title+' '+item.kind+' '+mcPick.chartFamily(chart)+(item.kind==='APP'?' APPROACH IAC':'')+(item.kind==='AIRPORT'?' AERODROME DIAGRAM':'')).toUpperCase();
+      if(terms.every(t=>hay.includes(t)))found.push(item);
     }
   }
-  return out
+  if(token!==MC.token)return;
+  MC.results=found.slice(0,60);
+  mcRender();
 }
-/* Every candidate pair is tried and scored by how many other labels agree with
-   it, so a stray designator in a legend cannot drag the sheet. The winner is
-   then refitted over all the labels that agreed. */
-function plateSuggest(labels,refs){
-  if(!refs||!refs.size||!labels||!labels.length)return null;
-  const toks=labels.map(l=>({t:String(l.text||'').trim(),x:l.x,y:l.y,angle:Number(l.angle)||0}));
-  const cand=plateRunwayCandidates(toks,refs);
-  for(const tok of toks){
-    if(!/^[A-Z0-9]{3,5}$/.test(tok.t))continue;
-    const ref=refs.get(tok.t.toUpperCase());
-    if(!ref||ref.kind==='runway')continue;
-    cand.push({ident:tok.t.toUpperCase(),chart:[tok.x,tok.y],geo:[ref.lon,ref.lat],kind:'waypoint'});
-  }
-  if(cand.length<2)return null;
-  let bestAny=null,bestRunways=null;
-  const consider=(A,B,inliers,sep)=>{
-    const candidate={A,B,inliers,sep};
-    if(!bestAny||inliers>bestAny.inliers||(inliers===bestAny.inliers&&sep>bestAny.sep))bestAny=candidate;
-    if(A.kind==='runway'&&B.kind==='runway'&&(!bestRunways||inliers>bestRunways.inliers||(inliers===bestRunways.inliers&&sep>bestRunways.sep)))bestRunways=candidate
-  };
-  for(let i=0;i<cand.length;i++)for(let j=i+1;j<cand.length;j++){
-    const A=cand[i],B=cand[j];
-    if(A.ident===B.ident)continue;
-    const sep=Math.hypot(B.chart[0]-A.chart[0],B.chart[1]-A.chart[1]);
-    if(sep<25)continue;
-    const fit=plateSimilarity([platePair(A),platePair(B)]);
-    if(!fit)continue;
-    const gate=plateGate(fit,(A.geo[1]+B.geo[1])/2);
-    let inliers=2;
-    for(const C of cand){
-      if(C===A||C===B)continue;
-      if(plateErrorPx(fit,C)<gate)inliers++
+function mcRow(item,i,set){
+  const id=item.icao+'|'+item.title;
+  return '<button type="button" data-set="'+set+'" data-i="'+i+'" aria-current="'+(MC.current===id)+'"><i>'+esc(item.kind)+'</i><b>'+esc(item.title)+'</b><span>'+esc(item.icao)+'</span></button>'
+}
+function mcRender(error){
+  const list=$('#mcList');if(!list)return;
+  let html='';
+  if(MC.route.length&&!MC.query)html+='<h4>Your route</h4>'+MC.route.map((item,i)=>mcRow(item,i,'route')).join('');
+  if(MC.query)html+=MC.results.length?'<h4>Results</h4>'+MC.results.map((item,i)=>mcRow(item,i,'results')).join('')
+    :'<p>'+esc(error||'No chart matches. Start with an airport code, e.g. OMDB STAR.')+'</p>';
+  if(!html)html='<p>Search an airport, e.g. KJFK or OMDB ILS. With a route loaded, its charts are listed here.</p>';
+  list.innerHTML=html
+}
+function mcStatus(name,msg){
+  $('#mcNow').hidden=false;$('#mcName').textContent=name;$('#mcMsg').innerHTML=msg
+}
+async function mcShow(item){
+  const id=item.icao+'|'+item.title,token=++MC.token;
+  MC.current=id;mcRender();
+  MC.canvas=null;MC.fit=null;MC.visible=true;$('#mcHide').textContent='Hide';draw();
+  mcStatus(item.icao+' · '+item.title,'Placing the chart on the map…');
+  try{
+    const entry=await mcPlate.plateChart(item.icao);
+    const page=await mcPlate.renderChart(mcPlate.chartDocumentUrl(item.icao,{chart:item.chart},entry.cycle),{maxWidth:2400});
+    const refs=await mcPlate.plateReferences(item.icao);
+    if(token!==MC.token)return;
+    const fit=mcFitLib.fitChart(page.labels,refs,(lat,lon)=>wpx(lon,lat,0),{metresPerUnit:lat=>40075016*Math.cos(lat*R)/SZ});
+    const viewer='<a href="pilot.html#charts?icao='+encodeURIComponent(item.icao)+'">Open it in Charts</a>';
+    if(!fit){
+      mcStatus(item.icao+' · '+item.title,'Not on the map: this chart is not drawn to scale, or it names no point the navigation data knows. '+viewer+'.');
+      return
     }
-    consider(A,B,inliers,sep)
-  }
-  /* Two labels fit any pair exactly, so two labels prove nothing: a placement
-     is only accepted when a third label independently agrees with it. */
-  const best=bestAny&&bestAny.inliers>=3?bestAny:null;
-  if(!best)return null;
-
-  /* Refit over everything that agreed, so the placement is the consensus of the
-     sheet's own labels rather than the two points that happened to seed it. */
-  const seed=plateSimilarity([platePair(best.A),platePair(best.B)]);
-  const seedGate=plateGate(seed,(best.A.geo[1]+best.B.geo[1])/2);
-  let inliers=cand.filter(c=>plateErrorPx(seed,c)<seedGate);
-  let fit=plateSimilarity(inliers.map(platePair));
-  if(!fit)return null;
-  const latMean=inliers.reduce((s,c)=>s+c.geo[1],0)/inliers.length;
-  inliers=cand.filter(c=>plateErrorPx(fit,c)<plateGate(fit,latMean));
-  fit=plateSimilarity(inliers.map(platePair));
-  if(!fit||inliers.length<2)return null;
-  if(inliers.length<3)return null;
-
-  const width=plateW()||1000;
-  const lat0=inliers.reduce((s,c)=>s+c.geo[1],0)/inliers.length;
-  const worldPerNm=SZ/360/(60*Math.cos(lat0*R));
-  const sheetNm=fit.scale*width/worldPerNm;
-  if(!(sheetNm>0.2&&sheetNm<800))return null;
-
-
-  const pxPerMetre=worldPerNm/1852;
-  const errors=inliers.map(c=>plateErrorPx(fit,c)*fit.scale/pxPerMetre).sort((a,b)=>a-b);
-  const medianM=errors[Math.floor(errors.length/2)]||0;
-  const maxM=errors[errors.length-1]||0;
-  const toleranceM=Math.max(200,Math.min(3000,sheetNm*1852*0.02));
-  if(medianM>toleranceM)return null;
-
-  /* The stored placement is two anchors on the fitted similarity, the widest
-     pair among the labels that agreed. */
-  let A=inliers[0],B=inliers[1],widest=0;
-  for(let i=0;i<inliers.length;i++)for(let j=i+1;j<inliers.length;j++){
-    const d=Math.hypot(inliers[j].chart[0]-inliers[i].chart[0],inliers[j].chart[1]-inliers[i].chart[1]);
-    if(d>widest){widest=d;A=inliers[i];B=inliers[j]}
-  }
-  if(!widest)return null;
-  const wA=fit(A.chart[0],A.chart[1]),wB=fit(B.chart[0],B.chart[1]);
-  const gA=wun(wA[0],wA[1],0),gB=wun(wB[0],wB[1],0);
-  const sepNm=Math.hypot((gB[1]-gA[1])*60,(gB[0]-gA[0])*60*Math.cos(lat0*R));
-  if(sepNm<sheetNm*0.08)return null;
-
-  /* The labels were read in rendered pixels; the anchors are stored in page
-     points, so a later render at another resolution still means the same place. */
-  const u=plateUnit();
-  return {
-    c1:[A.chart[0]*u,A.chart[1]*u],g1:gA,c2:[B.chart[0]*u,B.chart[1]*u],g2:gB,
-    suggested:[...new Set(inliers.map(c=>c.ident))].slice(0,6),
-    inliers:inliers.length,sheetNm:Math.round(sheetNm*10)/10,nudge:{},
-    valid:{points:inliers.length,medianM:Math.round(medianM),maxM:Math.round(maxM),toleranceM:Math.round(toleranceM)},
+    MC.canvas=page.canvas;MC.fit=fit;
+    mcStatus(item.icao+' · '+item.title,'On the map, placed on '+fit.idents.slice(0,5).join(', ')+' (±'+fit.medianM+' m).');
+    draw()
+  }catch(error){
+    if(token===MC.token)mcStatus(item.icao+' · '+item.title,'This chart could not be loaded: '+esc(String((error&&error.message)||error)))
   }
 }
-/* A world pixel at zoom 0 to where the chart puts it on screen right now. */
-function plateScreen(wx,wy){
-  const k=2**V.z,c=wpx(V.lon,V.lat,V.z);
-  return[wx*k-c[0]+W/2,wy*k-c[1]+H/2]
-}
-/* Chart pixel -> map pixel, as the affine the canvas transform consumes. */
-/* A chart that publishes its own plan-view rectangle needs no fitting at all:
-   the sheet is drawn as the geographic quadrilateral the publisher states, so
-   it is exact at every zoom and can carry a different scale on each axis. */
-function plateApplyGeoref(meta){
-  if(!meta||!PLATE.georef||!PLATE.canvas)return false;
-  const place=PLATE.georef.placementFromGeoref(meta,PLATE.canvas,(lon,lat)=>wpx(lon,lat,0));
-  if(!place.ok){plateHint('This chart publishes georeferencing that cannot be used: '+place.reason+'.');return false}
-  PLATE.align={georef:meta,nudge:{}};plateSave();
-  /* The metadata names pixels of the sheet it was published against, so this
-     path keeps the rendered page as its own coordinate space and is not
-     re-rendered at another resolution. */
-  PLATE.pageW=PLATE.canvas.width;PLATE.pageH=PLATE.canvas.height;
-  PLATE.drawable=PLATE.georef.maskInsets(PLATE.canvas,place.insets,(w,h)=>{
-    const c=document.createElement('canvas');c.width=w;c.height=h;return c
-  });
-  PLATE.georefFit=place;PLATE.georefFor=PLATE.align;
-  const n=place.insets.length;
-  plateHint('Placed from the chart\u2019s published georeferencing'+(n?' · '+n+' inset'+(n>1?'s':'')+' excluded':'')+'.');
-  return true
-}
-function plateGeorefPlacement(){
-  const a=PLATE.align,img=PLATE.canvas;
-  if(!a||!a.georef||!img||!PLATE.georef)return null;
-  if(PLATE.georefFor===a&&PLATE.georefFit)return PLATE.georefFit;
-  const place=PLATE.georef.placementFromGeoref(a.georef,img,(lon,lat)=>wpx(lon,lat,0));
-  PLATE.georefFor=a;PLATE.georefFit=place&&place.ok?place:null;
-  return PLATE.georefFit
-}
-function plateAffine(){
-  const img=PLATE.drawable||PLATE.canvas;if(!img||!PLATE.on)return null;
-  const w=plateW(),h=plateH();
-  const place=plateGeorefPlacement();
-  let A,B,C;
-  if(place){
-    const m=PLATE.georef.placementAffine(place,img,(wx,wy)=>plateScreen(wx,wy));
-    if(!m)return null;
-    /* A published placement is already right; the pilot's nudge is still
-       applied, about the middle of the sheet, for the odd chart whose print
-       does not match its own metadata. */
-    const n=PLATE.align.nudge||{};
-    const ns=Number(n.scale)||1,nth=(Number(n.rot)||0)*Math.PI/180;
-    if(ns===1&&!nth&&!Number(n.dx)&&!Number(n.dy))return m;
-    const cxs=m.e+m.a*w/2+m.c*h/2,cys=m.f+m.b*w/2+m.d*h/2;
-    const cs=Math.cos(nth)*ns,sn=Math.sin(nth)*ns;
-    /* The nudge is in chart pixels and moves the sheet a pixel of screen for a
-       pixel of chart, whichever way the sheet is turned or sized — the same
-       rule the fitted placement follows, so a drag means the same thing on
-       both. The scale is taken back out because it has already moved the
-       sheet's own corners. */
-    const ndx=Number(n.dx)||0,ndy=Number(n.dy)||0;
-    const bx=(Math.hypot(m.a,m.b)||1)/ns,by=(Math.hypot(m.c,m.d)||1)/ns;
-    return {a:m.a*cs-m.b*sn,b:m.a*sn+m.b*cs,c:m.c*cs-m.d*sn,d:m.c*sn+m.d*cs,
-      e:cxs+(m.e-cxs)*cs-(m.f-cys)*sn+bx*ndx,
-      f:cys+(m.e-cxs)*sn+(m.f-cys)*cs+by*ndy,w,h}
-  }
-  const toWorld=plateWorldTransform();
-  if(toWorld){
-    A=plateScreen(...toWorld(0,0));B=plateScreen(...toWorld(w,0));C=plateScreen(...toWorld(0,h));
-  }else{
-    /* Unaligned: a readable size in the middle of the map, where the route is. */
-    const dw=Math.min(W*0.62,900),sc=dw/w;
-    A=[Math.round(W/2-dw/2),Math.round(H/2-(h*sc)/2)];
-    B=[A[0]+dw,A[1]];C=[A[0],A[1]+h*sc]
-  }
-  return {a:(B[0]-A[0])/w,b:(B[1]-A[1])/w,c:(C[0]-A[0])/h,d:(C[1]-A[1])/h,e:A[0],f:A[1],w,h}
-}
-function plateInvert(m,x,y){
-  const det=m.a*m.d-m.b*m.c;
-  if(!det)return[0,0];
-  const dx=x-m.e,dy=y-m.f;
-  return[(m.d*dx-m.c*dy)/det,(m.a*dy-m.b*dx)/det]
-}
-function drawPlate(){
-  if(!PLATE.on||!PLATE.visible||!PLATE.canvas)return;
-  const m=plateAffine();if(!m)return;
+/* World units (zoom 0) to the screen, as one canvas transform. */
+function drawMapChart(){
+  if(!MC.canvas||!MC.fit||!MC.visible)return;
+  const f=MC.fit,k=2**V.z,c=wpx(V.lon,V.lat,V.z);
   cx.save();
-  cx.globalAlpha=Math.max(0,Math.min(1,PLATE.opacity/100));
+  cx.globalAlpha=MC.opacity/100;
   cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';
-  cx.transform(m.a,m.b,m.c,m.d,m.e,m.f);
-  cx.drawImage(PLATE.drawable||PLATE.canvas,0,0,m.w,m.h);
-  cx.restore();
-  /* While picking, show the runway ends a click will snap to, so the two
-     clicks land on the chart's own thresholds. */
-  if(PLATE.picking){
-    const ring=(p,color,r)=>{cx.save();cx.strokeStyle=color;cx.lineWidth=2;cx.beginPath();cx.arc(p[0],p[1],r,0,7);cx.stroke();cx.restore()};
-    cx.save();cx.fillStyle='rgba(56,189,248,.6)';
-    for(const e of plateChartEnds()){
-      cx.beginPath();cx.arc(m.e+m.a*e[0]+m.c*e[1],m.f+m.b*e[0]+m.d*e[1],3,0,7);cx.fill()
-    }
-    cx.restore();
-    if(PLATE.pend)ring([m.e+m.a*PLATE.pend[0]+m.c*PLATE.pend[1],m.f+m.b*PLATE.pend[0]+m.d*PLATE.pend[1]],'rgba(56,189,248,.95)',8);
-    if(PLATE.mark)ring(plateScreen(...wpx(PLATE.mark.lon,PLATE.mark.lat,0)),'rgba(250,204,21,.95)',8)
-  }
-  /* Drawn larger than the page was rendered, the sheet is rasterised again at
-     the size the screen is asking for, so it reads as sharply on a big screen
-     at 200% as it does at 100% on a phone. */
-  plateDetailSoon();
-  if(!PLATE.align){
-    cx.save();
-    cx.strokeStyle='rgba(148,163,184,.75)';cx.lineWidth=1;cx.setLineDash([7,5]);
-    cx.beginPath();
-    cx.moveTo(m.e,m.f);
-    cx.lineTo(m.e+m.a*m.w,m.f+m.b*m.w);
-    cx.lineTo(m.e+m.c*m.h,m.f+m.d*m.h);
-    cx.lineTo(m.e+m.a*m.w+m.c*m.h,m.f+m.b*m.w+m.d*m.h);
-    cx.closePath();cx.stroke();
-    cx.restore()
-  }
+  cx.transform(k*f.a,k*f.b,-k*f.b,k*f.a,k*f.tx-c[0]+W/2,k*f.ty-c[1]+H/2);
+  cx.drawImage(MC.canvas,0,0);
+  cx.restore()
 }
-let plateDetailTimer=0,plateDetailBusy=false;
-/* The map redraws every frame, so this has to be a one-shot rather than a
-   debounce: a timer reset on every frame would never be allowed to fire. */
-function plateDetailSoon(){
-  if(plateDetailTimer)return;
-  plateDetailTimer=setTimeout(()=>{plateDetailTimer=0;plateDetailRaise()},650)
+function mcOpen(query){
+  const el=$('#mc');el.hidden=false;$('#bMc').setAttribute('aria-expanded','true');$('#bMc').classList.add('on');setLay(false);
+  const q=$('#mcQ');
+  if(query!=null){q.value=query;mcSearch(query)}else mcRender();
+  mcRefreshRoute();
+  q.focus()
 }
-async function plateDetailRaise(){
-  if(plateDetailBusy||PLATE.busy||!PLATE.on||!PLATE.visible||!PLATE.url||PLATE.georefFit)return;
-  const c=PLATE.canvas;
-  if(!c||!PLATE.lib||!PLATE.lib.renderChart)return;
-  const m=plateAffine();if(!m)return;
-  const dpr=Math.min(2,window.devicePixelRatio||1);
-  const need=Math.round(Math.hypot(m.a,m.b)*dpr*plateW());
-  /* The page is redrawn once at a step the screen actually asks for, not in a
-     loop up the scales: past five times the sheet's own points the pixels cost
-     more memory and render time than the sharpness is worth on a moving map. */
-  const wantScale=Math.min(5,need/plateW());
-  if(need<c.width*1.4||wantScale<=c.width/plateW()*1.3)return;
-  plateDetailBusy=true;
-  try{
-    const page=await PLATE.lib.renderChart(PLATE.url,{scale:wantScale,labels:false});
-    if(page&&page.canvas&&Math.abs((Number(page.pageWidth)||0)-plateW())<1.5){
-      PLATE.canvas=page.canvas;PLATE.drawable=page.canvas;
-      PLATE.ends=null;PLATE.endsFor=null;draw()
-    }
-  }catch(_){/* the sheet already drawn stays wrapped over the ground */}
-  plateDetailBusy=false
-}
-/* A georeferenced airport diagram is a few miles wide: at a continental zoom it
-   is a speck. When it opens off-screen or too small to read, bring the map to
-   it once, at the size the chart is meant to be read at. */
-function plateReveal(){
-  const a=PLATE.align;if(!a||!PLATE.canvas)return;
-  const m=plateAffine();if(!m)return;
-  const widthPx=Math.hypot(m.a,m.b)*plateW();
-  if(widthPx>=160)return;
-  const midLon=(Number(a.g1[0])+Number(a.g2[0]))/2,midLat=(Number(a.g1[1])+Number(a.g2[1]))/2;
-  const want=Math.min(W,H)*0.55;
-  const zoom=V.z+Math.log2(want/Math.max(1,widthPx));
-  V.lon=midLon;V.lat=midLat;V.z=Math.max(3,Math.min(16,Math.round(zoom*100)/100));
-  draw()
-}
-/* Draw one chart of the airport's catalogue and place it. Any chart can be
-   picked, and each keeps its own alignment. */
-function plateFillList(){
-  const sel=$('#plateSel'),charts=PLATE.charts||[];
-  if(!sel)return;
-  sel.innerHTML=charts.map((c,i)=>'<option value="'+i+'">'+esc((c.code||'')+' · '+(c.title||'Chart'))+'</option>').join('');
-  sel.value=String(PLATE.index||0);
-  sel.hidden=charts.length<2
-}
-async function plateLoadChart(index){
-  const lib=PLATE.lib,entry=PLATE.entry;
-  if(!lib||!entry)return;
-  const charts=PLATE.charts||[];
-  const chosen=charts[index]||entry.chart;
-  PLATE.index=Number(index)||0;
-  PLATE.err='';PLATE.busy=true;
-  plateHint('Loading '+(chosen.title||'the chart')+'…');
-  try{
-    PLATE.url='/api/chart?'+lib.chartQuery(PLATE.icao,{chart:chosen},entry.cycle);
-    const page=await lib.renderChart(PLATE.url,{maxWidth:2400});
-    PLATE.canvas=page.canvas;
-    PLATE.pageW=Number(page.pageWidth)||page.canvas.width;
-    PLATE.pageH=Number(page.pageHeight)||page.canvas.height;
-    PLATE.title=String(chosen.title||chosen.code||'');
-    /* The publisher's own plan-view rectangle, when there is one, places the
-       sheet outright: no fitting, no threshold reading, nothing to nudge. */
-    PLATE.drawable=page.canvas;PLATE.georefFit=null;PLATE.georefFor=null;
-    if(chosen.georef&&plateApplyGeoref(chosen.georef)){draw();plateReveal();return}
-    let kept=plateStore()[plateKey()]||null;
-    /* Older records measured their points in rendered pixels, which no longer
-       name the same place on the page; they are dropped rather than misapplied. */
-    if(kept&&kept.v!==2)kept=null;
-    /* A stored placement from an older AIRAC is re-derived: a chart can change
-       between cycles, and a fit that no longer holds should not be reused. */
-    const stale=kept&&kept.cycle&&entry.cycle&&kept.cycle!==entry.cycle;
-    PLATE.align=stale?null:kept;
-    plateSyncTurn();
-    if(PLATE.align&&PLATE.align.georef&&plateApplyGeoref(PLATE.align.georef)){draw();plateReveal();return}
-    if(PLATE.align){
-      plateHint('Aligned. Raise the opacity until the chart reads against the ground.');
-    }else{
-      /* Place it without being asked: match what the document prints against
-         the points the airport publishes — runway ends and the procedure's own
-         waypoints — and accept only a fit several labels agree on. */
-      let suggestion=null;
-      try{
-        const refs=await lib.plateReferences(PLATE.icao);
-        suggestion=plateSuggest(page.labels,refs);
-      }catch(_){/* no reference data: the manual pick stays available */}
-      if(suggestion){
-        suggestion.cycle=PLATE.entry&&PLATE.entry.cycle||'';
-        PLATE.align=suggestion;plateSave();
-        const v=suggestion.valid;
-        plateHint('Aligned on '+suggestion.suggested.join(', ')
-          +(v&&v.points>2?' · '+v.points+' fixes, ±'+v.medianM+' m':v?' · '+v.points+' fixes (not independently checked)':'')+'.');
-      }else{
-        plateHint('The chart could not be placed from its labels. Press Align and pick two matching features.');
-      }
-    }
-    draw();
-    plateReveal()
-  }catch(error){
-    PLATE.err=String((error&&error.message)||error);
-    PLATE.canvas=null;
-    plateHint('This chart could not be drawn: '+PLATE.err);
-    draw()
-  }finally{PLATE.busy=false}
-}
-async function openPlate(icao,name,choice){
-  const el=$('#plate');if(!el)return;
-  const code=String(icao||'').toUpperCase();
-  PLATE.on=true;PLATE.icao=code;PLATE.name=name||'';PLATE.title='';PLATE.canvas=null;PLATE.align=null;PLATE.err='';PLATE.pairs=[];PLATE.pend=null;
-  PLATE.pendEnd=null;PLATE.mark=null;PLATE.picking=false;PLATE.ends=null;PLATE.endsFor=null;PLATE.thresholds=null;
-  PLATE.pageW=null;PLATE.pageH=null;PLATE.url='';PLATE.georefFit=null;
-  plateSetLocked(true,true);
-  PLATE.charts=null;PLATE.entry=null;PLATE.index=Number(choice)||0;PLATE.visible=true;
-  const showBox=$('#plateShow');if(showBox)showBox.checked=true;
-  $('#plateT').textContent=code||'Chart';
-  $('#plateN').textContent=name||'';
-  el.hidden=false;
-  plateHint('Finding the published charts…');
-  draw();
-  try{
-    if(!PLATE.lib)PLATE.lib=await import('./js/lib/plate.js');
-    if(!PLATE.georef)PLATE.georef=await import('./js/lib/georef.js');
-    const lib=PLATE.lib;
-    const entry=await lib.plateChart(code);
-    PLATE.entry=entry;
-    PLATE.charts=entry.charts||[entry.chart];
-    /* Default to the sheet the catalogue ranked best — the airport diagram — and
-       leave every other chart one pick away. */
-    if(choice===undefined||choice===null){
-      const wanted=entry.chart;
-      const at=PLATE.charts.findIndex(c=>c&&wanted&&c.code===wanted.code&&c.title===wanted.title);
-      PLATE.index=at>=0?at:0
-    }
-    plateFillList();
-    await plateLoadChart(PLATE.index)
-  }catch(error){
-    PLATE.err=String((error&&error.message)||error);
-    plateHint('No chart could be opened: '+PLATE.err);
-    draw()
-  }
-}
-function closePlate(){
-  const el=$('#plate'),pick=$('#platePick');
-  if(!el)return;
-  PLATE.on=false;PLATE.pairs=[];PLATE.pend=null;PLATE.pendEnd=null;PLATE.mark=null;PLATE.picking=false;
-  el.hidden=true;if(pick)pick.hidden=true;
-  draw()
-}
-/* Locked, the chart stays where it was placed while the map is panned.
-   Unlocked, the pointer drags the sheet itself: the movement is stored as the
-   chart-pixel nudge the panel used to offer as arrow buttons, so a correction
-   keeps its size at every zoom and survives a reload. */
-function plateSetLocked(locked,quiet){
-  PLATE.locked=!!locked;
-  const b=$('#plateLock');
-  if(b){
-    b.setAttribute('aria-pressed',locked?'false':'true');
-    b.innerHTML=locked?'&#128274; Locked':'&#128275; Dragging'
-  }
-  if(!quiet)plateHint(locked
-    ? (PLATE.align?'Chart locked in place.':'Chart locked.')
-    : 'Unlocked \u2014 drag to move, Shift-drag to turn, Alt-drag to size.');
-  draw()
-}
-/* Turning is the same stored nudge the drag writes, in degrees clockwise about
-   the middle of the sheet, so a chart whose print is a degree or two out can be
-   corrected without touching the two points that placed it. */
-function plateTurn(deg){
-  if(!PLATE.align)return false;
-  const n=PLATE.align.nudge||(PLATE.align.nudge={});
-  let v=Number(deg);
-  if(!isFinite(v))return false;
-  /* Keep it readable rather than letting it spin on: -180 and 180 are the same. */
-  v=((v+180)%360+360)%360-180;
-  n.rot=Math.round(v*10)/10;
-  plateSyncTurn();
-  draw();
-  return true
-}
-/* Sizing is the third stored nudge: a percentage of the placed sheet, about
-   its middle, for a chart drawn at the wrong scale or a print that does not
-   match its own size. */
-function plateScale(pct){
-  if(!PLATE.align)return false;
-  const n=PLATE.align.nudge||(PLATE.align.nudge={});
-  const v=Number(pct);
-  if(!isFinite(v))return false;
-  /* A sheet can come out an order of magnitude too big when the fit was poor,
-     so the floor is a hundredth rather than a quarter. */
-  n.scale=Math.min(4,Math.max(.01,Math.round(v)/100));
-  plateSyncTurn();
-  draw();
-  return true
-}
-function plateSyncTurn(){
-  const n=PLATE.align&&PLATE.align.nudge||{};
-  const s=$('#plateTurn');
-  if(s&&document.activeElement!==s)s.value=String(Math.round((Number(n.rot)||0)*2)/2);
-  const z=$('#plateSize');
-  if(z&&document.activeElement!==z)z.value=String(Math.round((Number(n.scale)||1)*100))
-}
-function platePointer(e){
-  const r=cv.getBoundingClientRect();
-  return[e.clientX-r.left,e.clientY-r.top]
-}
-let plateDrag=null;
-cv.addEventListener('pointerdown',e=>{
-  if(!PLATE.on||!PLATE.visible||PLATE.locked||!PLATE.align||PLATE.picking)return;
-  const[x,y]=platePointer(e),m=plateAffine();
-  if(!m)return;
-  const c=plateInvert(m,x,y);
-  if(c[0]<0||c[1]<0||c[0]>m.w||c[1]>m.h)return;
-  e.preventDefault();e.stopPropagation();
-  try{cv.setPointerCapture(e.pointerId)}catch(_){}
-  /* Shift turns the sheet about its middle instead of moving it; Alt sizes it
-     by how far the pointer is from that middle. */
-  const cx=m.e+m.a*m.w/2+m.c*m.h/2,cy=m.f+m.b*m.w/2+m.d*m.h/2;
-  const n=PLATE.align.nudge||{};
-  plateDrag=e.altKey
-    ? {id:e.pointerId,x,y,mode:'scale',cx,cy,d0:Math.hypot(x-cx,y-cy),s0:Number(n.scale)||1}
-    : e.shiftKey
-      ? {id:e.pointerId,x,y,mode:'rot',cx,cy,ang:Math.atan2(y-cy,x-cx)}
-      : {id:e.pointerId,x,y,mode:'move'}
-},{capture:true});
-cv.addEventListener('pointermove',e=>{
-  if(!plateDrag||e.pointerId!==plateDrag.id)return;
-  const m=plateAffine();
-  if(!m)return;
-  const[x,y]=platePointer(e);
-  if(plateDrag.mode==='scale'){
-    const d=Math.hypot(x-plateDrag.cx,y-plateDrag.cy);
-    if(plateDrag.d0>6)plateScale(plateDrag.s0*(d/plateDrag.d0)*100);
-    e.preventDefault();e.stopPropagation();
-    return
-  }
-  if(plateDrag.mode==='rot'){
-    const ang=Math.atan2(y-plateDrag.cy,x-plateDrag.cx);
-    let d=(ang-plateDrag.ang)*180/Math.PI;
-    if(d>180)d-=360;if(d<-180)d+=360;
-    plateDrag.ang=ang;
-    const n=PLATE.align.nudge||(PLATE.align.nudge={});
-    plateTurn((Number(n.rot)||0)+d);
-    e.preventDefault();e.stopPropagation();
-    return
-  }
-  const dx=x-plateDrag.x,dy=y-plateDrag.y;
-  plateDrag.x=x;plateDrag.y=y;
-  /* The nudge is carried to the screen as a plain translation of the sheet, so
-     one screen pixel of drag is one chart pixel divided by the sheet's own
-     scale. Anything else would make the chart slide away from the pointer. */
-  /* The sheet's drawn size already includes its own size nudge, and the nudge
-     offsets are not multiplied by it, so that factor comes back out here. */
-  const n=PLATE.align.nudge||(PLATE.align.nudge={});
-  const ns=Number(n.scale)||1;
-  const sx=(Math.hypot(m.a,m.b)||ns)/ns,sy=(Math.hypot(m.c,m.d)||sx*ns)/ns;
-  n.dx=(Number(n.dx)||0)+dx/sx;
-  n.dy=(Number(n.dy)||0)+dy/sy;
-  e.preventDefault();e.stopPropagation();
-  draw()
-},{capture:true});
-const plateDragEnd=e=>{
-  if(!plateDrag||e.pointerId!==plateDrag.id)return;
-  plateDrag=null;
-  plateSave()
-};
-cv.addEventListener('pointerup',plateDragEnd,{capture:true});
-cv.addEventListener('pointercancel',plateDragEnd,{capture:true});
-function plateAlignStart(){
-  if(!PLATE.canvas){plateHint('The chart has not loaded yet.');return}
-  PLATE.align=null;PLATE.pairs=[];PLATE.pend=null;PLATE.pendEnd=null;PLATE.mark=null;PLATE.picking=true;
-  plateThresholds();
-  const pick=$('#platePick');if(pick)pick.hidden=false;
-  plateHint('Click a runway end on the chart, then the same threshold on the map. Two thresholds place it.');
-  draw()
-}
-/* The ends of the runway bands the chart draws, in chart pixels. These are the
-   features a threshold pick is snapped to, so the pilot clicks "the end of 4L"
-   rather than a pixel they have to judge. */
-function plateChartEnds(){
-  const c=PLATE.canvas;
-  if(!c||!PLATE.lib||!PLATE.lib.runwayStrokes)return [];
-  if(PLATE.ends&&PLATE.endsFor===c)return PLATE.ends;
-  let out=[];
-  try{
-    /* The longest strokes are the runways; the short ones are taxiways and
-       labels, which are not thresholds anyone would pick. */
-    const u=plateUnit();
-    for(const s of PLATE.lib.runwayStrokes(c).slice(0,24))out.push([s.a[0]*u,s.a[1]*u],[s.b[0]*u,s.b[1]*u])
-  }catch(_){out=[]}
-  PLATE.ends=out;PLATE.endsFor=c;
-  return out
-}
-/* Published thresholds, for snapping the map-side click to a real runway end. */
-function plateThresholds(){
-  if(PLATE.thresholds)return PLATE.thresholds;
-  PLATE.thresholds=[];
-  fetch('/api/runways?icao='+encodeURIComponent(PLATE.icao||'')).then(r=>r.ok?r.json():null).then(d=>{
-    if(!d||!d.runways)return;
-    PLATE.thresholds=d.runways.filter(r=>!r.closed&&r.ends).flatMap(r=>r.ends.map(e=>({ident:e.ident,lat:e.lat,lon:e.lon})))
-  }).catch(()=>{});
-  return PLATE.thresholds
-}
-/* Nearest candidate to a screen click, within a radius the eye can judge. */
-function plateSnapClick(x,y,items,radius,place){
-  let best=null;
-  for(const item of items){
-    const p=place(item);
-    if(!p||!isFinite(p[0])||!isFinite(p[1]))continue;
-    const d=Math.hypot(p[0]-x,p[1]-y);
-    if(d<=radius&&(!best||d<best.d))best={item,p,d}
-  }
-  return best
-}
-/* Two clicks place a chart: one on a drawn runway end, one on the threshold it
-   is, and both are snapped so the pair lands on real features rather than on
-   however steady the hand was. */
-function platePickAt(x,y){
-  if(PLATE.pend){
-    const geo=unvis(x,y);
-    if(!geo){plateHint('That point is not on the map.');return}
-    const hit=plateSnapClick(x,y,plateThresholds(),22,t=>plateScreen(...wpx(t.lon,t.lat,0)));
-    const g=hit?[hit.item.lon,hit.item.lat]:geo;
-    if(hit)PLATE.mark={lon:hit.item.lon,lat:hit.item.lat};
-    const label=hit?hit.item.ident:(PLATE.pendEnd&&PLATE.pendEnd.label)||'';
-    PLATE.pairs.push({c:PLATE.pend,g,label});PLATE.pend=null;
-    if(PLATE.pairs.length>=2){
-      const[p,q]=PLATE.pairs;
-      PLATE.align={c1:p.c,g1:p.g,c2:q.c,g2:q.g};
-      PLATE.pairs=[];PLATE.mark=null;PLATE.picking=false;
-      const pick=$('#platePick');if(pick)pick.hidden=true;
-      plateSave();
-      const names=[p.label,q.label].filter(Boolean);
-      plateHint(names.length===2
-        ? 'Aligned '+names.join(' and ')+'. Nudge it if the chart\u2019s print sits a little off its thresholds.'
-        : 'Aligned to the map. Drag the opacity slider to see the ground through the chart.');
-    }else{
-      plateHint('Second threshold: click its runway end on the chart, then the same one on the map.')
-    }
-    draw();return
-  }
-  const m=plateAffine();if(!m)return;
-  const chart=plateInvert(m,x,y);
-  if(chart[0]<0||chart[1]<0||chart[0]>m.w||chart[1]>m.h){plateHint('That is outside the chart. Click on the chart itself.');return}
-  const near=plateNearestEnd(x,y,m);
-  PLATE.pend=near?near.end:chart;
-  PLATE.pendEnd=near?{end:near.end}:null;
-  plateHint(near
-    ? 'Runway end picked. Now click that same threshold on the map.'
-    : 'Point picked. Now click the same feature on the map.');
-  draw()
-}
-/* The drawn runway end nearest a screen click, with the distance in screen px. */
-function plateNearestEnd(x,y,m){
-  const ends=plateChartEnds();
-  let best=null;
-  for(const end of ends){
-    const px=m.e+m.a*end[0]+m.c*end[1],py=m.f+m.b*end[0]+m.d*end[1];
-    const d=Math.hypot(px-x,py-y);
-    if(d<=14&&(!best||d<best.d))best={end,d};
-  }
-  return best
-}
-(()=>{const el=$('#plate');if(!el)return;
-  $('#plateX').onclick=closePlate;
-  $('#plateO').oninput=e=>{PLATE.opacity=Number(e.target.value);draw()};
-  $('#plateSel').onchange=e=>{if(PLATE.lib&&PLATE.entry)plateLoadChart(Number(e.target.value))};
-  $('#plateShow').onchange=e=>{PLATE.visible=e.target.checked;draw()};
-  $('#plateAlign').onclick=plateAlignStart;
-  $('#plateClear').onclick=()=>{PLATE.align=null;plateSave();plateHint('Alignment cleared. Press Align to place it again.');draw()};
-  const size=$('#plateSize');
-  if(size){
-    size.oninput=e=>{
-      if(plateScale(Number(e.target.value)))return;
-      e.target.value='100';
-      plateHint('Press Align first: there is no placement to size yet.')
-    };
-    size.onchange=()=>plateSave()
-  }
-  const turn=$('#plateTurn');
-  if(turn){
-    turn.oninput=e=>{
-      if(plateTurn(Number(e.target.value)))return;
-      e.target.value='0';
-      plateHint('Press Align first: there is no placement to turn yet.')
-    };
-    turn.onchange=()=>plateSave()
-  }
-  const lockBtn=$('#plateLock');
-  if(lockBtn)lockBtn.onclick=()=>{
-    if(!PLATE.align){plateHint('Press Align first: there is no placement to move yet.');return}
-    plateSetLocked(!PLATE.locked)
-  };
-  const pick=$('#platePick');
-  if(pick)pick.addEventListener('pointerdown',e=>{
-    e.preventDefault();
-    const cv=document.getElementById('map'),r=cv.getBoundingClientRect();
-    const dpr=1;
-    platePickAt((e.clientX-r.left)*dpr,(e.clientY-r.top)*dpr)
-  });
-  document.addEventListener('click',e=>{const b=e.target.closest('[data-plate]');if(!b)return;openPlate(b.dataset.plate,b.dataset.plateName||'')});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!el.hidden&&!$('#platePick').hidden){$('#platePick').hidden=true;PLATE.pend=null;plateHint('Alignment cancelled.')}
-    else if(e.key==='Escape'&&!el.hidden&&!document.querySelector('#plate:hover'))closePlate()});
+function mcClose(){$('#mc').hidden=true;$('#bMc').setAttribute('aria-expanded','false');$('#bMc').classList.remove('on')}
+(function(){
+  let timer=0;
+  $('#bMc').onclick=()=>$('#mc').hidden?mcOpen():mcClose();
+  $('#mcX').onclick=mcClose;
+  $('#mcQ').oninput=e=>{clearTimeout(timer);timer=setTimeout(()=>mcSearch(e.target.value),250)};
+  $('#mcList').onclick=e=>{const b=e.target.closest('button[data-set]');if(!b)return;const item=(b.dataset.set==='route'?MC.route:MC.results)[Number(b.dataset.i)];if(item)mcShow(item)};
+  $('#mcO').oninput=e=>{MC.opacity=Number(e.target.value);draw()};
+  $('#mcHide').onclick=e=>{MC.visible=!MC.visible;e.target.textContent=MC.visible?'Hide':'Show';draw()};
+  $('#mcOff').onclick=()=>{MC.token++;MC.canvas=null;MC.fit=null;MC.current='';$('#mcNow').hidden=true;mcRender();draw()};
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-mapchart]');if(b)mcOpen(b.dataset.mapchart)});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#mc').hidden)mcClose()});
+  setTimeout(mcRefreshRoute,600);
 })();
 function openTaxiChart(a){openChartsPage((a||sel||CH.a||{}).id||'')}
 function cfHtml(a){return chartLauncherHtml(a)}

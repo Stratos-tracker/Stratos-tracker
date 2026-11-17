@@ -87,8 +87,10 @@ code, kbd, pre { font-family: var(--mono); font-size: 12px; }
 .card.flush { padding: 0; overflow: hidden; }
 .card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .card-head h2, .card-head h3 { flex: 1; }
+/* The title already pushes the tag right; a spacer beside it would halve the title. */
+.card-head :is(h2, h3) ~ .spacer { display: none; }
 .card-head .hint { font-size: 11px; color: var(--mut); }
-.section-title { display: flex; align-items: baseline; gap: 10px; margin: 26px 0 12px; }
+.section-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 26px 0 12px; }
 .section-title h2 { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--mut); }
 .section-title .hint { font-size: 11px; color: var(--mut); }
 

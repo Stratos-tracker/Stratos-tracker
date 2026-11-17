@@ -64,6 +64,27 @@ export const EAIP_SOURCES = {
     categories: ['diagram', 'sid', 'star', 'approach'],
     note: 'The SIA publishes the eAIP and its charts under the Licence Ouverte, which permits redistribution and inclusion in another application with attribution.',
   },
+  'gcaa-uae': {
+    id: 'gcaa-uae',
+    kind: 'uae-eaip',
+    name: 'AIP United Arab Emirates',
+    publisher: 'General Civil Aviation Authority (GCAA)',
+    country: 'United Arab Emirates',
+    iso2: 'AE',
+    region: 'Middle East',
+    prefixes: ['OM'],
+    base: 'https://www.gcaa.gov.ae/en/ais/AIPHtmlFiles/AIP/Current',
+    // The index lists packages with their package date; the GCAA's own rule is
+    // to use the package dated today or the closest one before (parseUaeEdition).
+    cycleIndexUrl: 'https://www.gcaa.gov.ae/en/ais/AIPHtmlFiles/AIP/Current/UAE_AIP.html',
+    licenceCategory: 'FREE_REUSE',
+    licenceLabel: 'CC BY 4.0',
+    attribution: '© General Civil Aviation Authority (GCAA) — UAE AIP, CC BY 4.0',
+    terms: 'https://www.gcaa.gov.ae/en/epublication/open-data-policy',
+    checked: '2026-11-16',
+    categories: ['diagram', 'sid', 'star', 'approach', 'vfr'],
+    note: 'The GCAA open data policy makes data published on its website, where the UAE AIP is published, available under CC BY 4.0 with attribution. Not yet confirmed by the GCAA for the chart PDFs specifically.',
+  },
 };
 
 export const EAIP_LIST = Object.values(EAIP_SOURCES);
@@ -234,6 +255,130 @@ export function parseFranceCharts(html, { icao } = {}) {
   }
   return charts.sort((a, b) => FRANCE_ORDER.indexOf(a.category) - FRANCE_ORDER.indexOf(b.category)
     || a.title.localeCompare(b.title));
+}
+
+/* ── AIP United Arab Emirates (GCAA) ──────────────────────────────────── */
+
+const UAE_PACKAGE = /^\d{4}-P\d{2}$/;
+
+/**
+ * Every package on the GCAA index: its folder, its package date and the
+ * effective date of the AIRAC amendment it carries (null when it carries none).
+ */
+export function parseUaePackages(html) {
+  const packages = [];
+  for (const row of String(html || '').split(/<tr[\s>]/i)) {
+    const link = /href="AIRACs\/(\d{4}-P\d{2})\/html\/index-en-GB\.html">\s*(\d{1,2} [A-Z]{3} \d{4})\s*</i.exec(row);
+    if (!link) continue;
+    const cells = [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(cell => cell[1].split(/<br\s*\/?>/i).map(stripTags));
+    // Columns: package date, publication dates, effective dates, descriptions.
+    const effective = cells[2] || [];
+    const items = cells[3] || [];
+    const amdt = items.findIndex(item => /^AIRAC AMDT/i.test(item));
+    packages.push({
+      pkg: link[1],
+      packageDate: parseEaipDate(link[2]),
+      amdt: amdt >= 0 ? items[amdt] : '',
+      amdtEffective: amdt >= 0 ? parseEaipDate(effective[amdt]) : null,
+    });
+  }
+  return packages;
+}
+
+/** The package in force: the newest one dated today or before (the GCAA's own instruction). */
+export function parseUaeEdition(html, now = Date.now()) {
+  const packages = parseUaePackages(html);
+  const current = packages.filter(p => p.packageDate != null && p.packageDate <= now).sort((a, b) => b.packageDate - a.packageDate)[0];
+  if (!current) return null;
+  // What is in force today stays valid until the next amendment takes effect.
+  const next = packages.map(p => p.amdtEffective).filter(at => at != null && at > now).sort((a, b) => a - b)[0];
+  return {
+    folder: current.pkg,
+    cycle: current.amdt || current.pkg,
+    effective: current.packageDate,
+    expires: next != null ? next : null,
+    // A page can come from an older package; its amendment date decides which
+    // copy of an amended chart is the one in force.
+    amdtEffective: Object.fromEntries(packages.map(p => [p.pkg, p.amdtEffective])),
+  };
+}
+
+export function uaeMenuUrl(source, pkg) {
+  if (!source || source.kind !== 'uae-eaip' || !UAE_PACKAGE.test(String(pkg || ''))) return null;
+  return `${source.base}/AIRACs/${pkg}/html/eAIP/menu-en-GB.html`;
+}
+
+/** One airport's AD 2 page as the package menu links it (it may live in an older package). */
+export function uaeAirportPage(source, pkg, menuHtml, icao) {
+  const code = String(icao || '').trim().toUpperCase();
+  const menu = uaeMenuUrl(source, pkg);
+  if (!menu || !/^OM[A-Z]{2}$/.test(code)) return null;
+  const href = new RegExp(`href=["']([^"']*AD-2\\.${code}-en-GB\\.html)`).exec(String(menuHtml || ''));
+  if (!href) return null;
+  const url = new URL(href[1], menu).href;
+  const page = new RegExp(`^${source.base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/AIRACs/(\\d{4}-P\\d{2})/html/eAIP/AD-2\\.${code}-en-GB\\.html$`).exec(url);
+  return page ? { url, pkg: page[1] } : null;
+}
+
+/** A chart file the GCAA publishes for this airport ("OMDB-AD-2-21_2026-08.pdf"). */
+export function isUaeChartName(pdf, icao) {
+  const code = String(icao || '').trim().toUpperCase();
+  return /^OM[A-Z]{2}$/.test(code) && new RegExp(`^${code}-AD-2-[0-9A-Z]+([.-][0-9A-Z]+)*_\\d{4}-\\d{2}\\.pdf$`, 'i').test(String(pdf || ''));
+}
+
+/** The GCAA's own address for one chart in the package that holds it, or null. */
+export function uaeChartUrl(source, pkg, icao, pdf) {
+  if (!source || source.kind !== 'uae-eaip' || !UAE_PACKAGE.test(String(pkg || ''))) return null;
+  if (!isUaeChartName(pdf, icao)) return null;
+  return `${source.base}/AIRACs/${pkg}/graphics/${pdf}`;
+}
+
+/** Chart family from the GCAA's own figure title. */
+export function classifyUaeChart(title) {
+  const text = String(title || '').toUpperCase();
+  if (/VISUAL APPROACH|\bVFR\b|VISUAL REPORTING/.test(text)) return 'vfr';
+  if (/STANDARD DEPARTURE|\bSID\b/.test(text)) return 'sid';
+  if (/STANDARD ARRIVAL|\bSTAR\b/.test(text)) return 'star';
+  if (/INSTRUMENT APPROACH|\bILS\b|\bRNP\b|\bRNAV\b|\bVOR\b|\bNDB\b|\bLOC\b/.test(text)) return 'approach';
+  if (/\bAD CHART\b|AERODROME CHART|PARKING|DOCKING|GROUND MOVEMENT/.test(text)) return 'diagram';
+  return 'other';
+}
+
+/**
+ * Charts on one UAE AD 2 page: each figure's title as the GCAA wrote it and the
+ * copy in force today. A pending amendment shows two copies of a chart, the
+ * inserted one (valid from the amendment's effective date) and the deleted one
+ * (valid until then); only the one in force is kept, so a pilot never gets
+ * next cycle's chart as today's.
+ */
+export function parseUaeCharts(html, { icao, amdtEffective = null, now = Date.now() } = {}) {
+  const code = String(icao || '').trim().toUpperCase();
+  if (!/^OM[A-Z]{2}$/.test(code)) return [];
+  const amended = amdtEffective != null && amdtEffective <= now;
+  const charts = [];
+  const seen = new Set();
+  for (const figure of String(html || '').split(/<div class="Figure"[^>]*>/i).slice(1)) {
+    const heading = /<span class="Figure-title">([\s\S]*?)<\/span>/i.exec(figure);
+    if (!heading) continue;
+    const title = stripTags(heading[1]);
+    const boxes = [...figure.matchAll(/<div class="graphic-box([^"]*)">\s*<a[^>]*href="\.\.\/\.\.\/graphics\/([^"\/]+\.pdf)"/gi)];
+    const inForce = boxes.find(([, cls]) => (/AmdtInserted/i.test(cls) ? amended : /AmdtDeleted/i.test(cls) ? !amended : true));
+    if (!inForce) continue;
+    const pdf = inForce[2];
+    if (seen.has(pdf) || !isUaeChartName(pdf, code)) continue;
+    seen.add(pdf);
+    const number = /\(Chart\s+([^)]+)\)\s*$/i.exec(title);
+    charts.push({
+      code: number ? number[1] : pdf.replace(/_.*$/, ''),
+      title: title.replace(/\s*\(Chart\s+[^)]+\)\s*$/i, ''),
+      caption: '',
+      pdf,
+      category: classifyUaeChart(title),
+      icao: code,
+    });
+  }
+  const order = ['diagram', 'sid', 'star', 'approach', 'vfr', 'other'];
+  return charts.sort((a, b) => order.indexOf(a.category) - order.indexOf(b.category));
 }
 
 /** The only direct French document outside the eAIP pages: the aerodrome chart. */

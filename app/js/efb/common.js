@@ -7,7 +7,7 @@
  * source of truth.
  */
 
-import { bridgeHealth, defaultBridgeBase, isHostedPage, TelemetryClient } from '../bridge.js';
+import { bridgeHealth, defaultBridgeBase, isHostedPage, siteApi, TelemetryClient } from '../bridge.js';
 import { loadDirectory } from '../pilot/common.js';
 import { clearOfp, loadOfp, OFP_STORAGE_KEY, saveOfp } from '../lib/flightsummary.js';
 import { fetchSimbriefPlan, loadSimbriefId } from '../lib/simbrief.js';
@@ -553,7 +553,7 @@ export async function loadChartCatalogue(icao) {
   }
   const candidates = [];
   if (!isHostedPage()) candidates.push(`${defaultBridgeBase().replace(/\/+$/, '')}/charts?icao=${encodeURIComponent(code)}`);
-  candidates.push(`/api/charts?icao=${encodeURIComponent(code)}`);
+  candidates.push(siteApi(`/api/charts?icao=${encodeURIComponent(code)}`));
   let lastError = 'No chart catalogue was returned.';
   for (const url of candidates) {
     try {

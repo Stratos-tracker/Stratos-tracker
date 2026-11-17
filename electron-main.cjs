@@ -850,6 +850,10 @@ if (!gotLock) {
       'tile.openstreetmap.org', 'server.arcgisonline.com', 'overpass-api.de',
       'overpass.kumi.systems', 'overpass.private.coffee', 'simbrief.com',
       'www.simbrief.com', 'metar.vatsim.net', '127.0.0.1', 'localhost',
+      // The site's own chart API: catalogues and documents from the publishers
+      // whose terms allow in-app display, which the bridge does not serve.
+      'www.stratos-tracker.com',
+      'api.ivao.aero',
     ]);
     // Charts are rendered by the bundled pdf.js from bytes fetched through the
     // bridge, so no third-party site is framed any more.

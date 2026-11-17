@@ -1,11 +1,13 @@
 // Stratos API: the terminal chart catalogue for one airport.
 // Query: /api/charts?icao=KJFK
 //
-// Three publishers are integrated, each because its own terms allow it:
+// Four publishers are integrated, each because its own terms allow it:
 //   - FAA d-TPP (U.S. Government work, public domain): one metafile per cycle.
 //   - AIP Austria (CC BY 4.0): the authority's chart index per aerodrome.
 //   - AIP France (Licence Ouverte): every chart the SIA lists in the airport's
 //     Cartes folder — aerodrome, SID, STAR and instrument approach.
+//   - AIP UAE (GCAA open data policy, CC BY 4.0): every chart figure on the
+//     airport's AD 2 page, in the copy in force today.
 // Every other authority is a link in data/chart-sources.js, not a catalogue:
 // a publicly readable AIP is not a redistribution licence.
 //
@@ -18,6 +20,7 @@ import { airmateDocuments } from './airmate.js';
 import {
   eaipAirportPage, eaipForIcao, eaipPdfUrl, franceAirportPageUrl, franceChartUrl, francePdfUrl,
   parseEaipCharts, parseEaipCycleIndex, parseEaipValidity, parseFranceCharts, parseFranceEdition,
+  parseUaeCharts, parseUaeEdition, uaeAirportPage, uaeChartUrl, uaeMenuUrl,
 } from '../app/js/lib/eaip.js';
 
 const CACHE_MS = 6 * 60 * 60 * 1000;
@@ -77,6 +80,12 @@ async function eaipEdition(source) {
   const hit = editionCache.get(source.id);
   if (hit && Date.now() - hit.at < 60 * 60 * 1000) return hit.edition;
   const html = await download(source.cycleIndexUrl, 'text/html');
+  if (source.kind === 'uae-eaip') {
+    const edition = parseUaeEdition(html);
+    if (!edition) throw new Error(`${source.name}: the publication package could not be read.`);
+    editionCache.set(source.id, { edition, at: Date.now() });
+    return edition;
+  }
   if (source.kind === 'france-atlas') {
     const edition = parseFranceEdition(html);
     if (!edition) throw new Error(`${source.name}: the publication edition could not be read.`);
@@ -126,7 +135,20 @@ async function eaipCatalogue(source, icao) {
   let charts;
   let effective = edition.effective;
   let expires = edition.expires;
-  if (source.kind === 'france-atlas') {
+  if (source.kind === 'uae-eaip') {
+    // The package menu points each airport at the AD 2 page in force, which may
+    // sit in an older package; that page's figures carry the charts.
+    const menu = await download(uaeMenuUrl(source, edition.folder), 'text/html');
+    const page = uaeAirportPage(source, edition.folder, menu, icao);
+    const html = page ? await download(page.url, 'text/html') : null;
+    charts = (html ? parseUaeCharts(html, { icao, amdtEffective: edition.amdtEffective[page.pkg] }) : []).map(chart => ({
+      ...chart,
+      cycle: edition.cycle,
+      edition: page.pkg,
+      url: uaeChartUrl(source, page.pkg, icao, chart.pdf),
+    })).filter(chart => chart.url);
+    if (!charts.length) return null;
+  } else if (source.kind === 'france-atlas') {
     // The SIA's eAIP page for the airport lists every chart in its Cartes
     // folder — aerodrome, SID, STAR and approach — as per-chart PDFs, so the
     // catalogue is read from the publisher's own page rather than assumed.

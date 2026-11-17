@@ -990,6 +990,7 @@ test('world layer: the tracker offers the style, ships the data and draws names'
   });
   const mount = (z, lat, lon, theme = 'night') => new Function('__cx', '__off', `
     const cx=__cx, SZ=256, R=Math.PI/180, W=1280, H=800, dpr=1;
+    const Path2D=class{moveTo(){}lineTo(){}closePath(){}};
     const V={lon:${lon},lat:${lat},z:${z}};
     const L={style:'world'};
     const C={bg:'#0a1421',land:'#101d2b',coast:'#2c3f55',txt:'#e4ecf5',mut:'#8b9db3',ui:'#0d1927'};
@@ -1007,14 +1008,14 @@ test('world layer: the tracker offers the style, ships the data and draws names'
     assert.ok(seen.includes(continent), `${continent} is named at world zoom`);
   }
   assert.ok(seen.some(l => /Atlantic Ocean/.test(l)), 'the Atlantic is named at world zoom');
-  assert.ok(seen.includes('France'), 'countries are named at world zoom');
+  assert.ok(seen.includes('FRANCE'), 'countries are named at world zoom, in chart capitals');
   // A whole-world view stays quiet: the great oceans are named in italic serif,
   // seas wait for a closer look, and countries are muted rather than shouting.
   assert.ok(!seen.includes('Mediterranean Sea'), 'seas wait until the view is closer than the whole world');
   assert.ok(counts.fonts.some(f => /italic .*Georgia/.test(f)), 'water names are set in an italic serif');
-  assert.equal(counts.ink['France'], '#8b9db3', 'country names use the muted ink at world zoom');
-  assert.ok(seen.includes('United States') && !seen.includes('United States of America'), 'long official names are shortened on the map');
-  assert.ok(counts.fills.includes('#16212c'), 'land is painted with the world basemap tone');
+  assert.equal(counts.ink['FRANCE'], 'rgba(214,224,236,.62)', 'country names use the quiet chart ink');
+  assert.ok(seen.includes('UNITED STATES') && !seen.includes('UNITED STATES OF AMERICA'), 'long official names are shortened on the map');
+  assert.ok(counts.fills.includes('#1b2631'), 'land is painted with the world chart tone');
 
   // A saved World style must not kill the frame loop: the loop starts after the
   // script is evaluated, and the layer resolves its data without a dead zone.
@@ -1027,12 +1028,12 @@ test('world layer: the tracker offers the style, ships the data and draws names'
 
   counts.labels = []; counts.fills = [];
   mount(2.5, 30, -10, 'day').buildWorld(stub('off'));
-  assert.ok(!counts.fills.includes('#16212c'), 'the night land tone stays out of the day theme');
-  assert.ok(counts.fills.includes('#101d2b'), 'the day theme keeps the page land colour');
+  assert.ok(!counts.fills.includes('#1b2631'), 'the night land tone stays out of the day theme');
+  assert.ok(counts.fills.includes('#f4f2ed'), 'the day theme has its own chart land tone');
 
   counts.labels = [];
   mount(6.5, 48, 8).buildWorld(stub('off'));
-  assert.ok(counts.labels.includes('Germany'), 'closer in, the local country is named');
+  assert.ok(counts.labels.includes('GERMANY'), 'closer in, the local country is named');
 
   // Panning must reuse the sheet: a rebuild per frame would stutter.
   const panned = mount(6, 40, -3);
@@ -1276,7 +1277,7 @@ test('a clicked aircraft shows its own recorded trail, from every traffic source
   const vatsim = page.slice(page.indexOf('function vatsimTraffic()'), page.indexOf('function vatsimHtml('));
   assert.match(vatsim, /trlAdd\(p\.id,p\.lat,p\.lon,p\.alt,400\)/, 'every VATSIM pilot appends a position');
   assert.match(vatsim, /known\.get\(id\)/, 'the existing object is reused, so an open card and its trail survive a refresh');
-  assert.match(vatsim, /sel\.source=='vatsim'&&!out\.includes\(sel\)/, 'a selected pilot stays selectable when it leaves the view');
+  assert.match(vatsim, /sel\.source==src&&!out\.includes\(sel\)/, 'a selected pilot stays selectable when it leaves the view');
   assert.match(vatsim, /trlGC\(\)/, 'expired trails are cleared on the same cycle');
 });
 
@@ -1757,111 +1758,17 @@ test('the VATSIM ATC layer marks staffed airports and invents no coverage', asyn
   assert.ok(page.includes('SimAware TRACON Project') && page.includes('CC BY-SA 4.0'), 'the boundary source is credited as its licence requires');
 });
 
-test('the chart plate is a map layer, placed by the pilot', async () => {
+
+test('charts on the map: one panel with a search bar, placed only when to scale', async () => {
   const fs = await import('node:fs');
   const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
-  const lib = fs.readFileSync(new URL('../app/js/lib/plate.js', import.meta.url), 'utf8');
-
-  // The document is drawn on the map, under the route and the aircraft, so a
-  // chart never hides the traffic it is meant to be read against.
-  assert.ok(page.includes('function drawPlate(){'), 'the plate has its own map pass');
-  const order = page.indexOf('drawPlate();drawSelectedAircraftRoute()');
-  assert.ok(order > 0, 'the plate is painted before the route, so the route reads over it');
-  assert.ok(page.indexOf("if(L.atc&&!CH.on){drawTracon();drawAtc()}if(liveOk())") > order, 'the aircraft is painted after the plate');
-
-  // Alignment is the pilot's own, solved from two picked reference points in
-  // the projection the chart below it uses.
-  assert.ok(page.includes('function plateWorldTransform()'), 'placement is solved from the picked pairs');
-  assert.ok(page.includes('wpx(Number(a.g1[0]),Number(a.g1[1]),0)'), 'it is solved in the map projection, so it holds through zoom and pan');
-  assert.ok(page.includes('const chart=plateInvert(m,x,y)'), 'the chart point is taken from the document, not guessed from the airport');
-  assert.ok(page.includes("localStorage.setItem('stratos.plateAlign'"), 'an alignment is remembered per chart');
-  assert.ok(!/Math\.random|heuristic|guess/i.test(page.slice(page.indexOf('function plateWorldTransform()'), page.indexOf('function platePickAt'))), 'no placement is invented');
-
-  // Transparency is the pilot's, from clear to transparent.
-  assert.ok(/id="plateO" type="range" min="0" max="100"/.test(page), 'the opacity range reaches fully transparent');
-  assert.ok(page.includes('PLATE.opacity=Number(e.target.value)'), 'the slider drives the drawn alpha');
-  assert.ok(page.includes('cx.globalAlpha=Math.max(0,Math.min(1,PLATE.opacity/100))'), 'the plate is composited at that alpha');
-
-  // The document comes from the authority, rendered locally.
-  assert.ok(lib.includes('/api/charts?icao='), 'the catalogue is the authority\'s, not a bundled copy');
-  assert.ok(lib.includes('pdf.min.mjs'), 'the document is rendered here, so it can be placed on the map');
-});
-
-test('the plate placement is suggested from the runways, never guessed', async () => {
-  const fs = await import('node:fs');
-  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
-  const lib = fs.readFileSync(new URL('../app/js/lib/plate.js', import.meta.url), 'utf8');
-  const api = fs.readFileSync(new URL('../api/runways.js', import.meta.url), 'utf8');
-
-  assert.ok(page.includes('function plateSuggest(labels,refs)'), 'a suggestion pairs printed labels with published points');
-  assert.ok(page.includes('const ref=refs.get(ident)'), 'only a point the authority publishes is used');
-  assert.ok(page.includes('if(cand.length<2)return null'), 'one readable label is not enough to place a sheet');
-  assert.ok(page.includes('bestAny.inliers>=3?bestAny:null'), 'a fit needs three labels to agree before it is used');
-  assert.ok(page.includes('if(inliers.length<3)return null'), 'two labels are not enough to place a sheet');
-  assert.ok(page.includes('if(!(sheetNm>0.2&&sheetNm<800))return null'), 'an implausible sheet size is refused rather than applied');
-  assert.ok(page.includes('id="plateSel"') && page.includes('plateLoadChart(Number(e.target.value))'), 'any chart in the catalogue can be shown over the map');
-  assert.ok(lib.includes('page.getTextContent()'), 'the designators come from the document itself');
-  assert.ok(lib.includes("export async function plateRunways"), 'threshold coordinates come from the airport data');
-  assert.ok(api.includes('runways.csv') && api.includes('le_latitude_deg'), 'thresholds are the published runway ends');
-  assert.ok(page.includes('function plateReveal()'), 'a georeferenced diagram too small to read is brought into view once');
-
-  // The pilot's correction is applied to the placement, not baked into the points.
-  assert.ok(page.includes('plateAffine'), 'the nudge feeds the same affine the plate is drawn with');
-  assert.ok(page.includes('id="plateLock"'), 'the sheet has one lock instead of a row of arrow buttons');
-  assert.ok(!page.includes('data-nudge='), 'the arrow buttons are gone');
-  assert.ok(page.includes('id="plateTurn"'), 'the sheet can be turned without a pair of buttons');
-  assert.ok(page.includes("plateDrag.mode==='rot'"), 'shift-drag turns the sheet about its middle');
-  assert.ok(page.includes('n.rot=Math.round(v*10)/10'), 'the turn is stored with the placement');
-  assert.ok(page.includes('id="plateSize"'), 'the sheet can be sized from the panel as well');
-  assert.ok(page.includes("plateDrag.mode==='scale'"), 'alt-drag sizes the sheet about its middle');
-  assert.ok(page.includes('n.scale=Math.min(4,Math.max(.01,Math.round(v)/100))'), 'the size can go down to a hundredth of the placement');
-  assert.ok(page.includes('id="plateSize" type="range" min="1"'), 'the size control reaches that small');
-});
-
-test('an unlocked chart is dragged, a locked one stays put', async () => {
-  const fs = await import('node:fs');
-  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
-
-  assert.ok(page.includes('function plateSetLocked(locked,quiet)'), 'one control locks and unlocks the sheet');
-  assert.ok(page.includes("aria-pressed") && page.includes('&#128274; Locked'), 'the lock states which mode it is in');
-  assert.ok(page.includes("PLATE.locked||!PLATE.align||PLATE.picking)return"), 'a locked sheet, or no placement, leaves the map alone');
-  assert.ok(page.includes('e.preventDefault();e.stopPropagation();'), 'a drag on the sheet does not pan the map underneath it');
-  /* The drag is stored as chart pixels, so the correction means the same thing
-     at every zoom and is saved with the placement. */
-  assert.ok(page.includes('n.dx=(Number(n.dx)||0)+dx/sx'), 'the drag is carried into chart pixels by the sheet\u2019s own scale');
-  assert.match(page, /plateDrag=null;\s*plateSave\(\)/, 'the correction is saved once the drag ends');
-});
-
-test('two clicks land on real thresholds, not on wherever the hand was', async () => {
-  const fs = await import('node:fs');
-  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
-
-  assert.ok(page.includes('function plateChartEnds()'), 'the chart\u2019s drawn runway ends are the picking candidates');
-  assert.ok(page.includes('PLATE.lib.runwayStrokes(c).slice(0,24)'), 'the long drawn strokes are the runways, not the taxiways');
-  assert.ok(page.includes('function plateThresholds()') && page.includes("fetch('/api/runways?icao='"), 'the map side snaps to published thresholds');
-  assert.ok(page.includes('function plateNearestEnd('), 'a chart click snaps to the nearest drawn end');
-  assert.ok(page.includes('plateSnapClick(x,y,plateThresholds(),22'), 'a map click snaps to the nearest threshold within reach');
-  assert.ok(page.includes("const g=hit?[hit.item.lon,hit.item.lat]:geo"), 'the published coordinates of the snapped threshold are what gets stored');
-  assert.ok(page.includes("Aligned '+names.join(' and ')"), 'the pilot is told which thresholds placed the sheet');
-  assert.ok(page.includes('PLATE.picking=true'), 'the picking mode is explicit, so the markers can be drawn');
-});
-
-test('the sheet is described in page points, so it can be rendered again sharper', async () => {
-  const fs = await import('node:fs');
-  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
-  const lib = fs.readFileSync(new URL('../app/js/lib/plate.js', import.meta.url), 'utf8');
-
-  assert.ok(lib.includes('pageWidth: base.width'), 'the renderer reports the page size in points');
-  assert.ok(lib.includes('Math.min(9, wantScale)'), 'a page can be rasterised well beyond three times its points');
-  assert.ok(lib.includes('labels: wantLabels = true'), 'a re-render can skip reading the text again');
-  assert.ok(page.includes('function plateUnit()'), 'rendered pixels convert to page points in one place');
-  assert.ok(lib.includes('page.getViewport({ scale: 1 })') && page.includes('pageW=Number(page.pageWidth)'), 'the page size is kept with the chart');
-  assert.ok(page.includes('cx.drawImage(PLATE.drawable||PLATE.canvas,0,0,m.w,m.h)'), 'the page is drawn at its own size, not its pixel size');
-  assert.ok(page.includes('const w=plateW(),h=plateH();'), 'the placement is solved in page points');
-  assert.ok(page.includes('out.push([s.a[0]*u,s.a[1]*u],[s.b[0]*u,s.b[1]*u])'), 'the picked runway ends are page points too');
-  assert.ok(page.includes('async function plateDetailRaise()'), 'the sheet is rendered again when the screen outgrows it');
-  assert.ok(page.includes('if(plateDetailTimer)return;'), 'the redraw loop cannot keep postponing the sharper render');
-  assert.ok(page.includes('if(need<c.width*1.4||wantScale<=c.width/plateW()*1.3)return'), 'it only re-renders when the screen really outgrows the sheet');
-  assert.ok(page.includes('const wantScale=Math.min(5,need/plateW())'), 'the extra pixels are capped to what a device has to hold');
-  assert.ok(page.includes('if(kept&&kept.v!==2)kept=null'), 'points stored in old rendered pixels are dropped, not misapplied');
+  assert.ok(page.includes('data-l="dn">Day / night</button><button type="button" id="bMc"'), 'a Charts chip in the map settings Layers opens the panel');
+  assert.doesNotMatch(page, /id="bMc" class="fab"/, 'not a button on the map itself');
+  assert.match(page, /<input id="mcQ" type="search"/, 'the panel has a search bar');
+  assert.match(page, /'<h4>Your route<\/h4>'/, "the route's own charts come first");
+  assert.match(page, /mcFitLib\.fitChart\(page\.labels,refs,/, 'a chart is placed from the names it prints');
+  assert.match(page, /if\(!fit\)\{\s*mcStatus\([^)]*'Not on the map: this chart is not drawn to scale/, 'and kept off the map when it cannot be');
+  assert.match(page, /function drawMapChart\(\)\{\s*if\(!MC\.canvas\|\|!MC\.fit\|\|!MC\.visible\)return;/, 'only a placed chart is ever drawn');
+  assert.match(page, /drawMapChart\(\);drawSelectedAircraftRoute\(\);/, 'under the route and the aircraft');
+  assert.doesNotMatch(page, /PLATE|platePick|plateAlign|data-plate/, 'nothing of the old overlay remains');
 });

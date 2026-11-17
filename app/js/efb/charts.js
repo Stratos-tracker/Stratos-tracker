@@ -31,14 +31,14 @@ import {
   chartCacheKey, isPdfBytes, officialChartUrl, readChartCache,
   validityState, validityText, writeChartCache,
 } from '../lib/charts.js';
-import { defaultBridgeBase, isHostedPage } from '../bridge.js';
+import { defaultBridgeBase, isHostedPage, siteApi } from '../bridge.js';
 import { ChartViewer } from '../pilot/charts.js';
 import {
   FREENAV_HOME, FREENAV_NOTICE, freenavForIcao, isFreenavIcao, loadFreenavIndex,
 } from '../lib/freenav.js';
 
 /** Integrated publishers whose catalogue is an AIP edition, not an FAA cycle. */
-const EAIP_CYCLE = new Set(['austrocontrol-eaip', 'sia-france']);
+const EAIP_CYCLE = new Set(['austrocontrol-eaip', 'sia-france', 'gcaa-uae']);
 
 const RECENT_KEY = 'stratos.efb.charts.recent';
 const SAVED_KEY = 'stratos.efb.charts.saved';
@@ -136,13 +136,15 @@ function documentUrls(chart) {
     // read it from the publisher's page.
     query = `source=sia-france&icao=${encodeURIComponent(chart.icao || '')}&edition=${encodeURIComponent(chart.edition || '')}`
       + (chart.pdf ? `&pdf=${encodeURIComponent(chart.pdf)}` : '');
+  } else if (chart.source === 'gcaa-uae') {
+    query = `source=gcaa&icao=${encodeURIComponent(chart.icao || '')}&pkg=${encodeURIComponent(chart.edition || '')}&pdf=${encodeURIComponent(chart.pdf)}`;
   } else {
     query = `cycle=${encodeURIComponent(chart.cycle || '')}&file=${encodeURIComponent(chart.pdf)}`;
   }
   if (!isHostedPage()) {
     urls.push(`${defaultBridgeBase().replace(/\/+$/, '')}/chart?${query}`);
   }
-  urls.push(`/api/chart?${query}`);
+  urls.push(siteApi(`/api/chart?${query}`));
   return urls;
 }
 
