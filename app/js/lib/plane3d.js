@@ -380,10 +380,10 @@
     + 'uniform mat4 u_mvp; uniform mat4 u_rot; varying vec3 v_n; varying float v_part; varying vec2 v_uv;'
     + 'void main(){ v_n = (u_rot * vec4(a_nrm, 0.0)).xyz; v_part = a_part; v_uv = a_uv; gl_Position = u_mvp * vec4(a_pos, 1.0); }';
   var FS = 'precision mediump float; varying vec3 v_n; varying float v_part; varying vec2 v_uv;'
-    + 'uniform vec3 u_top; uniform vec3 u_belly; uniform vec3 u_tail; uniform vec3 u_eng; uniform float u_mode;'
+    + 'uniform vec3 u_top; uniform vec3 u_belly; uniform vec3 u_tail; uniform vec3 u_eng; uniform float u_mode; uniform float u_alpha;'
     + 'uniform vec4 u_color; uniform sampler2D u_tex; uniform float u_hasTex;'
     + 'void main(){'
-    + ' if (u_mode > 1.5) { gl_FragColor = vec4(u_tail, 0.55); return; }'
+    + ' if (u_mode > 1.5) { gl_FragColor = vec4(u_tail, u_alpha); return; }'
     + ' vec3 base;'
     + ' if (u_mode > 0.5) { base = u_color.rgb; if (u_hasTex > 0.5) base *= texture2D(u_tex, v_uv).rgb; }'
     + ' else base = v_part < 0.5 ? u_top : v_part < 1.5 ? u_belly : v_part < 2.5 ? vec3(0.78, 0.81, 0.84) : v_part < 3.5 ? u_tail : u_eng;'
@@ -402,7 +402,7 @@
       the pilot's own aircraft when its airline is unknown, or the selected
       traffic. Downloaded models keep their own paint. */
   function layer(map, id) {
-    var planes = [];
+    var planes = [], trail = [];
     var prog = null, loc = {}, gpu = {}, glb = {}, lineBuf = null, uint32 = false;
     function buffer(gl, target, data) { var b = gl.createBuffer(); gl.bindBuffer(target, b); gl.bufferData(target, data, gl.STATIC_DRAW); return b; }
     function upload(gl, kind) {
@@ -459,24 +459,65 @@
       }).catch(function () { entry.failed = true; });
       return null;
     }
+    /* The trail: each segment placed from its own start point (so the globe's
+       curvature never lifts a long path off the surface), a line at the
+       recorded altitude and a faint curtain down to sea level; the terrain
+       hides the part of the curtain under the ground. */
+    function drawTrail(gl, main, attrib) {
+      gl.uniform1f(loc.u_mode, 2);
+      attrib('a_nrm', null);
+      attrib('a_part', null);
+      attrib('a_uv', null);
+      // The path ends where the selected model is drawn this frame, so the two always meet.
+      var pts = trail, sel = planes.filter(function (q) { return q.selected; })[0];
+      if (sel && Number.isFinite(sel.lat)) pts = trail.concat([{ lat: sel.lat, lon: sel.lon, alt: Number(sel.alt) || 0, rgb: trail[trail.length - 1].rgb }]);
+      var step = Math.max(1, Math.ceil(pts.length / 400)), idx = [];
+      for (var i = 0; i < pts.length; i += step) idx.push(i);
+      if (idx[idx.length - 1] !== pts.length - 1) idx.push(pts.length - 1);
+      for (var k = 1; k < idx.length; k += 1) {
+        var a = pts[idx[k - 1]], b = pts[idx[k]];
+        var dLon = ((b.lon - a.lon + 540) % 360) - 180;
+        var e = dLon * Math.cos(a.lat * RAD) * 111320, n = (b.lat - a.lat) * 110574;
+        var za = Math.max(0, a.alt * FT), zb = Math.max(0, b.alt * FT);
+        var c = a.rgb && b.rgb ? [(a.rgb[0] + b.rgb[0]) / 510, (a.rgb[1] + b.rgb[1]) / 510, (a.rgb[2] + b.rgb[2]) / 510] : [0.65, 0.95, 0.99];
+        gl.uniformMatrix4fv(loc.u_mvp, false, new Float32Array(mul(main, mul(map.transform.getMatrixForModel([a.lon, a.lat], 0), BASIS))));
+        gl.uniform3fv(loc.u_tail, c);
+        gl.bindBuffer(gl.ARRAY_BUFFER, lineBuf);
+        gl.depthMask(false);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 0, e, n, 0, e, n, zb, 0, 0, 0, e, n, zb, 0, 0, za]), gl.DYNAMIC_DRAW);
+        gl.uniform1f(loc.u_alpha, 0.2);
+        attrib('a_pos', lineBuf, 3);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        gl.depthMask(true);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, za, e, n, zb]), gl.DYNAMIC_DRAW);
+        gl.uniform1f(loc.u_alpha, 0.95);
+        attrib('a_pos', lineBuf, 3);
+        gl.drawArrays(gl.LINES, 0, 2);
+      }
+    }
     return {
       id: id || 'planes3d',
       type: 'custom',
       renderingMode: '3d',
       setPlanes: function (list) { planes = Array.isArray(list) ? list : []; map.triggerRepaint(); },
+      /** The selected flight's recorded path: [{lat, lon, alt (ft), rgb: [r,g,b] 0-255}]. */
+      setTrail: function (list) {
+        trail = (Array.isArray(list) ? list : []).filter(function (q) { return Number.isFinite(q.lat) && Number.isFinite(q.lon); });
+        map.triggerRepaint();
+      },
       onAdd: function (_map, gl) {
         prog = gl.createProgram();
         gl.attachShader(prog, compile(gl, gl.VERTEX_SHADER, VS));
         gl.attachShader(prog, compile(gl, gl.FRAGMENT_SHADER, FS));
         gl.linkProgram(prog);
         ['a_pos', 'a_nrm', 'a_part', 'a_uv'].forEach(function (n) { loc[n] = gl.getAttribLocation(prog, n); });
-        ['u_mvp', 'u_rot', 'u_top', 'u_belly', 'u_tail', 'u_eng', 'u_mode', 'u_color', 'u_tex', 'u_hasTex'].forEach(function (n) { loc[n] = gl.getUniformLocation(prog, n); });
+        ['u_mvp', 'u_rot', 'u_top', 'u_belly', 'u_tail', 'u_eng', 'u_mode', 'u_alpha', 'u_color', 'u_tex', 'u_hasTex'].forEach(function (n) { loc[n] = gl.getUniformLocation(prog, n); });
         lineBuf = gl.createBuffer();
         uint32 = (typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext) || !!gl.getExtension('OES_element_index_uint');
         Object.keys(MODELS).forEach(function (key) { if (!MODELS[key].lazy) model(gl, key); });
       },
       render: function (gl, args) {
-        if (!planes.length || !prog) return;
+        if ((!planes.length && trail.length < 2) || !prog) return;
         var main = args && args.defaultProjectionData && args.defaultProjectionData.mainMatrix;
         if (!main) return;
         var zoom = map.getZoom();
@@ -495,6 +536,7 @@
           gl.enableVertexAttribArray(loc[name]);
           gl.vertexAttribPointer(loc[name], size, gl.FLOAT, false, 0, 0);
         }
+        if (trail.length > 1) drawTrail(gl, main, attrib);
         for (var i = 0; i < planes.length; i += 1) {
           var p = planes[i];
           if (!Number.isFinite(p.lat) || !Number.isFinite(p.lon)) continue;
@@ -540,6 +582,7 @@
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 0, 0, 0, -altM]), gl.DYNAMIC_DRAW);
             gl.uniformMatrix4fv(loc.u_mvp, false, new Float32Array(mul(main, mul(place, BASIS))));
             gl.uniform3fv(loc.u_tail, rgb(p.highlight || '#38bdf8'));
+            gl.uniform1f(loc.u_alpha, 0.55);
             gl.uniform1f(loc.u_mode, 2);
             attrib('a_nrm', null);
             attrib('a_part', null);

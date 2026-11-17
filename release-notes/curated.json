@@ -585,5 +585,22 @@
         "3D aircraft models are credited on the map and in SOURCES_AND_LICENSING.md (CC BY 4.0, Sketchfab)."
       ]
     }
+  },
+  "2.4.2": {
+    "summary": "Tracking a flight in 3D now follows the 3D aircraft itself, with its trail drawn at real altitude.",
+    "changelog": {
+      "features": [],
+      "improvements": [
+        "Following a selected flight in the 3D views keeps the aircraft itself in the middle of the screen, at its altitude."
+      ],
+      "fixes": [
+        "3D views: the selected flight no longer shows a yellow ground ring and a flat orange icon beside its 3D model.",
+        "3D views: the selected flight's trail is drawn in 3D at its recorded altitude and ends at the aircraft model."
+      ],
+      "performance": [],
+      "ui": [],
+      "compatibility": [],
+      "other": []
+    }
   }
 }

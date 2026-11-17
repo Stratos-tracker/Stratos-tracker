@@ -1629,7 +1629,7 @@ test('the 3D globe carries the live traffic layer instead of dropping it', async
   assert.match(globe, /window\.aircraftIcon/, 'traffic reuses the detailed aircraft sprite atlas');
   assert.match(globe, /generic\.svg/, 'unsupported types keep a neutral detailed silhouette');
   assert.match(globe, /traffic-shadow-/, 'the selected surface icon becomes a shadow');
-  assert.match(globe, /trafficFeatures\(this\.traffic, this\.trafficSelected\)/, 'the globe publishes the traffic features it receives');
+  assert.match(globe, /trafficFeatures\(this\.traffic, this\.trafficSelected, !!this\.planes\)/, 'the globe publishes the traffic features it receives');
   assert.match(globe, /prototype\.setTraffic = function/, 'there is a public traffic setter');
   assert.match(page, /function t3TrafficList\(\)/, 'the chart builds the same traffic list for the globe');
   assert.match(page, /t3d\.setTraffic\(t3TrafficList\(\),active\)/, 'the globe receives traffic on its sync path');

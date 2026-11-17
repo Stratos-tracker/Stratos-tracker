@@ -81,3 +81,12 @@ test('the downloaded models parse, face north and are credited', () => {
   assert.equal(P3.modelKey('B77W', false), 'wide');
   assert.ok(P3.MODELS.a320hd.lazy, 'the 15 MB model only loads when flown');
 });
+
+test('a selected flight is the 3D model itself: no ground ring or flat icon, and its trail meets it', () => {
+  assert.ok(globe.includes("setLayoutProperty('traffic-selected', 'visibility', 'none')"), 'the yellow ground ring is hidden');
+  assert.ok(globe.includes('if (this.planes) { this._fxDrawn = false; return; }'), 'the flat overlay (orange icon, curtain) steps aside');
+  assert.ok(globe.includes('this.planes.setTrail('), 'the trail goes to the 3D layer');
+  assert.ok(globe.includes('elevation: alt * FT_TO_M'), 'following centres on the aircraft at its altitude');
+  const src = fs.readFileSync(new URL('../app/js/lib/plane3d.js', import.meta.url), 'utf8');
+  assert.ok(src.includes('pts = trail.concat([{ lat: sel.lat, lon: sel.lon'), 'the trail ends where the selected model is drawn');
+});
