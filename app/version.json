@@ -1,63 +1,44 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.4.0",
+  "latestVersion": "2.4.1",
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-17",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.0/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.0/Stratos-Setup.exe",
-      "sha256": "d5706cfb8488fbbc1615eb4db65bd0b1c472fc06a097fbb2b80ccd724596cf95",
-      "size": 119447610
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.0/Stratos-2.4.0-mac-arm64.dmg",
-      "sha256": "1d686c763329a69b4ebef9ca79c44585a63320f864eecc901b9c4c7acb75a2a7",
-      "size": 137549423
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.0/Stratos-2.4.0-mac-x64.dmg",
-      "sha256": "e5bba4bf1f6b3577a87311f996ef79c542573e8ea5ddcc3ff6f0ca959ee5df6c",
-      "size": 142972708
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.0/Stratos-2.4.0-linux-x64.AppImage",
-      "sha256": "bb2f76c2cbe394b5941f5e454cb5df4ab69a52afbe2c021d15457a82dbd8430b",
-      "size": 160267385
-    }
-  },
-  "summary": "Charts on the map with a search bar, UAE charts, IVAO traffic, airport weather, FAA chart layers and a cleaner World map.",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "Watch your flight in 3D: real 3D aircraft models, a chase camera that follows your plane, and a live Status line.",
   "reason": "",
   "releaseNotes": [
-    "Charts on the map: a new Charts button in Map settings → Layers opens one panel with a search bar. Pick a STAR, SID or approach and it is laid over the map in the right place, with an opacity slider.",
-    "UAE charts: Dubai, Abu Dhabi, Sharjah and Al Maktoum charts from the GCAA, shown inside Stratos.",
-    "IVAO traffic: choose IVAO as the traffic source to see live IVAO pilots on the map.",
-    "Airport weather layer: every reporting station in view, coloured by flight category, with wind, visibility, ceiling and temperature as you zoom in.",
-    "US chart layers: FAA Sectional, Terminal, IFR Low and IFR High charts as map layers.",
-    "The desktop app can now open charts outside the US.",
-    "Phone mode: the EFB dock no longer covers the app icons, Settings titles use the full width, and the Flight Plan chart card no longer hides half the map.",
-    "The World map has a cleaner chart style in night and day: muted water, plain land, crisp coastlines, quiet borders and a light grid."
+    "3D chase view: a new 3D chase button in Map settings puts the camera behind your aircraft at its real altitude, looking along its track over satellite imagery and terrain.",
+    "3D aircraft models: your plane and traffic fly as 3D aircraft at their real altitude, heading and bank, with a line down to the ground.",
+    "Realistic models for A320s, A321s and widebodies; jumbos, regional jets, turboprops, business jets and light aircraft get their own shapes.",
+    "Airline colours: popular airlines such as Emirates, Lufthansa, British Airways, Delta, Ryanair, easyJet and KLM are painted in their colours (no logos) on the shapes drawn in code.",
+    "Your own A320 is drawn with a detailed model in the 3D views.",
+    "Status line: the live strip now says what the flight is doing, for example \"Climbing through 12,300 ft · 2,950 NM to EGLL\" or \"Final approach into EGLL\".",
+    "The 3D views show a daylight sky and haze at the horizon instead of black.",
+    "The aircraft symbol on the 3D map points along its heading when the map is rotated.",
+    "3D aircraft models are credited on the map and in SOURCES_AND_LICENSING.md (CC BY 4.0, Sketchfab)."
   ],
   "notes": {
     "features": [
-      "Charts on the map: a new Charts button in Map settings → Layers opens one panel with a search bar. Pick a STAR, SID or approach and it is laid over the map in the right place, with an opacity slider.",
-      "UAE charts: Dubai, Abu Dhabi, Sharjah and Al Maktoum charts from the GCAA, shown inside Stratos.",
-      "IVAO traffic: choose IVAO as the traffic source to see live IVAO pilots on the map.",
-      "Airport weather layer: every reporting station in view, coloured by flight category, with wind, visibility, ceiling and temperature as you zoom in.",
-      "US chart layers: FAA Sectional, Terminal, IFR Low and IFR High charts as map layers."
+      "3D chase view: a new 3D chase button in Map settings puts the camera behind your aircraft at its real altitude, looking along its track over satellite imagery and terrain.",
+      "3D aircraft models: your plane and traffic fly as 3D aircraft at their real altitude, heading and bank, with a line down to the ground.",
+      "Realistic models for A320s, A321s and widebodies; jumbos, regional jets, turboprops, business jets and light aircraft get their own shapes.",
+      "Airline colours: popular airlines such as Emirates, Lufthansa, British Airways, Delta, Ryanair, easyJet and KLM are painted in their colours (no logos) on the shapes drawn in code.",
+      "Your own A320 is drawn with a detailed model in the 3D views.",
+      "Status line: the live strip now says what the flight is doing, for example \"Climbing through 12,300 ft · 2,950 NM to EGLL\" or \"Final approach into EGLL\"."
     ],
     "improvements": [
-      "The desktop app can now open charts outside the US."
+      "The 3D views show a daylight sky and haze at the horizon instead of black."
     ],
     "fixes": [
-      "Phone mode: the EFB dock no longer covers the app icons, Settings titles use the full width, and the Flight Plan chart card no longer hides half the map."
+      "The aircraft symbol on the 3D map points along its heading when the map is rotated."
     ],
     "performance": [],
-    "ui": [
-      "The World map has a cleaner chart style in night and day: muted water, plain land, crisp coastlines, quiet borders and a light grid."
-    ],
+    "ui": [],
     "compatibility": [],
-    "other": []
+    "other": [
+      "3D aircraft models are credited on the map and in SOURCES_AND_LICENSING.md (CC BY 4.0, Sketchfab)."
+    ]
   }
 }

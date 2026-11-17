@@ -696,3 +696,34 @@ html.phone-mode #procpane, html.phone-mode #planpane { display: none !important;
   line-height: 1.45;
   color: #cbd5e1;
 }
+
+/* ── Live status line ─────────────────────────────────────────────────
+   One readable line above the instruments; the dot takes the colour of the
+   state (ground, climb, cruise, descent, arrival). */
+#tel .tel-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 7px 12px 6px;
+  border-bottom: 1px solid rgba(120, 150, 175, .13);
+  white-space: nowrap;
+  overflow: hidden;
+  --st: #94a3b8;
+}
+#tel .tel-state i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--st); box-shadow: 0 0 8px var(--st); }
+#tel .tel-state b { font: 750 13px/1.1 system-ui, sans-serif; color: var(--st); }
+#tel .tel-state #tSTd { min-width: 0; overflow: hidden; text-overflow: ellipsis; font: 600 11.5px/1.1 ui-monospace, Menlo, monospace; color: #b6c6d6; }
+#tel .tel-state[data-k="taxi"], #tel .tel-state[data-k="takeoff"], #tel .tel-state[data-k="rollout"] { --st: #fbbf24; }
+#tel .tel-state[data-k="departing"], #tel .tel-state[data-k="climb"] { --st: #38bdf8; }
+#tel .tel-state[data-k="cruise"] { --st: #22c55e; }
+#tel .tel-state[data-k="descent"], #tel .tel-state[data-k="approach"], #tel .tel-state[data-k="final"] { --st: #c084fc; }
+#tel .tel-state[data-k="arrived"] { --st: #22c55e; }
+
+/* Three 3D modes side by side. */
+#t3mode { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* With 3D models the aircraft is the model itself; the flat marker steps aside. */
+.g3-models .g3-ac { display: none; }
+/* Chase view: where the map draws nothing between the sky and the far terrain,
+   the container shows the horizon haze instead of black. */
+#globe3d.g3-chase { background: #c9dcee; }

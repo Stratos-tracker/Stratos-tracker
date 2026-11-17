@@ -253,7 +253,9 @@
     this._fxDrawn = false;
     this._interacting = false;
     this.follow = false;
-    this.mode = options.mode === 'flat' ? 'flat' : 'globe';
+    /* Chase is the flat map with the camera behind the aircraft. */
+    this.chase = options.mode === 'chase';
+    this.mode = options.mode === 'flat' || this.chase ? 'flat' : 'globe';
     this.lowPower = !!options.lowPower;
     this._pixelRatioLow = false;
     this.onTraffic = typeof options.onTraffic === 'function' ? options.onTraffic : null;
@@ -416,9 +418,10 @@
         style: this._style(),
         center: [this.lon, this.lat],
         zoom: Math.max(1, this.zoom - 1),
-        pitch: this.mode === 'flat' ? 55 : 30,
+        pitch: this.chase ? 74 : (this.mode === 'flat' ? 55 : 30),
         bearing: 0,
         maxPitch: 78,
+        centerClampedToGround: false,
         renderWorldCopies: true,
         minZoom: 1,
         maxZoom: 18,
@@ -456,7 +459,10 @@
           self.map.getCanvas().style.cursor = '';
         });
       }
+      self._addPlaneLayer();
       self._apply();
+      // A chase view chosen before the map loaded gets its camera and sky now.
+      if (self.chase) self.setMode('chase');
       if (!self._onAtlasReady) {
         self._onAtlasReady = function () {
           self._refreshTrafficIcons();
@@ -476,6 +482,7 @@
       if (self.onFollow) self.onFollow(false);
     });
     this.map.on('zoom', function () { self._updateAltitude(); });
+    this.map.on('rotate', function () { self._updateAltitude(); });
     this.map.on('error', function () {});
     this.el.addEventListener('contextmenu', function (event) { event.preventDefault(); });
 
@@ -828,8 +835,24 @@
 
   /** Globe or a flat Mercator chart tilted over the same real terrain. */
   StratosGlobe3D.prototype.setMode = function (mode) {
-    this.mode = mode === 'flat' ? 'flat' : 'globe';
+    this.chase = mode === 'chase';
+    this.mode = mode === 'flat' || this.chase ? 'flat' : 'globe';
+    if (this.el) this.el.classList.toggle('g3-chase', this.chase);
     if (!this.map || !this.ready) return this.mode;
+    if (!this.chase) {
+      try { this.map.setPadding({ top: 0, bottom: 0, left: 0, right: 0 }); } catch (_) {}
+      try { if (this._sky) { this.map.setSky(this._sky); this._sky = null; } } catch (_) {}
+    }
+    if (this.chase) {
+      // Low pitch shows the horizon: a daylight sky and haze instead of black.
+      try {
+        if (!this._sky) this._sky = this.map.getSky() || {};
+        this.map.setSky({ 'sky-color': '#4f86c6', 'horizon-color': '#c9dcee', 'fog-color': '#c9dcee', 'sky-horizon-blend': 0.7, 'horizon-fog-blend': 0.6, 'fog-ground-blend': 0.85, 'atmosphere-blend': 0 });
+      } catch (_) {}
+      try { this.map.setProjection({ type: 'mercator' }); } catch (_) {}
+      this._chaseCam(true);
+      return this.mode;
+    }
     try { this.map.setProjection({ type: this.mode === 'flat' ? 'mercator' : 'globe' }); } catch (_) {}
     try {
       this.map.easeTo({
@@ -850,6 +873,11 @@
     this.follow = !!view.follow;
     if (!this.map || !this.ready) return;
     var z = Math.max(1, Math.min(17.2, (Number.isFinite(this.zoom) ? this.zoom : 6) - 1));
+    if (this.chase && this.aircraft && (view.force || this.follow)) {
+      this._placed = true;
+      if (view.force) this._chaseCam(true);
+      return;
+    }
     if (view.force || !this._placed) {
       this._placed = true;
       this.map.jumpTo({
@@ -917,6 +945,7 @@
     this.traffic = Array.isArray(list) ? list : [];
     this.trafficSelected = selected == null ? '' : String(selected);
     this._setTrafficData();
+    this._syncPlanes();
   };
 
   StratosGlobe3D.prototype._setSelectedData = function () {
@@ -976,7 +1005,7 @@
       tag.textContent = (who ? who + ' · ' : '') + fl;
     }
     var svg = el.querySelector('.g3-head svg');
-    if (svg) svg.style.transform = 'rotate(' + (((Number(this.aircraft.hdg) || 0) % 360 + 360) % 360) + 'deg)';
+    if (svg) svg.style.transform = 'rotate(' + ((((Number(this.aircraft.hdg) || 0) - this.map.getBearing()) % 360 + 360) % 360) + 'deg)';
   };
 
   StratosGlobe3D.prototype.setAircraft = function (aircraft) {
@@ -991,11 +1020,69 @@
       alt: Number(aircraft.alt),
       hdg: Number(aircraft.hdg),
       trk: Number(aircraft.trk),
+      bank: Number(aircraft.bank) || 0,
+      pitch: Number(aircraft.pitch) || 0,
       callsign: aircraft.callsign || '',
       type: aircraft.type || '',
     };
     if (!Number.isFinite(this.aircraft.lat) || !Number.isFinite(this.aircraft.lon)) return;
     this._placeAircraft();
+    this._syncPlanes();
+    this._chaseCam(false);
+  };
+
+  /** 3D models for the aircraft and the traffic (lib/plane3d.js). The flat
+      traffic symbols stay faint underneath as ground shadows and click targets. */
+  StratosGlobe3D.prototype._addPlaneLayer = function () {
+    if (!window.StratosPlane3D || this.planes || !this.map) return;
+    try {
+      this.planes = window.StratosPlane3D.layer(this.map, 'planes3d');
+      this.map.addLayer(this.planes);
+      this.map.setPaintProperty('traffic-plane', 'icon-opacity', 0.3);
+      if (this.el) this.el.classList.add('g3-models');
+    } catch (_) { this.planes = null; }
+  };
+
+  StratosGlobe3D.prototype._syncPlanes = function () {
+    if (!this.planes) return;
+    var list = [];
+    var active = String(this.trafficSelected || '').toUpperCase();
+    for (var i = 0; i < this.traffic.length; i += 1) {
+      var t = this.traffic[i] || {};
+      var key = String(t.key || t.hx || t.id || '').toUpperCase();
+      list.push({ lat: Number(t.lat), lon: Number(t.lon), alt: t.alt == null ? 0 : Number(t.alt), hdg: Number.isFinite(Number(t.hdg)) ? Number(t.hdg) : Number(t.trk), type: t.type, callsign: t.id, highlight: key && key === active ? '#fbbf24' : '' });
+    }
+    var ac = this.aircraft;
+    if (ac && Number.isFinite(ac.lat) && Number.isFinite(ac.lon)) {
+      list.push({ lat: ac.lat, lon: ac.lon, alt: ac.alt, hdg: Number.isFinite(ac.hdg) ? ac.hdg : ac.trk, bank: ac.bank, pitch: ac.pitch, type: ac.type, callsign: ac.callsign, own: true,
+        // Your own aircraft keeps a coloured tail when its airline has no colour scheme, so it stands out.
+        highlight: window.StratosPlane3D.schemeFor(ac.callsign) ? '' : this.accent });
+    }
+    this.planes.setPlanes(list);
+  };
+
+  /** The camera behind the aircraft model, at its altitude, looking along its
+      track. A drag on the map stops following (as in the other modes); the
+      centre button resumes. */
+  StratosGlobe3D.prototype._chaseCam = function (instant) {
+    if (!this.chase || !this.map || !this.ready || !this.aircraft || !this.follow && !instant) return;
+    var ac = this.aircraft;
+    if (!Number.isFinite(ac.lat) || !Number.isFinite(ac.lon)) return;
+    var dir = Number.isFinite(ac.trk) ? ac.trk : (Number.isFinite(ac.hdg) ? ac.hdg : this.map.getBearing());
+    var cam = {
+      center: [ac.lon, ac.lat],
+      elevation: Math.max(0, (Number(ac.alt) || 0) * FT_TO_M),
+      bearing: dir,
+      pitch: 72,
+      zoom: 17.4,
+      // The aircraft sits a little below the middle, with the horizon above it.
+      padding: { top: Math.round((this.el.clientHeight || 600) * 0.3), bottom: 0, left: 0, right: 0 },
+    };
+    // The Flight Deck already smooths the position every frame, so the camera
+    // jumps with it; easing on top would make it lag behind the aircraft.
+    // MapLibre can throw reading elevation tiles that are still loading; that frame is skipped.
+    try { this.map.jumpTo(cam); } catch (_) { return; }
+    this._updateAltitude();
   };
 
   StratosGlobe3D.prototype.recenter = function () {
@@ -1003,6 +1090,7 @@
     var lat = this.aircraft && Number.isFinite(this.aircraft.lat) ? this.aircraft.lat : this.lat;
     var lon = this.aircraft && Number.isFinite(this.aircraft.lon) ? this.aircraft.lon : this.lon;
     this.follow = true;
+    if (this.chase && this.aircraft) { this._chaseCam(true); return; }
     this.map.easeTo({ center: [lon, lat], zoom: Math.max(this.map.getZoom(), 6.2), pitch: this.mode === 'flat' ? 55 : 52, duration: 700 });
   };
 
@@ -1042,7 +1130,8 @@
     if (!this.credit) return;
     this.credit.textContent = 'Imagery: Esri, Maxar · ' +
       (this.lowPower ? 'low-power: terrain off, 1x pixels' : 'Elevation: AWS Terrain Tiles (Mapzen)') +
-      ' · display only, not for navigation';
+      ' · display only, not for navigation' +
+      (window.StratosPlane3D && window.StratosPlane3D.CREDIT ? ' · ' + window.StratosPlane3D.CREDIT : '');
   };
 
   /** Turn off terrain and cap the 3D render surface at 1x for slower GPUs. */

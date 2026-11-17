@@ -299,24 +299,6 @@
       ]
     }
   },
-  "2.1.29": {
-    "summary": "Aircraft photos now resolve when only a Mode S address is reported and fall back to a labelled photo of another live aircraft of the same airline and type, while the Performance page is rebuilt around a bundled, versioned aircraft database.",
-    "changelog": {
-      "features": [
-        "Aircraft that report a Mode S address but no registration get their own Planespotters photo, linked to its page and credited to the photographer.",
-        "When the feed reports neither a registration nor an address, the card shows a labelled backup: a random live aircraft of the same airline and type, with its registration named.",
-        "The Performance page loads six bundled profiles — A321-200, A321neo, A340-600, 777-200ER, 777-200LR, 777-300ER — detects a ToLiss or FlightFactor airframe, and allows manual selection."
-      ],
-      "improvements": [
-        "Performance figures name their source and are labelled verified, interpolated, estimated or unavailable; field lengths and V-speeds say they are unavailable rather than being estimated.",
-        "Performance inputs prefill from the simulator and weather and stay editable, with no file import or dataset for a pilot to manage."
-      ],
-      "fixes": [
-        "The tracker reads the ADS-B aircraft type field correctly, so real airliners are no longer rejected as backup photo candidates.",
-        "A failed ADS-B lookup is reported as unavailable instead of being described as no aircraft flying."
-      ]
-    }
-  },
   "2.1.37": {
     "summary": "SID paths now start on the runway and follow the published initial-climb heading to its altitude-gated turn, including SLEEK2 runway 8 at KDEN.",
     "changelog": {
@@ -577,6 +559,31 @@
       ],
       "compatibility": [],
       "other": []
+    }
+  },
+  "2.4.1": {
+    "summary": "Watch your flight in 3D: real 3D aircraft models, a chase camera that follows your plane, and a live Status line.",
+    "changelog": {
+      "features": [
+        "3D chase view: a new 3D chase button in Map settings puts the camera behind your aircraft at its real altitude, looking along its track over satellite imagery and terrain.",
+        "3D aircraft models: your plane and traffic fly as 3D aircraft at their real altitude, heading and bank, with a line down to the ground.",
+        "Realistic models for A320s, A321s and widebodies; jumbos, regional jets, turboprops, business jets and light aircraft get their own shapes.",
+        "Airline colours: popular airlines such as Emirates, Lufthansa, British Airways, Delta, Ryanair, easyJet and KLM are painted in their colours (no logos) on the shapes drawn in code.",
+        "Your own A320 is drawn with a detailed model in the 3D views.",
+        "Status line: the live strip now says what the flight is doing, for example \"Climbing through 12,300 ft · 2,950 NM to EGLL\" or \"Final approach into EGLL\"."
+      ],
+      "improvements": [
+        "The 3D views show a daylight sky and haze at the horizon instead of black."
+      ],
+      "fixes": [
+        "The aircraft symbol on the 3D map points along its heading when the map is rotated."
+      ],
+      "performance": [],
+      "ui": [],
+      "compatibility": [],
+      "other": [
+        "3D aircraft models are credited on the map and in SOURCES_AND_LICENSING.md (CC BY 4.0, Sketchfab)."
+      ]
     }
   }
 }

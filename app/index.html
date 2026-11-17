@@ -565,7 +565,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
     <div class="lay-theme"><button type="button" data-theme-set="day">Day</button><button type="button" data-theme-set="night">Night</button><button type="button" data-theme-set="contrast">High contrast</button></div></section>
   <section class="lay-s"><h3>Layers</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="trf" class="on">Traffic</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="trl">Trails</button><button type="button" data-l="grid">Grid</button><button type="button" data-l="wxrain">Rain</button><button type="button" data-l="wxwind">Wind</button><button type="button" data-l="wxturb">Turbulence</button><button type="button" data-l="wxsig">SIGMETs</button><button type="button" data-l="wxapt">Airport weather</button><button type="button" data-l="ifrlo">IFR Low</button><button type="button" data-l="ifrhi">IFR High</button><button type="button" data-l="faavfr">US Sectional</button><button type="button" data-l="faatac">US Terminal</button><button type="button" data-l="faalo">US IFR Low</button><button type="button" data-l="faahi">US IFR High</button><button type="button" data-l="atc">VATSIM ATC</button><button type="button" data-l="dn">Day / night</button><button type="button" id="bMc" aria-expanded="false" title="Find a chart and lay it on the map">Charts</button></div><p class="m">US charts: FAA Aeronautical Information Services (public domain). Airport weather: NOAA Aviation Weather Center. Rain <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a> · wind, turbulence Open-Meteo (estimate) · SIGMETs NOAA AWC · ATC data.vatsim.net, <a href="https://github.com/vatsimnetwork/simaware-tracon-project" target="_blank" rel="noopener">SimAware TRACON Project</a> (CC BY-SA 4.0)</p></section>
   <section class="lay-s"><h3>Projection</h3><div id="pj"></div>
-    <div class="lay-grid" id="t3mode"><button type="button" id="bMap3d" aria-pressed="false" title="3D globe with satellite imagery, real terrain and aircraft altitude">3D globe</button><button type="button" id="bMap3dFlat" aria-pressed="false" title="Tilted flat map with real terrain and aircraft altitude">3D flat map</button></div><label class="lay-check" for="t3low"><input type="checkbox" id="t3low"><span>Low-power 3D</span></label><p class="m">Turns off terrain and renders at 1× pixel density for slower GPUs.</p>
+    <div class="lay-grid" id="t3mode"><button type="button" id="bMap3d" aria-pressed="false" title="3D globe with satellite imagery, real terrain and aircraft altitude">3D globe</button><button type="button" id="bMap3dFlat" aria-pressed="false" title="Tilted flat map with real terrain and aircraft altitude">3D flat map</button><button type="button" id="bMap3dChase" aria-pressed="false" title="Watch your aircraft in 3D: the camera follows it from behind over real terrain">3D chase</button></div><label class="lay-check" for="t3low"><input type="checkbox" id="t3low"><span>Low-power 3D</span></label><p class="m">Turns off terrain and renders at 1× pixel density for slower GPUs.</p>
     <div id="gwrap" hidden><div class="lay-sub">Globe surface</div><div id="gs"></div><p class="m" id="gn"></p>
       <div class="lay-row"><button type="button" id="gReset" title="Centre the globe on the route again">Reset view</button><button type="button" id="gRead" title="Read terrain elevations around the centre">Read terrain</button></div></div>
     <p class="m">The flat map is the chart tilted over real terrain; the globe adds the Earth's curvature. Both keep the same live aircraft and route.</p></section>
@@ -581,6 +581,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 <div id="mc" hidden role="dialog" aria-label="Charts on the map"><header>Charts on map<button type="button" id="mcX" aria-label="Close the charts panel">&#10005;</button></header><input id="mcQ" type="search" autocomplete="off" spellcheck="false" placeholder="Search: OMDB, OMDB STAR, EHAM ILS 18R" aria-label="Search charts"><div id="mcList"></div><div id="mcNow" hidden><b id="mcName"></b><span id="mcMsg"></span><div class="mc-ctl"><label for="mcO">Opacity</label><input id="mcO" type="range" min="10" max="100" value="80"><button type="button" id="mcHide">Hide</button><button type="button" id="mcOff">Remove</button></div></div></div>
 <div id="sheet" class="box"></div>
 <div id="tel" class="box" aria-label="Live flight telemetry">
+<div class="tel-state" id="tST" data-k="offline" role="status"><span class="tel-k">STATUS</span><i aria-hidden="true"></i><b id="tSTl">Not connected</b><span id="tSTd"></span></div>
 <div class="tel-main">
 <div class="tel-cell"><span class="tel-k">IAS</span><b id="tIA">—</b><span class="tel-u">kt</span></div>
 <div class="tel-cell"><span class="tel-k">GS</span><b id="tGS">—</b><span class="tel-u">kt</span></div>
@@ -597,6 +598,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 </div>
 </div>
 <script src="vendor/maplibre/maplibre-gl.js"></script>
+<script src="js/lib/plane3d.js"></script>
 <script src="js/lib/globe3d.js"></script>
 <script src="js/data/world.js"></script>
 <script type="module">
@@ -1798,7 +1800,7 @@ function set3d(on){const next=!!on;if(next&&!ensure3d())return;view3d=next;$('#m
    centre and zoom, carries the real Esri imagery and AWS/Mapzen relief, and
    is entirely optional: the Flight Deck stays 2D until the pilot asks. */
 let t3d=null,viewT3=false,t3Cached=[],t3AirAt=0,t3AirKey='',t3TrfAt=0,t3SelAt=0,t3RouteAt=0,t3AirSetAt=0,t3AcSig='',t3ViewAt=0;
-let t3mode=(function(){try{return localStorage.getItem('stratos.t3mode')==='flat'?'flat':'globe'}catch(_){return'globe'}})();
+let t3mode=(function(){try{const m=localStorage.getItem('stratos.t3mode');return m==='flat'||m==='chase'?m:'globe'}catch(_){return'globe'}})();
 function t3Low(){try{return localStorage.getItem('stratos.t3low')==='1'}catch(_){return false}}
 function ensureT3(){if(t3d)return t3d;const Ctor=window.StratosGlobe3D;if(!Ctor)return null;t3d=new Ctor($('#globe3d'),{accent:MP.color,mode:t3mode,lowPower:t3Low(),onView:v=>{if(!v)return;V.lon=wrapLon(v.lon);V.lat=v.lat;if(Number.isFinite(v.zoom))V.z=Math.max(2.5,Math.min(17.5,v.zoom))},onFollow:f=>{V.fol=!!f;const b=$('#bFol');if(b){b.classList.toggle('on',V.fol);b.setAttribute('aria-pressed',V.fol?'true':'false')}},onTraffic:id=>{selectTrafficById(id)}});window.STRATOS_3D=t3d;return t3d}
 function t3NearAirports(){const key=V.lat.toFixed(1)+','+V.lon.toFixed(1);if(key===t3AirKey&&Date.now()-t3AirAt<5000)return t3Cached;t3AirKey=key;t3AirAt=Date.now();const out=[];for(const a of A){if(a.lat==null||a.lon==null)continue;if(Math.abs(a.lat-V.lat)>7||Math.abs(a.lon-V.lon)>9)continue;out.push(a);if(out.length>=18)break}t3Cached=out;return out}
@@ -1811,7 +1813,7 @@ function t3Sync(force){
   if(force||now-t3ViewAt>150){t3ViewAt=now;t3d.setView({lat:V.lat,lon:V.lon,zoom:V.z,follow:V.fol,force:!!force})}
   if(force||now-t3RouteAt>500){t3RouteAt=now;t3d.setRoute(route.map(p=>({lat:p.lat,lon:p.lon,id:p.id})),t3Active())}
   const ok=liveOk(),d=live.d||{};
-  const ac=ok?{lat:own.lat,lon:own.lon,alt:own.alt,hdg:own.hdgMag!=null?own.hdgMag:own.hdg,trk:own.trk,callsign:(d.callsign||d.registration)||'',type:(d.aircraftType||d.aircraft||d.type||'')}:null;
+  const ac=ok?{lat:own.lat,lon:own.lon,alt:own.alt,hdg:own.hdgMag!=null?own.hdgMag:own.hdg,trk:own.trk,bank:own.bank,pitch:tnum(d.pitch),callsign:(d.callsign||d.registration)||'',type:(d.aircraftType||d.aircraft||d.type||'')}:null;
   const acSig=ac?[ac.lat,ac.lon,ac.alt,ac.hdg,ac.trk,ac.callsign,ac.type].join('|'):'';
   if(force||acSig!==t3AcSig){t3AcSig=acSig;t3d.setAircraft(ac)}
   if(force||now-t3AirSetAt>1000){t3AirSetAt=now;t3d.setAirports(t3NearAirports())}
@@ -1819,9 +1821,10 @@ function t3Sync(force){
   if((force||now-t3TrfAt>250)&&typeof t3d.setTraffic==='function'){t3TrfAt=now;t3d.setTraffic(t3TrafficList(),active)}
   if((force||now-t3SelAt>500)&&typeof t3d.setSelectedTraffic==='function'){t3SelAt=now;t3d.setSelectedTraffic(t3SelectedDetail())}
 }
-function setT3(on,mode){const next=!!on;if(mode==='flat'||mode==='globe'){t3mode=mode;try{localStorage.setItem('stratos.t3mode',mode)}catch(_){}}if(next&&!ensureT3())return;if(next)set3d(false);if(next&&t3d)t3d.setMode(t3mode);viewT3=next;if(viewT3)t3d.show();else t3d.hide();const state=(b,on)=>{if(!b)return;b.classList.toggle('on',!!on);b.setAttribute('aria-pressed',on?'true':'false')};state($('#bMap3d'),viewT3&&t3mode==='globe');state($('#bMap3dFlat'),viewT3&&t3mode==='flat');$('#p3dctl').hidden=!viewT3;const low=$('#t3low');if(low)low.checked=t3Low();const msc=document.getElementById('mapscl');if(msc)msc.style.display=viewT3?'none':'';if(viewT3){setLay(false);V.fol=true;t3d.setFollow(true);const fb=$('#bFol');if(fb){fb.classList.add('on');fb.setAttribute('aria-pressed','true')}t3Sync(true);t3d.resize()}render()}
+function setT3(on,mode){const next=!!on;if(mode==='flat'||mode==='globe'||mode==='chase'){t3mode=mode;try{localStorage.setItem('stratos.t3mode',mode)}catch(_){}}if(next&&!ensureT3())return;if(next)set3d(false);if(next&&t3d)t3d.setMode(t3mode);viewT3=next;if(viewT3)t3d.show();else t3d.hide();const state=(b,on)=>{if(!b)return;b.classList.toggle('on',!!on);b.setAttribute('aria-pressed',on?'true':'false')};state($('#bMap3d'),viewT3&&t3mode==='globe');state($('#bMap3dFlat'),viewT3&&t3mode==='flat');state($('#bMap3dChase'),viewT3&&t3mode==='chase');$('#p3dctl').hidden=!viewT3;const low=$('#t3low');if(low)low.checked=t3Low();const msc=document.getElementById('mapscl');if(msc)msc.style.display=viewT3?'none':'';if(viewT3){setLay(false);V.fol=true;t3d.setFollow(true);const fb=$('#bFol');if(fb){fb.classList.add('on');fb.setAttribute('aria-pressed','true')}t3Sync(true);t3d.resize()}render()}
 $('#bMap3d')&&($('#bMap3d').onclick=()=>setT3(!(viewT3&&t3mode==='globe'),'globe'));
 $('#bMap3dFlat')&&($('#bMap3dFlat').onclick=()=>setT3(!(viewT3&&t3mode==='flat'),'flat'));
+$('#bMap3dChase')&&($('#bMap3dChase').onclick=()=>setT3(!(viewT3&&t3mode==='chase'),'chase'));
 const t3low=$('#t3low');
 if(t3low){t3low.checked=t3Low();t3low.onchange=()=>{const on=!!t3low.checked;try{localStorage.setItem('stratos.t3low',on?'1':'0')}catch(_){}if(t3d)t3d.setLowPower(on)}}
 /* One desktop shell. The Volanta deck is the document layout; phones keep
@@ -3263,6 +3266,7 @@ tset('tLT',Number(d.lat).toFixed(4)+'°');tset('tLN',Number(d.lon).toFixed(4)+'�
 tset('tDS',isFinite(el)?el.toFixed(1):'—');tset('tEt',isFinite(el)&&gs>30?hm(el/gs):'—');
 if(isFinite(el)&&gs>30){const clock=new Date(Date.now()+el/gs*3600e3);tset('tEA',String(clock.getUTCHours()).padStart(2,'0')+String(clock.getUTCMinutes()).padStart(2,'0')+'Z')}else tset('tEA','—');
 tset('tPH',String(d.flightPhase||d.phase||'—').replace(/_/g,' '));
+if(window.FSTATUS){const hasPlan=route.length>1,st=window.FSTATUS.flightStatus({phase:d.flightPhase||d.phase,alt:own.alt,agl:tnum(d.agl),vs,gs,dep:hasPlan?route[0].id:'',arr:hasPlan?route.at(-1).id:'',destNm:hasPlan&&isFinite(el)?el:null}),sb=document.getElementById('tST');if(sb&&sb.dataset.k!==st.key)sb.dataset.k=st.key;tset('tSTl',st.label);tset('tSTd',st.detail)}
 if(V.fol){const q=(sel&&sel.k=='trf')?sel:own;V.lon=q.lon;V.lat=q.lat}}
 let wxList=[];try{wxList=JSON.parse(localStorage.getItem('dl.wx')||'[]')}catch(_){}
 function wxAdd(a){if(!wxList.includes(a.id)){wxList.unshift(a.id);wxList=wxList.slice(0,8);try{localStorage.setItem('dl.wx',JSON.stringify(wxList))}catch(_){}}}
@@ -4454,10 +4458,12 @@ navigator.serviceWorker.addEventListener('controllerchange',()=>{try{if(sessionS
   import * as SIMBRIEFROUTE from './js/lib/simbriefroute.js';
   import * as PROFILE from './js/lib/profile.js';
   import * as PROC from './js/lib/procedures.js';
+  import * as FSTATUS from './js/lib/flightstatus.js';
   import * as TRAILC from './js/lib/trailcolor.js';
   import * as TRAILP from './js/lib/trailpath.js';
   window.PROFILE = PROFILE;
   window.PROC = PROC;
+  window.FSTATUS = FSTATUS;
   window.TRAILC = TRAILC;
   window.TRAILP = TRAILP;
   window.VATSIM = VATSIM;
