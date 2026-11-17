@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-17",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.7/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.7/Stratos-Setup.exe",
+      "sha256": "2d66a138646aa4575a82173fb1d75e79f487fec5ae12db72f4904bfa49b531a2",
+      "size": 119497404
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.7/Stratos-2.4.7-mac-arm64.dmg",
+      "sha256": "eb9c2c691829081b0ab78abc2547fb4013e30079a1e45771455af6a407389484",
+      "size": 137582775
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.7/Stratos-2.4.7-mac-x64.dmg",
+      "sha256": "0d10bdf2de1c8fd869f31c928c8a4de18df9c0073d7d1353670f53524a64dd91",
+      "size": 143030631
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.7/Stratos-2.4.7-linux-x64.AppImage",
+      "sha256": "4667e4b823a03ebabedf9bdc65105dbab22e7d27351b29e0fc82f0ecafb8251b",
+      "size": 160324839
+    }
+  },
   "summary": "A thicker route line on the Flight Deck map, easier to follow over dark water and satellite imagery.",
   "reason": "",
   "releaseNotes": [
