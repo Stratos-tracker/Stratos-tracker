@@ -746,9 +746,6 @@
   /* The desktop's new UI retires the old flight-plan card (#fp) and the flight
      sheet (#fc); the phone shows the same new tracking UI, so they are retired
      here too rather than left lying over the map. */
-  /* A phone is not a PC: the install offer lists desktop installers, so the
-     deck leaves it out rather than covering the chart with .exe downloads. */
-  html.phone-mode #dlOffer, html.phone-mode #dlChip { display: none !important; }
   html.phone-mode #fc, html.phone-mode #fp, html.phone-mode #efbbar,
   html.phone-mode .m-grip { display: none !important; }
   /* The retired card keeps its "expanded" class, and the desktop rule that hides
@@ -779,7 +776,7 @@
   body.pd #app #fab .fab.on { background: var(--m-cyan); color: #04121e; }
   /* Pinch zooms on a phone, so the rail keeps to the tools. */
   body.pd #app #fab #bZi, body.pd #app #fab #bZo { display: none; }
-  body.pd #attr { display: block !important; top: auto !important; bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 106px) !important; left: auto !important; right: 8px !important; max-width: calc(100% - 16px); text-align: right; font-size: 9px; }
+  body.pd #attr { display: block !important; top: calc(env(safe-area-inset-top, 0px) + 8px) !important; bottom: auto !important; left: 64px !important; right: 8px !important; width: auto; text-align: right; font-size: 9px; background: none; }
   body.pd #app #fab .pd-style { font: 800 10.5px system-ui, sans-serif; letter-spacing: .04em; color: var(--m-ink); border: 1px solid var(--m-line-2); }
 
   /* Search opens from the rail, beside it. */
@@ -812,6 +809,8 @@
 
   /* A chart sheet takes the whole map; the deck steps aside. */
   body.pd.pd-chart #pd-tray { display: none; }
+  /* Phone Mode's Status panel sits on top of the tray, not behind it. */
+  html.phone-mode body.pd #tel { bottom: calc(var(--m-nav-h) + var(--m-safe-b) + var(--pd-tray, 100px) + 6px); }
 
   /* More: the sections that are not tabs, in a sheet above the bar. */
   .m-more { position: fixed; inset: 0; z-index: 89; background: rgba(0, 0, 0, .35); }

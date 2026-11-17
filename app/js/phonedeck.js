@@ -61,6 +61,7 @@
   function paint() {
     // The map writes its imagery credit just above whatever covers the bottom of the screen.
     window.pdInset = Math.round(innerHeight - tray.getBoundingClientRect().top + 12);
+    document.body.style.setProperty('--pd-tray', tray.offsetHeight + 'px'); // the Status panel docks above the tray
     const s = JSON.stringify([route.map(p => p.id + (p.ss || '')), L.style, V.fol, CH.on]);
     if (s === sig) return;
     sig = s;

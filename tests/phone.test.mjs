@@ -91,12 +91,12 @@ test('the phone map carries no procedure or flight-plan panels', () => {
   assert.doesNotMatch(hud, /^#planpane \{ display: none/m, 'the desktop Flight Planning tab keeps its pane');
 });
 
-test('the deck follows the pilot back from /phone', () => {
-  assert.match(tracker, /sessionStorage\.setItem\('stratos\.phoneMode', '1'\)/, 'choosing Phone Mode is remembered for the tab');
-  assert.match(tracker, /sessionStorage\.getItem\('stratos\.phoneMode'\)/, 'and read back when the Map tab loads this file');
-  assert.match(tracker, /remembered && narrow/, 'only a phone-width window acts on the memory');
+test('every phone-width window gets the same deck, however it arrived', () => {
+  assert.match(tracker, /if \(onPhoneUrl \|\| narrow\) html\.classList\.add\('phone-mode'\)/, 'coming back from the EFB lands on the same deck');
+  assert.doesNotMatch(tracker, /stratos\.phoneMode/, 'no per-tab memory that a new tab or relaunch would lose');
   assert.match(tracker, /max-width: 767px/, 'the same breakpoint the phone nav uses');
-  assert.match(mobileCss, /html\.phone-mode #dlOffer, html\.phone-mode #dlChip \{ display: none !important; \}/, 'the desktop installer offer stays off the phone deck');
+  // A phone reports a 980 px viewport until the viewport tag is parsed, so it must come first.
+  assert.ok(tracker.indexOf('name="viewport"') < tracker.indexOf('onPhoneUrl'), 'the viewport tag is set before the width test');
 });
 
 test('the landing page keeps offering Phone Mode', () => {

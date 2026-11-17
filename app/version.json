@@ -1,61 +1,31 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.4.5",
+  "latestVersion": "2.4.6",
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-17",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.5/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.5/Stratos-Setup.exe",
-      "sha256": "0a54ff684d6f9006b9b9f5341006dc2d140e4cb8726c6ba88b9047c3b74da1d0",
-      "size": 119513323
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.5/Stratos-2.4.5-mac-arm64.dmg",
-      "sha256": "c9c787477e36f49a608e5a5ff03d20a8fac5f61b7f441478f8d1fa0393fc465c",
-      "size": 137622587
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.5/Stratos-2.4.5-mac-x64.dmg",
-      "sha256": "bda6ec7810959b68e1ff7a37097e8b4706aa8b68fac08626cbc5d2eecfb6a6e6",
-      "size": 143046340
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.5/Stratos-2.4.5-linux-x64.AppImage",
-      "sha256": "426d66ce2fe24ba60203aea9f7e2e3ee77ca358b89909625946124e981968b34",
-      "size": 160345052
-    }
-  },
-  "summary": "A phone layout built for the cockpit: map tools in one rail, your departure and arrival charts one tap away, and a cleaner map.",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "Phones always open the phone layout, including after visiting the EFB, and the download panel is gone from the map.",
   "reason": "",
   "releaseNotes": [
-    "Phone Flight Deck: a tray above the tab bar pins your departure and arrival airports with their charts, plus a Sync with flight switch.",
-    "Phone Flight Deck: the map tools sit in one rail on the left, with search opening beside it on demand.",
-    "Phone tab bar: Map, Plan, Flights, Charts and More, so every label has room; More holds the EFB apps, Airports, Weather and Profile.",
-    "Phone map labels no longer pile up: a label without room is left out, and navaids appear one zoom step later.",
-    "The EFB flight planner on a phone shows airports and your route when zoomed out, adding navaids and fixes as you zoom in.",
-    "Phone: the Flight Deck search no longer runs under the map buttons.",
-    "Phone: the EFB home dock no longer covers the last row of apps.",
-    "Phone: the floating Plan button and the empty flight plan and procedures cards are gone from the map; the Plan tab opens the planner."
+    "Phone: the Status panel sits just above the charts tray, and the map credit moves to the top right.",
+    "Phone: coming back to the map from the EFB, a new tab or a relaunched app no longer shows the older layout.",
+    "Phone: the phone layout is detected correctly on first load; the page set its width before the viewport was known.",
+    "The Download Stratos panel is removed from the Flight Deck map."
   ],
   "notes": {
-    "features": [
-      "Phone Flight Deck: a tray above the tab bar pins your departure and arrival airports with their charts, plus a Sync with flight switch."
-    ],
+    "features": [],
     "improvements": [
-      "Phone Flight Deck: the map tools sit in one rail on the left, with search opening beside it on demand.",
-      "Phone tab bar: Map, Plan, Flights, Charts and More, so every label has room; More holds the EFB apps, Airports, Weather and Profile.",
-      "Phone map labels no longer pile up: a label without room is left out, and navaids appear one zoom step later.",
-      "The EFB flight planner on a phone shows airports and your route when zoomed out, adding navaids and fixes as you zoom in."
+      "Phone: the Status panel sits just above the charts tray, and the map credit moves to the top right."
     ],
     "fixes": [
-      "Phone: the Flight Deck search no longer runs under the map buttons.",
-      "Phone: the EFB home dock no longer covers the last row of apps."
+      "Phone: coming back to the map from the EFB, a new tab or a relaunched app no longer shows the older layout.",
+      "Phone: the phone layout is detected correctly on first load; the page set its width before the viewport was known."
     ],
     "performance": [],
     "ui": [
-      "Phone: the floating Plan button and the empty flight plan and procedures cards are gone from the map; the Plan tab opens the planner."
+      "The Download Stratos panel is removed from the Flight Deck map."
     ],
     "compatibility": [],
     "other": []
