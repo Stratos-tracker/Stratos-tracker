@@ -139,7 +139,7 @@
     return (shadow ? 'traffic-shadow-' : 'traffic-plane-') + (trafficType(type) || 'generic');
   }
 
-  function trafficFeatures(list, selected, labelSelected) {
+  function trafficFeatures(list, selected) {
     var features = [];
     var active = selected == null ? '' : String(selected).toUpperCase();
     for (var i = 0; i < list.length; i += 1) {
@@ -160,8 +160,7 @@
         type: 'Feature',
         properties: {
           key: key,
-          // The overlay used to tag the selected plane; with 3D models the map label does.
-          label: selectedNow && !labelSelected ? '' : label,
+          label: selectedNow ? '' : label,
           selected: selectedNow ? 1 : 0,
           hdg: ((hdg % 360) + 360) % 360,
           type: type,
@@ -422,7 +421,6 @@
         pitch: this.chase ? 74 : (this.mode === 'flat' ? 55 : 30),
         bearing: 0,
         maxPitch: 78,
-        centerClampedToGround: false,
         renderWorldCopies: true,
         minZoom: 1,
         maxZoom: 18,
@@ -460,7 +458,6 @@
           self.map.getCanvas().style.cursor = '';
         });
       }
-      self._addPlaneLayer();
       self._apply();
       // A chase view chosen before the map loaded gets its camera and sky now.
       if (self.chase) self.setMode('chase');
@@ -614,8 +611,6 @@
     if (!ctx || !this._fxW || !this._fxH || this.el.hidden) return;
     ctx.setTransform(this._fxDpr, 0, 0, this._fxDpr, 0, 0);
     ctx.clearRect(0, 0, this._fxW, this._fxH);
-    // With 3D models the trail is drawn in 3D at true altitude (plane3d.js), so it meets the model.
-    if (this.planes) { this._fxDrawn = false; return; }
     if (!this.map || !this.ready || !this.selectedTrail.length) {
       this._fxDrawn = false;
       return;
@@ -890,18 +885,8 @@
         bearing: Number.isFinite(Number(view.bearing)) ? Number(view.bearing) : 0,
       });
     } else if (this.follow) {
-      var alt = this.planes ? this._followAlt() : null;
-      if (alt == null) this.map.setCenter([this.lon, this.lat]);
-      else try { this.map.jumpTo({ center: [this.lon, this.lat], elevation: alt * FT_TO_M }); } catch (_) {}
+      this.map.setCenter([this.lon, this.lat]);
     }
-  };
-
-  /** Altitude (ft) of whatever the camera follows: the selected traffic, else the pilot's aircraft. */
-  StratosGlobe3D.prototype._followAlt = function () {
-    var meta = this.selectedMeta;
-    if (this.trafficSelected && meta && Number.isFinite(meta.alt)) return Math.max(0, meta.alt);
-    if (this.aircraft && Number.isFinite(this.aircraft.alt)) return Math.max(0, this.aircraft.alt);
-    return null;
   };
 
   StratosGlobe3D.prototype.setFollow = function (on) {
@@ -951,14 +936,13 @@
       if (String(t.key || t.hx || t.id || '').toUpperCase() === active) this._ensureTrafficIcon(t.type || '', true);
     }
     var source = this.map.getSource('traffic');
-    if (source) source.setData(trafficFeatures(this.traffic, this.trafficSelected, !!this.planes));
+    if (source) source.setData(trafficFeatures(this.traffic, this.trafficSelected));
   };
 
   StratosGlobe3D.prototype.setTraffic = function (list, selected) {
     this.traffic = Array.isArray(list) ? list : [];
     this.trafficSelected = selected == null ? '' : String(selected);
     this._setTrafficData();
-    this._syncPlanes();
   };
 
   StratosGlobe3D.prototype._setSelectedData = function () {
@@ -966,13 +950,6 @@
     var filed = this.map.getSource('selectedRoute');
     if (filed) filed.setData(routeFeatures(this.selectedRoute, -1));
     if (this.selectedMeta && this.selectedMeta.type) this._ensureTrafficIcon(this.selectedMeta.type, true);
-    if (this.planes) {
-      this.planes.setTrail(this.selectedTrail.map(function (p) {
-        var alt = Number(p.alt);
-        if (!Number.isFinite(alt)) alt = Number(p.agl);
-        return { lat: Number(p.lat), lon: Number(p.lon), alt: Number.isFinite(alt) ? alt : 0, rgb: altitudeRgb(alt) };
-      }));
-    }
     this._queueFx();
   };
 
@@ -1040,52 +1017,23 @@
       alt: Number(aircraft.alt),
       hdg: Number(aircraft.hdg),
       trk: Number(aircraft.trk),
-      bank: Number(aircraft.bank) || 0,
-      pitch: Number(aircraft.pitch) || 0,
       callsign: aircraft.callsign || '',
       type: aircraft.type || '',
     };
     if (!Number.isFinite(this.aircraft.lat) || !Number.isFinite(this.aircraft.lon)) return;
     this._placeAircraft();
-    this._syncPlanes();
     this._chaseCam(false);
   };
 
-  /** 3D models for the aircraft and the traffic (lib/plane3d.js). The flat
-      traffic symbols stay faint underneath as ground shadows and click targets. */
-  StratosGlobe3D.prototype._addPlaneLayer = function () {
-    if (!window.StratosPlane3D || this.planes || !this.map) return;
-    try {
-      this.planes = window.StratosPlane3D.layer(this.map, 'planes3d');
-      this.map.addLayer(this.planes);
-      this.map.setPaintProperty('traffic-plane', 'icon-opacity', 0.3);
-      // The selected plane is its 3D model now; the ground ring would only mark the shadow.
-      this.map.setLayoutProperty('traffic-selected', 'visibility', 'none');
-      if (this.el) this.el.classList.add('g3-models');
-    } catch (_) { this.planes = null; }
+  /** Zoom for the chase camera: close on the ground, wider with height so the
+      aircraft (lifted by its altitude stalk) and the ground both stay in view. */
+  StratosGlobe3D.chaseZoom = function (feet) {
+    var alt = Math.max(0, Number(feet) || 0);
+    return Math.max(9.5, Math.min(16, 16 - Math.log2(Math.max(1, alt / 500))));
   };
 
-  StratosGlobe3D.prototype._syncPlanes = function () {
-    if (!this.planes) return;
-    var list = [];
-    var active = String(this.trafficSelected || '').toUpperCase();
-    for (var i = 0; i < this.traffic.length; i += 1) {
-      var t = this.traffic[i] || {};
-      var key = String(t.key || t.hx || t.id || '').toUpperCase();
-      list.push({ lat: Number(t.lat), lon: Number(t.lon), alt: t.alt == null ? 0 : Number(t.alt), hdg: Number.isFinite(Number(t.hdg)) ? Number(t.hdg) : Number(t.trk), type: t.type, callsign: t.id, selected: !!(key && key === active), highlight: key && key === active ? '#fbbf24' : '' });
-    }
-    var ac = this.aircraft;
-    if (ac && Number.isFinite(ac.lat) && Number.isFinite(ac.lon)) {
-      list.push({ lat: ac.lat, lon: ac.lon, alt: ac.alt, hdg: Number.isFinite(ac.hdg) ? ac.hdg : ac.trk, bank: ac.bank, pitch: ac.pitch, type: ac.type, callsign: ac.callsign, own: true,
-        // Your own aircraft keeps a coloured tail when its airline has no colour scheme, so it stands out.
-        highlight: window.StratosPlane3D.schemeFor(ac.callsign) ? '' : this.accent });
-    }
-    this.planes.setPlanes(list);
-  };
-
-  /** The camera behind the aircraft model, at its altitude, looking along its
-      track. A drag on the map stops following (as in the other modes); the
-      centre button resumes. */
+  /** The camera behind the aircraft, looking along its track. A drag on the
+      map stops following (as in the other modes); the centre button resumes. */
   StratosGlobe3D.prototype._chaseCam = function (instant) {
     if (!this.chase || !this.map || !this.ready || !this.aircraft || !this.follow && !instant) return;
     var ac = this.aircraft;
@@ -1093,12 +1041,12 @@
     var dir = Number.isFinite(ac.trk) ? ac.trk : (Number.isFinite(ac.hdg) ? ac.hdg : this.map.getBearing());
     var cam = {
       center: [ac.lon, ac.lat],
-      elevation: Math.max(0, (Number(ac.alt) || 0) * FT_TO_M),
       bearing: dir,
-      pitch: 72,
-      zoom: 17.4,
-      // The aircraft sits a little below the middle, with the horizon above it.
-      padding: { top: Math.round((this.el.clientHeight || 600) * 0.3), bottom: 0, left: 0, right: 0 },
+      pitch: 74,
+      zoom: StratosGlobe3D.chaseZoom(ac.alt),
+      // Padding puts the ground point low on screen, so the aircraft lifted on
+      // its altitude stalk sits mid-view, clear of the strip along the top.
+      padding: { top: Math.round((this.el.clientHeight || 600) * 0.6), bottom: 0, left: 0, right: 0 },
     };
     // The Flight Deck already smooths the position every frame, so the camera
     // jumps with it; easing on top would make it lag behind the aircraft.
@@ -1152,8 +1100,7 @@
     if (!this.credit) return;
     this.credit.textContent = 'Imagery: Esri, Maxar · ' +
       (this.lowPower ? 'low-power: terrain off, 1x pixels' : 'Elevation: AWS Terrain Tiles (Mapzen)') +
-      ' · display only, not for navigation' +
-      (window.StratosPlane3D && window.StratosPlane3D.CREDIT ? ' · ' + window.StratosPlane3D.CREDIT : '');
+      ' · display only, not for navigation';
   };
 
   /** Turn off terrain and cap the 3D render surface at 1x for slower GPUs. */

@@ -2,7 +2,7 @@
    The shell is available offline after the first visit. Live data, telemetry,
    logbook JSON, weather and map tiles are NEVER cached, so stale data can never
    be presented as live. A new build replaces the old cache on activation. */
-const CACHE = 'stratos-shell-2.4.2-phone';
+const CACHE = 'stratos-shell-2.4.3-phone';
 const SHELL = [
   './',
   'index.html',
@@ -19,10 +19,6 @@ const SHELL = [
   'efb-hud.css',
   'tokens.css',
   'js/lib/globe3d.js',
-  'js/lib/plane3d.js',
-  'models/a320.glb',
-  'models/b789.glb',
-  'models/a321.glb',
   'js/lib/flightstatus.js',
   'js/lib/earthview.js',
   'vendor/maplibre/maplibre-gl.js',

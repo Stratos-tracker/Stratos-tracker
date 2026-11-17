@@ -48,17 +48,6 @@ A globe — the Flight Planner's and the Flight Deck tracker's, which share one 
 - **Terrain elevation is a display product, not a navigation one.** ETOPO1 states that it is not suitable for navigation; the assembled tiles are a situational-awareness picture for a simulator map. The readout says so on every terrain reading, reports how many of its samples actually had data, and states the level and ground resolution they came from. No terrain elevation is used for terrain clearance, minima or any operational purpose, and the surface is never presented as an obstacle or terrain-awareness function.
 - **What is not integrated.** No provider's imagery is bundled, mirrored or proxied, no Google/Esri/Bing imagery is read for the globe, and no commercial terrain or obstacle database is present. A surface the pilot does not choose costs nothing: the Outlines default makes no request, and a failed or offline request falls back to the bundled outlines with the failure reported in the readout rather than a substitute pattern being drawn.
 
-## 3D aircraft models
-
-The 3D map draws downloaded models, all under **Creative Commons Attribution 4.0** (CC BY 4.0, https://creativecommons.org/licenses/by/4.0/), shipped unmodified in `app/models/` and credited on the 3D map:
-
-- `app/models/a320.glb`: ["Airbus A320 Airliner"](https://sketchfab.com/3d-models/airbus-a320-airliner-757aa190f27a407291187328d7125903) by Kyaie, drawn for narrowbody traffic. The author modelled it in Blender and asks only for credit.
-- `app/models/a320hd.glb`: ["Airbus A320-200 V2"](https://sketchfab.com/3d-models/airbus-a320-200-v2-c078f9af15884a6b820c7e778831b110) by fDlruosne (made in Blender), drawn only for the pilot's own A320 because of its size (474k triangles, 15 MB).
-- `app/models/a321.glb`: ["Airbus A321-232"](https://sketchfab.com/3d-models/airbus-a321-232-22721a53dabc4ca282fbda3b8cd7f030) by piggyrockstarYT, drawn for every A321.
-- `app/models/b789.glb`: ["Boeing 787-9"](https://sketchfab.com/3d-models/boeing-787-9-b6711e2e698e4e469675c1154a50b7a3) by Nobilis 2, drawn for every widebody twin.
-
-Every other family (four-engine, regional jet, turboprop, business jet, light aircraft) is a low-poly shape built in code in `app/js/lib/plane3d.js`, painted in airline colours only (no logos).
-
 ## Route Discovery
 
 - Route recommendations are computed locally from the same airport records above: identifiers, coordinates, elevation and published runway lengths. Distances are great-circle distances; durations are estimates at a fixed cruise speed plus ground time, never ATC routings or winds.

@@ -598,7 +598,6 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 </div>
 </div>
 <script src="vendor/maplibre/maplibre-gl.js"></script>
-<script src="js/lib/plane3d.js"></script>
 <script src="js/lib/globe3d.js"></script>
 <script src="js/data/world.js"></script>
 <script type="module">
@@ -1813,7 +1812,7 @@ function t3Sync(force){
   if(force||now-t3ViewAt>150){t3ViewAt=now;t3d.setView({lat:V.lat,lon:V.lon,zoom:V.z,follow:V.fol,force:!!force})}
   if(force||now-t3RouteAt>500){t3RouteAt=now;t3d.setRoute(route.map(p=>({lat:p.lat,lon:p.lon,id:p.id})),t3Active())}
   const ok=liveOk(),d=live.d||{};
-  const ac=ok?{lat:own.lat,lon:own.lon,alt:own.alt,hdg:own.hdgMag!=null?own.hdgMag:own.hdg,trk:own.trk,bank:own.bank,pitch:tnum(d.pitch),callsign:(d.callsign||d.registration)||'',type:(d.aircraftType||d.aircraft||d.type||'')}:null;
+  const ac=ok?{lat:own.lat,lon:own.lon,alt:own.alt,hdg:own.hdgMag!=null?own.hdgMag:own.hdg,trk:own.trk,callsign:(d.callsign||d.registration)||'',type:(d.aircraftType||d.aircraft||d.type||'')}:null;
   const acSig=ac?[ac.lat,ac.lon,ac.alt,ac.hdg,ac.trk,ac.callsign,ac.type].join('|'):'';
   if(force||acSig!==t3AcSig){t3AcSig=acSig;t3d.setAircraft(ac)}
   if(force||now-t3AirSetAt>1000){t3AirSetAt=now;t3d.setAirports(t3NearAirports())}

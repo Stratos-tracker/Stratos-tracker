@@ -722,8 +722,10 @@ html.phone-mode #procpane, html.phone-mode #planpane { display: none !important;
 
 /* Three 3D modes side by side. */
 #t3mode { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-/* With 3D models the aircraft is the model itself; the flat marker steps aside. */
-.g3-models .g3-ac { display: none; }
+/* The chase view draws the aircraft symbol larger. */
+.g3-chase .g3-head { width: 44px; height: 44px; }
+.g3-chase .g3-head svg { width: 40px; height: 40px; }
+.g3-chase .g3-stalk { width: 2px; }
 /* Chase view: where the map draws nothing between the sky and the far terrain,
    the container shows the horizon haze instead of black. */
 #globe3d.g3-chase { background: #c9dcee; }

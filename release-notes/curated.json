@@ -602,5 +602,23 @@
       "compatibility": [],
       "other": []
     }
+  },
+  "2.4.3": {
+    "summary": "The 3D views go back to the aircraft symbol on its altitude stalk; the 3D aircraft models are removed.",
+    "changelog": {
+      "features": [],
+      "improvements": [
+        "The 3D chase view follows your aircraft symbol on its altitude stalk again."
+      ],
+      "fixes": [],
+      "performance": [
+        "The 3D aircraft models are removed, making the app about 18 MB smaller and the 3D views lighter."
+      ],
+      "ui": [
+        "3D views: aircraft are drawn as symbols again, with the selected flight's altitude trail."
+      ],
+      "compatibility": [],
+      "other": []
+    }
   }
 }

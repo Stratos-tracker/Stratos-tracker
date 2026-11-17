@@ -3,48 +3,48 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.4.2",
+    "version": "2.4.3",
     "releasedAt": "2026-11-17",
     "severity": "normal",
-    "summary": "Tracking a flight in 3D now follows the 3D aircraft itself, with its trail drawn at real altitude.",
+    "summary": "The 3D views go back to the aircraft symbol on its altitude stalk; the 3D aircraft models are removed.",
     "changelog": {
       "features": [],
       "improvements": [
-        "Following a selected flight in the 3D views keeps the aircraft itself in the middle of the screen, at its altitude."
+        "The 3D chase view follows your aircraft symbol on its altitude stalk again."
       ],
-      "fixes": [
-        "3D views: the selected flight no longer shows a yellow ground ring and a flat orange icon beside its 3D model.",
-        "3D views: the selected flight's trail is drawn in 3D at its recorded altitude and ends at the aircraft model."
+      "fixes": [],
+      "performance": [
+        "The 3D aircraft models are removed, making the app about 18 MB smaller and the 3D views lighter."
       ],
-      "performance": [],
-      "ui": [],
+      "ui": [
+        "3D views: aircraft are drawn as symbols again, with the selected flight's altitude trail."
+      ],
       "compatibility": [],
       "other": []
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.2/Stratos-Setup.exe",
-        "sha256": "bd9c9e655415ed2e2280c8217dd49c489f7bf333de06aeb9c70025dcc057b669",
-        "size": 137715937
-      },
-      "mac-arm64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.2/Stratos-2.4.2-mac-arm64.dmg",
-        "sha256": "a24f1567da5f22af92a0f3c58fd74dbebc60ef26849a776d1aeed5265201bc0f",
-        "size": 163120150
-      },
-      "mac-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.2/Stratos-2.4.2-mac-x64.dmg",
-        "sha256": "5a27bc21978f33eac9c1bd391f543d47cf124c4159f12cf0f4f21f4563dcd82a",
-        "size": 168597561
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.2/Stratos-2.4.2-linux-x64.AppImage",
-        "sha256": "18e7af32568e871e093e4f6c4854b8d26dc09ebdb2320a42ceff4da04a6fa1f8",
-        "size": 185924258
-      }
     }
   },
   "releases": [
+    {
+      "version": "2.4.3",
+      "releasedAt": "2026-11-17",
+      "severity": "normal",
+      "summary": "The 3D views go back to the aircraft symbol on its altitude stalk; the 3D aircraft models are removed.",
+      "changelog": {
+        "features": [],
+        "improvements": [
+          "The 3D chase view follows your aircraft symbol on its altitude stalk again."
+        ],
+        "fixes": [],
+        "performance": [
+          "The 3D aircraft models are removed, making the app about 18 MB smaller and the 3D views lighter."
+        ],
+        "ui": [
+          "3D views: aircraft are drawn as symbols again, with the selected flight's altitude trail."
+        ],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.4.2",
       "releasedAt": "2026-11-17",
@@ -1248,26 +1248,6 @@
           "sha256": "29b04e93692b442fafcdd067398040500d4947b471f318ba99252cbd0e75b0be",
           "size": 146100351
         }
-      }
-    },
-    {
-      "version": "2.1.31",
-      "releasedAt": "2026-11-05",
-      "severity": "normal",
-      "summary": "2 new features.",
-      "changelog": {
-        "features": [
-          "Add the 2.1.30 release entry to the update manifest.",
-          "Track flight position over the existing X-Plane link and ship the cabin audio."
-        ],
-        "improvements": [],
-        "fixes": [],
-        "performance": [],
-        "ui": [],
-        "compatibility": [],
-        "other": [
-          "Publish the 2.1.29 download table."
-        ]
       }
     }
   ]
