@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-18",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.8/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.8/Stratos-Setup.exe",
+      "sha256": "704f6efed981d8a03a717f97821f05fd5f02d0d4301b22c280f362a820c6e995",
+      "size": 119510526
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.8/Stratos-2.4.8-mac-arm64.dmg",
+      "sha256": "9de90810338b94f195b127ae434cb81bba777e81bec1a5501479832393ae73ee",
+      "size": 137710668
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.8/Stratos-2.4.8-mac-x64.dmg",
+      "sha256": "a8effa056ca5bdcbbafce60739af245fec7e90692bfe5a133ad925d5e357ef45",
+      "size": 143117033
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.8/Stratos-2.4.8-linux-x64.AppImage",
+      "sha256": "7912f5f5497c327d219422297e4f58b3016d7de50c498356a86ce34aedee4106",
+      "size": 160742960
+    }
+  },
   "summary": "Prepar3D and FSX support, X-Plane 11 navigation data, and a map that wraps around the world without a black edge.",
   "reason": "",
   "releaseNotes": [
