@@ -1,4 +1,26 @@
 {
+  "2.4.9": {
+    "summary": "A lock screen and home bar for the EFB, the Flight Deck map inside Navigator, and a quieter phone map.",
+    "changelog": {
+      "features": [
+        "The EFB opens on a lock screen over its own wallpaper, with the airline's logo behind it: the time, UTC and local clocks, your flight, the simulator connection and a calendar. Swipe up to open it.",
+        "A home bar on the EFB home screen: swipe it up to return to the Flight Deck.",
+        "Navigator now shows the Flight Deck map itself, with every layer and control."
+      ],
+      "improvements": [
+        "The lock screen follows your finger and settles with the same motion as an iPad."
+      ],
+      "fixes": [
+        "The Stratos wing on the EFB home screen no longer shows a faint square around it."
+      ],
+      "performance": [],
+      "ui": [
+        "On a phone, the telemetry strip and the aircraft card open when you tap an aircraft instead of staying on screen."
+      ],
+      "compatibility": [],
+      "other": []
+    }
+  },
   "2.4.8": {
     "summary": "Prepar3D and FSX support, X-Plane 11 navigation data, and a map that wraps around the world without a black edge.",
     "changelog": {
@@ -247,27 +269,6 @@
       "other": [
         "Charts offered as links are the publisher's current documents, not charts bundled with Stratos."
       ]
-    }
-  },
-  "2.1.37": {
-    "summary": "SID paths now start on the runway and follow the published initial-climb heading to its altitude-gated turn, including SLEEK2 runway 8 at KDEN.",
-    "changelog": {
-      "features": [
-        "A departure now begins at the runway threshold, follows the runway centreline to the departure end, and continues on the published initial-climb heading before turning to the first fix.",
-        "The bundled FAA dataset keeps a no-fix heading leg's course and altitude instead of dropping it, and carries runway-end elevation so the altitude turn can be placed."
-      ],
-      "improvements": [
-        "The initial climb is carried through SimBrief import, the route builder, the EFB, the map and the stored route, so every page draws the same departure.",
-        "The procedure note says when a turn is altitude-gated and when its lateral position is drawn at 500 ft/NM, rather than presenting a planning line as a published ground distance."
-      ],
-      "fixes": [
-        "SLEEK2 runway 8 at KDEN no longer turns toward KIDNG at the threshold; it climbs on 082.5° to 5,934 ft before the right turn.",
-        "A procedure without a published heading course and altitude gets no synthetic turn point."
-      ],
-      "performance": [],
-      "ui": [],
-      "compatibility": [],
-      "other": []
     }
   },
   "2.1.38": {
