@@ -566,8 +566,9 @@ test('the bag opens on a lock screen over its own wallpaper, and never between S
   const fs = await import('node:fs');
   const root = new URL('../', import.meta.url);
   const html = fs.readFileSync(new URL('app/efb.html', root), 'utf8');
-  const shell = fs.readFileSync(new URL('app/js/efb.js', root), 'utf8');
-  const css = fs.readFileSync(new URL('app/efb.css', root), 'utf8');
+  // Line endings normalised: the repository may hold CRLF where these match LF.
+  const shell = fs.readFileSync(new URL('app/js/efb.js', root), 'utf8').replace(/\r\n/g, '\n');
+  const css = fs.readFileSync(new URL('app/efb.css', root), 'utf8').replace(/\r\n/g, '\n');
   assert.match(html, /<div class="efb-lock" id="efb-lock" hidden role="dialog"/, 'the lock screen is part of the page');
   assert.match(html, /id="lk-time"/, 'with the time');
   assert.match(html, /id="lk-flight"/, 'and the flight');
@@ -585,7 +586,7 @@ test('the deck has a home bar that swipes back to the Flight Deck', async () => 
   const fs = await import('node:fs');
   const root = new URL('../', import.meta.url);
   const html = fs.readFileSync(new URL('app/efb.html', root), 'utf8');
-  const shell = fs.readFileSync(new URL('app/js/efb.js', root), 'utf8');
+  const shell = fs.readFileSync(new URL('app/js/efb.js', root), 'utf8').replace(/\r\n/g, '\n');
   assert.match(html, /<button class="home-indicator" id="home-indicator"/, 'the deck shows a home bar');
   assert.match(shell, /setTimeout\(\(\) => \{ location\.href = 'index\.html'; \}, 400\);/, 'swiping it up returns to the Flight Deck');
   assert.match(shell, /setupHomeIndicator\(\);\n\s*route\(\);/, 'it is wired up at start');
