@@ -120,7 +120,7 @@ def _build():
         return [os.path.join(d, name) for d in dirs if os.path.isfile(os.path.join(d, name))]
 
     for path in files("earth_fix.dat"):
-        label = "X-Plane 12 CIFP" if "Custom Data" not in path else "X-Plane 12 CIFP (Custom Data)"
+        label = "X-Plane CIFP" if "Custom Data" not in path else "X-Plane CIFP (Custom Data)"
         try:
             with open(path, "r", encoding="utf-8", errors="replace") as handle:
                 for line in handle:
@@ -165,13 +165,18 @@ def _build():
 
     ils_rows = []
     for path in files("earth_nav.dat"):
-        label = "X-Plane 12 nav data"
+        label = "X-Plane nav data"
+        packed_course = True
         try:
             with open(path, "r", encoding="utf-8", errors="replace") as handle:
                 for line in handle:
                     parts = line.split()
+                    # X-Plane 11 writes version 1100/1150 files, whose localizer
+                    # rows hold the true course only (no packed magnetic course).
+                    if parts[:1] in (["1100"], ["1150"]):
+                        packed_course = False
                     if parts[:1] in (["4"], ["5"], ["6"], ["12"]):
-                        ils_rows.append(parts)
+                        ils_rows.append(parts if packed_course else (parts, False))
                     # type lat lon elev freq range bearing ident airport region name...
                     if len(parts) < 10:
                         continue
@@ -222,7 +227,9 @@ def ils_from_rows(rows):
     wins, so Custom Data (read first) overrides the shipped default data.
     """
     locs, slopes, dmes = {}, {}, set()
-    for parts in rows:
+    for row in rows:
+        # A (parts, False) row comes from an X-Plane 11 file: true course only.
+        parts, packed_course = row if isinstance(row, tuple) else (row, True)
         try:
             code = int(parts[0])
             lat, lon, elev = float(parts[1]), float(parts[2]), float(parts[3])
@@ -232,13 +239,17 @@ def ils_from_rows(rows):
             continue
         key = (airport, ident)
         if code in (4, 5) and len(parts) > 10 and key not in locs:
-            mag = int(packed // 360)
+            if packed_course:
+                mag = int(packed // 360)
+                course_mag, course_true = mag % 360 or 360, round(packed - mag * 360, 2)
+            else:
+                course_mag, course_true = None, round(packed % 360, 2)
             name = " ".join(parts[11:])
             kind = name.replace("-", " ").upper() if name else ("ILS" if code == 4 else "LOC")
             locs[key] = {
                 "airport": airport, "runway": parts[10].upper(), "ident": ident,
-                "freqMHz": round(freq / 100.0, 2), "courseMag": mag % 360 or 360,
-                "courseTrue": round(packed - mag * 360, 2), "type": kind,
+                "freqMHz": round(freq / 100.0, 2), "courseMag": course_mag,
+                "courseTrue": course_true, "type": kind,
                 "lat": round(lat, 6), "lon": round(lon, 6), "elevFt": int(elev),
             }
         elif code == 6 and key not in slopes:
@@ -454,7 +465,7 @@ def enroute(lat, lon, nm=80.0, level="low", limit=3000):
             if value:
                 mora.append([cell_lat, cell_lon, value])
     return {"ok": True, "level": level, "airways": airways, "airspace": airspace, "mora": mora,
-            "available": data["available"], "source": "X-Plane 12 nav data" if data["available"] else "",
+            "available": data["available"], "source": "X-Plane nav data" if data["available"] else "",
             "cycle": data["cycle"]}
 
 
@@ -488,7 +499,7 @@ def airspace(lat, lon, nm=120.0, limit=800):
         if len(out) >= limit:
             break
     return {"ok": True, "airspace": out, "available": data["available"],
-            "source": "X-Plane 12 nav data" if data["available"] else "", "cycle": data["cycle"]}
+            "source": "X-Plane nav data" if data["available"] else "", "cycle": data["cycle"]}
 
 
 def ils(airport):
@@ -498,7 +509,7 @@ def ils(airport):
     return {
         "ok": True, "airport": code, "ils": data.get("ils", {}).get(code, []),
         "simulatorNavData": bool(data["dirs"]),
-        "source": "X-Plane 12 nav data" if data["dirs"] else "",
+        "source": "X-Plane nav data" if data["dirs"] else "",
         "cycle": data["cycle"].get("cycle", ""),
     }
 
@@ -607,7 +618,7 @@ def coverage(data=None):
     cycle = data.get("cycle") or {}
     return {
         "simulatorNavData": installed,
-        "source": "X-Plane 12 CIFP" if installed else "",
+        "source": "X-Plane CIFP" if installed else "",
         "cycle": cycle.get("cycle", ""),
         "cycleSource": cycle.get("source", ""),
         "fixes": data["counts"].get("fix", 0),
@@ -636,7 +647,7 @@ def status():
         dirs, xplane = _dirs()
         _PROBE = {
             "simulatorNavData": bool(dirs),
-            "source": "X-Plane 12 CIFP" if dirs else "",
+            "source": "X-Plane CIFP" if dirs else "",
             "cycle": _cycle(xplane).get("cycle", ""),
             "cycleSource": _cycle(xplane).get("source", ""),
             "fixes": None, "navaids": None, "simulatorAirports": None,

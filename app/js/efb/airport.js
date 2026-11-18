@@ -144,14 +144,14 @@ export async function mount(root, ctx) {
     let content;
     if (ilsError) content = `<div class="e-notice warn"><div>${esc(ilsError)}</div></div>`;
     else if (!ils) content = '<div class="e-loading"><i></i>Reading the localizers…</div>';
-    else if (!ils.simulatorNavData) content = '<div class="e-small e-muted">No X-Plane 12 nav data on this PC · ILS needs X-Plane 12</div>';
+    else if (!ils.simulatorNavData) content = '<div class="e-small e-muted">No X-Plane nav data on this PC · ILS needs X-Plane 11 or 12</div>';
     else if (!rows.length) content = `<div class="e-small e-muted">The navigation data lists no ILS or localizer at ${esc(icao)}.</div>`;
     else content = `<table class="e-table"><thead><tr><th>Rwy</th><th>Type</th><th>Ident</th><th>Freq</th><th>Course</th><th>GS</th><th>DME</th></tr></thead><tbody>
         ${rows.map(row => `<tr${row.runway === planned ? ' style="background:rgba(34,211,238,.10)"' : ''}>
           <td><b>${esc(row.runway)}</b>${row.runway === planned ? ' <span class="e-badge accent">plan</span>' : ''}</td>
           <td>${esc(String(row.type).replace(/^ILS CAT /, 'CAT '))}</td><td><b>${esc(row.ident)}</b></td>
           <td>${esc(Number(row.freqMHz).toFixed(2))}</td>
-          <td>${esc(String(row.courseMag).padStart(3, '0'))}°M <span class="e-faint">${esc(String(Math.round(row.courseTrue) % 360 || 360).padStart(3, '0'))}°T</span></td>
+          <td>${row.courseMag != null ? `${esc(String(row.courseMag).padStart(3, '0'))}°M <span class="e-faint">${esc(String(Math.round(row.courseTrue) % 360 || 360).padStart(3, '0'))}°T</span>` : `${esc(String(Math.round(row.courseTrue) % 360 || 360).padStart(3, '0'))}°T`}</td>
           <td>${row.glideSlopeDeg != null ? `${esc(Number(row.glideSlopeDeg).toFixed(2))}°` : '<span class="e-faint">none</span>'}</td>
           <td>${row.dme ? 'Yes' : '—'}</td></tr>`).join('')}
       </tbody></table>`;

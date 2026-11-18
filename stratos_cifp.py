@@ -80,7 +80,9 @@ def _install_files():
     home = os.path.expanduser("~")
     paths = [
         os.path.join(os.environ.get("LOCALAPPDATA", ""), "x-plane_install_12.txt"),
+        os.path.join(os.environ.get("LOCALAPPDATA", ""), "x-plane_install_11.txt"),
         os.path.join(home, "Library", "Preferences", "x-plane_install_12.txt"),
+        os.path.join(home, "Library", "Preferences", "x-plane_install_11.txt"),
         os.path.join(home, ".x-plane", "x-plane_install_12.txt"),
         os.path.join(home, ".x-plane", "x-plane_install_11.txt"),
     ]
@@ -88,15 +90,20 @@ def _install_files():
 
 
 def _default_dirs():
-    return [
-        r"C:\X-Plane 12",
-        r"C:\Program Files\X-Plane 12",
-        r"C:\Program Files (x86)\X-Plane 12",
-        r"C:\Program Files (x86)\Steam\steamapps\common\X-Plane 12",
-        r"C:\Program Files\Steam\steamapps\common\X-Plane 12",
-        "/Applications/X-Plane 12",
-        os.path.expanduser("~/X-Plane 12"),
-    ]
+    # X-Plane 12 first, then X-Plane 11: both keep CIFP and nav data in the
+    # same folders, so whichever is installed is read the same way.
+    dirs = []
+    for name in ("X-Plane 12", "X-Plane 11"):
+        dirs += [
+            "C:\\" + name,
+            "C:\\Program Files\\" + name,
+            "C:\\Program Files (x86)\\" + name,
+            "C:\\Program Files (x86)\\Steam\\steamapps\\common\\" + name,
+            "C:\\Program Files\\Steam\\steamapps\\common\\" + name,
+            "/Applications/" + name,
+            os.path.expanduser("~/" + name),
+        ]
+    return dirs
 
 
 def _looks_like_xplane(directory):
@@ -460,7 +467,7 @@ def _runway_of(transition):
     return match.group(1) + ("" if match.group(2) == "B" else match.group(2))
 
 
-def build_airport(cifp_text, airport, resolver, source="X-Plane 12 CIFP", cycle=""):
+def build_airport(cifp_text, airport, resolver, source="X-Plane CIFP", cycle=""):
     """Procedures for one airport, from the text of its CIFP file."""
     lines = [line.rstrip("\r\n") for line in cifp_text.splitlines()]
     runways = parse_runways(lines)
@@ -680,7 +687,7 @@ class NavData:
                 self._resolver.airports.add(code)
             payload = build_airport(
                 text, code, self._resolver,
-                source="X-Plane 12 CIFP (Custom Data)" if "Custom" in directory else "X-Plane 12 CIFP",
+                source="X-Plane CIFP (Custom Data)" if "Custom" in directory else "X-Plane CIFP",
                 cycle=cycles.get("cycle", ""),
             )
             self._cache[code] = (mtime, payload)

@@ -993,6 +993,17 @@ class IlsNavDataTests(unittest.TestCase):
         self.assertTrue(sea["dme"])
         self.assertEqual(sea["type"], "ILS CAT II")
 
+    def test_xplane_11_localizer_keeps_true_course_and_has_no_magnetic(self):
+        # X-Plane 11 earth_nav.dat (1150): the localizer field is the true course only.
+        rows = [(line.split(), False) for line in (
+            " 4  47.463533 -122.308041      354    11030    18     179.950 ISZI KSEA K1 16L ILS-cat-I",
+            " 6  47.442900 -122.311200      354    11030    10  300179.950 ISZI KSEA K1 16L GS",
+        )]
+        sea = self.nav.ils_from_rows(rows)["KSEA"][0]
+        self.assertIsNone(sea["courseMag"])
+        self.assertAlmostEqual(sea["courseTrue"], 179.95, places=2)
+        self.assertEqual(sea["glideSlopeDeg"], 3.0)
+
     def test_first_copy_wins_and_a_lone_localizer_has_no_glide_slope(self):
         table = self.nav.ils_from_rows([line.split() for line in self.LINES])
         lhr = table["EGLL"]

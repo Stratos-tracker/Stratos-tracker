@@ -2894,7 +2894,7 @@ function drawIfr(){
   const level=L.ifrhi?'high':L.ifrlo?'low':'';if(!level||CH.on)return;
   ifrFetch(level);
   const d=IFR.data;
-  if(!d||d.level!==level){if(IFR.err)wxNotice(IFR.err==='nodata'?'IFR chart: no X-Plane 12 nav data on this PC':'IFR chart needs the Stratos bridge');return}
+  if(!d||d.level!==level){if(IFR.err)wxNotice(IFR.err==='nodata'?'IFR chart: no X-Plane nav data on this PC':'IFR chart needs the Stratos bridge');return}
   const day=document.documentElement.dataset.theme==='day',on=p=>p&&p[0]>-200&&p[0]<W+200&&p[1]>-200&&p[1]<H+200;
   cx.save();
   for(const[lat,lon,h]of d.mora||[]){

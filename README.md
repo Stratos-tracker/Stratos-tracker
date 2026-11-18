@@ -23,6 +23,7 @@ Everything is free. There is no paid tier.
 | --- | --- |
 | MSFS 2020/2024 | Tested in a real flight |
 | X-Plane 12 | Implemented, not yet flown live. Reports welcome |
+| X-Plane 11 | Same UDP output and nav data as X-Plane 12; not yet flown live |
 
 ## Run it
 

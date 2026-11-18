@@ -118,9 +118,11 @@ h3{font-size:20px;line-height:1.25;font-weight:700}
 .hero .sub{font-size:19px}
 .hero .ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
 .note{font-size:13.5px;color:var(--muted);margin:16px 0 0}
-.sims{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:34px;padding-top:24px;border-top:1px solid var(--line)}
-.sims span{font:600 12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--soft);display:flex;align-items:center;gap:8px}
-.sims span::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ok)}
+.sims{display:flex;flex-wrap:wrap;align-items:center;gap:18px 40px;margin-top:34px;padding-top:26px;border-top:1px solid var(--line)}
+.simlogo{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.simlogo img{height:44px;width:auto}
+.simlogo img[src$=".svg"]{height:26px;margin:9px 0}
+.simlogo small{font:600 11px/1 var(--mono);letter-spacing:.12em;color:var(--muted)}
 
 /* Devices */
 .devices{position:relative;padding:0 0 40px 8%}
@@ -175,8 +177,10 @@ h3{font-size:20px;line-height:1.25;font-weight:700}
 .datum p{margin:0;font-size:15px;color:var(--paper-soft)}
 
 /* Simulators */
-.simgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:52px}
-.sim{padding:28px;border-radius:16px;border:1px solid var(--line);background:var(--surface)}
+.simgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:52px}
+.sim{padding:32px;border-radius:16px;border:1px solid var(--line);background:var(--surface)}
+.sim-mark{height:64px;width:auto;margin-bottom:26px}
+.sim-mark.xp{height:36px;margin:14px 0 40px}
 .sim .tagline{font:600 12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ok);display:flex;align-items:center;gap:8px}
 .sim .tagline::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
 .sim h3{font-size:24px;margin:16px 0 10px}
@@ -315,13 +319,16 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:110px;col
     <div>
       <span class="badge"><b>FREE</b>Flight tracker &amp; EFB for flight simulation</span>
       <h1>The complete flight deck for your <em>simulator</em>.</h1>
-      <p class="sub">Live tracking, charts, performance, planning and an automatic logbook for X-Plane 12 and Microsoft Flight Simulator, on your PC, tablet and phone.</p>
+      <p class="sub">Live tracking, charts, performance, planning and an automatic logbook for X-Plane 11 and 12 and Microsoft Flight Simulator, on your PC, tablet and phone.</p>
       <div class="ctas">
         <a class="btn primary" id="pc-download" href="/api/download?p=windows">↓ Download for Windows</a>
         <a class="btn line" href="/phone">Open Phone Mode</a>
       </div>
       <p class="note" id="download-note">Also on macOS, Linux and ChromeOS · or <a href="app/">launch it in your browser</a></p>
-      <div class="sims" aria-label="Supported simulators"><span>MSFS 2020</span><span>MSFS 2024</span><span>X-Plane 12</span></div>
+      <div class="sims" aria-label="Supported simulators">
+        <span class="simlogo"><img src="images/sims/msfs-2024.png" width="560" height="200" alt="Microsoft Flight Simulator"><small>2020 · 2024</small></span>
+        <span class="simlogo"><img src="images/sims/x-plane.svg" width="1060" height="182" alt="X-Plane"><small>11 · 12</small></span>
+      </div>
     </div>
     <div class="devices">
       <div class="tablet"><img src="images/shot-charts.jpg" width="1400" height="994" alt="Stratos EFB on a tablet, showing the San Francisco airport diagram beside a list of current departure procedures"></div>
@@ -459,9 +466,18 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:110px;col
       <p class="sub center">A small bridge built into the desktop app reads your aircraft. It runs on your PC and nothing is exposed to the internet.</p>
     </div>
     <div class="simgrid">
-      <div class="sim reveal"><span class="tagline">Automatic</span><h3>MSFS 2020</h3><p>Open Stratos and start a flight. It connects on its own.</p></div>
-      <div class="sim reveal"><span class="tagline">Automatic</span><h3>MSFS 2024</h3><p>Same as 2020: start a flight with Stratos open and you're live.</p></div>
-      <div class="sim reveal"><span class="tagline">One-time setup</span><h3>X-Plane 12</h3><p>In <b>Settings → Data Output</b>, send rows 3, 17 and 20 over UDP to port 49003 on your PC.</p></div>
+      <div class="sim reveal">
+        <img class="sim-mark" src="images/sims/msfs-2024.png" width="560" height="200" alt="Microsoft Flight Simulator" loading="lazy">
+        <span class="tagline">Automatic</span>
+        <h3>Microsoft Flight Simulator 2020 &amp; 2024</h3>
+        <p>Open Stratos and start a flight. It connects on its own, with nothing to install in the sim.</p>
+      </div>
+      <div class="sim reveal">
+        <img class="sim-mark xp" src="images/sims/x-plane.svg" width="1060" height="182" alt="X-Plane" loading="lazy">
+        <span class="tagline">One-time setup</span>
+        <h3>X-Plane 11 &amp; 12</h3>
+        <p>In <b>Settings → Data Output</b>, send rows 3, 17 and 20 over UDP to port 49003 on your PC. Stratos also reads your X-Plane navigation data for SIDs, STARs and ILS.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -571,7 +587,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:110px;col
     </div>
     <div class="faq">
       <details><summary>Is Stratos really free?</summary><p>Yes. Every feature is included, with no subscription, no paid tier and no trial.</p></details>
-      <details><summary>Which simulators are supported?</summary><p>Microsoft Flight Simulator 2020 and 2024, and X-Plane 12. Stratos detects which one is running and shows it in the top bar.</p></details>
+      <details><summary>Which simulators are supported?</summary><p>Microsoft Flight Simulator 2020 and 2024, and X-Plane 11 and 12. Stratos detects which one is running and shows it in the top bar.</p></details>
       <details><summary>Where do the charts come from, and which countries are covered?</summary><p>Charts are the FAA's published terminal procedures, so they cover the United States and its territories in the current cycle. For other countries Stratos links to the official publisher, and you can open a chart PDF you've downloaded yourself.</p></details>
       <details><summary>Do I need an account?</summary><p>No. Your logbook is stored on your own PC. An account is only needed to follow your flight from a phone or Chromebook on a different network.</p></details>
       <details><summary>Is my data uploaded anywhere?</summary><p>Not unless you pair a phone over the internet. Then your PC sends live snapshots out to a relay and your phone reads them with its own token. Nothing can send commands back to your PC, and you can revoke pairing in Pilot → Settings.</p></details>
@@ -596,13 +612,13 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:110px;col
     <div class="foot">
       <div>
         <a class="brand" href="/"><img src="app/icon-192.png" alt="" width="32" height="32"><b>STRATOS</b></a>
-        <p>A free flight tracker and electronic flight bag for X-Plane 12 and Microsoft Flight Simulator.</p>
+        <p>A free flight tracker and electronic flight bag for X-Plane 11 and 12 and Microsoft Flight Simulator.</p>
       </div>
       <div><h4>Product</h4><ul><li><a href="#products">Flight Deck</a></li><li><a href="app/efb.html">Stratos EFB</a></li><li><a href="app/logbook.html">Logbook</a></li><li><a href="/phone">Phone Mode</a></li></ul></div>
       <div><h4>Get Stratos</h4><ul><li><a href="/api/download?p=windows">Windows</a></li><li><a href="/api/download?p=mac-arm64">macOS</a></li><li><a href="/api/download?p=linux-x64">Linux</a></li><li><a href="app/">Web app</a></li></ul></div>
       <div><h4>Legal</h4><ul><li><a href="app/privacy.html">Privacy</a></li><li><a href="app/terms.html">Terms</a></li><li><a href="SOURCES_AND_LICENSING.md">Data sources</a></li></ul></div>
     </div>
-    <p class="legal">Stratos is an independent project for flight simulation only and is not for real-world navigation. Traffic from public ADS-B sources, airports from OurAirports, weather from NOAA Aviation Weather, charts from the FAA. Not affiliated with Microsoft, Laminar Research or SimBrief.</p>
+    <p class="legal">Stratos is an independent project for flight simulation only and is not for real-world navigation. Traffic from public ADS-B sources, airports from OurAirports, weather from NOAA Aviation Weather, charts from the FAA. Not affiliated with Microsoft, Laminar Research or SimBrief. Microsoft Flight Simulator and X-Plane are trademarks of their respective owners.</p>
   </div>
 </footer>
 

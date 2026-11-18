@@ -459,7 +459,7 @@ export async function mount(root, ctx) {
     const bridge = isHostedPage() ? '' : defaultBridgeBase().replace(/\/+$/, '');
     const center = map.viewCenter();
     if (!center) return; // no view yet: the next view change asks again
-    if (!bridge) { setNotice('The IFR chart needs the Stratos bridge with X-Plane 12 nav data.', 'warn'); return; }
+    if (!bridge) { setNotice('The IFR chart needs the Stratos bridge with X-Plane 11 or 12 nav data.', 'warn'); return; }
     const span = map.viewSpanNm() || 160;
     const nm = Math.max(30, Math.min(600, Math.round(span * 0.75)));
     const key = `${enrouteLevel}|${center.lat.toFixed(2)}|${center.lon.toFixed(2)}|${nm}`;
@@ -470,7 +470,7 @@ export async function mount(root, ctx) {
       const data = await response.json();
       if (destroyed || enrouteKey !== key) return;
       map.setEnroute(data);
-      if (data && data.ok && !data.available) setNotice('No X-Plane 12 nav data on this PC · IFR chart unavailable', 'warn');
+      if (data && data.ok && !data.available) setNotice('No X-Plane nav data on this PC · IFR chart unavailable', 'warn');
     } catch (_) {
       if (destroyed || enrouteKey !== key) return;
       enrouteKey = '';
