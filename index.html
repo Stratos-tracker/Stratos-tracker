@@ -118,12 +118,13 @@ h3{font-size:20px;line-height:1.25;font-weight:700}
 .hero .sub{font-size:19px}
 .hero .ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
 .note{font-size:13.5px;color:var(--muted);margin:16px 0 0}
-.sims{display:flex;flex-wrap:wrap;align-items:center;gap:22px 30px;margin-top:34px;padding-top:26px;border-top:1px solid var(--line)}
-.sims img{width:auto}
-.sims .msfs{height:40px}
-.sims .xp{height:22px}
-.sims .p3d{height:20px}
-.sims .fsx{height:34px}
+/* Two rows that scale as one: column widths follow each logo's aspect ratio
+   (MSFS 30px tall, X-Plane 16px, Prepar3D 15px, FSX 28px at full size). */
+.sims{display:grid;gap:22px;width:min(473px,100%);margin-top:34px;padding-top:26px;border-top:1px solid var(--line)}
+.sims>div{display:grid;align-items:center}
+.sims .r1{grid-template-columns:84fr 138fr 93fr 92fr;column-gap:4.65%}
+.sims .r2{width:56.2%;grid-template-columns:1fr 1fr;column-gap:8.3%}
+.sims img{width:100%;height:auto}
 /* FSX's slate lettering is drawn for light pages; lift it so it reads on navy. */
 .sims .fsx,.sim-marks .fsx{filter:brightness(2.3)}
 
@@ -336,12 +337,16 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:110px;col
       </div>
       <p class="note" id="download-note">Also on macOS, Linux and ChromeOS · or <a href="app/">launch it in your browser</a></p>
       <div class="sims" aria-label="Supported simulators">
-        <img class="msfs" src="images/sims/msfs-2020.png" width="560" height="122" alt="Microsoft Flight Simulator 2020">
-        <img class="msfs" src="images/sims/msfs-2024.png" width="560" height="200" alt="Microsoft Flight Simulator 2024">
-        <img class="xp" src="images/sims/x-plane-11.png" width="328" height="57" alt="X-Plane 11">
-        <img class="xp" src="images/sims/x-plane-12.svg" width="1060" height="182" alt="X-Plane 12">
-        <img class="p3d" src="images/sims/prepar3d.png" width="293" height="36" alt="Prepar3D">
-        <img class="fsx" src="images/sims/fsx.png" width="560" height="129" alt="Microsoft Flight Simulator X">
+        <div class="r1">
+          <img src="images/sims/msfs-2024.png" width="560" height="200" alt="Microsoft Flight Simulator 2024">
+          <img src="images/sims/msfs-2020.png" width="560" height="122" alt="Microsoft Flight Simulator 2020">
+          <img src="images/sims/x-plane-12.svg" width="1060" height="182" alt="X-Plane 12">
+          <img src="images/sims/x-plane-11.png" width="328" height="57" alt="X-Plane 11">
+        </div>
+        <div class="r2">
+          <img src="images/sims/prepar3d.png" width="293" height="36" alt="Prepar3D">
+          <img class="fsx" src="images/sims/fsx.png" width="560" height="129" alt="Microsoft Flight Simulator X">
+        </div>
       </div>
     </div>
     <div class="devices">
