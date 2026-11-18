@@ -118,11 +118,10 @@ h3{font-size:20px;line-height:1.25;font-weight:700}
 .hero .sub{font-size:19px}
 .hero .ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
 .note{font-size:13.5px;color:var(--muted);margin:16px 0 0}
-.sims{display:flex;flex-wrap:wrap;align-items:center;gap:18px 40px;margin-top:34px;padding-top:26px;border-top:1px solid var(--line)}
-.simlogo{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
-.simlogo img{height:44px;width:auto}
-.simlogo img[src$=".svg"]{height:26px;margin:9px 0}
-.simlogo small{font:600 11px/1 var(--mono);letter-spacing:.12em;color:var(--muted)}
+.sims{display:flex;flex-wrap:wrap;align-items:center;gap:22px 30px;margin-top:34px;padding-top:26px;border-top:1px solid var(--line)}
+.sims img{width:auto}
+.sims .msfs{height:40px}
+.sims .xp{height:22px}
 
 /* Devices */
 .devices{position:relative;padding:0 0 40px 8%}
@@ -179,8 +178,10 @@ h3{font-size:20px;line-height:1.25;font-weight:700}
 /* Simulators */
 .simgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:52px}
 .sim{padding:32px;border-radius:16px;border:1px solid var(--line);background:var(--surface)}
-.sim-mark{height:64px;width:auto;margin-bottom:26px}
-.sim-mark.xp{height:36px;margin:14px 0 40px}
+.sim-marks{display:flex;flex-wrap:wrap;align-items:center;gap:16px 26px;min-height:64px;margin-bottom:26px}
+.sim-marks img{width:auto}
+.sim-marks .msfs{height:52px}
+.sim-marks .xp{height:28px}
 .sim .tagline{font:600 12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ok);display:flex;align-items:center;gap:8px}
 .sim .tagline::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
 .sim h3{font-size:24px;margin:16px 0 10px}
@@ -326,8 +327,10 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:110px;col
       </div>
       <p class="note" id="download-note">Also on macOS, Linux and ChromeOS · or <a href="app/">launch it in your browser</a></p>
       <div class="sims" aria-label="Supported simulators">
-        <span class="simlogo"><img src="images/sims/msfs-2024.png" width="560" height="200" alt="Microsoft Flight Simulator"><small>2020 · 2024</small></span>
-        <span class="simlogo"><img src="images/sims/x-plane.svg" width="1060" height="182" alt="X-Plane"><small>11 · 12</small></span>
+        <img class="msfs" src="images/sims/msfs-2020.png" width="560" height="122" alt="Microsoft Flight Simulator 2020">
+        <img class="msfs" src="images/sims/msfs-2024.png" width="560" height="200" alt="Microsoft Flight Simulator 2024">
+        <img class="xp" src="images/sims/x-plane-11.png" width="328" height="57" alt="X-Plane 11">
+        <img class="xp" src="images/sims/x-plane-12.svg" width="1060" height="182" alt="X-Plane 12">
       </div>
     </div>
     <div class="devices">
@@ -467,13 +470,19 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:110px;col
     </div>
     <div class="simgrid">
       <div class="sim reveal">
-        <img class="sim-mark" src="images/sims/msfs-2024.png" width="560" height="200" alt="Microsoft Flight Simulator" loading="lazy">
+        <div class="sim-marks">
+          <img class="msfs" src="images/sims/msfs-2020.png" width="560" height="122" alt="Microsoft Flight Simulator 2020" loading="lazy">
+          <img class="msfs" src="images/sims/msfs-2024.png" width="560" height="200" alt="Microsoft Flight Simulator 2024" loading="lazy">
+        </div>
         <span class="tagline">Automatic</span>
         <h3>Microsoft Flight Simulator 2020 &amp; 2024</h3>
         <p>Open Stratos and start a flight. It connects on its own, with nothing to install in the sim.</p>
       </div>
       <div class="sim reveal">
-        <img class="sim-mark xp" src="images/sims/x-plane.svg" width="1060" height="182" alt="X-Plane" loading="lazy">
+        <div class="sim-marks">
+          <img class="xp" src="images/sims/x-plane-11.png" width="328" height="57" alt="X-Plane 11" loading="lazy">
+          <img class="xp" src="images/sims/x-plane-12.svg" width="1060" height="182" alt="X-Plane 12" loading="lazy">
+        </div>
         <span class="tagline">One-time setup</span>
         <h3>X-Plane 11 &amp; 12</h3>
         <p>In <b>Settings → Data Output</b>, send rows 3, 17 and 20 over UDP to port 49003 on your PC. Stratos also reads your X-Plane navigation data for SIDs, STARs and ILS.</p>
