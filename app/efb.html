@@ -97,6 +97,39 @@
     <p class="home-foot">Simulator use only · not for real-world navigation</p>
   </div>
   <div class="home-dock" id="home-dock" aria-label="Dock"></div>
+  <button class="home-indicator" id="home-indicator" type="button" aria-label="Back to the Flight Deck" title="Swipe up to go back to the Flight Deck"><i aria-hidden="true"></i></button>
+</div>
+
+<!-- The lock screen, shown each time the bag opens, over the deck's own
+     wallpaper so the airline's mark (or the Stratos wing) stays behind it.
+     A tap, an upward swipe or any key opens the deck. -->
+<div class="efb-lock" id="efb-lock" hidden role="dialog" aria-modal="true" aria-label="Stratos EFB lock screen">
+  <span class="lk-padlock" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M7 10V7.5a5 5 0 0 1 10 0V10h.6A1.9 1.9 0 0 1 19.5 11.9v7.2A1.9 1.9 0 0 1 17.6 21H6.4A1.9 1.9 0 0 1 4.5 19.1v-7.2A1.9 1.9 0 0 1 6.4 10zm2 0h6V7.5a3 3 0 0 0-6 0z"/></svg>
+  </span>
+  <div class="lk-head">
+    <span class="lk-date" id="lk-date"></span>
+    <b class="lk-time" id="lk-time">--:--</b>
+    <span class="lk-utc" id="lk-utc"></span>
+  </div>
+  <aside class="lk-widgets" aria-label="Widgets">
+    <div class="lk-clocks">
+      <figure class="lk-face"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48" class="lkf-dial"/><g class="lkf-ticks"></g><line id="lk-utc-h" x1="50" y1="50" x2="50" y2="28" class="lkf-h"/><line id="lk-utc-m" x1="50" y1="50" x2="50" y2="14" class="lkf-m"/><circle cx="50" cy="50" r="3" class="lkf-pin"/><text x="50" y="72" class="lkf-label">UTC</text></svg></figure>
+      <figure class="lk-face"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48" class="lkf-dial"/><g class="lkf-ticks"></g><line id="lk-lcl-h" x1="50" y1="50" x2="50" y2="28" class="lkf-h"/><line id="lk-lcl-m" x1="50" y1="50" x2="50" y2="14" class="lkf-m"/><circle cx="50" cy="50" r="3" class="lkf-pin"/><text x="50" y="72" class="lkf-label">LCL</text></svg></figure>
+    </div>
+    <section class="lk-list">
+      <header><span>Flight</span><b id="lk-count"></b></header>
+      <ul id="lk-flight"></ul>
+    </section>
+    <section class="lk-sim">
+      <span class="lk-sim-line"><i aria-hidden="true"></i><b id="lk-sim">Offline</b></span>
+      <span class="lk-sim-sub">Simulator</span>
+      <span class="lk-meter"><i id="lk-meter"></i></span>
+    </section>
+    <section class="lk-cal" id="lk-cal" aria-label="Calendar"></section>
+    <section class="lk-note"><b>Stratos EFB</b><span>Simulator use only</span></section>
+  </aside>
+  <button class="lk-open" id="lk-open" type="button" aria-label="Open Stratos EFB"><i aria-hidden="true"></i></button>
 </div>
 
 <div class="efb-shell">

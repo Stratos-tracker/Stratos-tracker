@@ -194,38 +194,14 @@ test('EFB charts: a real d-TPP payload becomes a catalogue the viewer can group'
   assert.equal(catalogueFromPayload({ charts: [{ code: 'APD', title: 'X', pdf: null }] }, 'KEWR'), null);
 });
 
-test('EFB Navigator keeps the flight it drew when the rollout opens a new record', async () => {
+test('Navigator is the Flight Deck map, embedded without its own rail and bar', async () => {
   const fs = await import('node:fs');
   const page = fs.readFileSync(new URL('../app/js/efb/navigator.js', import.meta.url), 'utf8');
-  assert.match(page, /trailContinues\(drawnTrack\[drawnTrack\.length - 1\], track\[0\]\)/,
-    'a record that starts where the drawn path stopped continues it');
-  assert.match(page, /drawnTrack = track\.slice\(\);/, 'a flight from somewhere else replaces the path');
-  assert.match(page, /if \(drawnTrack\.length > 6000\) drawnTrack\.splice/, 'the joined path stays bounded');
-});
-
-test('Navigator describes the route it drew, not a plan left over from another flight', async () => {
-  const fs = await import('node:fs');
-  // Matched line by line, so the file's line endings must not decide the result:
-  // a checkout on Windows may hand us CRLF where the repository holds LF.
-  const page = fs.readFileSync(new URL('../app/js/efb/navigator.js', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
-
-  // The route built in the Flight Plan app carries its own airports, procedures
-  // and cruise in the shared record, so it is described from itself.
-  assert.match(page, /const meta = loadRouteMeta\(\);/, 'the shared route record is read for the summary');
-  assert.match(page, /const own = meta\.plan \|\| null;/, 'and its plan is what the summary prefers');
-  assert.match(page, /const origin = \(own\.origin && own\.origin\.id\) \|\| '';/, 'the route names its own airports');
-  assert.match(page, /sid: procedureLabel\(own\.sid\)/, 'and its own procedures');
-  assert.match(page, /meta\.cruiseAlt \? fmtFl\(meta\.cruiseAlt\)/, 'and its own cruise level');
-
-  // The callsign and the aircraft belong to a SimBrief plan, and it is only this
-  // route's plan while both of its airports match.
-  assert.match(page, /const sameFlight = Boolean\(ofp && origin && destination/, 'a match is required before any of it is shown');
-  assert.match(page, /callsign: sameFlight \?[^:]*: '',/, 'a callsign from another flight is withheld');
-  assert.match(page, /aircraft: sameFlight \?[^:]*: '',/, 'so is its aircraft');
-  assert.match(page, /plannedNm: sameFlight &&[^,]*,/i, 'and its planned distance');
-
-  // With no route record the SimBrief plan is the flight, which is the older path.
-  assert.match(page, /if \(!own\) \{\n\s+if \(!ofp\) return null;/, 'a SimBrief-only flight still reads from the plan');
+  const deck = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+  assert.match(page, /export const NAVIGATOR_SRC = 'index\.html\?embed=efb';/, 'Navigator loads the Flight Deck page itself');
+  assert.match(page, /<iframe class="nav-deck-frame" src="\$\{NAVIGATOR_SRC\}"/, 'in a frame that fills the page');
+  assert.match(deck, /embed=efb\(&\|\$\)/, 'the Flight Deck recognises the embedded mode');
+  assert.match(deck, /\.embed-efb #tabs,\.embed-efb #appbar/, 'and hides its rail and top bar there');
 });
 
 test('the EFB installs as its own app on a tablet or phone home screen', async () => {
@@ -329,31 +305,14 @@ test('Navigator replaced Live: one map app, planned route, chart conventions', a
   const manifest = JSON.parse(fs.readFileSync(new URL('app/manifest-efb.webmanifest', root), 'utf8'));
   assert.ok(manifest.shortcuts.some(shortcut => shortcut.url.endsWith('#/navigator')), 'the install shortcut too');
 
-  // Route rendering: chart symbols, leg geometry and collision-thinned labels.
-  assert.match(page, /new MiniMap\(el\.canvas, \{/, 'the page reuses the tracker\'s map engine');
-  assert.match(page, /routeStyle: 'nav'/, 'and asks for the chart-style route');
-  assert.match(page, /pannable: true/, 'the chart can be panned and wheel-zoomed');
-  assert.match(page, /ownSymbol: 'aircraft'/, 'own aircraft is drawn as an aircraft');
-  assert.match(page, /chartTheme/, 'the chart theme is chosen, not inherited from the tracker');
-  assert.match(page, /attribution: false/, 'the credit lives in the footer instead of on the canvas');
-  assert.match(page, /map-credit[^<]*© Esri/, 'and it is still shown');
-  assert.match(page, /map\?\.setPosition\(null\)/, 'an offline feed clears the last position');
-  assert.match(page, /The aircraft is still tracked on the map/, 'tracking needs no flight plan');
-  assert.match(page, /flightPhase\(message\)/, 'the chip shows the current phase');
-  assert.match(page, /setRouteState\(stateNow\)/, 'route progress is handed to the chart');
-  assert.match(page, /data-wp="\$\{index\}"/, 'the panel lists waypoints');
-  assert.match(page, /data-leg="\$\{index\}"/, 'and the legs between them');
-  assert.match(page, /data-centre/, 'a selected point can be centred');
-  assert.match(page, /distanceNm\(from, to\)/, 'a leg reports its real distance');
-  assert.match(page, /bearingDeg\(from, to\)/, 'and its initial track');
+  // The map is the Flight Deck's own, so the two can never drift apart.
+  assert.match(page, /index\.html\?embed=efb/, 'the page shows the Flight Deck map');
 
   // The map is its own view: the content region is the chart, edge to edge.
   assert.match(html, /<body class="efb"/, 'the page is the bag shell');
   const css = fs.readFileSync(new URL('app/efb.css', root), 'utf8');
   assert.match(css, /body\.view-map \.efb-body \{ padding: 0/, 'the map view removes the page padding');
-  assert.match(css, /^\.map-shell \{ flex: 1; display: flex; flex-direction: column/m, 'the chart and its bar stack');
-  assert.match(css, /^\.map-foot\b/m, 'the progress bar has a bar of its own under the chart');
-  assert.match(css, /^\.nav-panel \{/m, 'the route panel is styled');
+  assert.match(css, /^\.nav-deck-frame \{/m, 'the embedded map fills the content region');
 });
 
 test('the map engine draws route points as chart symbols without label pile-ups', async () => {
@@ -543,7 +502,7 @@ test('the airline dresses the whole bag, with a preview and a manual override', 
   assert.ok(/class="home-logo"/.test(page), 'with the house mark, without its wordmark, under the deck');
   assert.doesNotMatch(page, /home-brand/, 'and no airline wordmark in the bottom-right corner');
   assert.match(css, /\.home-logo \{[^}]*place-items: center/, 'the mark is centred on the deck');
-  assert.match(css, /\.home-mark \{[^}]*background: var\(--efb-accent\)[^}]*mask: url\(icon-512\.png\)/, 'the Stratos wing, drawn in the house accent');
+  assert.match(css, /\.home-mark \{[^}]*background: var\(--efb-accent\)[^}]*mask: url\(images\/stratos-wing\.png\)/, 'the Stratos wing, drawn in the house accent');
   assert.match(css, /body\[data-airline=""\] \.home-logo/, 'and only while no airline is loaded');
   assert.ok(/id="home-airline-logo"/.test(page), 'with the airline mark on the wallpaper');
   assert.match(shell, /function renderAirlineWallpaper/, 'drawn from the resolved airline');
@@ -601,4 +560,33 @@ test('opening the same app with a different query remounts it', () => {
   assert.ok(shell.includes('if (state.app === app.id && state.query === query) return;'),
     'an app is skipped only when both the app and its query are unchanged');
   assert.ok(shell.includes('state.query = query;'), 'the open query is remembered');
+});
+
+test('the bag opens on a lock screen over its own wallpaper, and never between Stratos pages', async () => {
+  const fs = await import('node:fs');
+  const root = new URL('../', import.meta.url);
+  const html = fs.readFileSync(new URL('app/efb.html', root), 'utf8');
+  const shell = fs.readFileSync(new URL('app/js/efb.js', root), 'utf8');
+  const css = fs.readFileSync(new URL('app/efb.css', root), 'utf8');
+  assert.match(html, /<div class="efb-lock" id="efb-lock" hidden role="dialog"/, 'the lock screen is part of the page');
+  assert.match(html, /id="lk-time"/, 'with the time');
+  assert.match(html, /id="lk-flight"/, 'and the flight');
+  assert.match(css, /body\.efb-locked \.efb-home\[hidden\] \{ display: flex; \}/, 'the deck wallpaper (and the airline mark) stays behind it');
+  assert.match(css, /body\.efb-locked \.home-stage/, 'while the apps are hidden');
+  assert.match(shell, /setupLock\(\);\n\s*setupHomeIndicator\(\);\n\s*route\(\);/, 'it is set up before the first route');
+  assert.ok(shell.includes('from.origin === location.origin && /\\/(app|phone)(\\/|$)/.test(from.pathname)'), 'moving between Stratos pages skips it');
+  assert.match(shell, /end\(rise > height\(\) \* 0\.15 \|\| \(rise > 12 && speed > 0\.45\) \|\| Math\.abs\(rise\) < 8\);/, 'a swipe past 15%, a flick or a tap completes it');
+  assert.match(shell, /const drag = swipeUp\(lock, \{/, 'the lock follows the finger');
+  assert.match(css, /--ios-ease: cubic-bezier\(\.32, \.72, 0, 1\)/, 'and settles on the iOS curve');
+  assert.doesNotMatch(html, /Swipe up or tap to open/, 'no hint text under the home bar');
+});
+
+test('the deck has a home bar that swipes back to the Flight Deck', async () => {
+  const fs = await import('node:fs');
+  const root = new URL('../', import.meta.url);
+  const html = fs.readFileSync(new URL('app/efb.html', root), 'utf8');
+  const shell = fs.readFileSync(new URL('app/js/efb.js', root), 'utf8');
+  assert.match(html, /<button class="home-indicator" id="home-indicator"/, 'the deck shows a home bar');
+  assert.match(shell, /setTimeout\(\(\) => \{ location\.href = 'index\.html'; \}, 400\);/, 'swiping it up returns to the Flight Deck');
+  assert.match(shell, /setupHomeIndicator\(\);\n\s*route\(\);/, 'it is wired up at start');
 });

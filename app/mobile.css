@@ -171,9 +171,10 @@
     right: 0;
     z-index: 42;
     border-bottom: 0;
-    background: linear-gradient(180deg, rgba(11, 12, 15, .96), rgba(11, 12, 15, .72) 70%, rgba(11, 12, 15, 0));
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
+    /* No band over the map: the search field carries its own background. */
+    background: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
   body[data-mobile-section="map"] #appbar #sb {
     background: rgba(24, 25, 28, .86);
@@ -726,7 +727,10 @@
      draggable flight sheet. At /phone the pilot asked for the desktop deck, so
      the PC strip and control column stay where the desktop puts them and the
      sheet is never mounted: the same instruments, scaled to the screen. */
-  html.phone-mode #tel {
+  /* Not permanent: the strip opens when the pilot taps their own aircraft and
+     closes when the selection is cleared. */
+  html.phone-mode #tel { display: none !important; }
+  html.phone-mode.tel-open #tel {
     display: block !important;
     left: var(--m-gutter);
     right: var(--m-gutter);

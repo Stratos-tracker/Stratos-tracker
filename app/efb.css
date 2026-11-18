@@ -471,8 +471,9 @@ body[data-airline=""] .home-logo { opacity: .22; }
   width: clamp(300px, 52vmin, 640px);
   aspect-ratio: 1;
   background: var(--efb-accent);
-  -webkit-mask: url(icon-512.png) center / contain no-repeat;
-  mask: url(icon-512.png) center / contain no-repeat luminance;
+  /* The wing alone on a transparent ground, so no square of the icon's navy shows. */
+  -webkit-mask: url(images/stratos-wing.png) center / contain no-repeat;
+  mask: url(images/stratos-wing.png) center / contain no-repeat;
 }
 
 /* The resolved airline's mark, laid large across the deck and shown only when
@@ -2680,3 +2681,176 @@ body.view-nav .efb-main { background: #07080b; }
 @media (max-width: 700px) {
   .gc-wrap canvas { height: 320px; }
 }
+
+/* ── lock screen ──────────────────────────────────────────────────────
+   Shown when the bag opens, over the deck's own wallpaper: the airline's
+   mark (or the Stratos wing) stays behind it while the apps, the bar and
+   the dock are hidden. Large local time in the middle, a column of quiet
+   widgets on the left and a home bar at the foot, like a tablet at rest. */
+body.efb-locked .efb-home[hidden] { display: flex; }
+body.efb-locked .efb-shell { visibility: hidden; }
+/* iOS's own curve for unlock and app close: a fast start that settles softly. */
+:root { --ios-ease: cubic-bezier(.32, .72, 0, 1); }
+/* While locked the deck waits slightly enlarged and transparent; --unlock
+   (0 to 1, set while the lock is dragged) brings it in under the finger. */
+body.efb-locked .home-bar,
+body.efb-locked .home-stage,
+body.efb-locked .home-dock,
+body.efb-locked .home-indicator {
+  opacity: var(--unlock, 0);
+  transform: scale(calc(1.08 - .08 * var(--unlock, 0)));
+  pointer-events: none;
+  transition: opacity .5s var(--ios-ease), transform .5s var(--ios-ease);
+}
+body.lk-dragging .home-bar,
+body.lk-dragging .home-stage,
+body.lk-dragging .home-dock,
+body.lk-dragging .home-indicator { transition: none; }
+.efb-lock[hidden] { display: none; }
+.efb-lock {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  color: rgba(255, 255, 255, .94);
+  background: linear-gradient(180deg, rgba(0, 0, 0, .18), transparent 30%, transparent 70%, rgba(0, 0, 0, .28));
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  user-select: none;
+  touch-action: none;
+  cursor: grab;
+  will-change: transform, opacity;
+  transition: transform .5s var(--ios-ease), opacity .5s var(--ios-ease);
+}
+.efb-lock.lk-drag { transition: none; cursor: grabbing; }
+.lk-padlock { position: absolute; top: 3.2vh; left: 50%; transform: translateX(-50%); opacity: .9; }
+.lk-head {
+  position: absolute;
+  top: 7vh;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, .25);
+}
+.lk-date { font-size: clamp(15px, 2.1vmin, 22px); font-weight: 600; letter-spacing: .01em; }
+.lk-time {
+  font-size: clamp(84px, 17vmin, 190px);
+  line-height: .95;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, .88);
+}
+.lk-utc { margin-top: 6px; font-size: clamp(12px, 1.5vmin, 15px); font-weight: 600; letter-spacing: .14em; opacity: .7; }
+
+.lk-widgets {
+  position: absolute;
+  top: 7vh;
+  left: 4.2vw;
+  width: clamp(170px, 19vmin, 230px);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  font-size: 13px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, .2);
+}
+.lk-clocks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.lk-face { margin: 0; }
+.lk-face svg { width: 100%; height: auto; display: block; }
+.lkf-dial { fill: rgba(255, 255, 255, .2); stroke: rgba(255, 255, 255, .35); stroke-width: 1.2; }
+.lkf-ticks line { stroke: rgba(255, 255, 255, .7); stroke-width: 1.4; stroke-linecap: round; }
+.lkf-h, .lkf-m { stroke: #fff; stroke-linecap: round; }
+.lkf-h { stroke-width: 3.6; }
+.lkf-m { stroke-width: 2.4; }
+.lkf-pin { fill: #fff; }
+.lkf-label { fill: rgba(255, 255, 255, .8); font: 600 9px/1 system-ui, sans-serif; letter-spacing: .1em; text-anchor: middle; }
+
+.lk-list header { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.lk-list ul { list-style: none; margin: 0; padding: 0; }
+.lk-list li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid rgba(255, 255, 255, .22); font-size: 13px; }
+.lk-list li::before { content: ""; flex: none; width: 15px; height: 15px; border-radius: 50%; border: 1.4px solid rgba(255, 255, 255, .7); }
+.lk-list li.lk-empty::before { display: none; }
+
+.lk-sim { display: flex; flex-direction: column; gap: 3px; }
+.lk-sim-line { display: flex; align-items: center; gap: 7px; font-size: 14px; }
+.lk-sim-line i { width: 9px; height: 9px; border-radius: 50%; background: rgba(255, 255, 255, .5); }
+.efb-lock[data-sim="live"] .lk-sim-line i { background: #4ade80; box-shadow: 0 0 0 3px rgba(74, 222, 128, .25); }
+.lk-sim-sub { font-size: 13px; opacity: .85; }
+.lk-meter { margin-top: 5px; height: 5px; border-radius: 9px; background: rgba(255, 255, 255, .28); overflow: hidden; }
+.lk-meter i { display: block; height: 100%; width: 0; border-radius: inherit; background: #fff; transition: width .4s ease; }
+
+.lk-cal { font-size: 10.5px; }
+.lk-cal b { display: block; font-size: 11px; letter-spacing: .08em; margin-bottom: 6px; }
+.lk-cal table { width: 100%; border-collapse: collapse; text-align: center; font-variant-numeric: tabular-nums; }
+.lk-cal th { font-weight: 600; opacity: .7; padding: 2px 0; }
+.lk-cal td { padding: 3px 0; }
+.lk-cal td.lk-today span { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: #fff; color: #0b1220; font-weight: 700; }
+
+.lk-note { display: flex; flex-direction: column; gap: 2px; padding-left: 9px; border-left: 2.5px solid rgba(255, 255, 255, .8); font-size: 13px; }
+.lk-note span { opacity: .85; }
+
+.lk-open {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 40px 6px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: 600 13px/1 inherit;
+  cursor: pointer;
+}
+.lk-open i { width: clamp(130px, 18vw, 230px); height: 5px; border-radius: 9px; background: rgba(255, 255, 255, .9); }
+.lk-open:focus-visible { outline: 2px solid #fff; outline-offset: 2px; border-radius: 12px; }
+
+/* A phone, or any narrow screen: the widgets sit under the time in one column. */
+@media (max-width: 700px) {
+  .lk-widgets { top: auto; bottom: 90px; left: 50%; transform: translateX(-50%); width: min(300px, 86vw); gap: 16px; }
+  .lk-clocks, .lk-cal { display: none; }
+}
+@media (max-height: 560px) and (min-width: 701px) {
+  .lk-cal, .lk-note { display: none; }
+}
+/* The home bar on the deck: swipe it up (or tap it) to go back to the Flight
+   Deck, the way closing an app returns to the home screen. */
+.efb-home > .home-dock { margin-bottom: 30px; }
+.home-indicator {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  z-index: 6;
+  width: 260px;
+  height: 26px;
+  margin-left: -130px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: grab;
+  touch-action: none;
+}
+.home-indicator i { width: clamp(120px, 16vw, 200px); height: 5px; border-radius: 9px; background: rgba(255, 255, 255, .85); }
+.home-indicator:focus-visible { outline: 2px solid #fff; outline-offset: -4px; border-radius: 12px; }
+.efb-home { transform-origin: 50% 100%; will-change: transform; }
+.efb-home.hm-drag { transition: none; }
+.efb-home.hm-leaving {
+  transform: translateY(-12%) scale(.62);
+  opacity: 0;
+  border-radius: 40px;
+  transition: transform .42s var(--ios-ease), opacity .42s var(--ios-ease), border-radius .42s var(--ios-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .efb-lock { transition: opacity .2s linear; }
+  body.efb-locked .home-bar, body.efb-locked .home-stage, body.efb-locked .home-dock, body.efb-locked .home-indicator { transform: none; }
+  .efb-home.hm-leaving { transform: none; transition: opacity .2s linear; }
+}
+
+/* ── Navigator: the Flight Deck map, embedded edge to edge ───────────── */
+.nav-deck { flex: 1; display: flex; min-height: 0; }
+.nav-deck-frame { flex: 1; width: 100%; min-height: 0; border: 0; display: block; background: #07080b; }

@@ -66,6 +66,7 @@
   --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:80px}
 body{margin:0;background:var(--ink);color:var(--text);font:16px/1.6 var(--body);overflow-x:hidden;-webkit-font-smoothing:antialiased}
 img{max-width:100%;height:auto;display:block}
@@ -210,7 +211,7 @@ h2,h3{overflow-wrap:anywhere}
 .plan .btn{width:100%}
 
 /* Access + install */
-.access{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:52px}
+.access{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:52px}
 .access-card,.card{border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,var(--surface),var(--ink-2));padding:30px}
 .access-card{display:flex;flex-direction:column;gap:14px}
 .ac-top{display:flex;align-items:center;gap:14px}
@@ -274,6 +275,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:110px;col
 
 @media (max-width:1080px){
   .suite,.data,.install{grid-template-columns:1fr 1fr}
+  .access{grid-template-columns:1fr}
   .links{display:none}
 }
 @media (max-width:900px){
@@ -312,6 +314,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:110px;col
     <div class="links">
       <a href="#products">Products</a>
       <a href="#features">Features</a>
+      <a href="#access">EFB &amp; phone</a>
       <a href="#simulators">Simulators</a>
       <a href="#pricing">Pricing</a>
       <a href="#faq">FAQ</a>
@@ -333,7 +336,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:110px;col
       <p class="sub">Live tracking, charts, performance, planning and an automatic logbook for X-Plane 11 and 12 and Microsoft Flight Simulator, on your PC, tablet and phone.</p>
       <div class="ctas">
         <a class="btn primary" id="pc-download" href="/api/download?p=windows">↓ Download for Windows</a>
-        <a class="btn line" href="/phone">Open Phone Mode</a>
+        <a class="btn line" id="efb-open" href="app/efb.html">Open Stratos EFB</a>
       </div>
       <p class="note" id="download-note">Also on macOS, Linux and ChromeOS · or <a href="app/">launch it in your browser</a></p>
       <div class="sims" aria-label="Supported simulators">
@@ -567,6 +570,16 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:110px;col
         <a class="btn line" href="/phone">Open Phone Mode ↗</a>
         <p class="small">Add it to your home screen and it opens like an app.</p>
       </article>
+      <article class="access-card reveal" aria-labelledby="access-efb">
+        <div class="ac-top">
+          <span class="ac-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3.6" width="18" height="16.8" rx="2.6"/><path d="M7.5 8.5h9M7.5 12h9M7.5 15.5h5"/></svg></span>
+          <div><span class="ac-k">EFB mode</span><h2 id="access-efb">Stratos EFB on your tablet</h2></div>
+        </div>
+        <p>An electronic flight bag for the tablet on your knee: briefing, charts, performance and the moving map.</p>
+        <ul class="ac-list"><li>iPad</li><li>Android tablets</li><li>Home screen</li></ul>
+        <a class="btn line" href="app/efb.html">Open Stratos EFB ↗</a>
+        <p class="small">Add it to your home screen and it opens to its own lock screen.</p>
+      </article>
     </div>
 
     <div class="install" id="install">
@@ -667,6 +680,23 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:110px;col
   </div>
 </div>
 <script>
+/* The hero's main button follows the device: a phone gets Phone Mode, a tablet
+   gets the EFB, and a computer keeps the Windows download. */
+(function () {
+  var ua = navigator.userAgent || '', coarse = false;
+  try { coarse = matchMedia('(pointer: coarse)').matches; } catch (_) { /* old browser */ }
+  var shortSide = Math.min(screen.width || 0, screen.height || 0);
+  var ipad = /iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var phone = !ipad && (/iPhone|iPod/.test(ua) || /Android.+Mobile/.test(ua) || (coarse && shortSide > 0 && shortSide < 600));
+  var tablet = !phone && (ipad || /Android/.test(ua) || (coarse && shortSide >= 600));
+  var main = document.getElementById('pc-download'), efb = document.getElementById('efb-open');
+  if (!main || !(phone || tablet)) return;
+  main.href = phone ? '/phone' : 'app/efb.html';
+  main.textContent = phone ? 'Open Phone Mode' : 'Open Stratos EFB';
+  main.removeAttribute('id');
+  if (efb) efb.hidden = true;
+  document.documentElement.dataset.device = phone ? 'phone' : 'tablet';
+})();
 (function () {
   // The site's own manifest names the current version; the download buttons
   // point at /api/download, which resolves the newest installer server-side.

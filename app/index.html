@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-ui="new"><head><meta name="google-site-verification" content="XKDdOg6JlR51vfE1F6f55J3rZuq3D6lwzNUdK4eiSEo" /><meta charset="utf-8">
+<html lang="en" data-ui="new"><head><meta name="google-site-verification" content="XKDdOg6JlR51vfE1F6f55J3rZuq3D6lwzNUdK4eiSEo" /><meta charset="utf-8"><script>/* Embedded in the EFB's Navigator: the bag draws its own bar and sections, so the Flight Deck's rail and top bar step aside. */try{if(/[?&]embed=efb(&|$)/.test(location.search))document.documentElement.classList.add('embed-efb')}catch(_){}</script><style>.embed-efb #tabs,.embed-efb #appbar,.embed-efb [data-rail-toggle]{display:none!important}.embed-efb .app-shell{grid-template-columns:0 minmax(0,1fr)!important}.embed-efb .app-main{margin-left:0!important}</style>
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png">
 <!-- Before the Phone Mode script: until this is parsed a phone reports a 980 px desktop viewport, and the width test would fail. -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -4166,7 +4166,11 @@ function etaZ(duration){ // 'h:mm' remaining -> the clock time it lands, in UTC
 function fcField(value,label){return '<div><b>'+value+'</b><span>'+label+'</span></div>'}
 function fcRender(ok){
   const e=$('#fc'),pick=sel&&(sel.k=='trf'||sel.k=='own');
-  if(!pick&&!ok){if(fcS){fcS='';e.style.display='none'}return}
+  // Phone Mode shows its telemetry strip only while your own aircraft is selected.
+  document.documentElement.classList.toggle('tel-open',Boolean(sel&&sel.k=='own'));
+  // On a phone the card is not permanent: it opens when an aircraft (your own included) is tapped.
+  const phoneMap=(()=>{try{return matchMedia('(max-width: 767px)').matches}catch(_){return false}})();
+  if(!pick&&(!ok||phoneMap)){if(fcS||e.style.display!='none'){fcS='';e.style.display='none'}return}
   const g=i=>$('#'+i).textContent;
   let s;
   if(pick){

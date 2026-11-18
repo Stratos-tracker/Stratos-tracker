@@ -389,7 +389,206 @@ function syncHomeWidget(status = state.live) {
   dom.hwTele.innerHTML = `<span class="hw-hint">${esc(reason)}</span>`;
 }
 
+
+/* ── lock screen ─────────────────────────────────────────────────────── */
+
+/* Shown each time the bag opens, over the deck's wallpaper so the airline's
+   mark stays behind it. A tap, an upward swipe or any key opens the deck. */
+function setupLock() {
+  const lock = document.getElementById('efb-lock');
+  if (!lock) return;
+  // Moving between Stratos pages (the Flight Deck rail, the phone's EFB tab)
+  // skips it; opening the bag from the website, a home-screen icon or a new
+  // tab shows it.
+  try {
+    const from = document.referrer ? new URL(document.referrer) : null;
+    if (from && from.origin === location.origin && /\/(app|phone)(\/|$)/.test(from.pathname)) return;
+  } catch (_) { /* unreadable referrer: show the lock */ }
+  dom.lock = lock;
+  for (const ticks of lock.querySelectorAll('.lkf-ticks')) {
+    ticks.innerHTML = Array.from({ length: 12 }, (_, i) =>
+      `<line x1="50" y1="6" x2="50" y2="${i % 3 ? 11 : 15}" transform="rotate(${i * 30} 50 50)"/>`).join('');
+  }
+  document.body.classList.add('efb-locked');
+  lock.hidden = false;
+  updateLock();
+
+  const onKey = event => {
+    if (event.key === 'Tab' || event.metaKey || event.ctrlKey || event.altKey) return;
+    event.preventDefault();
+    event.stopPropagation();
+    open();
+  };
+  // The lock follows the finger up, the deck comes in under it, and a release
+  // either finishes the unlock or springs back, as on iOS.
+  const drag = swipeUp(lock, {
+    move(rise, height) {
+      const progress = Math.max(0, Math.min(1, rise / height));
+      lock.style.transform = `translate3d(0, ${-rise}px, 0)`;
+      lock.style.opacity = String(1 - progress * 0.5);
+      document.body.style.setProperty('--unlock', (progress * 1.6 > 1 ? 1 : progress * 1.6).toFixed(3));
+    },
+    start() { lock.classList.add('lk-drag'); document.body.classList.add('lk-dragging'); },
+    end(done) {
+      lock.classList.remove('lk-drag');
+      document.body.classList.remove('lk-dragging');
+      if (done) { open(); return; }
+      lock.style.transform = '';
+      lock.style.opacity = '';
+      document.body.style.removeProperty('--unlock');
+    },
+  });
+  function open() {
+    if (lock.dataset.opening) return;
+    lock.dataset.opening = '1';
+    document.removeEventListener('keydown', onKey, true);
+    drag.detach();
+    lock.style.transform = 'translate3d(0, -100%, 0)';
+    lock.style.opacity = '0';
+    document.body.style.setProperty('--unlock', '1');
+    setTimeout(() => {
+      document.body.classList.remove('efb-locked');
+      document.body.style.removeProperty('--unlock');
+      lock.hidden = true;
+      lock.removeAttribute('style');
+      delete lock.dataset.opening;
+    }, 520);
+  }
+  document.addEventListener('keydown', onKey, true);
+  try { document.getElementById('lk-open').focus({ preventScroll: true }); } catch (_) { /* no focus API */ }
+}
+
+/* An upward swipe on an element, followed by the finger: `move(rise, height)`
+   on every frame of the drag, `end(done)` on release, where done is a swipe
+   past 15% of the screen, a quick flick, or a tap. Pulling down meets
+   resistance instead of moving freely, like iOS's rubber band. */
+function swipeUp(el, { move, start, end }) {
+  let from = null, lastY = 0, lastT = 0, speed = 0, id = null;
+  const height = () => window.innerHeight || el.clientHeight || 800;
+  const down = event => {
+    from = event.clientY; lastY = from; lastT = event.timeStamp; speed = 0; id = event.pointerId;
+    try { el.setPointerCapture(id); } catch (_) { /* synthetic event */ }
+    start && start();
+  };
+  const moveTo = event => {
+    if (from == null) return;
+    const dt = Math.max(1, event.timeStamp - lastT);
+    speed = (lastY - event.clientY) / dt;
+    lastY = event.clientY; lastT = event.timeStamp;
+    const raw = from - event.clientY;
+    move(raw >= 0 ? raw : -Math.min(40, Math.sqrt(-raw) * 3), height());
+  };
+  const up = event => {
+    if (from == null) return;
+    const rise = from - event.clientY;
+    from = null;
+    end(rise > height() * 0.15 || (rise > 12 && speed > 0.45) || Math.abs(rise) < 8);
+  };
+  const cancel = () => { if (from == null) return; from = null; end(false); };
+  el.addEventListener('pointerdown', down);
+  el.addEventListener('pointermove', moveTo);
+  el.addEventListener('pointerup', up);
+  el.addEventListener('pointercancel', cancel);
+  return {
+    detach() {
+      el.removeEventListener('pointerdown', down);
+      el.removeEventListener('pointermove', moveTo);
+      el.removeEventListener('pointerup', up);
+      el.removeEventListener('pointercancel', cancel);
+    },
+  };
+}
+
+/* The home bar on the deck: swiping it up (or tapping it) shrinks the bag
+   away, like closing an app, and returns to the Flight Deck. */
+function setupHomeIndicator() {
+  const bar = document.getElementById('home-indicator');
+  const home = document.getElementById('efb-home');
+  if (!bar || !home) return;
+  let leaving = false;
+  const leave = () => {
+    if (leaving) return;
+    leaving = true;
+    home.classList.remove('hm-drag');
+    home.style.transform = '';
+    home.style.opacity = '';
+    home.classList.add('hm-leaving');
+    setTimeout(() => { location.href = 'index.html'; }, 400);
+  };
+  swipeUp(bar, {
+    start() { home.classList.add('hm-drag'); },
+    move(rise, height) {
+      const progress = Math.max(0, Math.min(1, rise / height));
+      home.style.transform = `translate3d(0, ${-rise * 0.5}px, 0) scale(${1 - progress * 0.35})`;
+      home.style.borderRadius = `${Math.round(progress * 120)}px`;
+    },
+    end(done) {
+      if (done) { leave(); return; }
+      home.classList.remove('hm-drag');
+      home.style.transform = '';
+      home.style.borderRadius = '';
+    },
+  });
+  bar.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); leave(); }
+  });
+}
+
+function updateLock() {
+  const lock = dom.lock;
+  if (!lock || lock.hidden) return;
+  const now = new Date();
+  const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+  set('lk-date', now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }));
+  set('lk-time', now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }).replace(/\s*[AaPp]\.?\s?[Mm]\.?$/, ''));
+  set('lk-utc', `${now.toISOString().slice(11, 16)} UTC`);
+  const hands = (id, h, m) => {
+    document.getElementById(`${id}-h`)?.setAttribute('transform', `rotate(${(h % 12) * 30 + m / 2} 50 50)`);
+    document.getElementById(`${id}-m`)?.setAttribute('transform', `rotate(${m * 6} 50 50)`);
+  };
+  hands('lk-utc', now.getUTCHours(), now.getUTCMinutes());
+  hands('lk-lcl', now.getHours(), now.getMinutes());
+
+  const parts = flightParts(state.plan);
+  const items = parts ? [
+    parts.origin || parts.destination ? `${parts.origin || '????'} → ${parts.destination || '????'}` : '',
+    [parts.callsign, parts.aircraft].filter(Boolean).join(' · '),
+    [parts.cruise ? `Cruise ${parts.cruise}` : '', parts.alternate ? `Alternate ${parts.alternate}` : ''].filter(Boolean).join(' · '),
+  ].filter(Boolean) : [];
+  const list = document.getElementById('lk-flight');
+  if (list) {
+    list.innerHTML = items.length
+      ? items.map(item => `<li>${esc(item)}</li>`).join('')
+      : '<li class="lk-empty">No flight plan loaded</li>';
+  }
+  set('lk-count', items.length ? String(items.length) : '');
+
+  const sim = dom.conn ? dom.conn.dataset.state : 'offline';
+  lock.dataset.sim = sim;
+  set('lk-sim', sim === 'live' ? 'Connected' : sim === 'connecting' ? 'Waiting for the simulator' : 'Offline');
+  const meter = document.getElementById('lk-meter');
+  if (meter) meter.style.width = sim === 'live' ? '100%' : sim === 'connecting' ? '40%' : '0%';
+
+  const cal = document.getElementById('lk-cal');
+  const day = now.toDateString();
+  if (cal && cal.dataset.day !== day) {
+    cal.dataset.day = day;
+    const year = now.getFullYear(), month = now.getMonth(), first = new Date(year, month, 1).getDay();
+    const days = new Date(year, month + 1, 0).getDate();
+    const cells = Array(first).fill('').concat(Array.from({ length: days }, (_, i) => i + 1));
+    while (cells.length % 7) cells.push('');
+    const rows = [];
+    for (let i = 0; i < cells.length; i += 7) {
+      rows.push(`<tr>${cells.slice(i, i + 7).map(d => d === now.getDate()
+        ? `<td class="lk-today"><span>${d}</span></td>` : `<td>${d}</td>`).join('')}</tr>`);
+    }
+    const heads = ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => `<th>${d}</th>`).join('');
+    cal.innerHTML = `<b>${esc(now.toLocaleDateString(undefined, { month: 'long' }).toUpperCase())}</b><table><thead><tr>${heads}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
+  }
+}
+
 function syncHomeBar() {
+  updateLock();
   if (dom.homeFlight) {
     const parts = flightParts(state.plan);
     dom.homeFlight.innerHTML = parts
@@ -497,6 +696,7 @@ function updateClock() {
   const utc = document.getElementById('hcw-utc'), lcl = document.getElementById('hcw-lcl');
   if (utc) utc.textContent = time;
   if (lcl) lcl.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  updateLock();
 }
 
 /* ── routing ─────────────────────────────────────────────────────────── */
@@ -704,6 +904,8 @@ export async function boot() {
 
   bindEvents();
   syncNavFade();
+  setupLock();
+  setupHomeIndicator();
   route();
 }
 
