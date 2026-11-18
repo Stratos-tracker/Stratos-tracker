@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-18",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.9/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.9/Stratos-Setup.exe",
+      "sha256": "c837830fbfd8e1240cabd39313ae49a84a16b338fe14f769fc538c83f75a74a6",
+      "size": 119514188
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.9/Stratos-2.4.9-mac-arm64.dmg",
+      "sha256": "f0594a4b9c8840607db061999659a37c85cad2349165f9824be805db7e617605",
+      "size": 137658418
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.9/Stratos-2.4.9-mac-x64.dmg",
+      "sha256": "64cf06faa4274333fc47201cd278791c0adaf4793b2536c0f3aafe99ff027b4a",
+      "size": 143117643
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.9/Stratos-2.4.9-linux-x64.AppImage",
+      "sha256": "60b8e867228a53ed914ce500837de9422b718f4de58af1a18fc746218ee6c0d9",
+      "size": 160742415
+    }
+  },
   "summary": "A lock screen and home bar for the EFB, the Flight Deck map inside Navigator, and a quieter phone map.",
   "reason": "",
   "releaseNotes": [
