@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#08151d">
+<meta name="theme-color" content="#070d18">
 <title>Stratos – Free Flight Tracker for X-Plane 12 &amp; MSFS 2020/2024</title>
 <meta name="description" content="Track your flights in X-Plane 12 and Microsoft Flight Simulator 2020/2024 with Stratos. Explore live flight tracking, interactive maps, flight planning, charts and more.">
 <meta name="robots" content="index,follow,max-image-preview:large">
@@ -22,6 +22,10 @@
 <meta name="twitter:image" content="https://www.stratos-tracker.com/app/icon-512.png">
 <link rel="icon" href="app/icon-192.png">
 <link rel="apple-touch-icon" href="app/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="preload" as="image" href="images/shot-deck.jpg">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -51,259 +55,427 @@
 }
 </script>
 <style>
-:root{color-scheme:dark;--bg:#08151d;--panel:#0f2029;--panel-2:#132a35;--line:#294754;--text:#e7f0f2;--muted:#91a8b1;--accent:#79c9bb;--warm:#f2b65f;--mono:ui-monospace,SFMono-Regular,Consolas,monospace}
+:root{
+  color-scheme:dark;
+  --bg:#070d18;--bg-2:#0b1424;--panel:#0f1a2c;--panel-2:#13213a;--line:#1f3150;--line-2:#2b4268;
+  --text:#eef3fa;--soft:#b6c4d8;--muted:#7f92ad;
+  --cyan:#45c4f5;--cyan-ink:#03192a;--amber:#f7a928;--green:#3ddc84;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --r:14px;
+}
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:radial-gradient(900px 480px at 78% -10%,#163743 0,transparent 62%),radial-gradient(700px 420px at -10% 20%,#102b31 0,transparent 60%),var(--bg);color:var(--text);font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif}
-a{color:var(--accent)}
-.wrap{width:min(1120px,100%);margin:auto;padding:0 22px}
-header{padding:22px 0}
-.nav{display:flex;align-items:center;gap:12px;font-size:14px;color:var(--muted)}
-.nav img{width:40px;height:40px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.35)}
-.nav b{color:var(--text);letter-spacing:.14em}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:17px/1.6 var(--body);overflow-x:hidden}
+img{max-width:100%;height:auto;display:block}
+a{color:var(--cyan);text-underline-offset:3px}
+code{font:500 .88em var(--mono);color:var(--soft)}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:6px}
+.wrap{width:min(1180px,100%);margin:0 auto;padding:0 24px}
+.label{font:600 13px/1 var(--display);letter-spacing:.16em;text-transform:uppercase;color:var(--cyan)}
+
+/* Navigation */
+.top{position:sticky;top:0;z-index:20;background:rgba(7,13,24,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(43,66,104,.45)}
+.nav{display:flex;align-items:center;gap:22px;height:66px}
+.brand{display:flex;align-items:center;gap:11px;color:var(--text);text-decoration:none}
+.brand img{width:34px;height:34px;border-radius:9px}
+.brand b{font:700 21px/1 var(--display);letter-spacing:.2em}
+.nav .links{display:flex;gap:22px;margin-left:12px}
+.nav .links a{color:var(--soft);text-decoration:none;font-size:15px;font-weight:500}
+.nav .links a:hover{color:var(--text)}
 .nav .spacer{flex:1}
-.nav a{color:var(--muted);text-decoration:none;padding:6px 2px}
-.nav a:hover{color:var(--text)}
-.hero{padding:clamp(44px,8vw,92px) 0 44px;display:grid;grid-template-columns:minmax(0,1.12fr) minmax(300px,.88fr);gap:clamp(28px,5vw,64px);align-items:center}
-.eyebrow{color:var(--accent);font-weight:750;letter-spacing:.14em;text-transform:uppercase;font-size:12px}
-h1{font-size:clamp(42px,6.7vw,76px);letter-spacing:-.055em;line-height:1.01;margin:14px 0 18px;font-weight:800}
-h1 span{color:var(--warm)}
-.lead{color:#b9c9d8;font-size:clamp(17px,2.2vw,20px);max-width:620px;margin:0}
-.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:12px;text-decoration:none;font-weight:750;border:1px solid transparent;transition:transform .14s ease,background .14s ease;cursor:pointer;font-size:15px;line-height:1.2}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 22px;border-radius:11px;text-decoration:none;font:600 16px/1.1 var(--body);border:1px solid transparent;cursor:pointer;transition:transform .15s ease,background .15s ease,border-color .15s ease;white-space:nowrap}
 .btn:hover{transform:translateY(-1px)}
-.btn:focus-visible{outline:3px solid #fff;outline-offset:3px}
-.primary{background:var(--accent);color:#04212b}
-.secondary{border-color:var(--line);background:rgba(19,42,53,.72);color:var(--text)}
-.small{font-size:13px;color:var(--muted);margin:14px 0 0}
-.panel{background:linear-gradient(160deg,rgba(20,43,54,.9),rgba(11,26,34,.94));border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
-.mock-head{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
-.mock-route{font:700 clamp(26px,4vw,36px)/1.2 var(--mono);letter-spacing:.02em;margin:18px 0 4px}
-.mock-route em{font-style:normal;color:var(--muted)}
-.mock-sub{font-size:12px;color:var(--muted)}
-.mock-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:16px}
-.mock-grid div{background:rgba(8,21,29,.72);border:1px solid rgba(41,71,84,.7);border-radius:12px;padding:10px 12px}
-.mock-grid b{display:block;font:700 21px/1.2 var(--mono)}
-.mock-grid span{font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
-.mock-path{height:64px;margin-top:14px;border-radius:12px;background:linear-gradient(180deg,rgba(121,201,187,.08),transparent);position:relative;overflow:hidden}
-.mock-path svg{position:absolute;inset:0;width:100%;height:100%}
-section{padding:clamp(34px,5vw,58px) 0;border-top:1px solid rgba(41,71,84,.55)}
-.section-head{max-width:680px;margin-bottom:26px}
-h2{font-size:clamp(25px,3.4vw,34px);letter-spacing:-.03em;margin:0 0 8px}
-.section-head p{margin:0;color:var(--muted)}
-.features{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.card{background:rgba(15,32,41,.8);border:1px solid var(--line);border-radius:16px;padding:18px}
-.card .icon{font-size:20px;color:var(--accent)}
-.card h3{font-size:16px;margin:10px 0 5px}
-.card p{font-size:13px;color:var(--muted);margin:0}
-.install{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.install .card{display:flex;flex-direction:column}
-.install ol{padding-left:18px;color:var(--muted);font-size:13px;margin:8px 0 14px}
-.install .card .btn{margin-top:auto;min-height:42px;font-size:14px}
-.badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);background:rgba(121,201,187,.1);border:1px solid rgba(121,201,187,.28);border-radius:999px;padding:4px 9px}
-.badge.warn{color:var(--warm);background:rgba(242,182,95,.09);border-color:rgba(242,182,95,.3)}
-.notice{display:none;margin-top:12px;padding:10px 12px;border-radius:10px;font-size:12px;color:#ffd98a;background:rgba(242,182,95,.08);border:1px solid rgba(242,182,95,.28)}
-details{background:rgba(15,32,41,.7);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:10px}
-summary{cursor:pointer;font-weight:650;font-size:14px}
-details p{color:var(--muted);font-size:13px;margin:10px 0 0}
-footer{color:var(--muted);font-size:12px;padding:26px 0 40px;border-top:1px solid var(--line)}
-footer a{color:var(--muted)}
+.btn.primary{background:var(--cyan);color:var(--cyan-ink)}
+.btn.primary:hover{background:#6fd3fa}
+.btn.ghost{border-color:var(--line-2);background:rgba(19,33,58,.6);color:var(--text)}
+.btn.ghost:hover{border-color:var(--cyan)}
+.btn.sm{min-height:40px;padding:0 16px;font-size:15px}
 
-/* ── Two ways to fly: desktop and phone, equal weight ─────────────────── */
-.access{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.access-card{display:flex;flex-direction:column;gap:10px;background:linear-gradient(165deg,rgba(20,43,54,.92),rgba(11,26,34,.96));border:1px solid var(--line);border-radius:18px;padding:22px}
-.access-card .ac-top{display:flex;align-items:center;gap:12px}
-.access-card .ac-icon{display:grid;place-items:center;width:46px;height:46px;border-radius:13px;border:1px solid rgba(121,201,187,.34);background:rgba(121,201,187,.1);color:var(--accent);flex:0 0 auto}
-.access-card .ac-icon svg{width:24px;height:24px}
-.ac-k{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-.access-card h2{font-size:22px;margin:0;letter-spacing:-.02em}
-.access-card p{margin:0;font-size:14px;color:var(--muted);line-height:1.5}
-.access-card .ac-list{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 0;padding:0;list-style:none}
-.access-card .ac-list li{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#b9c9d8;background:rgba(8,21,29,.6);border:1px solid rgba(41,71,84,.8);border-radius:6px;padding:3px 7px}
-.access-card .btn{margin-top:auto}
-.access-card .small{margin:6px 0 0}
+/* Hero */
+.hero{position:relative;padding:76px 0 0;text-align:center;isolation:isolate}
+.hero::before{content:"";position:absolute;inset:-66px 0 auto;height:820px;z-index:-1;
+  background:
+    radial-gradient(620px 340px at 50% 6%,rgba(69,196,245,.22),transparent 70%),
+    repeating-linear-gradient(0deg,rgba(69,196,245,.05) 0 1px,transparent 1px 64px),
+    repeating-linear-gradient(90deg,rgba(69,196,245,.05) 0 1px,transparent 1px 64px);
+  -webkit-mask-image:linear-gradient(#000 40%,transparent);mask-image:linear-gradient(#000 40%,transparent)}
+.pill{display:inline-flex;align-items:center;gap:10px;padding:7px 14px 7px 10px;border:1px solid var(--line-2);border-radius:99px;background:rgba(15,26,44,.8);font-size:14px;color:var(--soft)}
+.pill .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(61,220,132,.6);animation:pulse 2.2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 9px rgba(61,220,132,0)}100%{box-shadow:0 0 0 0 rgba(61,220,132,0)}}
+h1{font:700 clamp(54px,9.4vw,118px)/.9 var(--display);letter-spacing:-.01em;text-transform:uppercase;margin:24px 0 22px}
+h1 span{display:block;color:var(--amber)}
+.lead{font-size:clamp(18px,2.1vw,21px);color:var(--soft);max-width:640px;margin:0 auto}
+.lead b{color:var(--text);font-weight:600}
+.actions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:32px}
+.note{font-size:14px;color:var(--muted);margin:16px 0 0}
 
-/* ── Remembered mobile prompt ─────────────────────────────────────────── */
-.mode-prompt{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:40;display:none;gap:14px;align-items:center;flex-wrap:wrap;padding:14px 16px;border-radius:16px;background:rgba(11,26,34,.98);border:1px solid var(--line);box-shadow:0 18px 48px rgba(0,0,0,.55)}
-.mode-prompt[data-open="1"]{display:flex}
-.mode-prompt div:first-child{flex:1 1 220px;min-width:0}
-.mode-prompt b{display:block;font-size:14px}
-.mode-prompt span{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
-.mode-prompt .mp-actions{display:flex;gap:8px;flex-wrap:wrap}
-.mode-prompt .btn{min-height:40px;padding:0 14px;font-size:13px}
-@media(max-width:900px){.hero{grid-template-columns:1fr;padding-top:24px}.features,.install{grid-template-columns:1fr 1fr}}
-@media(max-width:620px){.features,.install,.access{grid-template-columns:1fr}.nav{font-size:12px}.nav .hide{display:none}.actions .btn{flex:1 1 100%}.mock-route{font-size:26px}}
-@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto;transition:none!important}.btn:hover{transform:none}}
+/* Product shot */
+.stage{position:relative;margin:64px auto 0;max-width:1120px;padding-bottom:40px}
+.screen{position:relative;border-radius:16px;padding:8px;background:linear-gradient(180deg,#22385c,#0d1830);box-shadow:0 40px 120px -30px rgba(69,196,245,.35),0 30px 60px -20px rgba(0,0,0,.8)}
+.screen img{border-radius:10px;width:100%;height:auto}
+.phone{position:absolute;right:-18px;bottom:0;width:23%;max-width:250px;border-radius:30px;padding:7px;background:#1a2a46;box-shadow:0 30px 70px -10px rgba(0,0,0,.85),0 0 0 1px #2f4670}
+.phone img{border-radius:24px}
+.tag{position:absolute;display:flex;align-items:center;gap:8px;padding:9px 13px;border-radius:10px;background:rgba(7,13,24,.9);border:1px solid var(--line-2);font:600 13px/1 var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--soft);backdrop-filter:blur(8px)}
+.tag i{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.tag.t1{left:-14px;top:22%}
+.tag.t2{left:6%;bottom:2px}
+
+/* Trust strip */
+.strip{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 36px;padding:34px 0;margin-top:30px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font:600 16px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--soft)}
+.strip span::before{content:"✓";color:var(--cyan);margin-right:9px}
+
+/* Sections */
+section{padding:110px 0 0}
+.head{max-width:700px;margin-bottom:46px}
+.head.center{margin-left:auto;margin-right:auto;text-align:center}
+h2{font:700 clamp(38px,5.4vw,62px)/.98 var(--display);text-transform:uppercase;margin:14px 0 16px}
+.head p{color:var(--soft);margin:0;font-size:18px}
+h3{font:600 26px/1.1 var(--display);letter-spacing:.02em;text-transform:uppercase;margin:0 0 10px}
+
+/* Steps */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;counter-reset:s}
+.step{position:relative;padding:28px;border:1px solid var(--line);border-radius:var(--r);background:linear-gradient(180deg,var(--panel),var(--bg-2))}
+.step::before{counter-increment:s;content:"0" counter(s);display:block;font:700 15px/1 var(--mono);color:var(--amber);margin-bottom:22px}
+.step p{margin:0;color:var(--soft)}
+
+/* Feature rows */
+.row{display:grid;grid-template-columns:1fr 1.15fr;gap:64px;align-items:center;margin-top:110px}
+.row.flip .copy{order:2}
+.copy p{color:var(--soft);margin:0 0 18px}
+.copy ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.copy li{display:flex;gap:12px;color:var(--text)}
+.copy li::before{content:"";flex:none;width:16px;height:2px;margin-top:13px;background:var(--cyan)}
+.frame{border-radius:14px;padding:6px;background:linear-gradient(180deg,#22385c,#0d1830);box-shadow:0 30px 80px -30px rgba(0,0,0,.9)}
+.frame img{border-radius:9px;width:100%;height:auto}
+.frame.tall{max-width:330px;margin:0 auto;border-radius:30px;padding:7px}
+.frame.tall img{border-radius:24px}
+
+/* Feature grid */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.cell{background:var(--bg-2);padding:30px}
+.cell svg{width:26px;height:26px;color:var(--cyan);margin-bottom:18px}
+.cell p{margin:0;color:var(--soft);font-size:16px}
+
+/* Access + install */
+.access{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.access-card,.card{border:1px solid var(--line);border-radius:var(--r);background:linear-gradient(180deg,var(--panel),var(--bg-2));padding:30px}
+.access-card{display:flex;flex-direction:column;gap:14px}
+.access-card .btn{align-self:flex-start;margin-top:auto}
+.ac-top{display:flex;align-items:center;gap:14px}
+.ac-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:12px;background:rgba(69,196,245,.1);color:var(--cyan);border:1px solid rgba(69,196,245,.25)}
+.ac-icon svg{width:26px;height:26px}
+.ac-k{font:600 13px/1 var(--display);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.access-card h2{font-size:32px;margin:6px 0 0}
+.access-card p{margin:0;color:var(--soft)}
+.ac-list{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:0}
+.ac-list li{font:600 13px/1 var(--display);letter-spacing:.1em;text-transform:uppercase;padding:7px 10px;border-radius:7px;border:1px solid var(--line-2);color:var(--soft)}
+.small{font-size:14px;color:var(--muted);margin:0}
+.install{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:18px}
+.card{display:flex;flex-direction:column}
+.badge{font:600 13px/1 var(--display);letter-spacing:.16em;text-transform:uppercase;color:var(--amber)}
+.card h3{margin-top:10px}
+.card ol{margin:6px 0 22px;padding-left:20px;color:var(--soft);display:grid;gap:8px}
+.card ol b{color:var(--text);font-weight:600}
+.card .btn{align-self:flex-start;margin-top:auto}
+.card .small{margin-top:14px}
+
+/* FAQ */
+.faq{max-width:820px;margin:0 auto;border-top:1px solid var(--line)}
+details{border-bottom:1px solid var(--line)}
+summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:22px 2px;font:600 22px/1.2 var(--display);letter-spacing:.02em;text-transform:uppercase}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font:500 26px/1 var(--mono);color:var(--cyan);transition:transform .2s}
+details[open] summary::after{transform:rotate(45deg)}
+details p{margin:0 0 24px;color:var(--soft);max-width:720px}
+
+/* Closing call */
+.final{margin-top:120px;padding:80px 24px;text-align:center;border-radius:22px;border:1px solid var(--line-2);background:radial-gradient(500px 240px at 50% 0,rgba(247,169,40,.16),transparent 70%),linear-gradient(180deg,var(--panel),var(--bg-2))}
+.final h2{margin-top:0}
+.final p{color:var(--soft);margin:0 auto;max-width:520px}
+
+footer{margin-top:90px;padding:36px 0 48px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
+footer p{margin:0;max-width:640px}
+footer nav{display:flex;gap:20px}
+footer a{color:var(--soft)}
+
+/* Phone Mode prompt (offered once, never a redirect) */
+.mode-prompt{position:fixed;left:12px;right:12px;bottom:12px;z-index:40;display:none;flex-direction:column;gap:12px;padding:16px;border-radius:16px;background:rgba(15,26,44,.97);border:1px solid var(--line-2);box-shadow:0 20px 50px rgba(0,0,0,.6)}
+.mode-prompt[data-open]{display:flex}
+.mode-prompt b{display:block}
+.mode-prompt span{color:var(--soft);font-size:15px}
+.mp-actions{display:flex;gap:10px}
+.mp-actions .btn{flex:1;min-height:44px;padding:0 12px;font-size:15px}
+
+/* Reveal on scroll */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .reveal{opacity:1;transform:none;transition:none}
+  .pill .dot{animation:none}
+  .btn{transition:none}
+}
+
+@media (max-width:980px){
+  .row,.row.flip{grid-template-columns:1fr;gap:36px;margin-top:80px}
+  .row.flip .copy{order:0}
+  .grid,.steps{grid-template-columns:1fr 1fr}
+  .tag{display:none}
+  .phone{right:-6px;width:26%}
+}
+@media (max-width:767px){
+  body{font-size:16px}
+  .wrap{padding:0 16px}
+  .nav{gap:12px}
+  .nav .links,.nav .open{display:none}
+  .hero{padding-top:48px}
+  .actions .btn{flex:1 1 100%}
+  .stage{margin-top:44px;padding-bottom:30px}
+  .screen{padding:5px;border-radius:12px}
+  .screen img{border-radius:8px}
+  .phone{width:34%;right:-4px;border-radius:20px;padding:4px}
+  .phone img{border-radius:16px}
+  .strip{gap:12px 22px;font-size:14px}
+  section{padding-top:80px}
+  .grid,.steps,.access,.install{grid-template-columns:1fr}
+  .cell,.step,.access-card,.card{padding:24px}
+  .final{padding:56px 20px;margin-top:90px}
+  .final .btn{width:100%}
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-<header>
-  <nav class="nav" aria-label="Main">
-    <img src="app/icon-192.png" alt="" width="40" height="40">
-    <b>STRATOS</b>
-    <span class="hide">FLIGHT DECK</span>
+<header class="top">
+  <nav class="wrap nav" aria-label="Main">
+    <a class="brand" href="/" aria-label="Stratos home"><img src="app/icon-192.png" alt="" width="34" height="34"><b>STRATOS</b></a>
+    <div class="links">
+      <a href="#features">Features</a>
+      <a href="/phone">Phone mode</a>
+      <a href="#install">Install</a>
+      <a href="#faq">FAQ</a>
+    </div>
     <span class="spacer"></span>
-    <a href="app/">Open app</a>
-    <a class="hide" href="#access">Phone mode</a>
-    <a class="hide" href="#features">Features</a>
-    <a class="hide" href="#install">Install</a>
+    <a class="btn ghost sm open" href="app/">Open in browser</a>
+    <a class="btn primary sm" href="/api/download?p=windows">Download</a>
   </nav>
 </header>
 
 <main>
 <div class="hero">
-  <div>
-    <div class="eyebrow">Flight tracker &amp; EFB for X-Plane 12 and MSFS</div>
-    <h1>Every flight.<br><span>Properly recorded.</span></h1>
-    <p class="lead">A lightweight map, career logbook, replay, landing analysis, briefing and route planner for <b>X-Plane 12</b> and <b>Microsoft Flight Simulator 2020/2024</b> — with a dedicated touchscreen Phone Mode.</p>
+  <div class="wrap">
+    <span class="pill"><i class="dot"></i>Free for X-Plane 12 and MSFS 2020/2024</span>
+    <h1>Every flight.<span>Properly recorded.</span></h1>
+    <p class="lead">Fly as you always do. Stratos follows you on a live map, then saves every flight to your logbook with <b>replay</b> and <b>landing analysis</b>. No subscription, no account needed.</p>
     <div class="actions">
-      <a class="btn primary" href="app/">Open Stratos <span aria-hidden="true">↗</span></a>
-      <a class="btn secondary" id="pc-download" href="/api/download?p=windows">↓ Download for Windows</a>
-      <a class="btn secondary" href="/phone">Open Phone Mode</a>
+      <a class="btn primary" id="pc-download" href="/api/download?p=windows">↓ Download for Windows</a>
+      <a class="btn ghost" href="app/">Open in browser</a>
+      <a class="btn ghost" href="/phone">Open Phone Mode</a>
     </div>
-    <p class="small" id="download-note">Windows installer · macOS and Linux builds on the tracker · Phone Mode installs from your mobile browser, no App Store needed</p>
-  </div>
+    <p class="note" id="download-note">Also on macOS, Linux and ChromeOS · Phone Mode installs from your phone's browser</p>
 
-  <div class="panel" aria-label="Example of the live flight view">
-    <div class="mock-head"><i class="live-dot"></i> Simulator telemetry · example layout</div>
-    <div class="mock-route">EGLL <em>→</em> KJFK</div>
-    <div class="mock-sub">B77W · how your own flight shows up</div>
-    <div class="mock-grid">
-      <div><b>35 000</b><span>Altitude ft</span></div>
-      <div><b>481</b><span>Ground speed kt</span></div>
-      <div><b>287°</b><span>Heading</span></div>
-      <div><b>0</b><span>Vertical speed fpm</span></div>
+    <div class="stage">
+      <div class="screen"><img src="images/shot-deck.jpg" width="1400" height="1050" alt="The Stratos Flight Deck: a live flight out of Oakland on a satellite map, with speed, heading, altitude and vertical speed along the top and nearby traffic labelled"></div>
+      <div class="phone"><img src="images/shot-phone.jpg" width="520" height="1125" alt="Stratos Phone Mode showing the same flight on a phone, with a Your Aircraft card" loading="lazy"></div>
+      <span class="tag t1"><i></i>Live from your sim</span>
+      <span class="tag t2">Real traffic around you</span>
     </div>
-    <div class="mock-path" aria-hidden="true">
-      <svg viewBox="0 0 360 64" preserveAspectRatio="none"><path d="M4 52 C70 8 118 58 180 30 S300 10 356 22" fill="none" stroke="#79c9bb" stroke-width="2" stroke-dasharray="3 4" opacity=".85"/><circle cx="4" cy="52" r="3" fill="#f2b65f"/><circle cx="356" cy="22" r="3" fill="#f2b65f"/></svg>
-    </div>
-    <p class="small">Live from X-Plane 12 or MSFS while you fly, then saved to your logbook.</p>
   </div>
 </div>
 
-<section id="access">
-  <div class="section-head">
-    <h2>Two ways to fly Stratos</h2>
-    <p>The desktop app is the complete flight deck. Phone Mode is a dedicated touchscreen interface for the same account, logbook and flight plan — not the desktop layout squeezed onto a small screen.</p>
+<div class="wrap">
+  <div class="strip" aria-label="At a glance">
+    <span>X-Plane 12</span><span>MSFS 2020</span><span>MSFS 2024</span><span>Free, no paid tier</span><span>Your data stays on your PC</span>
   </div>
-  <div class="access">
-    <article class="access-card" aria-labelledby="access-desktop">
-      <div class="ac-top">
-        <span class="ac-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.6" y="4" width="18.8" height="12.4" rx="1.8"/><path d="M8 20h8M12 16.4V20"/></svg>
-        </span>
-        <div>
-          <span class="ac-k">Desktop</span>
-          <h2 id="access-desktop">Download Stratos</h2>
-        </div>
+
+  <section aria-labelledby="how">
+    <div class="head center reveal">
+      <span class="label">How it works</span>
+      <h2 id="how">Install once. Then just fly.</h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal"><h3>Install Stratos</h3><p>Run the installer. The small simulator bridge starts with the app, so there's nothing else to set up for MSFS.</p></div>
+      <div class="step reveal"><h3>Start your sim</h3><p>Stratos picks up X-Plane 12 or MSFS on its own. Your aircraft appears on the map, live, with traffic around you.</p></div>
+      <div class="step reveal"><h3>Land and look back</h3><p>The flight is in your logbook: route, times, a full replay and how firm your landing was.</p></div>
+    </div>
+  </section>
+
+  <section id="features" aria-labelledby="features-title">
+    <div class="head reveal">
+      <span class="label">Features</span>
+      <h2 id="features-title">Everything around the flight</h2>
+      <p>The tracker, the logbook and a full flight bag, in one free app.</p>
+    </div>
+
+    <div class="row reveal">
+      <div class="copy">
+        <span class="label">Flight Deck</span>
+        <h3>A live map that knows where you are</h3>
+        <p>Your aircraft on satellite or chart maps, with the instruments you check most along the top.</p>
+        <ul>
+          <li>Real-world traffic, airports and navaids around you</li>
+          <li>Your planned route with SIDs, STARs and top of descent</li>
+          <li>Weather at every airport on the way</li>
+        </ul>
       </div>
-      <p>Download Stratos for the complete desktop flight tracking experience.</p>
-      <ul class="ac-list"><li>Windows</li><li>macOS</li><li>Linux</li><li>ChromeOS</li></ul>
-      <a class="btn primary" href="/api/download?p=windows">↓ Download for Windows</a>
-      <p class="small">Also for <a href="/api/download?p=mac-arm64">macOS (Apple silicon)</a>, <a href="/api/download?p=mac-x64">macOS (Intel)</a> and <a href="/api/download?p=linux-x64">Linux</a>, or <a href="#chromeos">ChromeOS</a>.</p>
-    </article>
-    <article class="access-card" aria-labelledby="access-phone">
-      <div class="ac-top">
-        <span class="ac-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6.6" y="2.4" width="10.8" height="19.2" rx="2.4"/><path d="M10.6 5.2h2.8M12 18.4h.01"/></svg>
-        </span>
-        <div>
-          <span class="ac-k">Phone mode</span>
-          <h2 id="access-phone">Use Stratos on your phone</h2>
-        </div>
+      <div class="frame"><img src="images/shot-deck.jpg" width="1400" height="1050" alt="The Stratos live map over the San Francisco Bay Area" loading="lazy"></div>
+    </div>
+
+    <div class="row flip reveal">
+      <div class="copy">
+        <span class="label">Stratos EFB</span>
+        <h3>A flight bag beside you</h3>
+        <p>Briefing, charts, weather, performance, weight and balance, fuel and checklists, laid out like a tablet in the cockpit.</p>
+        <ul>
+          <li>Current FAA charts for every US airport, built in</li>
+          <li>Your SimBrief plan, briefed in one place</li>
+          <li>Checklists for popular airliners</li>
+        </ul>
       </div>
-      <p>Access a streamlined, touchscreen-optimized Stratos experience on your smartphone.</p>
-      <ul class="ac-list"><li>iPhone</li><li>Android</li><li>Home screen</li></ul>
-      <a class="btn secondary" href="/phone">Open Phone Mode ↗</a>
-      <p class="small">Same account, logbook and active flight plan. Add it to your home screen for a standalone app.</p>
-    </article>
-  </div>
-</section>
+      <div class="frame"><img src="images/shot-charts.jpg" width="1200" height="900" alt="The Stratos EFB showing the San Francisco airport diagram next to a list of departure procedures" loading="lazy"></div>
+    </div>
 
-<section id="features">
-  <div class="section-head">
-    <h2>Built for the way sim pilots actually fly</h2>
-    <p>Recorded data first. Estimates are labelled. Nothing is uploaded unless you pair a phone.</p>
-  </div>
-  <div class="features">
-    <article class="card"><div class="icon">◉</div><h3>Live map &amp; traffic</h3><p>Public ADS-B traffic, airports, navaids, charts and METAR/TAF. Your own aircraft appears when the bridge is connected.</p></article>
-    <article class="card"><div class="icon">◈</div><h3>Career logbook</h3><p>Hours, distance, airports, aircraft, routes and records, calculated once from your real flights without double counting.</p></article>
-    <article class="card"><div class="icon">↺</div><h3>Flight replay</h3><p>Scrub through the recorded track with a moving aircraft, altitude/speed profiles and clear markers for recorded versus interpolated values.</p></article>
-    <article class="card"><div class="icon">↘</div><h3>Landing analytics</h3><p>Touchdown rate, ground speed, runway and distance from the threshold where the data supports it — with per-aircraft thresholds.</p></article>
-    <article class="card"><div class="icon">☁</div><h3>Briefing &amp; routes</h3><p>Build a route, validate waypoints, import/export PLN, FMS and GPX, then brief weather with source and freshness.</p></article>
-    <article class="card"><div class="icon">▤</div><h3>Phone Mode</h3><p>A touchscreen interface — Map, Plan, Flights, Charts, EFB, Weather and Profile — that reads the same telemetry and flight plan as the desktop deck.</p></article>
-  </div>
-</section>
+    <div class="row reveal">
+      <div class="copy">
+        <span class="label">Phone Mode</span>
+        <h3>Your flight, on your phone</h3>
+        <p>Put your phone next to the yoke. It shows the live flight, the plan, charts and weather, built for touch rather than a squeezed desktop.</p>
+        <ul>
+          <li>On the same Wi-Fi it finds your PC with one tap</li>
+          <li>Add it to your home screen, no app store needed</li>
+          <li>iPhone and Android</li>
+        </ul>
+      </div>
+      <div class="frame tall"><img src="images/shot-phone.jpg" width="520" height="1125" alt="Stratos Phone Mode with the live map and a Your Aircraft card" loading="lazy"></div>
+    </div>
 
-<section id="install">
-  <div class="section-head">
-    <h2>Install Stratos</h2>
-    <p>The website, desktop app and Phone Mode use the same application files and the same account, so features stay consistent.</p>
-  </div>
-  <div class="install">
-    <article class="card">
-      <span class="badge">Windows</span>
-      <h3 style="margin-top:10px">Desktop app</h3>
-      <ol>
-        <li>Download <code>Stratos-Setup.exe</code>.</li>
-        <li>Run the installer. SmartScreen may warn because the build is not code-signed — choose <b>More info → Run anyway</b>.</li>
-        <li>Launch Stratos. The simulator bridge starts with the app.</li>
-      </ol>
-      <a class="btn primary" href="/api/download?p=windows">Download installer</a>
-      <p class="small">Also for <a href="/api/download?p=mac-arm64">macOS (Apple silicon)</a>, <a href="/api/download?p=mac-x64">macOS (Intel)</a> and <a href="/api/download?p=linux-x64">Linux</a>, or <a href="#chromeos">ChromeOS</a>.</p>
-    </article>
-    <article class="card">
-      <span class="badge">Phone</span>
-      <h3 style="margin-top:10px">Phone Mode</h3>
-      <ol>
-        <li>Open <a href="/phone">Phone Mode</a> on your phone.</li>
-        <li>On iPhone: <b>Share</b> → <b>Add to Home Screen</b>. On Android: menu → <b>Install app</b>.</li>
-        <li>To follow your flight, open <a href="app/live.html">Live</a> on the phone and tap <b>Connect to Simulator</b> while it is on the same Wi-Fi as the PC. If it cannot find the PC, use the code from <b>Pilot → Settings → Phone access</b> on the PC.</li>
-      </ol>
-      <a class="btn secondary" href="/phone">Open Phone Mode ↗</a>
-      <p class="small">Needs HTTPS for installation. Live telemetry needs the relay and the desktop bridge running.</p>
-    </article>
-    <article class="card" id="chromeos">
-      <span class="badge">ChromeOS</span>
-      <h3 style="margin-top:10px">Chromebook</h3>
-      <ol>
-        <li>Open <a href="app/">Stratos</a> in Chrome.</li>
-        <li>Click the <b>install</b> icon at the right of the address bar (or menu → <b>Cast, save and share</b> → <b>Install page as app</b>), then pin it to the shelf.</li>
-        <li>The simulator runs on your PC: sign in to the same Stratos account on both, then open <a href="app/live.html">Live</a> on the Chromebook to follow your flight.</li>
-      </ol>
-      <a class="btn secondary" href="app/">Open Stratos ↗</a>
-      <p class="small">Intel or AMD Chromebooks can also run the <a href="/api/download?p=linux-x64">Linux build</a> in ChromeOS's Linux environment.</p>
-    </article>
-    <article class="card">
-      <span class="badge">Browser</span>
-      <h3 style="margin-top:10px">Use it now</h3>
-      <ol>
-        <li>Open the tracker — no install.</li>
-        <li>Browse public traffic and airports.</li>
-        <li>Open <b>Pilot</b> for the logbook, replay, landings and flight planning.</li>
-      </ol>
-      <a class="btn secondary" href="app/pilot.html">Open Pilot ↗</a>
-      <p class="small">Your logbook is stored locally in the browser or the desktop app.</p>
-    </article>
-  </div>
+    <div class="grid reveal" style="margin-top:110px">
+      <div class="cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M4 17a3 3 0 0 1 3-3h12M8 8h7"/></svg><h3>Career logbook</h3><p>Hours, distance, airports, aircraft, routes, records and milestones, added up from the flights you actually flew.</p></div>
+      <div class="cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5M12 8v4l3 2"/></svg><h3>Flight replay</h3><p>Scrub through any flight with the aircraft moving on the map and altitude and speed profiles underneath.</p></div>
+      <div class="cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 20h20M5 16l14-8M15 6l4 2-2 4"/></svg><h3>Landing analysis</h3><p>Touchdown rate, ground speed, runway and distance past the threshold, judged against your aircraft type.</p></div>
+      <div class="cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M7 18h4a4 4 0 0 0 4-4v-4a4 4 0 0 1 4-4"/></svg><h3>Route planner</h3><p>Drag waypoints on the map, import from SimBrief, or load PLN, FMS and GPX files. Export back to your sim.</p></div>
+      <div class="cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18a5 5 0 1 1 .9-9.9A6 6 0 0 1 19 10a4 4 0 0 1-1 8z"/></svg><h3>Weather briefing</h3><p>Real METARs and TAFs, decoded, with crosswind and gust components for the runway you'll use.</p></div>
+      <div class="cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><h3>Route ideas</h3><p>Not sure where to fly? Pick a mood and a length, and Stratos suggests three real routes to try.</p></div>
+    </div>
+  </section>
 
-  <details>
-    <summary>Simulator setup</summary>
-    <p><b>X-Plane 11/12:</b> Settings → Data Output, enable rows 3, 17 and 20 to UDP port 49003 on the PC running the bridge. <b>Microsoft Flight Simulator 2020/2024:</b> start a flight; install the optional SimConnect Python package once if available. The bridge reports exactly which source is connected and when telemetry goes stale.</p>
-  </details>
-  <details>
-    <summary>Phone relay and privacy</summary>
-    <p>The desktop bridge pushes snapshots outbound to a relay you host. The phone pairs with a short-lived code and receives a separate read token. The relay has no command channel to the PC, tokens are hashed at rest, and the bridge is never exposed to the internet. Pairing and revocation are in Pilot → Settings.</p>
-  </details>
-</section>
+  <section id="access" aria-labelledby="access-title">
+    <div class="head center reveal">
+      <span class="label">Get Stratos</span>
+      <h2 id="access-title">On your PC and on your phone</h2>
+      <p>Both use the same logbook and flight plan.</p>
+    </div>
+    <div class="access">
+      <article class="access-card reveal" aria-labelledby="access-desktop">
+        <div class="ac-top">
+          <span class="ac-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.6" y="4" width="18.8" height="12.4" rx="1.8"/><path d="M8 20h8M12 16.4V20"/></svg></span>
+          <div><span class="ac-k">Desktop</span><h2 id="access-desktop">Download Stratos</h2></div>
+        </div>
+        <p>The full flight deck, EFB and logbook, with the simulator bridge built in.</p>
+        <ul class="ac-list"><li>Windows</li><li>macOS</li><li>Linux</li><li>ChromeOS</li></ul>
+        <a class="btn primary" href="/api/download?p=windows">↓ Download for Windows</a>
+        <p class="small">Also for <a href="/api/download?p=mac-arm64">macOS (Apple silicon)</a>, <a href="/api/download?p=mac-x64">macOS (Intel)</a> and <a href="/api/download?p=linux-x64">Linux</a>, or <a href="#chromeos">ChromeOS</a>.</p>
+      </article>
+      <article class="access-card reveal" aria-labelledby="access-phone">
+        <div class="ac-top">
+          <span class="ac-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6.6" y="2.4" width="10.8" height="19.2" rx="2.4"/><path d="M10.6 5.2h2.8M12 18.4h.01"/></svg></span>
+          <div><span class="ac-k">Phone mode</span><h2 id="access-phone">Use Stratos on your phone</h2></div>
+        </div>
+        <p>A touchscreen version made for the phone beside your yoke, not the desktop shrunk down.</p>
+        <ul class="ac-list"><li>iPhone</li><li>Android</li><li>Home screen</li></ul>
+        <a class="btn ghost" href="/phone">Open Phone Mode ↗</a>
+        <p class="small">Add it to your home screen and it opens like an app.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="install" aria-labelledby="install-title">
+    <div class="head reveal">
+      <span class="label">Install</span>
+      <h2 id="install-title">Up and running in minutes</h2>
+    </div>
+    <div class="install">
+      <article class="card reveal">
+        <span class="badge">Windows</span>
+        <h3>Desktop app</h3>
+        <ol>
+          <li>Download <code>Stratos-Setup.exe</code>.</li>
+          <li>Run it. Windows may warn you because the app isn't code-signed yet: choose <b>More info → Run anyway</b>.</li>
+          <li>Open Stratos and start your sim. The bridge starts with the app.</li>
+        </ol>
+        <a class="btn primary" href="/api/download?p=windows">Download installer</a>
+        <p class="small">Also for <a href="/api/download?p=mac-arm64">macOS (Apple silicon)</a>, <a href="/api/download?p=mac-x64">macOS (Intel)</a> and <a href="/api/download?p=linux-x64">Linux</a>.</p>
+      </article>
+      <article class="card reveal">
+        <span class="badge">Phone</span>
+        <h3>Phone Mode</h3>
+        <ol>
+          <li>Open <a href="/phone">Phone Mode</a> on your phone.</li>
+          <li>On iPhone: <b>Share</b> → <b>Add to Home Screen</b>. On Android: menu → <b>Install app</b>.</li>
+          <li>To follow your flight, open <a href="app/live.html">Live</a> on the phone and tap <b>Connect to Simulator</b> while it is on the same Wi-Fi as the PC. If it can't find the PC, use the code from <b>Pilot → Settings → Phone access</b> on the PC.</li>
+        </ol>
+        <a class="btn ghost" href="/phone">Open Phone Mode ↗</a>
+      </article>
+      <article class="card" id="chromeos">
+        <span class="badge">ChromeOS</span>
+        <h3>Chromebook</h3>
+        <ol>
+          <li>Open <a href="app/">Stratos</a> in Chrome.</li>
+          <li>Click the <b>install</b> icon at the right of the address bar (or menu → <b>Cast, save and share</b> → <b>Install page as app</b>), then pin it to the shelf.</li>
+          <li>Your sim runs on your PC: sign in to the same Stratos account on both, then open <a href="app/live.html">Live</a> on the Chromebook to follow your flight.</li>
+        </ol>
+        <a class="btn ghost" href="app/">Open Stratos ↗</a>
+        <p class="small">Intel or AMD Chromebooks can also run the <a href="/api/download?p=linux-x64">Linux build</a>.</p>
+      </article>
+      <article class="card reveal">
+        <span class="badge">Browser</span>
+        <h3>Try it now</h3>
+        <ol>
+          <li>Open Stratos in your browser, no install.</li>
+          <li>Explore live traffic, airports, charts and weather.</li>
+          <li>Open <b>Pilot</b> for the logbook, replay and flight planning.</li>
+        </ol>
+        <a class="btn ghost" href="app/pilot.html">Open Pilot ↗</a>
+        <p class="small">To track your own flights from the sim, use the desktop app.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="faq" aria-labelledby="faq-title">
+    <div class="head center reveal">
+      <span class="label">FAQ</span>
+      <h2 id="faq-title">Questions pilots ask</h2>
+    </div>
+    <div class="faq">
+      <details><summary>Is Stratos really free?</summary><p>Yes. Every feature is included, with no subscription, no paid tier and no trial.</p></details>
+      <details><summary>Which simulators does it work with?</summary><p>Microsoft Flight Simulator 2020 and 2024, and X-Plane 12. Stratos detects which one is running and shows it in the top bar.</p></details>
+      <details><summary>How do I connect X-Plane?</summary><p>In X-Plane, open <b>Settings → Data Output</b> and send rows 3, 17 and 20 over UDP to port 49003 on the PC running Stratos. That's the only setup step.</p></details>
+      <details><summary>How do I connect MSFS?</summary><p>Start a flight with Stratos open. The desktop app connects to MSFS on its own.</p></details>
+      <details><summary>Do I need an account?</summary><p>No. Your logbook is stored on your own PC. An account is only useful if you want to follow your flight from a phone or Chromebook on a different network.</p></details>
+      <details><summary>Is my data uploaded anywhere?</summary><p>Not unless you pair a phone over the internet. Then the PC sends live snapshots out to a relay, and your phone reads them with its own token. Nothing can send commands back to your PC, and pairing can be revoked in Pilot → Settings.</p></details>
+      <details><summary>Can I use it for real-world flying?</summary><p>No. Stratos is for flight simulation only and must never be used for real-world navigation.</p></details>
+    </div>
+  </section>
+
+  <div class="final reveal">
+    <span class="label">Ready for departure</span>
+    <h2>Your next flight, recorded.</h2>
+    <p>Download Stratos, start your sim and fly. Your logbook starts with the very next takeoff.</p>
+    <div class="actions"><a class="btn primary" href="/api/download?p=windows">↓ Download for Windows</a><a class="btn ghost" href="app/">Open in browser</a></div>
+  </div>
+</div>
 </main>
 
 <footer>
-  Stratos is an independent project. Aircraft data comes from third-party public ADS-B sources; airport data from OurAirports (public domain); weather from NOAA Aviation Weather. Map and chart providers keep their own terms. Simulator use only — not for real-world navigation. · <a href="README-DEPLOY.md">Deployment notes</a> · <a href="SOURCES_AND_LICENSING.md">Sources &amp; licensing</a>
+  <div class="wrap">
+    <p>Stratos is an independent project for flight simulation only, not for real-world navigation. Traffic comes from public ADS-B sources, airports from OurAirports and weather from NOAA Aviation Weather. Map and chart providers keep their own terms.</p>
+    <nav aria-label="Footer"><a href="app/privacy.html">Privacy</a><a href="app/terms.html">Terms</a><a href="SOURCES_AND_LICENSING.md">Sources</a></nav>
+  </div>
 </footer>
-</div>
 
 <div class="mode-prompt" id="mode-prompt" role="dialog" aria-live="polite" aria-label="Phone Mode suggestion">
   <div>
@@ -312,10 +484,9 @@ footer a{color:var(--muted)}
   </div>
   <div class="mp-actions">
     <a class="btn primary" id="mp-switch" href="/phone">Switch to phone mode</a>
-    <button class="btn secondary" id="mp-dismiss" type="button">Continue to desktop</button>
+    <button class="btn ghost" id="mp-dismiss" type="button">Continue to desktop</button>
   </div>
 </div>
-
 <script>
 (function () {
   // The site's own manifest names the current version; the download buttons
@@ -326,11 +497,22 @@ footer a{color:var(--muted)}
     .then(function (manifest) {
       var version = manifest && manifest.latest && manifest.latest.version;
       if (!version) return;
-      note.textContent = 'Windows installer · version ' + version + ' · macOS and Linux builds on the tracker · Phone Mode installs from your mobile browser';
+      note.textContent = 'Version ' + version + ' · also on macOS, Linux and ChromeOS · Phone Mode installs from your phone\'s browser';
     })
     .catch(function () { /* keep the generic note */ });
 })();
-
+/* Sections fade in once as they scroll into view; without IntersectionObserver
+   (or with reduced motion, handled in CSS) everything is simply shown. */
+(function () {
+  var items = document.querySelectorAll('.reveal');
+  if (!('IntersectionObserver' in window)) { items.forEach(function (el) { el.classList.add('in'); }); return; }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) { entry.target.classList.add('in'); io.unobserve(entry.target); }
+    });
+  }, { rootMargin: '0px 0px -8% 0px' });
+  items.forEach(function (el) { io.observe(el); });
+})();
 /* The phone prompt is an offer, never a redirect. The answer is remembered in
    one preference the Phone Mode page reads too, so the question is asked once
    and "switch back to desktop" is possible at any time. */
@@ -343,16 +525,12 @@ footer a{color:var(--muted)}
   var prompt = document.getElementById('mode-prompt');
   var narrow = false;
   try { narrow = matchMedia('(max-width: 767px)').matches; } catch (_) { /* old browser */ }
-
   function close() { if (prompt) prompt.removeAttribute('data-open'); }
-
   if (prompt && narrow && !store.get()) {
     setTimeout(function () { prompt.setAttribute('data-open', '1'); }, 1200);
   }
-
   document.getElementById('mp-switch')?.addEventListener('click', function () { store.set('phone'); });
   document.getElementById('mp-dismiss')?.addEventListener('click', function () { store.set('desktop'); close(); });
-
   // Choosing Phone Mode from the access cards is the same preference.
   document.querySelectorAll('a[href="/phone"]').forEach(function (link) {
     link.addEventListener('click', function () { store.set('phone'); });

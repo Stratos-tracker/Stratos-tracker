@@ -101,7 +101,7 @@ test('every phone-width window gets the same deck, however it arrived', () => {
 
 test('the landing page keeps offering Phone Mode', () => {
   assert.ok((home.match(/href="\/phone"/g) || []).length >= 2, 'the header and the access cards link to it');
-  assert.match(home, /Access a streamlined, touchscreen-optimized Stratos experience on your smartphone\./);
+  assert.match(home, /A touchscreen version made for the phone beside your yoke, not the desktop shrunk down\./);
 });
 
 test('the phone bar marks the section the page is actually showing', () => {

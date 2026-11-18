@@ -66,8 +66,8 @@ test('the homepage offers desktop and Phone Mode as equal choices', () => {
   const phoneLinks = [...home.matchAll(/href="\/phone"/g)];
   assert.ok(phoneLinks.length >= 2, 'Phone Mode is offered from the header, the card and the hero');
   assert.match(home, /href="\/api\/download\?p=windows"/, 'the desktop download is preserved');
-  assert.match(home, /Download Stratos for the complete desktop flight tracking experience\./);
-  assert.match(home, /Access a streamlined, touchscreen-optimized Stratos experience on your smartphone\./);
+  assert.match(home, /The full flight deck, EFB and logbook, with the simulator bridge built in\./);
+  assert.match(home, /A touchscreen version made for the phone beside your yoke, not the desktop shrunk down\./);
 });
 
 test('the mobile prompt offers a switch and remembers the answer', () => {
