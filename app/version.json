@@ -1,44 +1,40 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.4.7",
+  "latestVersion": "2.4.8",
   "minimumSupportedVersion": "",
   "mandatory": false,
-  "releaseDate": "2026-11-17",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.7/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.7/Stratos-Setup.exe",
-      "sha256": "2d66a138646aa4575a82173fb1d75e79f487fec5ae12db72f4904bfa49b531a2",
-      "size": 119497404
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.7/Stratos-2.4.7-mac-arm64.dmg",
-      "sha256": "eb9c2c691829081b0ab78abc2547fb4013e30079a1e45771455af6a407389484",
-      "size": 137582775
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.7/Stratos-2.4.7-mac-x64.dmg",
-      "sha256": "0d10bdf2de1c8fd869f31c928c8a4de18df9c0073d7d1353670f53524a64dd91",
-      "size": 143030631
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.7/Stratos-2.4.7-linux-x64.AppImage",
-      "sha256": "4667e4b823a03ebabedf9bdc65105dbab22e7d27351b29e0fc82f0ecafb8251b",
-      "size": 160324839
-    }
-  },
-  "summary": "A thicker route line on the Flight Deck map, easier to follow over dark water and satellite imagery.",
+  "releaseDate": "2026-11-18",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "Prepar3D and FSX support, X-Plane 11 navigation data, and a map that wraps around the world without a black edge.",
   "reason": "",
   "releaseNotes": [
-    "The planned route is drawn twice as thick (a 12 px line over an 18 px outline), and the part already flown widens to match."
+    "Prepar3D v4 to v6: Stratos finds Prepar3D's own SimConnect library and connects to it automatically.",
+    "FSX: tried through the same SimConnect connection. FSX is 32-bit, so this depends on it accepting the 64-bit connection.",
+    "X-Plane 11: the bridge now finds X-Plane 11 installs for SIDs, STARs, ILS and the IFR charts, as it does for X-Plane 12.",
+    "Settings shows which simulator SimConnect is connected to: MSFS, Prepar3D or FSX.",
+    "Zooming out or panning past the date line no longer leaves a black side: map tiles, radar and FAA charts repeat around the world.",
+    "Aircraft, airports, the route and your own aircraft repeat on every visible copy of the world, and clicking a copy selects the real one.",
+    "X-Plane 11 ILS courses show the true course instead of a wrong 360° magnetic.",
+    "The top-bar Go Premium button is gone. Stratos is free, and a Support Stratos button appears only when a support page is set."
   ],
   "notes": {
-    "features": [],
-    "improvements": [],
-    "fixes": [],
+    "features": [
+      "Prepar3D v4 to v6: Stratos finds Prepar3D's own SimConnect library and connects to it automatically.",
+      "FSX: tried through the same SimConnect connection. FSX is 32-bit, so this depends on it accepting the 64-bit connection.",
+      "X-Plane 11: the bridge now finds X-Plane 11 installs for SIDs, STARs, ILS and the IFR charts, as it does for X-Plane 12."
+    ],
+    "improvements": [
+      "Settings shows which simulator SimConnect is connected to: MSFS, Prepar3D or FSX."
+    ],
+    "fixes": [
+      "Zooming out or panning past the date line no longer leaves a black side: map tiles, radar and FAA charts repeat around the world.",
+      "Aircraft, airports, the route and your own aircraft repeat on every visible copy of the world, and clicking a copy selects the real one.",
+      "X-Plane 11 ILS courses show the true course instead of a wrong 360° magnetic."
+    ],
     "performance": [],
     "ui": [
-      "The planned route is drawn twice as thick (a 12 px line over an 18 px outline), and the part already flown widens to match."
+      "The top-bar Go Premium button is gone. Stratos is free, and a Support Stratos button appears only when a support page is set."
     ],
     "compatibility": [],
     "other": []

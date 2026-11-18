@@ -3,45 +3,60 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.4.7",
-    "releasedAt": "2026-11-17",
+    "version": "2.4.8",
+    "releasedAt": "2026-11-18",
     "severity": "normal",
-    "summary": "A thicker route line on the Flight Deck map, easier to follow over dark water and satellite imagery.",
+    "summary": "Prepar3D and FSX support, X-Plane 11 navigation data, and a map that wraps around the world without a black edge.",
     "changelog": {
-      "features": [],
-      "improvements": [],
-      "fixes": [],
+      "features": [
+        "Prepar3D v4 to v6: Stratos finds Prepar3D's own SimConnect library and connects to it automatically.",
+        "FSX: tried through the same SimConnect connection. FSX is 32-bit, so this depends on it accepting the 64-bit connection.",
+        "X-Plane 11: the bridge now finds X-Plane 11 installs for SIDs, STARs, ILS and the IFR charts, as it does for X-Plane 12."
+      ],
+      "improvements": [
+        "Settings shows which simulator SimConnect is connected to: MSFS, Prepar3D or FSX."
+      ],
+      "fixes": [
+        "Zooming out or panning past the date line no longer leaves a black side: map tiles, radar and FAA charts repeat around the world.",
+        "Aircraft, airports, the route and your own aircraft repeat on every visible copy of the world, and clicking a copy selects the real one.",
+        "X-Plane 11 ILS courses show the true course instead of a wrong 360° magnetic."
+      ],
       "performance": [],
       "ui": [
-        "The planned route is drawn twice as thick (a 12 px line over an 18 px outline), and the part already flown widens to match."
+        "The top-bar Go Premium button is gone. Stratos is free, and a Support Stratos button appears only when a support page is set."
       ],
       "compatibility": [],
       "other": []
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.7/Stratos-Setup.exe",
-        "sha256": "2d66a138646aa4575a82173fb1d75e79f487fec5ae12db72f4904bfa49b531a2",
-        "size": 119497404
-      },
-      "mac-arm64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.7/Stratos-2.4.7-mac-arm64.dmg",
-        "sha256": "eb9c2c691829081b0ab78abc2547fb4013e30079a1e45771455af6a407389484",
-        "size": 137582775
-      },
-      "mac-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.7/Stratos-2.4.7-mac-x64.dmg",
-        "sha256": "0d10bdf2de1c8fd869f31c928c8a4de18df9c0073d7d1353670f53524a64dd91",
-        "size": 143030631
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.7/Stratos-2.4.7-linux-x64.AppImage",
-        "sha256": "4667e4b823a03ebabedf9bdc65105dbab22e7d27351b29e0fc82f0ecafb8251b",
-        "size": 160324839
-      }
     }
   },
   "releases": [
+    {
+      "version": "2.4.8",
+      "releasedAt": "2026-11-18",
+      "severity": "normal",
+      "summary": "Prepar3D and FSX support, X-Plane 11 navigation data, and a map that wraps around the world without a black edge.",
+      "changelog": {
+        "features": [
+          "Prepar3D v4 to v6: Stratos finds Prepar3D's own SimConnect library and connects to it automatically.",
+          "FSX: tried through the same SimConnect connection. FSX is 32-bit, so this depends on it accepting the 64-bit connection.",
+          "X-Plane 11: the bridge now finds X-Plane 11 installs for SIDs, STARs, ILS and the IFR charts, as it does for X-Plane 12."
+        ],
+        "improvements": [
+          "Settings shows which simulator SimConnect is connected to: MSFS, Prepar3D or FSX."
+        ],
+        "fixes": [
+          "Zooming out or panning past the date line no longer leaves a black side: map tiles, radar and FAA charts repeat around the world.",
+          "Aircraft, airports, the route and your own aircraft repeat on every visible copy of the world, and clicking a copy selects the real one.",
+          "X-Plane 11 ILS courses show the true course instead of a wrong 360° magnetic."
+        ],
+        "performance": [],
+        "ui": [
+          "The top-bar Go Premium button is gone. Stratos is free, and a Support Stratos button appears only when a support page is set."
+        ],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.4.7",
       "releasedAt": "2026-11-17",
@@ -1305,27 +1320,6 @@
           "sha256": "c63dc6ec1fc9422b0b3fc35be4e463c16baa9ca453fcbea93d19a28f9f2f2e43",
           "size": 146740037
         }
-      }
-    },
-    {
-      "version": "2.1.36",
-      "releasedAt": "2026-11-06",
-      "severity": "normal",
-      "summary": "The Settings update centre downloads the published installer instead of reporting an updater feed that is no longer published.",
-      "changelog": {
-        "features": [],
-        "improvements": [
-          "Checking for updates still works on a build without the native updater, and the panel says plainly that an update is installed by running the published installer.",
-          "The action is called Download installer, and it opens the installer for the platform that is running: Setup.exe, the DMG, or the AppImage."
-        ],
-        "fixes": [
-          "Settings → Updates no longer asks electron-updater for latest.yml, so a release without feeds can never fail there with Cannot find latest.yml.",
-          "A failed or refused update action is reported in one sentence with its own Retry, instead of a raw updater error with headers and stack text, and it no longer hides the saved release answer."
-        ],
-        "performance": [],
-        "ui": [],
-        "compatibility": [],
-        "other": []
       }
     }
   ]
