@@ -874,7 +874,14 @@ function globePicture(){return !!globeStyle(V.gs).source}
    the middle of the view. A chart centred on the Pacific then shows a point
    written 74°W on its own right-hand side, a world away from where the plain
    arithmetic would have put it. */
-const mercator=(lon,lat)=>{const near=Number(V.lon)+((((Number(lon)-Number(V.lon))+540)%360)-180),c=wpx(V.lon,V.lat,V.z),p=wpx(near,lat,V.z);return[p[0]-c[0]+W/2,p[1]-c[1]+H/2]};
+const mercator=(lon,lat)=>{const near=Number(V.lon)+((((Number(lon)-Number(V.lon))+540)%360)-180),c=wpx(V.lon,V.lat,V.z),p=wpx(near,lat,V.z);return[p[0]-c[0]+W/2+WORLD_DX,p[1]-c[1]+H/2]};
+/* The flat map repeats east and west. mercator() puts each point on the copy
+   nearest the centre; the marker layers are drawn once per visible copy with
+   WORLD_DX set to that copy's shift, and a click on any copy is folded back onto the
+   centre copy before it is hit-tested. */
+let WORLD_DX=0;
+function worldShifts(){if(V.mode==='globe'||CH.on)return[0];const wp=SZ*2**V.z,m=80,out=[0];for(let k=Math.ceil((-m-W/2-wp/2)/wp);k<=Math.floor((W+m-W/2+wp/2)/wp);k++)if(k)out.push(k*wp);return out}
+function foldX(clientX){if(V.mode==='globe'||CH.on)return clientX;const wp=SZ*2**V.z,lx=clientX-cv.getBoundingClientRect().left;return clientX-Math.round((lx-W/2)/wp)*wp}
 /* The chart's one projection. A point on the far side of the sphere is placed
    on the limb in its own direction, so a line crossing the horizon runs to it
    and stops there instead of streaking to a corner. `vis` is the same call with
@@ -1356,15 +1363,17 @@ for(let o=Math.ceil(a[0]/s)*s;o<b[0];o+=s){const x=sc(o,0)[0];cx.moveTo(x,0);cx.
 for(let t=Math.ceil(b[1]/s)*s;t<a[1];t+=s){const y=sc(0,t)[1];cx.moveTo(0,y);cx.lineTo(W,y);cx.fillText(t.toFixed(s<1?1:0)+'°',4,y-2)}cx.stroke()}
 if(L.atc&&!CH.on)atcTick();drawFaaCharts();drawAirspaces();drawWeather();drawDayNight();drawAirportWx();
 const ppn=lat=>SZ*2**V.z/360/(60*Math.cos(lat*R));MKL.length=0;
+for(const wx of worldShifts()){WORLD_DX=wx;try{
 if(L.nav&&!CH.on)N.forEach(n=>{const q=vis(n.lon,n.lat);if(!q||lblZ()<(W<600?7:6))return;const[x,y]=q;if(x<-20||x>W+20||y<-20||y>H+20)return;const t=String(n.type||'').toUpperCase(),kind=/NDB/.test(t)?'ndb':/VOR|TACAN|DME/.test(t)?'vor':'int';mkDraw(kind,x,y,mkRz()*.8);if(lblZ()>(W<600?7.5:5.5))mkText(n.id,x+Math.round(mkRz()*.55)-4,y+4,mkColor(kind),11,false)});
 if(L.apt&&clusterAirports()){}else if(L.apt)A.forEach(a=>{if(CH.on&&a!==CH.a)return;const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;if(a.x&&lblZ()<6)return;const mg=lblZ()>10?4000:60;if(x<-mg||x>W+mg||y<-mg||y>H+mg)return;
 if(V.mode!=='globe'&&V.z>8.5)drawReal(a,x,y);else a.det=false;if(0)pairs(a).forEach(pr=>{const n=pr[0],h=n*10,p=ppn(a.lat)*1.4,dx=Math.sin(h*R)*p,dy=-Math.cos(h*R)*p;cx.strokeStyle=C.ap;cx.lineWidth=Math.max(3,p/9);cx.lineCap='butt';cx.beginPath();cx.moveTo(x-dx,y-dy);cx.lineTo(x+dx,y+dy);cx.stroke()});
 if(a.det){}else if(V.mode!=='globe'&&V.z>8.5){cx.beginPath();cx.arc(x,y,3,0,7);cx.fillStyle=C.land;cx.fill();cx.strokeStyle=C.ap;cx.lineWidth=2.2;cx.stroke()}else mkRing(x,y,mkRz()*.9,mkColor('apt'),1);
 if(lblZ()>(a.x?7:4.8)&&x>-40&&x<W+40&&y>-40&&y<H+40&&!(L.rte&&planTocTod().ids.has(String(a.id).toUpperCase())))mkText(a.id,x+Math.round(mkRz()*.62)-3,y-6,SAT()?(DKM()?'#fff':'#111'):C.txt,12.5,true)});
-drawMapChart();drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.lineCap='round';cx.lineJoin='round';if(sp.flown.length>1){cx.globalAlpha=.5;cx.strokeStyle=C.route;cx.lineWidth=9;cx.setLineDash([14,12]);drawPlanLine(sp.flown);cx.setLineDash([])}if(sp.ahead.length>1){cx.globalAlpha=.9;cx.strokeStyle=RTE_CASE;cx.lineWidth=18;drawPlanLine(sp.ahead);cx.globalAlpha=1;cx.strokeStyle=C.route;cx.lineWidth=12;drawPlanLine(sp.ahead)}cx.restore()
+if(!WORLD_DX)drawMapChart();drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.lineCap='round';cx.lineJoin='round';if(sp.flown.length>1){cx.globalAlpha=.5;cx.strokeStyle=C.route;cx.lineWidth=9;cx.setLineDash([14,12]);drawPlanLine(sp.flown);cx.setLineDash([])}if(sp.ahead.length>1){cx.globalAlpha=.9;cx.strokeStyle=RTE_CASE;cx.lineWidth=18;drawPlanLine(sp.ahead);cx.globalAlpha=1;cx.strokeStyle=C.route;cx.lineWidth=12;drawPlanLine(sp.ahead)}cx.restore()
 drawProcedureRouteLine();drawRouteMarkers();}
 trails();if(L.trf&&!CH.on)T.forEach(a=>{const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;drawAircraft(a.type,x,y,a.hdg,C.trf,32);if(lblZ()>6&&x>-40&&x<W+40&&y>-20&&y<H+20)mkText(a.id+(a.type?' '+a.type:'')+' '+Math.round(a.alt/100),x+4,y+4,C.trf,10,false)});
 if(L.atc&&!CH.on){drawTracon();drawAtc()}if(liveOk()){const q=vis(own.lon,own.lat);if(q){const[x,y]=q;if(MP.halo){cx.beginPath();cx.arc(x,y,19+6*MP.size,0,7);cx.strokeStyle=MP.color;cx.globalAlpha=.32;cx.lineWidth=1.5;cx.stroke();cx.globalAlpha=1}const oh=(own.trk!=null&&(own.gs||live.d?.gs)>20)?own.trk:own.hdg;if(MP.icon==='aircraft')drawAircraft(live.d?.type||live.d?.aircraft||live.d?.aircraftType,x,y,oh,MP.color,42*MP.size);else drawOwnTri(x,y,oh,MP.color,MP.size)}}
+}finally{WORLD_DX=0}}
 if(view3d)sync3d();if(CH.on)chartFx();if(sel&&!CH.on&&sel.k!='own'){const s0=sel.k=='own'?own:sel,p0=vis(s0.lon,s0.lat);if(p0){const[x,y]=p0;cx.strokeStyle=C.txt;cx.lineWidth=2;cx.beginPath();cx.arc(x,y,16+(tk?3*Math.sin(performance.now()/260):0),0,7);cx.stroke()}}}
 
 /* ── Waypoint markers ─────────────────────────────────────────────────
@@ -1980,7 +1989,7 @@ function applyTrafficSource(next,save){
   const st=document.getElementById('st');if(st&&!liveOk()&&!deskStatus)st.textContent=t;
 }
 /* Index of the route waypoint under a screen point, or -1. */
-function wpAt(x,y){const r=cv.getBoundingClientRect();x-=r.left;y-=r.top;let best=-1,bd=Math.max(18,mkRz()+9);route.forEach((p,i)=>{const q=vis(p.lon,p.lat);if(!q)return;const d=Math.hypot(q[0]-x,q[1]-y);if(d<bd){bd=d;best=i}});return best}
+function wpAt(x,y){x=foldX(x);const r=cv.getBoundingClientRect();x-=r.left;y-=r.top;let best=-1,bd=Math.max(18,mkRz()+9);route.forEach((p,i)=>{const q=vis(p.lon,p.lat);if(!q)return;const d=Math.hypot(q[0]-x,q[1]-y);if(d<bd){bd=d;best=i}});return best}
 /* Move one waypoint to the point under the pointer (live, no undo stack here). */
 function moveWp(i,x,y){const r=cv.getBoundingClientRect();x-=r.left;y-=r.top;const p=unvis(x,y);if(!p)return;route[i]={...route[i],lat:p[1],lon:p[0]};trav=Math.min(trav,total());if(panel=='route')render()}
 /* Index of the route leg under a screen point (its start waypoint), or -1. */
@@ -2138,7 +2147,7 @@ function procAt(x,y){
   return best
 }
 function selectTrafficById(key){const want=String(key==null?'':key).toLowerCase();if(!want)return false;const best=T.find(a=>a&&a.k=='trf'&&(String(a.hx||'').toLowerCase()==want||String(a.id||'').toLowerCase()==want));if(!best)return false;sel=best;best._trackAt=Date.now();tk=true;trafficBackfill(best);if(best.source=='vatsim'||best.source=='ivao')loadNet().then(vatsimTraffic);panel=null;render();fCard();if(viewT3)t3Sync(true);return true}
-function tap(x,y){if(CH.on)return;if(TX.on){txTap(x,y);return}const rect=cv.getBoundingClientRect();
+function tap(x,y){if(CH.on)return;if(TX.on){txTap(x,y);return}x=foldX(x);const rect=cv.getBoundingClientRect();
 if(route.length&&L.rte){const wi=wpAt(x,y);if(wi>=0){wpIdx=wi;openRouteCard({kind:'wp',index:wi},x,y);return}const pc=procAt(x,y);if(pc){wpIdx=null;openRouteCard(pc,x,y);return}const li=legAt(x,y);if(li>=0){wpIdx=li;openRouteCard({kind:'leg',index:li},x,y);return}}
 closeRouteCard();wpIdx=null;sel=null;
 x-=rect.left;y-=rect.top;let best=null,bestD=Infinity;
