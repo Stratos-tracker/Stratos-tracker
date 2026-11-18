@@ -122,7 +122,10 @@ h3{font-size:20px;line-height:1.25;font-weight:700}
 .sims img{width:auto}
 .sims .msfs{height:40px}
 .sims .xp{height:22px}
-.sims .also{font:600 12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--soft)}
+.sims .p3d{height:20px}
+.sims .fsx{height:34px}
+/* FSX's slate lettering is drawn for light pages; lift it so it reads on navy. */
+.sims .fsx,.sim-marks .fsx{filter:brightness(2.3)}
 
 /* Devices */
 .devices{position:relative;padding:0 0 40px 8%}
@@ -183,7 +186,8 @@ h3{font-size:20px;line-height:1.25;font-weight:700}
 .sim-marks img{width:auto}
 .sim-marks .msfs{height:52px}
 .sim-marks .xp{height:28px}
-.wordmark{font:800 30px/1 var(--head);letter-spacing:-.01em;color:var(--text)}
+.sim-marks .p3d{height:26px}
+.sim-marks .fsx{height:46px}
 .sim .tagline{font:600 12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ok);display:flex;align-items:center;gap:8px}
 .sim .tagline::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
 .sim h3{font-size:24px;margin:16px 0 10px}
@@ -336,7 +340,8 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:110px;col
         <img class="msfs" src="images/sims/msfs-2024.png" width="560" height="200" alt="Microsoft Flight Simulator 2024">
         <img class="xp" src="images/sims/x-plane-11.png" width="328" height="57" alt="X-Plane 11">
         <img class="xp" src="images/sims/x-plane-12.svg" width="1060" height="182" alt="X-Plane 12">
-        <span class="also">+ Prepar3D &amp; FSX</span>
+        <img class="p3d" src="images/sims/prepar3d.png" width="293" height="36" alt="Prepar3D">
+        <img class="fsx" src="images/sims/fsx.png" width="560" height="129" alt="Microsoft Flight Simulator X">
       </div>
     </div>
     <div class="devices">
@@ -494,7 +499,10 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:110px;col
         <p>In <b>Settings → Data Output</b>, send rows 3, 17 and 20 over UDP to port 49003 on your PC. Stratos also reads your X-Plane navigation data for SIDs, STARs and ILS.</p>
       </div>
       <div class="sim reveal">
-        <div class="sim-marks"><span class="wordmark">Prepar3D</span><span class="wordmark">FSX</span></div>
+        <div class="sim-marks">
+          <img class="p3d" src="images/sims/prepar3d.png" width="293" height="36" alt="Prepar3D" loading="lazy">
+          <img class="fsx" src="images/sims/fsx.png" width="560" height="129" alt="Microsoft Flight Simulator X" loading="lazy">
+        </div>
         <span class="tagline">Automatic</span>
         <h3>Prepar3D &amp; FSX</h3>
         <p>Start a flight with Stratos open. It connects through SimConnect and finds Prepar3D's own SimConnect library on its own.</p>
