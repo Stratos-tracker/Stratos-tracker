@@ -285,7 +285,7 @@ export async function mount(root, ctx) {
             <dt>Bridge version</dt><dd>${esc(health.version)} · up ${Math.round(health.uptimeSeconds / 60)} min</dd>
             <dt>Telemetry</dt><dd>${sim?.connected ? `${esc(sim.source)} · ${sim.ageSeconds != null ? `${sim.ageSeconds.toFixed(1)} s old` : 'live'}` : 'No simulator data yet'}</dd>
             <dt>X-Plane UDP</dt><dd>${health.xplane?.ready ? `listening on ${health.ports.udp}` : esc(health.xplane?.error || 'not listening')}</dd>
-            <dt>MSFS connector</dt><dd>${health.msfs?.available ? (health.msfs.connected ? 'connected' : 'installed, waiting for a flight') : 'not installed (optional)'}</dd>
+            <dt>SimConnect (MSFS, P3D, FSX)</dt><dd>${health.msfs?.available ? (health.msfs.connected ? `connected${health.msfs.sim ? ` to ${esc(health.msfs.sim)}` : ''}` : 'installed, waiting for a flight') : 'not installed (optional)'}</dd>
             <dt>Airports</dt><dd>${health.airports ? `${health.airports.toLocaleString()} loaded` : 'still loading'}</dd>
             <dt>FAA charts</dt><dd>${health.faaCharts ? `${health.faaCharts.toLocaleString()} airports` : 'not loaded'}</dd>
             <dt>Bridge logbook</dt><dd>${health.logbook?.flights || 0} flights · ${health.logbook?.hours || 0} h</dd>

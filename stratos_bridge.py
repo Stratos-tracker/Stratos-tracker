@@ -1657,25 +1657,92 @@ def tile(z, x, y):
     return data
 
 
-# ── MSFS ────────────────────────────────────────────────────────────
+# ── MSFS, Prepar3D and FSX (SimConnect) ─────────────────────────────
+def simconnect_label(app_name):
+    """Short source name from the application name SimConnect reports on open."""
+    name = str(app_name or "")
+    if "prepar3d" in name.lower():
+        return "P3D"
+    if name.rstrip().endswith("Flight Simulator X"):
+        return "FSX"
+    return "MSFS"
+
+
+def simconnect_libraries(default):
+    """SimConnect client libraries to try, in order.
+
+    The bundled library talks to MSFS. Prepar3D v4-v6 ship their own 64-bit
+    SimConnect.dll (in the install's redist folder or the SDK), which speaks
+    the same API, so any found is tried next. STRATOS_SIMCONNECT_DLL names
+    one explicitly. A 32-bit library (FSX's own) cannot load into this 64-bit
+    bridge and is skipped when it fails to load.
+    """
+    import glob
+    paths = [os.environ.get("STRATOS_SIMCONNECT_DLL", "").strip(), default]
+    for root in {os.environ.get(k, "") for k in ("ProgramFiles", "ProgramW6432", "ProgramFiles(x86)")}:
+        if not root:
+            continue
+        base = os.path.join(root, "Lockheed Martin")
+        for pattern in (("Prepar3D v*", "redist", "**", "SimConnect.dll"),
+                        ("Prepar3D v* SDK*", "lib", "SimConnect", "**", "SimConnect.dll")):
+            paths += sorted(glob.glob(os.path.join(base, *pattern), recursive=True), reverse=True)
+    seen, ordered = set(), []
+    for path in paths:
+        key = os.path.normcase(os.path.normpath(path)) if path else ""
+        if key and key not in seen:
+            seen.add(key)
+            ordered.append(path)
+    return ordered
+
+
 def msfs_loop():
     try:
+        from ctypes import POINTER, cast
         from SimConnect import AircraftRequests, SimConnect
+        from SimConnect.SimConnect import _library_path as bundled_library
+        from SimConnect.Enum import SIMCONNECT_RECV_ID, SIMCONNECT_RECV_OPEN
         msfs_status["available"] = True
     except Exception:
         if sys.platform == "win32":
             log("MSFS support not installed. Run:  pip install SimConnect")
         return
+
+    class NamedSimConnect(SimConnect):
+        """Keeps the simulator's own name from the open message."""
+        app_name = ""
+
+        def my_dispatch_proc(self, pData, cbData, pContext):
+            if pData.contents.dwID == SIMCONNECT_RECV_ID.SIMCONNECT_RECV_ID_OPEN:
+                raw = cast(pData, POINTER(SIMCONNECT_RECV_OPEN)).contents.szApplicationName
+                self.app_name = raw.decode("utf-8", "replace").strip("\x00 ")
+            return super().my_dispatch_proc(pData, cbData, pContext)
+
+    def open_any():
+        """Connect through the first SimConnect library a running sim accepts."""
+        last = None
+        for library in simconnect_libraries(bundled_library):
+            try:
+                sim = NamedSimConnect(library_path=library)
+            except Exception as exc:    # missing or 32-bit library, or no sim answered
+                last = exc
+                continue
+            if sim.ok:
+                return sim
+            last = ConnectionError("No simulator answered %s" % library)
+        raise last or ConnectionError("No SimConnect library found")
+
     import math
-    requests, previous, warned = None, None, False
+    requests, previous, warned, sim = None, None, False, None
     while True:
         try:
             if requests is None:
-                sim = SimConnect()
+                sim = open_any()
                 requests = AircraftRequests(sim, _time=200)
                 msfs_status.update(connected=True, error="")
-                log("Connected to MSFS")
                 warned = False
+                log("Connected to %s" % (sim.app_name or "a SimConnect simulator"))
+            source = simconnect_label(sim.app_name)
+            msfs_status["sim"] = source
             lat = requests.get("PLANE_LATITUDE")
             lon = requests.get("PLANE_LONGITUDE")
             alt = requests.get("PLANE_ALTITUDE")
@@ -1731,7 +1798,7 @@ def msfs_loop():
             now = time.time()
             with state_lock:
                 state.update(lat=float(lat), lon=float(lon), alt=float(alt), agl=float(agl),
-                             hdg=float(heading) % 360, gs=float(gs), t=now, src="MSFS",
+                             hdg=float(heading) % 360, gs=float(gs), t=now, src=source,
                              aircraft=str(title)[:48], registration=str(tail)[:24],
                              callsign=str(call)[:24])
                 for key, value in (("hdgMag", heading_mag), ("trk", track),
@@ -1758,7 +1825,7 @@ def msfs_loop():
             requests = None
             msfs_status["connected"] = False
             if not warned:
-                log("Waiting for MSFS: %s" % exc)
+                log("Waiting for MSFS, Prepar3D or FSX: %s" % exc)
                 warned = True
             time.sleep(5)
 

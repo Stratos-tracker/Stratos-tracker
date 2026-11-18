@@ -966,6 +966,34 @@ class SigmetFeedTests(unittest.TestCase):
         self.assertIn("error", payload)
 
 
+class SimConnectSourceTests(unittest.TestCase):
+    def test_the_reported_application_name_picks_the_source(self):
+        self.assertEqual(bridge.simconnect_label("Lockheed Martin® Prepar3D® v5"), "P3D")
+        self.assertEqual(bridge.simconnect_label("Microsoft Flight Simulator X"), "FSX")
+        self.assertEqual(bridge.simconnect_label("KittyHawk"), "MSFS")
+        self.assertEqual(bridge.simconnect_label(""), "MSFS")
+
+    def test_libraries_are_tried_override_first_then_bundled_then_prepar3d(self):
+        root = tempfile.mkdtemp()
+        p3d = os.path.join(root, "Lockheed Martin", "Prepar3D v5", "redist", "Interface", "SimConnect.dll")
+        os.makedirs(os.path.dirname(p3d))
+        open(p3d, "wb").close()
+        saved = {k: os.environ.get(k) for k in ("ProgramFiles", "ProgramW6432", "ProgramFiles(x86)", "STRATOS_SIMCONNECT_DLL")}
+        try:
+            for key in saved:
+                os.environ.pop(key, None)
+            os.environ["ProgramFiles"] = root
+            os.environ["STRATOS_SIMCONNECT_DLL"] = r"D:\custom\SimConnect.dll"
+            libs = bridge.simconnect_libraries("bundled.dll")
+        finally:
+            for key, value in saved.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
+        self.assertEqual(libs, [r"D:\custom\SimConnect.dll", "bundled.dll", p3d])
+
+
 class IlsNavDataTests(unittest.TestCase):
     # Real X-Plane 12 earth_nav.dat (1200) lines, cycle 2610.
     LINES = [

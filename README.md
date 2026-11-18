@@ -24,6 +24,8 @@ Everything is free. There is no paid tier.
 | MSFS 2020/2024 | Tested in a real flight |
 | X-Plane 12 | Implemented, not yet flown live. Reports welcome |
 | X-Plane 11 | Same UDP output and nav data as X-Plane 12; not yet flown live |
+| Prepar3D v4–v6 | Through Prepar3D's own SimConnect library, found automatically; not yet flown live |
+| FSX / FSX: Steam Edition | Tried through the same SimConnect connection; FSX is 32-bit, so this depends on it accepting the 64-bit client. Not yet flown live |
 
 ## Run it
 

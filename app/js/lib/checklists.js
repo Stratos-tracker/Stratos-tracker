@@ -33,7 +33,7 @@ export function profileByKey(key) {
  */
 export function detectAircraft({ aircraft = '', src = '' } = {}, profiles = CHECKLIST_PROFILES) {
   const label = String(aircraft || '').trim();
-  const simulator = /x-?plane/i.test(String(src)) ? 'X-Plane' : /msfs|simconnect|microsoft/i.test(String(src)) ? 'MSFS' : (src || '');
+  const simulator = /x-?plane/i.test(String(src)) ? 'X-Plane' : /msfs|simconnect|microsoft|p3d|prepar3d|fsx/i.test(String(src)) ? 'MSFS' : (src || '');
   if (!label) {
     return {
       profileKey: null,
