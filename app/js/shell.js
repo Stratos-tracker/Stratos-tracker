@@ -216,10 +216,8 @@ function openSupport() {
   dialog.setAttribute('aria-label', 'Support Stratos');
   dialog.innerHTML = `
     <h2>Support Stratos</h2>
-    <p>Stratos is free and complete: every map layer, chart link, logbook and phone feature in this build is unlocked. The name on this button is a promise, not a product.</p>
-    ${url
-      ? `<p><a class="shell-dialog-cta" href="${esc(url)}" target="_blank" rel="noopener">${ICON.heart}<span>Open the support page</span></a></p>`
-      : '<p class="shell-dialog-note">No support page is configured in this build yet, so there is nowhere for this button to send you. Set one and it opens here.</p>'}
+    <p>Stratos is free and complete: every map layer, chart link, logbook and phone feature is unlocked, with nothing to buy.</p>
+    <p><a class="shell-dialog-cta" href="${esc(url)}" target="_blank" rel="noopener">${ICON.heart}<span>Open the support page</span></a></p>
     <div class="shell-dialog-row"><button type="button" data-close class="shell-dialog-close">Close</button></div>`;
   document.body.appendChild(dialog);
 
@@ -365,9 +363,9 @@ function buildBar(bar, { theme = false, rail = false, search = null, status = nu
       <div class="status is-off" data-status="live" title="Live tracking status"><i></i><span>No live data</span></div>
     </div>`}
     <a class="tb-btn tb-efb" href="efb.html" title="Stratos EFB — electronic flight bag" aria-label="Open Stratos EFB">${ICON.efb}<span>EFB</span></a>
-    <button class="tb-support" data-support type="button" title="Support Stratos — the app is complete without it">
-      <span>Support Us</span><b>${ICON.heart}Go Premium</b>
-    </button>
+    ${supportUrl() ? `<button class="tb-support" data-support type="button" title="Stratos is free — support it if you like it">
+      <span>Free app</span><b>${ICON.heart}Support Stratos</b>
+    </button>` : ''}
     <button class="tb-clock" data-clock type="button" title="UTC">
       <b>--:--Z</b><small>--</small>
     </button>
