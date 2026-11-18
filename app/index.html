@@ -2391,9 +2391,10 @@ function tileUrl(l,z,x,y){const h=location.protocol=='http:',s='abc'[(x+y)%3];
 if(l=='sat')return h?'/tile/'+z+'/'+x+'/'+y+'.jpg':'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/'+z+'/'+y+'/'+x;
 return 'https://'+s+'.tile.opentopomap.org/'+z+'/'+x+'/'+y+'.png'}
 function tImg(l,z,x,y){const k=l+'/'+z+'/'+x+'/'+y;let t=TC.get(k);if(!t){t={i:new Image(),ok:0,t:0};if(MS[l]&&MS[l].z)t.i.crossOrigin='anonymous';t.i.onload=()=>{t.ok=1;t.t=performance.now();TS.ok++};t.i.onerror=()=>{TS.err++};t.i.src=tileUrl(l,z,x,y);TC.set(k,t);const limit=MS[l]&&MS[l].z?CHART_TILE_CACHE:600;if(TC.size>limit)TC.delete(TC.keys().next().value)}return t}
-function tl(l){const cfg=MS[l]||MS.sat,mz=l=='lab'?18:cfg.m,mn=cfg.z||0,Z=Math.min(mz,Math.max(mn,mn?Math.ceil(V.z+1):Math.ceil(V.z-.25))),s=256*2**(V.z-Z),c=wpx(V.lon,V.lat),n=2**Z,now=performance.now(),x0=Math.max(0,Math.floor((c[0]-W/2)/s)),x1=Math.min(n-1,Math.floor((c[0]+W/2)/s)),y0=Math.max(0,Math.floor((c[1]-H/2)/s)),y1=Math.min(n-1,Math.floor((c[1]+H/2)/s)),cols=x1-x0+1,rows=y1-y0+1;if(mn&&cols*rows>CHART_TILE_CAP)return false;
-for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const dx=x*s-c[0]+W/2,dy=y*s-c[1]+H/2,t=tImg(l,Z,x,y);
-if(Z>mn){const p=t.ok&&now-t.t>260?null:tImg(l,Z-1,x>>1,y>>1);if(p&&p.ok)cx.drawImage(p.i,(x&1)*128,(y&1)*128,128,128,dx,dy,s+.5,s+.5)}
+function tl(l){const cfg=MS[l]||MS.sat,mz=l=='lab'?18:cfg.m,mn=cfg.z||0,Z=Math.min(mz,Math.max(mn,mn?Math.ceil(V.z+1):Math.ceil(V.z-.25))),s=256*2**(V.z-Z),c=wpx(V.lon,V.lat),n=2**Z,now=performance.now(),x0=Math.floor((c[0]-W/2)/s),x1=Math.floor((c[0]+W/2)/s),y0=Math.max(0,Math.floor((c[1]-H/2)/s)),y1=Math.min(n-1,Math.floor((c[1]+H/2)/s)),cols=x1-x0+1,rows=y1-y0+1;if(mn&&cols*rows>CHART_TILE_CAP)return false;
+// Columns run past the date line; each wraps to its tile so the world repeats east and west.
+for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const xi=((x%n)+n)%n,dx=x*s-c[0]+W/2,dy=y*s-c[1]+H/2,t=tImg(l,Z,xi,y);
+if(Z>mn){const p=t.ok&&now-t.t>260?null:tImg(l,Z-1,xi>>1,y>>1);if(p&&p.ok)cx.drawImage(p.i,(xi&1)*128,(y&1)*128,128,128,dx,dy,s+.5,s+.5)}
 if(t.ok){cx.globalAlpha=Math.min(1,(now-t.t)/220);cx.drawImage(t.i,dx,dy,s+.5,s+.5);cx.globalAlpha=1}}return true}
 /* World basemap: country outlines, country names, continent names and ocean
    names from the bundled Natural Earth layer. The sheet is drawn into an
@@ -2588,9 +2589,9 @@ restoreGlobe();
 pjUi();gsUi();globeAttr();
 
 function tileImg(z,x,y){const k=z+'/'+x+'/'+y;let t=TC.get(k);if(!t){t={i:new Image(),ok:0,t:0};t.i.onload=()=>{t.ok=1;t.t=performance.now();TS.ok++};t.i.onerror=()=>{TS.err++};t.i.src=location.protocol=='http:'?'/tile/'+k+'.jpg':'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/'+z+'/'+y+'/'+x;TC.set(k,t);if(TC.size>500)TC.delete(TC.keys().next().value)}return t}
-function drawSat(){const Z=Math.min(18,Math.max(0,Math.ceil(V.z-.25))),s=256*2**(V.z-Z),c=wpx(V.lon,V.lat),n=2**Z,now=performance.now(),x0=Math.max(0,Math.floor((c[0]-W/2)/s)),x1=Math.min(n-1,Math.floor((c[0]+W/2)/s)),y0=Math.max(0,Math.floor((c[1]-H/2)/s)),y1=Math.min(n-1,Math.floor((c[1]+H/2)/s));
-for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const dx=x*s-c[0]+W/2,dy=y*s-c[1]+H/2,t=tileImg(Z,x,y);
-if(Z>0){const p=t.ok&&now-t.t>260?null:tileImg(Z-1,x>>1,y>>1);if(p&&p.ok)cx.drawImage(p.i,(x&1)*128,(y&1)*128,128,128,dx,dy,s+.5,s+.5)}
+function drawSat(){const Z=Math.min(18,Math.max(0,Math.ceil(V.z-.25))),s=256*2**(V.z-Z),c=wpx(V.lon,V.lat),n=2**Z,now=performance.now(),x0=Math.floor((c[0]-W/2)/s),x1=Math.floor((c[0]+W/2)/s),y0=Math.max(0,Math.floor((c[1]-H/2)/s)),y1=Math.min(n-1,Math.floor((c[1]+H/2)/s));
+for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const xi=((x%n)+n)%n,dx=x*s-c[0]+W/2,dy=y*s-c[1]+H/2,t=tileImg(Z,xi,y);
+if(Z>0){const p=t.ok&&now-t.t>260?null:tileImg(Z-1,xi>>1,y>>1);if(p&&p.ok)cx.drawImage(p.i,(xi&1)*128,(y&1)*128,128,128,dx,dy,s+.5,s+.5)}
 if(t.ok){cx.globalAlpha=Math.min(1,(now-t.t)/220);cx.drawImage(t.i,dx,dy,s+.5,s+.5);cx.globalAlpha=1}}
 const tx='Imagery © Esri, Maxar, Earthstar Geographics';cx.font='10px sans-serif';cx.strokeStyle='rgba(0,0,0,.65)';cx.lineWidth=3;const ty=H-(window.pdInset||84);cx.strokeText(tx,8,ty);cx.fillStyle='#fff';cx.fillText(tx,8,ty)}
 var fcS='',aTab='info';
@@ -2660,12 +2661,12 @@ function radarTile(url){
 function drawRadar(){
   const frames=RADAR.frames;if(!frames.length)return false;
   const z=Math.min(7,Math.max(0,Math.floor(V.z))),s=256*2**(V.z-z),c=wpx(V.lon,V.lat),n=2**z;
-  const x0=Math.max(0,Math.floor((c[0]-W/2)/s)),x1=Math.min(n-1,Math.floor((c[0]+W/2)/s));
+  const x0=Math.floor((c[0]-W/2)/s),x1=Math.floor((c[0]+W/2)/s);
   const y0=Math.max(0,Math.floor((c[1]-H/2)/s)),y1=Math.min(n-1,Math.floor((c[1]+H/2)/s));
   const now=performance.now(),frame=frames[Math.floor(now/900)%frames.length];
   cx.save();cx.globalAlpha=.82;cx.imageSmoothingEnabled=true;
   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
-    const t=radarTile(RADAR.host+frame.path+'/512/'+z+'/'+x+'/'+y+'/2/1_1.png');
+    const t=radarTile(RADAR.host+frame.path+'/512/'+z+'/'+(((x%n)+n)%n)+'/'+y+'/2/1_1.png');
     if(t.ok)cx.drawImage(t.i,x*s-c[0]+W/2,y*s-c[1]+H/2,s+.5,s+.5)
   }
   cx.restore();return true
@@ -2688,11 +2689,11 @@ function drawFaaCharts(){
     if(!L[key])continue;
     if(V.z<min-.5){wxNotice('Zoom in to see '+label,1);continue}
     const z=Math.max(min,Math.min(max,Math.round(V.z))),s=256*2**(V.z-z),c=wpx(V.lon,V.lat),n=2**z;
-    const x0=Math.max(0,Math.floor((c[0]-W/2)/s)),x1=Math.min(n-1,Math.floor((c[0]+W/2)/s));
+    const x0=Math.floor((c[0]-W/2)/s),x1=Math.floor((c[0]+W/2)/s);
     const y0=Math.max(0,Math.floor((c[1]-H/2)/s)),y1=Math.min(n-1,Math.floor((c[1]+H/2)/s));
     cx.save();cx.imageSmoothingEnabled=true;
     for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
-      const t=faaTile(FAA_TILE_BASE+service+'/MapServer/tile/'+z+'/'+y+'/'+x);
+      const t=faaTile(FAA_TILE_BASE+service+'/MapServer/tile/'+z+'/'+y+'/'+(((x%n)+n)%n));
       if(t.ok)cx.drawImage(t.i,x*s-c[0]+W/2,y*s-c[1]+H/2,s+.5,s+.5)
     }
     cx.restore()
