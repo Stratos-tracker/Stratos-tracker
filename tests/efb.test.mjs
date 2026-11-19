@@ -574,7 +574,7 @@ test('the bag opens on a lock screen over its own wallpaper, and never between S
   assert.match(html, /id="lk-flight"/, 'and the flight');
   assert.match(css, /body\.efb-locked \.efb-home\[hidden\] \{ display: flex; \}/, 'the deck wallpaper (and the airline mark) stays behind it');
   assert.match(css, /body\.efb-locked \.home-stage/, 'while the apps are hidden');
-  assert.match(shell, /setupLock\(\);\n\s*setupHomeIndicator\(\);\n\s*route\(\);/, 'it is set up before the first route');
+  assert.match(shell, /setupLock\(\);\n\s*setupHomeIndicator\(\);\n\s*setupHomeEdit\(\);\n\s*route\(\);/, 'it is set up before the first route');
   assert.ok(shell.includes('from.origin === location.origin && /\\/(app|phone)(\\/|$)/.test(from.pathname)'), 'moving between Stratos pages skips it');
   assert.match(shell, /end\(rise > height\(\) \* 0\.15 \|\| \(rise > 12 && speed > 0\.45\) \|\| Math\.abs\(rise\) < 8\);/, 'a swipe past 15%, a flick or a tap completes it');
   assert.match(shell, /const drag = swipeUp\(lock, \{/, 'the lock follows the finger');
@@ -589,5 +589,5 @@ test('the deck has a home bar that swipes back to the Flight Deck', async () => 
   const shell = fs.readFileSync(new URL('app/js/efb.js', root), 'utf8').replace(/\r\n/g, '\n');
   assert.match(html, /<button class="home-indicator" id="home-indicator"/, 'the deck shows a home bar');
   assert.match(shell, /setTimeout\(\(\) => \{ location\.href = 'index\.html'; \}, 400\);/, 'swiping it up returns to the Flight Deck');
-  assert.match(shell, /setupHomeIndicator\(\);\n\s*route\(\);/, 'it is wired up at start');
+  assert.match(shell, /setupHomeIndicator\(\);\n\s*setupHomeEdit\(\);\n\s*route\(\);/, 'it is wired up at start');
 });

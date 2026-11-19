@@ -18,6 +18,9 @@ import {
 import { displayVersion } from './lib/version.js';
 import { airlineText, applyAirline, resolveAirline } from './lib/airlines.js';
 import { airlineMark } from './data/airline-marks.js';
+import { HOME_LAYOUT_KEY, WIDGETS, readLayout, offsetLabel, airportTime, flightProgress } from './efb/homewidgets.js';
+import { normalizeRegistration, photoRequest, photoFromPayload } from './lib/aircraftphoto.js';
+import { distanceNm } from './lib/geo.js';
 
 /* The rail, the router and the page titles all read this one list. */
 export const APPS = [
@@ -209,6 +212,7 @@ function applyAirlineState() {
   state.airline = resolved;
   applyAirline(resolved.airline);
   renderAirlineMark(resolved);
+  syncFlightWidget(state.live);
   window.dispatchEvent(new CustomEvent('stratos:efb-airline', { detail: resolved }));
 }
 
@@ -323,16 +327,284 @@ function tileMarkup(app, size = 44) {
   </a>`;
 }
 
+function loadLayout() {
+  let raw = null;
+  try { raw = localStorage.getItem(HOME_LAYOUT_KEY); } catch (_) { /* private mode */ }
+  return readLayout(raw, APPS.map(app => app.id));
+}
+
+function saveLayout() {
+  try { localStorage.setItem(HOME_LAYOUT_KEY, JSON.stringify(state.layout)); } catch (_) { /* private mode */ }
+}
+
+/* Show the chosen widgets in their saved order; the rest stay in the gallery. */
+function applyWidgets() {
+  const holder = document.getElementById('home-widgets');
+  if (!holder) return;
+  const chosen = state.layout.widgets;
+  for (const el of holder.querySelectorAll('[data-widget]')) el.hidden = !chosen.includes(el.dataset.widget);
+  for (const id of chosen) {
+    const el = holder.querySelector(`[data-widget="${id}"]`);
+    if (el) holder.appendChild(el);
+  }
+}
+
 function renderHome() {
   if (!dom.homeGrid) return;
-  dom.homeGrid.innerHTML = APPS.map(app => tileMarkup(app)).join('');
+  state.layout = state.layout || loadLayout();
+  const byId = new Map(APPS.map(app => [app.id, app]));
+  dom.homeGrid.innerHTML = state.layout.apps.map(id => byId.get(id)).filter(Boolean).map(app => tileMarkup(app)).join('');
+  applyWidgets();
+  drawClockRings();
   const dockApps = DOCK.map(id => APPS.find(app => app.id === id)).filter(Boolean);
   if (dom.homeDock) dom.homeDock.innerHTML = dockApps.map(app => tileMarkup(app, 32)).join('');
+}
+
+/* ── home widgets: flight tracking and airport clocks ───────────────── */
+
+/* The SimBrief plan describes this flight only while its airports are the
+   route's own, the rule the strip above follows too. */
+function planOfp(parts) {
+  const ofp = state.plan && state.plan.ofp;
+  if (!ofp || !parts) return null;
+  const same = (ofp.origin && ofp.origin.icao) === parts.origin && (ofp.destination && ofp.destination.icao) === parts.destination;
+  return same ? ofp : null;
+}
+
+function drawClockRings() {
+  const ticks = Array.from({ length: 60 }, (_, i) => {
+    const major = i % 5 === 0;
+    return `<line x1="50" y1="2.5" x2="50" y2="${major ? 8 : 6}" stroke="${major ? '#1c1c1e' : '#b8b8bd'}" stroke-width="${major ? 1.4 : 0.8}" transform="rotate(${i * 6} 50 50)"/>`;
+  }).join('');
+  for (const ring of document.querySelectorAll('.tz-ring')) ring.innerHTML = ticks;
+}
+
+/* Local time at each airport from the UTC offset SimBrief publishes; without
+   one the clock says UTC instead of guessing a zone. */
+function syncAirportClocks() {
+  const parts = flightParts(state.plan);
+  const ofp = planOfp(parts);
+  const now = Date.now();
+  for (const [key, icao, airport] of [['dep', parts && parts.origin, ofp && ofp.origin], ['arr', parts && parts.destination, ofp && ofp.destination]]) {
+    const tz = airport ? airport.timezone : null;
+    const label = offsetLabel(tz);
+    const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+    set(`tz-${key}-icao`, icao || (key === 'dep' ? 'DEP' : 'ARR'));
+    set(`tz-${key}-time`, icao ? airportTime(now, tz) : '--:--');
+    set(`tz-${key}-off`, icao ? (label || 'UTC') : '');
+  }
+}
+
+function syncFlightWidget(status) {
+  const card = document.querySelector('[data-widget="flight"]');
+  if (!card) return;
+  const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+  const parts = flightParts(state.plan);
+  const ofp = planOfp(parts);
+  const snapshot = status && status.status === 'live' ? status.snapshot : null;
+  const t = snapshot && snapshot.telemetry;
+  const callsign = (parts && parts.callsign) || (t && t.callsign) || '';
+  const type = (parts && parts.aircraft) || '';
+  const registration = normalizeRegistration((t && t.registration) || (ofp && ofp.aircraft && ofp.aircraft.reg) || '');
+  const airline = state.airline && state.airline.airline;
+
+  set('hf-cs', callsign || 'No flight');
+  const fn = document.getElementById('hf-fn');
+  const number = ofp && ofp.flight && ofp.flight.flightNumber;
+  if (fn) { fn.hidden = !number; fn.textContent = number ? `${(ofp.flight.airline || '').slice(0, 3)}${number}` : ''; }
+  const typeTag = document.getElementById('hf-type');
+  if (typeTag) { typeTag.hidden = !type; typeTag.textContent = type; }
+  const about = [airline && airline.name, ofp && ofp.aircraft && ofp.aircraft.name, registration].filter(Boolean);
+  set('hf-air', parts ? (about.join(' · ') || 'Flight from the loaded plan') : 'Import a SimBrief plan to track the flight here');
+  set('hf-dep', (parts && parts.origin) || '----');
+  set('hf-arr', (parts && parts.destination) || '----');
+  set('hf-depn', (ofp && ofp.origin.name) || '');
+  set('hf-arrn', (ofp && ofp.destination.name) || '');
+
+  const zulu = ms => (Number.isFinite(ms) && ms > 0 ? `${new Date(ms).toISOString().slice(11, 16)}Z` : '—');
+  set('hf-out', zulu(ofp && ofp.times && ofp.times.depUtc));
+
+  // Distance along the great circle between the two airports, from the plan's
+  // coordinates or the route's own end points.
+  const ends = [ofp && ofp.origin, ofp && ofp.destination];
+  const route = state.route || [];
+  const from = ends[0] && Number.isFinite(ends[0].lat) ? ends[0] : route[0];
+  const to = ends[1] && Number.isFinite(ends[1].lat) ? ends[1] : route[route.length - 1];
+  const located = p => p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lon));
+  const total = (ofp && ofp.distanceNm) || (located(from) && located(to) ? distanceNm(from, to) : null);
+  const remaining = t && located(to) ? distanceNm(t, to) : null;
+  const progress = flightProgress(total, remaining);
+  const fill = document.getElementById('hf-fill');
+  const pos = document.getElementById('hf-pos');
+  const pct = progress ? `${(progress.fraction * 100).toFixed(1)}%` : '0%';
+  if (fill) fill.style.width = pct;
+  if (pos) pos.style.left = pct;
+  set('hf-flown', progress ? `${Math.round(progress.flown)} nm flown` : '');
+  const eta = t && remaining != null && t.gs > 50 ? Date.now() + (remaining / t.gs) * 3600000 : null;
+  set('hf-left', progress ? `${Math.round(progress.left)} nm${eta ? ` · ${fmtMinutesLeft((eta - Date.now()) / 60000)} left` : ''} to go` : '');
+  set('hf-in-k', eta ? 'Estimated in' : 'Scheduled in');
+  set('hf-in', eta ? zulu(eta) : zulu(ofp && ofp.times && ofp.times.arrUtc));
+  document.getElementById('hf-in')?.classList.toggle('is-live', Boolean(eta));
+
+  set('hf-alt', t ? fmtFl(t.alt) : '—');
+  set('hf-gs', t ? fmtKt(t.gs) : '—');
+  const phase = t ? flightPhase(snapshot) : null;
+  set('hf-phase', phase ? phase.label : (status && status.status === 'live' ? 'Live' : 'Offline'));
+
+  if (registration !== state.photoReg) {
+    state.photoReg = registration;
+    showAircraftPhoto(registration);
+  }
+}
+
+function fmtMinutesLeft(minutes) {
+  const m = Math.max(0, Math.round(minutes));
+  return m >= 60 ? `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m` : `${m}m`;
+}
+
+/* The airframe's photo by registration, from Planespotters through Stratos'
+   own /api/photo endpoint, always shown with the credit and link it requires. */
+function showAircraftPhoto(registration) {
+  const img = document.getElementById('hf-img');
+  const credit = document.getElementById('hf-cred');
+  const none = document.getElementById('hf-nophoto');
+  if (!img || !credit || !none) return;
+  const clear = text => { img.hidden = true; img.removeAttribute('src'); credit.hidden = true; none.hidden = false; none.textContent = text; };
+  if (!registration) { clear('No aircraft photo'); return; }
+  clear(`Looking for a photo of ${registration}…`);
+  fetch(photoRequest(registration), { headers: { Accept: 'application/json' } })
+    .then(response => (response.ok ? response.json() : null))
+    .then(payload => {
+      if (state.photoReg !== registration) return;
+      const photo = photoFromPayload(payload);
+      if (!photo) { clear(`No photo of ${registration} yet`); return; }
+      img.src = photo.src;
+      img.alt = `${registration}, photographed by ${photo.photographer || 'a Planespotters contributor'}`;
+      img.hidden = false;
+      none.hidden = true;
+      credit.href = photo.link;
+      credit.textContent = `${registration} · © ${photo.photographer || 'Planespotters contributor'} · planespotters.net`;
+      credit.hidden = false;
+    })
+    .catch(() => { if (state.photoReg === registration) clear(`No photo of ${registration} available`); });
+}
+
+/* ── edit mode: hold the wallpaper ─────────────────────────────────── */
+
+/* Holding the deck for half a second makes everything wiggle, as on iPadOS:
+   apps can be dragged to new places, widgets removed with their minus, and
+   added back from the gallery. Done (or a tap on the wallpaper) saves. */
+function setupHomeEdit() {
+  const home = dom.home;
+  const grid = dom.homeGrid;
+  const bar = document.getElementById('home-editbar');
+  const gallery = document.getElementById('wg-gallery');
+  const list = document.getElementById('wg-list');
+  if (!home || !grid || !bar || !gallery || !list) return;
+  let hold = null, holdFrom = null, swallowClick = false, drag = null;
+
+  const editing = () => document.body.classList.contains('home-editing');
+  const enter = () => { document.body.classList.add('home-editing'); bar.hidden = false; };
+  const exit = () => {
+    document.body.classList.remove('home-editing');
+    bar.hidden = true;
+    gallery.hidden = true;
+    saveLayout();
+  };
+
+  home.addEventListener('pointerdown', event => {
+    if (editing() || event.button > 0 || event.target.closest('.home-dock, .home-indicator, .home-editbar, .wg-gallery')) return;
+    holdFrom = [event.clientX, event.clientY];
+    hold = setTimeout(() => { hold = null; swallowClick = true; enter(); }, 550);
+  });
+  home.addEventListener('pointermove', event => {
+    if (hold && Math.hypot(event.clientX - holdFrom[0], event.clientY - holdFrom[1]) > 10) { clearTimeout(hold); hold = null; }
+  });
+  const stopHold = () => { if (hold) { clearTimeout(hold); hold = null; } };
+  home.addEventListener('pointerup', stopHold);
+  home.addEventListener('pointercancel', stopHold);
+  home.addEventListener('contextmenu', event => { if (event.target.closest('#home-grid, .home-widgets, .home-stage')) event.preventDefault(); });
+
+  // While editing nothing opens; a tap on the bare wallpaper finishes.
+  home.addEventListener('click', event => {
+    if (swallowClick) { swallowClick = false; event.preventDefault(); event.stopPropagation(); return; }
+    if (!editing()) return;
+    const remove = event.target.closest('[data-remove]');
+    if (remove) {
+      event.preventDefault(); event.stopPropagation();
+      state.layout.widgets = state.layout.widgets.filter(id => id !== remove.dataset.remove);
+      applyWidgets();
+      saveLayout();
+      return;
+    }
+    if (event.target.closest('.home-editbar, .wg-gallery')) return;
+    if (event.target.closest('#home-grid .hi, .home-widgets [data-widget], .home-dock')) { event.preventDefault(); event.stopPropagation(); return; }
+    exit();
+  }, true);
+
+  document.getElementById('he-done')?.addEventListener('click', exit);
+  document.getElementById('he-add')?.addEventListener('click', () => {
+    const missing = WIDGETS.filter(widget => !state.layout.widgets.includes(widget.id));
+    list.innerHTML = missing.length
+      ? missing.map(widget => `<div><span>${esc(widget.name)}</span><button type="button" data-add="${esc(widget.id)}">Add</button></div>`).join('')
+      : '<p>Every widget is already on the home screen.</p>';
+    gallery.hidden = false;
+  });
+  document.getElementById('wg-close')?.addEventListener('click', () => { gallery.hidden = true; });
+  list.addEventListener('click', event => {
+    const add = event.target.closest('[data-add]');
+    if (!add) return;
+    state.layout.widgets.push(add.dataset.add);
+    applyWidgets();
+    syncHomeWidget();
+    syncAirportClocks();
+    saveLayout();
+    gallery.hidden = true;
+  });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && editing()) { event.stopPropagation(); exit(); } }, true);
+
+  // Dragging an app: the tile follows the finger and the grid makes room.
+  grid.addEventListener('pointerdown', event => {
+    const tile = event.target.closest('.hi');
+    if (!editing() || !tile) return;
+    event.preventDefault();
+    const box = tile.getBoundingClientRect();
+    drag = { tile, x: event.clientX, y: event.clientY, left: box.left, top: box.top };
+    tile.classList.add('is-dragging');
+    try { tile.setPointerCapture(event.pointerId); } catch (_) { /* synthetic event */ }
+  });
+  grid.addEventListener('pointermove', event => {
+    if (!drag) return;
+    const { tile } = drag;
+    tile.style.visibility = 'hidden';
+    const under = document.elementFromPoint(event.clientX, event.clientY);
+    tile.style.visibility = '';
+    const target = under && under.closest('#home-grid .hi');
+    if (target && target !== tile) {
+      const tiles = [...grid.children];
+      grid.insertBefore(tile, tiles.indexOf(target) > tiles.indexOf(tile) ? target.nextSibling : target);
+    }
+    // Keep the tile under the finger wherever its slot now is.
+    tile.style.transform = 'none';
+    const box = tile.getBoundingClientRect();
+    tile.style.transform = `translate(${drag.left + (event.clientX - drag.x) - box.left}px, ${drag.top + (event.clientY - drag.y) - box.top}px)`;
+  });
+  const drop = () => {
+    if (!drag) return;
+    drag.tile.classList.remove('is-dragging');
+    drag.tile.style.transform = '';
+    drag = null;
+    state.layout.apps = [...grid.querySelectorAll('.hi')].map(tile => tile.dataset.open);
+    saveLayout();
+  };
+  grid.addEventListener('pointerup', drop);
+  grid.addEventListener('pointercancel', drop);
 }
 
 /* The deck widget: route from the stored plan, numbers from the same bridge
    stream the Map app reads. Nothing is held on screen after the feed stops. */
 function syncHomeWidget(status = state.live) {
+  syncFlightWidget(status);
   if (!dom.homeWidget) return;
   const parts = flightParts(state.plan);
   const snapshot = status && status.status === 'live' ? status.snapshot : null;
@@ -696,6 +968,7 @@ function updateClock() {
   const utc = document.getElementById('hcw-utc'), lcl = document.getElementById('hcw-lcl');
   if (utc) utc.textContent = time;
   if (lcl) lcl.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  syncAirportClocks();
   updateLock();
 }
 
@@ -906,6 +1179,7 @@ export async function boot() {
   syncNavFade();
   setupLock();
   setupHomeIndicator();
+  setupHomeEdit();
   route();
 }
 

@@ -250,6 +250,8 @@ export function parseOfp(json, fetchedAt = Date.now()) {
       name: str(origin.name),
       lat: num(origin.pos_lat),
       lon: num(origin.pos_long),
+      // Hours from UTC, as SimBrief publishes it; the deck's airport clocks read it.
+      timezone: num(origin.timezone),
       rwy: upper(origin.plan_rwy),
       sid: upper(general.sid_ident || origin.sid_ident),
       sidTrans: upper(general.sid_trans || origin.sid_trans),
@@ -259,6 +261,7 @@ export function parseOfp(json, fetchedAt = Date.now()) {
       name: str(dest.name),
       lat: num(dest.pos_lat),
       lon: num(dest.pos_long),
+      timezone: num(dest.timezone),
       rwy: upper(dest.plan_rwy),
       star: upper(general.star_ident || dest.star_ident),
       starTrans: upper(general.star_trans || dest.star_trans),

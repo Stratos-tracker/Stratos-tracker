@@ -62,8 +62,47 @@
          Values appear only when the simulator reports them; offline it says so
          instead of showing a last known position as if it were current. -->
     <div class="home-layout">
-    <div class="home-widgets">
-    <a class="home-widget" id="home-widget" href="#/navigator" aria-label="Open Navigator">
+    <div class="home-widgets" id="home-widgets">
+    <section class="hw-flight" data-widget="flight" aria-label="Flight tracking">
+      <button class="wg-remove" type="button" data-remove="flight" aria-label="Remove widget">−</button>
+      <div class="hf-photo">
+        <img id="hf-img" alt="" hidden decoding="async">
+        <span class="hf-nophoto" id="hf-nophoto">No aircraft photo</span>
+        <span class="hf-head"><b id="hf-cs">No flight</b><span class="hf-tag" id="hf-fn" hidden></span><span class="hf-tag is-type" id="hf-type" hidden></span></span>
+        <a class="hf-cred" id="hf-cred" target="_blank" rel="noopener" hidden></a>
+      </div>
+      <div class="hf-body">
+        <span class="hf-air" id="hf-air">Import a SimBrief plan to track the flight here</span>
+        <span class="hf-route">
+          <span class="hf-ap"><b id="hf-dep">----</b><small id="hf-depn"></small></span>
+          <span class="hf-plane" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><g transform="rotate(90 12 12)"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></g></svg></span>
+          <span class="hf-ap is-r"><b id="hf-arr">----</b><small id="hf-arrn"></small></span>
+        </span>
+        <span class="hf-times">
+          <span><em>Scheduled out</em><b id="hf-out">—</b></span>
+          <span class="is-r"><em id="hf-in-k">Scheduled in</em><b id="hf-in">—</b></span>
+        </span>
+        <span class="hf-bar"><i id="hf-fill"></i><svg id="hf-pos" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></span>
+        <span class="hf-dist"><span id="hf-flown"></span><span id="hf-left"></span></span>
+        <span class="hf-stats">
+          <span><em>Altitude</em><b id="hf-alt">—</b></span>
+          <span><em>Ground speed</em><b id="hf-gs">—</b></span>
+          <span><em>Phase</em><b id="hf-phase">—</b></span>
+        </span>
+      </div>
+    </section>
+    <section class="hw-tz" data-widget="dep" aria-label="Departure airport time">
+      <button class="wg-remove" type="button" data-remove="dep" aria-label="Remove widget">−</button>
+      <svg class="tz-ring" viewBox="0 0 100 100" aria-hidden="true"></svg>
+      <span class="tz-in"><em id="tz-dep-icao">DEP</em><b id="tz-dep-time">--:--</b><small id="tz-dep-off"></small></span>
+    </section>
+    <section class="hw-tz" data-widget="arr" aria-label="Arrival airport time">
+      <button class="wg-remove" type="button" data-remove="arr" aria-label="Remove widget">−</button>
+      <svg class="tz-ring" viewBox="0 0 100 100" aria-hidden="true"></svg>
+      <span class="tz-in"><em id="tz-arr-icao">ARR</em><b id="tz-arr-time">--:--</b><small id="tz-arr-off"></small></span>
+    </section>
+    <a class="home-widget" id="home-widget" href="#/navigator" aria-label="Open Navigator" data-widget="navigator" hidden>
+      <button class="wg-remove" type="button" data-remove="navigator" aria-label="Remove widget">−</button>
       <span class="hw-head">
         <span class="hw-eyebrow">Navigator</span>
         <span class="hw-state" id="hw-state" data-state="offline"><i aria-hidden="true"></i><span>Offline</span></span>
@@ -76,7 +115,8 @@
       <span class="hw-tele" id="hw-tele"></span>
     </a>
     <!-- A clock widget: UTC on the face, UTC and local time beside it. -->
-    <div class="home-clockw" aria-label="Clock">
+    <div class="home-clockw" aria-label="Clock" data-widget="clock" hidden>
+      <button class="wg-remove" type="button" data-remove="clock" aria-label="Remove widget">−</button>
       <svg class="hcw-face" viewBox="0 0 100 100" aria-hidden="true">
         <circle cx="50" cy="50" r="47" class="hcw-dial"/>
         <g class="hcw-ticks"><line x1="50" y1="8" x2="50" y2="16" transform="rotate(0 50 50)"/><line x1="50" y1="8" x2="50" y2="13" transform="rotate(30 50 50)"/><line x1="50" y1="8" x2="50" y2="13" transform="rotate(60 50 50)"/><line x1="50" y1="8" x2="50" y2="16" transform="rotate(90 50 50)"/><line x1="50" y1="8" x2="50" y2="13" transform="rotate(120 50 50)"/><line x1="50" y1="8" x2="50" y2="13" transform="rotate(150 50 50)"/><line x1="50" y1="8" x2="50" y2="16" transform="rotate(180 50 50)"/><line x1="50" y1="8" x2="50" y2="13" transform="rotate(210 50 50)"/><line x1="50" y1="8" x2="50" y2="13" transform="rotate(240 50 50)"/><line x1="50" y1="8" x2="50" y2="16" transform="rotate(270 50 50)"/><line x1="50" y1="8" x2="50" y2="13" transform="rotate(300 50 50)"/><line x1="50" y1="8" x2="50" y2="13" transform="rotate(330 50 50)"/></g>
@@ -97,6 +137,15 @@
     <p class="home-foot">Simulator use only · not for real-world navigation</p>
   </div>
   <div class="home-dock" id="home-dock" aria-label="Dock"></div>
+  <!-- Hold the wallpaper to edit: apps move, widgets are added and removed. -->
+  <div class="home-editbar" id="home-editbar" hidden>
+    <button type="button" class="he-add" id="he-add" aria-label="Add a widget">+</button>
+    <button type="button" class="he-done" id="he-done">Done</button>
+  </div>
+  <div class="wg-gallery" id="wg-gallery" role="dialog" aria-label="Add a widget" hidden>
+    <header><b>Add a widget</b><button type="button" id="wg-close">Close</button></header>
+    <div class="wg-list" id="wg-list"></div>
+  </div>
   <button class="home-indicator" id="home-indicator" type="button" aria-label="Back to the Flight Deck" title="Swipe up to go back to the Flight Deck"><i aria-hidden="true"></i></button>
 </div>
 
