@@ -15,8 +15,9 @@ export const WIDGETS = [
 ];
 export const DEFAULT_WIDGETS = ['flight', 'dep', 'arr'];
 
-/** The saved layout, with unknown ids dropped and missing apps appended. */
-export function readLayout(raw, appIds) {
+/** The saved layout, with unknown ids dropped and missing apps appended. An
+ *  app in the dock is not on the home screen as well, as on an iPad. */
+export function readLayout(raw, appIds, dockIds = []) {
   let saved = {};
   try { saved = raw ? JSON.parse(raw) : {}; } catch (_) { saved = {}; }
   const known = new Set(WIDGETS.map(w => w.id));
@@ -25,7 +26,8 @@ export function readLayout(raw, appIds) {
     : DEFAULT_WIDGETS.slice();
   const order = Array.isArray(saved.apps) ? saved.apps.filter(id => appIds.includes(id)) : [];
   const apps = [...new Set(order), ...appIds.filter(id => !order.includes(id))];
-  return { widgets, apps };
+  const dock = [...new Set((Array.isArray(saved.dock) ? saved.dock : dockIds).filter(id => appIds.includes(id)))];
+  return { widgets, apps, dock };
 }
 
 /** SimBrief's airport UTC offset in hours as a clock label: +1, -9, +5:30. */

@@ -2909,10 +2909,12 @@ body.lk-dragging .home-indicator { transition: none; }
 
 /* ── edit mode: hold the wallpaper, as on iPadOS ─────────────────────── */
 @keyframes hm-jiggle { 0% { transform: rotate(-1.4deg); } 50% { transform: rotate(1.4deg); } 100% { transform: rotate(-1.4deg); } }
-body.home-editing #home-grid .hi, body.home-editing .home-widgets > [data-widget] { animation: hm-jiggle .26s ease-in-out infinite; }
-body.home-editing #home-grid .hi:nth-child(2n), body.home-editing .home-widgets > [data-widget]:nth-child(2n) { animation-delay: -.13s; }
-body.home-editing #home-grid .hi { cursor: grab; touch-action: none; }
-body.home-editing #home-grid .hi.is-dragging { animation: none; z-index: 5; cursor: grabbing; filter: drop-shadow(0 12px 18px rgba(0, 0, 0, .45)); }
+body.home-editing #efb-home .hi, body.home-editing .home-widgets > [data-widget] { animation: hm-jiggle .26s ease-in-out infinite; }
+body.home-editing #efb-home .hi:nth-child(2n), body.home-editing .home-widgets > [data-widget]:nth-child(2n) { animation-delay: -.13s; }
+body.home-editing #efb-home { touch-action: none; }
+body.home-editing #efb-home .hi, body.home-editing .home-widgets > [data-widget] { cursor: grab; }
+/* The lifted item rides above the rest and lets the pointer see what is under it. */
+body.home-editing #efb-home .is-dragging { animation: none; transition: none !important; z-index: 50; position: relative; pointer-events: none; cursor: grabbing; filter: drop-shadow(0 16px 24px rgba(0, 0, 0, .5)); }
 body.home-editing .home-bar { visibility: hidden; }
 .wg-remove {
   display: none; position: absolute; z-index: 4; top: 6px; left: 6px; width: 26px; height: 26px; padding: 0;
@@ -2942,7 +2944,7 @@ body.home-editing .wg-remove { display: block; }
 .wg-list button { background: #0a84ff; }
 .wg-list p { margin: 4px 2px; color: rgba(255, 255, 255, .6); font-size: 13px; }
 @media (prefers-reduced-motion: reduce) {
-  body.home-editing #home-grid .hi, body.home-editing .home-widgets > [data-widget] { animation: none; }
+  body.home-editing #efb-home .hi, body.home-editing .home-widgets > [data-widget] { animation: none; }
 }
 
 /* A long press edits the deck instead of opening the browser's link menu. */

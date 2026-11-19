@@ -330,7 +330,7 @@ function tileMarkup(app, size = 44) {
 function loadLayout() {
   let raw = null;
   try { raw = localStorage.getItem(HOME_LAYOUT_KEY); } catch (_) { /* private mode */ }
-  return readLayout(raw, APPS.map(app => app.id));
+  return readLayout(raw, APPS.map(app => app.id), DOCK);
 }
 
 function saveLayout() {
@@ -353,11 +353,11 @@ function renderHome() {
   if (!dom.homeGrid) return;
   state.layout = state.layout || loadLayout();
   const byId = new Map(APPS.map(app => [app.id, app]));
-  dom.homeGrid.innerHTML = state.layout.apps.map(id => byId.get(id)).filter(Boolean).map(app => tileMarkup(app)).join('');
+  dom.homeGrid.innerHTML = state.layout.apps.filter(id => !state.layout.dock.includes(id)).map(id => byId.get(id)).filter(Boolean).map(app => tileMarkup(app)).join('');
   applyWidgets();
   drawClockRings();
-  const dockApps = DOCK.map(id => APPS.find(app => app.id === id)).filter(Boolean);
-  if (dom.homeDock) dom.homeDock.innerHTML = dockApps.map(app => tileMarkup(app, 32)).join('');
+  // An app sits on the home screen or in the dock, never both, as on an iPad.
+  if (dom.homeDock) dom.homeDock.innerHTML = state.layout.dock.map(id => byId.get(id)).filter(Boolean).map(app => tileMarkup(app, 32)).join('');
 }
 
 /* ── home widgets: flight tracking and airport clocks ───────────────── */
@@ -497,11 +497,15 @@ function showAircraftPhoto(registration) {
 function setupHomeEdit() {
   const home = dom.home;
   const grid = dom.homeGrid;
+  const dock = dom.homeDock;
+  const holder = document.getElementById('home-widgets');
   const bar = document.getElementById('home-editbar');
   const gallery = document.getElementById('wg-gallery');
   const list = document.getElementById('wg-list');
-  if (!home || !grid || !bar || !gallery || !list) return;
-  let hold = null, holdFrom = null, swallowClick = false, drag = null;
+  if (!home || !grid || !dock || !holder || !bar || !gallery || !list) return;
+  const DOCK_MAX = 8;
+  const EASE = 'cubic-bezier(.32, .72, 0, 1)';
+  let hold = null, press = null, swallowClick = false, drag = null;
 
   const editing = () => document.body.classList.contains('home-editing');
   const enter = () => { document.body.classList.add('home-editing'); bar.hidden = false; };
@@ -511,19 +515,140 @@ function setupHomeEdit() {
     gallery.hidden = true;
     saveLayout();
   };
+  const draggableAt = node => node && node.closest('#home-grid .hi, #home-dock .hi, #home-widgets > [data-widget]');
+  const shown = () => [...grid.querySelectorAll('.hi'), ...dock.querySelectorAll('.hi'),
+    ...holder.querySelectorAll(':scope > [data-widget]:not([hidden])')];
+
+  // Everything that changes place slides there, as on iPadOS. `translate` is
+  // its own property, so it runs alongside the wiggle's rotation.
+  const flip = mutate => {
+    const items = shown().filter(el => !drag || el !== drag.item);
+    const before = new Map(items.map(el => [el, el.getBoundingClientRect()]));
+    mutate();
+    for (const el of items) {
+      const a = before.get(el), b = el.getBoundingClientRect();
+      const dx = a.left - b.left, dy = a.top - b.top;
+      if (Math.abs(dx) + Math.abs(dy) > 0.5) {
+        el.animate([{ translate: `${dx}px ${dy}px` }, { translate: '0 0' }], { duration: 320, easing: EASE });
+      }
+    }
+  };
+
+  const saveOrder = () => {
+    const ids = parent => [...parent.querySelectorAll('.hi')].map(tile => tile.dataset.open);
+    state.layout.dock = ids(dock);
+    state.layout.apps = [...ids(grid), ...state.layout.dock];
+    state.layout.widgets = [...holder.querySelectorAll(':scope > [data-widget]:not([hidden])')].map(el => el.dataset.widget);
+    saveLayout();
+  };
+
+  function startDrag(event) {
+    const item = press.item;
+    // A settle or slide still running would override the position it follows.
+    for (const run of item.getAnimations()) run.cancel();
+    item.classList.add('is-dragging');
+    const box = item.getBoundingClientRect();
+    // Anchored by the centre, so an icon that changes size in the dock stays under the finger.
+    drag = { item, widget: item.matches('[data-widget]'), x: press.x, y: press.y, cx: box.left + box.width / 2, cy: box.top + box.height / 2 };
+    try { home.setPointerCapture(press.id); } catch (_) { /* synthetic event */ }
+    moveDrag(event);
+  }
+
+  // Where an element sits in the layout, ignoring transforms and the slide
+  // animations, so a moving widget is judged by its slot, not its motion.
+  const layoutRect = el => {
+    let left = 0, top = 0;
+    for (let node = el; node; node = node.offsetParent) { left += node.offsetLeft; top += node.offsetTop; }
+    return { left, top, width: el.offsetWidth, height: el.offsetHeight };
+  };
+
+  function moveDrag(event) {
+    const { item } = drag;
+    const under = document.elementFromPoint(event.clientX, event.clientY);
+    if (drag.widget) {
+      // Widgets differ in size, so one only moves past another once the finger
+      // crosses that widget's middle; otherwise the two would keep swapping.
+      const target = under && under.closest('#home-widgets > [data-widget]');
+      if (target && target !== item) {
+        const siblings = [...holder.children];
+        const before = siblings.indexOf(item) < siblings.indexOf(target);
+        const box = layoutRect(target), mine = layoutRect(item);
+        const sameRow = Math.abs(box.top - mine.top) < 8;
+        const mid = sameRow ? box.left + box.width / 2 : box.top + box.height / 2;
+        const at = sameRow ? event.clientX : event.clientY;
+        if (before ? at > mid : at < mid) flip(() => holder.insertBefore(item, before ? target.nextSibling : target));
+      }
+    } else {
+      // Apps are all one size: entering another app's place takes it.
+      const target = under && under.closest('#home-grid .hi, #home-dock .hi');
+      const into = target ? target.parentElement : under && under.closest('#home-dock, #home-grid');
+      const dockFull = into === dock && item.parentElement !== dock && dock.querySelectorAll('.hi').length >= DOCK_MAX;
+      if (into && !dockFull && target !== item && (target || into !== item.parentElement)) {
+        flip(() => {
+          if (!target) { into.appendChild(item); return; }
+          const siblings = [...into.children];
+          const after = item.parentElement === into && siblings.indexOf(target) > siblings.indexOf(item);
+          into.insertBefore(item, after ? target.nextSibling : target);
+        });
+      }
+    }
+    // The item stays under the finger wherever its slot now is.
+    for (const run of item.getAnimations()) run.cancel();
+    item.style.transform = 'none';
+    const box = item.getBoundingClientRect();
+    item.style.transform = `translate(${drag.cx + (event.clientX - drag.x) - (box.left + box.width / 2)}px, ${drag.cy + (event.clientY - drag.y) - (box.top + box.height / 2)}px) scale(1.06)`;
+  }
+
+  function endDrag() {
+    let { item } = drag;
+    drag = null;
+    const lifted = item.style.transform;
+    item.classList.remove('is-dragging');
+    item.style.transform = '';
+    // An app keeps the icon size of the row it landed in.
+    if (item.matches('.hi')) {
+      const app = APPS.find(entry => entry.id === item.dataset.open);
+      const size = item.parentElement === dock ? 32 : 44;
+      const svg = item.querySelector('.hi-tile svg');
+      if (app && svg && Number(svg.getAttribute('width')) !== size) {
+        const fresh = document.createElement('template');
+        fresh.innerHTML = tileMarkup(app, size).trim();
+        const tile = fresh.content.firstElementChild;
+        item.replaceWith(tile);
+        item = tile;
+      }
+    }
+    item.animate([{ transform: lifted || 'none' }, { transform: 'none' }], { duration: 300, easing: EASE });
+    saveOrder();
+  }
 
   home.addEventListener('pointerdown', event => {
-    if (editing() || event.button > 0 || event.target.closest('.home-dock, .home-indicator, .home-editbar, .wg-gallery')) return;
-    holdFrom = [event.clientX, event.clientY];
-    hold = setTimeout(() => { hold = null; swallowClick = true; enter(); }, 550);
+    if (event.button > 0 || event.target.closest('.home-indicator, .home-editbar, .wg-gallery, .wg-remove')) return;
+    press = { x: event.clientX, y: event.clientY, id: event.pointerId, item: draggableAt(event.target) };
+    if (editing()) { if (press.item) event.preventDefault(); return; }
+    // Holding anywhere, an icon or a widget included, starts editing; keep
+    // the finger down and the item it is on can be dragged straight away.
+    hold = setTimeout(() => { hold = null; swallowClick = true; enter(); }, 500);
   });
   home.addEventListener('pointermove', event => {
-    if (hold && Math.hypot(event.clientX - holdFrom[0], event.clientY - holdFrom[1]) > 10) { clearTimeout(hold); hold = null; }
+    if (!press) return;
+    const moved = Math.hypot(event.clientX - press.x, event.clientY - press.y);
+    if (hold) {
+      if (moved > 10) { clearTimeout(hold); hold = null; press = null; }
+      return;
+    }
+    if (!editing() || !press.item) return;
+    if (!drag && moved > 4) startDrag(event);
+    else if (drag) moveDrag(event);
   });
-  const stopHold = () => { if (hold) { clearTimeout(hold); hold = null; } };
-  home.addEventListener('pointerup', stopHold);
-  home.addEventListener('pointercancel', stopHold);
-  home.addEventListener('contextmenu', event => { if (event.target.closest('#home-grid, .home-widgets, .home-stage')) event.preventDefault(); });
+  const release = () => {
+    if (hold) { clearTimeout(hold); hold = null; }
+    if (drag) { endDrag(); swallowClick = true; }
+    press = null;
+  };
+  home.addEventListener('pointerup', release);
+  home.addEventListener('pointercancel', release);
+  home.addEventListener('contextmenu', event => { if (event.target.closest('#efb-home')) event.preventDefault(); });
 
   // While editing nothing opens; a tap on the bare wallpaper finishes.
   home.addEventListener('click', event => {
@@ -532,13 +657,15 @@ function setupHomeEdit() {
     const remove = event.target.closest('[data-remove]');
     if (remove) {
       event.preventDefault(); event.stopPropagation();
-      state.layout.widgets = state.layout.widgets.filter(id => id !== remove.dataset.remove);
-      applyWidgets();
+      flip(() => {
+        state.layout.widgets = state.layout.widgets.filter(id => id !== remove.dataset.remove);
+        applyWidgets();
+      });
       saveLayout();
       return;
     }
     if (event.target.closest('.home-editbar, .wg-gallery')) return;
-    if (event.target.closest('#home-grid .hi, .home-widgets [data-widget], .home-dock')) { event.preventDefault(); event.stopPropagation(); return; }
+    if (draggableAt(event.target) || event.target.closest('.home-dock')) { event.preventDefault(); event.stopPropagation(); return; }
     exit();
   }, true);
 
@@ -554,51 +681,16 @@ function setupHomeEdit() {
   list.addEventListener('click', event => {
     const add = event.target.closest('[data-add]');
     if (!add) return;
-    state.layout.widgets.push(add.dataset.add);
-    applyWidgets();
+    flip(() => {
+      state.layout.widgets.unshift(add.dataset.add);
+      applyWidgets();
+    });
     syncHomeWidget();
     syncAirportClocks();
     saveLayout();
     gallery.hidden = true;
   });
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && editing()) { event.stopPropagation(); exit(); } }, true);
-
-  // Dragging an app: the tile follows the finger and the grid makes room.
-  grid.addEventListener('pointerdown', event => {
-    const tile = event.target.closest('.hi');
-    if (!editing() || !tile) return;
-    event.preventDefault();
-    const box = tile.getBoundingClientRect();
-    drag = { tile, x: event.clientX, y: event.clientY, left: box.left, top: box.top };
-    tile.classList.add('is-dragging');
-    try { tile.setPointerCapture(event.pointerId); } catch (_) { /* synthetic event */ }
-  });
-  grid.addEventListener('pointermove', event => {
-    if (!drag) return;
-    const { tile } = drag;
-    tile.style.visibility = 'hidden';
-    const under = document.elementFromPoint(event.clientX, event.clientY);
-    tile.style.visibility = '';
-    const target = under && under.closest('#home-grid .hi');
-    if (target && target !== tile) {
-      const tiles = [...grid.children];
-      grid.insertBefore(tile, tiles.indexOf(target) > tiles.indexOf(tile) ? target.nextSibling : target);
-    }
-    // Keep the tile under the finger wherever its slot now is.
-    tile.style.transform = 'none';
-    const box = tile.getBoundingClientRect();
-    tile.style.transform = `translate(${drag.left + (event.clientX - drag.x) - box.left}px, ${drag.top + (event.clientY - drag.y) - box.top}px)`;
-  });
-  const drop = () => {
-    if (!drag) return;
-    drag.tile.classList.remove('is-dragging');
-    drag.tile.style.transform = '';
-    drag = null;
-    state.layout.apps = [...grid.querySelectorAll('.hi')].map(tile => tile.dataset.open);
-    saveLayout();
-  };
-  grid.addEventListener('pointerup', drop);
-  grid.addEventListener('pointercancel', drop);
 }
 
 /* The deck widget: route from the stored plan, numbers from the same bridge

@@ -34,8 +34,8 @@ test('flight progress is clamped to the trip', () => {
 
 test('the saved home layout drops unknown entries and keeps new apps', () => {
   const apps = ['navigator', 'charts', 'fuel'];
-  assert.deepEqual(readLayout(null, apps), { widgets: DEFAULT_WIDGETS, apps });
-  const saved = JSON.stringify({ widgets: ['arr', 'bogus', 'arr'], apps: ['fuel', 'gone', 'navigator'] });
-  assert.deepEqual(readLayout(saved, apps), { widgets: ['arr'], apps: ['fuel', 'navigator', 'charts'] });
+  assert.deepEqual(readLayout(null, apps, ['navigator']), { widgets: DEFAULT_WIDGETS, apps, dock: ['navigator'] });
+  const saved = JSON.stringify({ widgets: ['arr', 'bogus', 'arr'], apps: ['fuel', 'gone', 'navigator'], dock: ['charts', 'gone'] });
+  assert.deepEqual(readLayout(saved, apps, ['navigator']), { widgets: ['arr'], apps: ['fuel', 'navigator', 'charts'], dock: ['charts'] });
   assert.deepEqual(readLayout('{not json', apps).widgets, DEFAULT_WIDGETS);
 });
