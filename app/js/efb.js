@@ -18,7 +18,7 @@ import {
 import { displayVersion } from './lib/version.js';
 import { airlineText, applyAirline, resolveAirline } from './lib/airlines.js';
 import { airlineMark } from './data/airline-marks.js';
-import { HOME_LAYOUT_KEY, WIDGETS, readLayout, offsetLabel, airportTime, flightProgress } from './efb/homewidgets.js';
+import { HOME_LAYOUT_KEY, WIDGETS, readLayout, offsetLabel, airportTime, flightProgress, fits, placeAll, sizeOf } from './efb/homewidgets.js';
 import { normalizeRegistration, photoRequest, photoFromPayload } from './lib/aircraftphoto.js';
 import { distanceNm } from './lib/geo.js';
 
@@ -337,22 +337,60 @@ function saveLayout() {
   try { localStorage.setItem(HOME_LAYOUT_KEY, JSON.stringify(state.layout)); } catch (_) { /* private mode */ }
 }
 
-/* Show the chosen widgets in their saved order; the rest stay in the gallery. */
+/* One grid of cells for apps and widgets, like iPadOS: each item keeps the
+   cell it was put in, gaps included. */
+const CELL = 116;
+const boardKey = el => (el.dataset.widget ? `w:${el.dataset.widget}` : el.dataset.open);
+
+function placeOnBoard(el, spot) {
+  el.style.gridColumn = `${spot.c + 1} / span ${spot.w}`;
+  el.style.gridRow = `${spot.r + 1} / span ${spot.h}`;
+}
+
+/* Lay the board out for the space there is. Below six columns (a phone)
+   everything flows in order instead of keeping cells. */
+function positionBoard() {
+  const grid = dom.homeGrid;
+  if (!grid) return;
+  const width = (grid.parentElement && grid.parentElement.clientWidth) || grid.clientWidth || 0;
+  const cols = Math.max(1, Math.floor(width / CELL));
+  const items = [...grid.children].filter(el => !el.hidden);
+  state.cols = cols;
+  if (cols < 6) {
+    grid.classList.add('is-flow');
+    for (const el of items) { el.style.gridColumn = ''; el.style.gridRow = ''; }
+    state.placed = null;
+    return;
+  }
+  grid.classList.remove('is-flow');
+  grid.style.setProperty('--cols', String(cols));
+  state.placed = placeAll(items.map(boardKey), state.layout.pos, cols);
+  for (const el of items) placeOnBoard(el, state.placed[boardKey(el)]);
+  state.layout.pos = Object.fromEntries(Object.entries(state.placed).map(([key, spot]) => [key, [spot.c, spot.r]]));
+}
+
+/* Chosen widgets join the board; the rest wait, hidden, for the gallery. */
 function applyWidgets() {
   const holder = document.getElementById('home-widgets');
-  if (!holder) return;
+  const grid = dom.homeGrid;
+  if (!holder || !grid) return;
   const chosen = state.layout.widgets;
-  for (const el of holder.querySelectorAll('[data-widget]')) el.hidden = !chosen.includes(el.dataset.widget);
-  for (const id of chosen) {
-    const el = holder.querySelector(`[data-widget="${id}"]`);
-    if (el) holder.appendChild(el);
+  for (const el of document.querySelectorAll('#home-widgets [data-widget], #home-grid > [data-widget]')) {
+    const on = chosen.includes(el.dataset.widget);
+    el.hidden = !on;
+    if (on && el.parentElement !== grid) grid.appendChild(el);
+    if (!on && el.parentElement !== holder) { holder.appendChild(el); el.style.gridColumn = ''; el.style.gridRow = ''; }
   }
+  positionBoard();
 }
 
 function renderHome() {
   if (!dom.homeGrid) return;
   state.layout = state.layout || loadLayout();
   const byId = new Map(APPS.map(app => [app.id, app]));
+  const holder = document.getElementById('home-widgets');
+  // Widgets step out before the apps are redrawn, then come back in.
+  if (holder) for (const el of dom.homeGrid.querySelectorAll(':scope > [data-widget]')) holder.appendChild(el);
   dom.homeGrid.innerHTML = state.layout.apps.filter(id => !state.layout.dock.includes(id)).map(id => byId.get(id)).filter(Boolean).map(app => tileMarkup(app)).join('');
   applyWidgets();
   drawClockRings();
@@ -515,9 +553,8 @@ function setupHomeEdit() {
     gallery.hidden = true;
     saveLayout();
   };
-  const draggableAt = node => node && node.closest('#home-grid .hi, #home-dock .hi, #home-widgets > [data-widget]');
-  const shown = () => [...grid.querySelectorAll('.hi'), ...dock.querySelectorAll('.hi'),
-    ...holder.querySelectorAll(':scope > [data-widget]:not([hidden])')];
+  const draggableAt = node => node && node.closest('#home-grid > .hi, #home-grid > [data-widget], #home-dock .hi');
+  const shown = () => [...grid.children, ...dock.querySelectorAll('.hi')].filter(el => !el.hidden);
 
   // Everything that changes place slides there, as on iPadOS. `translate` is
   // its own property, so it runs alongside the wiggle's rotation.
@@ -526,6 +563,7 @@ function setupHomeEdit() {
     const before = new Map(items.map(el => [el, el.getBoundingClientRect()]));
     mutate();
     for (const el of items) {
+      if (!before.has(el) || !el.isConnected) continue;
       const a = before.get(el), b = el.getBoundingClientRect();
       const dx = a.left - b.left, dy = a.top - b.top;
       if (Math.abs(dx) + Math.abs(dy) > 0.5) {
@@ -535,10 +573,10 @@ function setupHomeEdit() {
   };
 
   const saveOrder = () => {
-    const ids = parent => [...parent.querySelectorAll('.hi')].map(tile => tile.dataset.open);
-    state.layout.dock = ids(dock);
-    state.layout.apps = [...ids(grid), ...state.layout.dock];
-    state.layout.widgets = [...holder.querySelectorAll(':scope > [data-widget]:not([hidden])')].map(el => el.dataset.widget);
+    state.layout.dock = [...dock.querySelectorAll('.hi')].map(tile => tile.dataset.open);
+    const onBoard = [...grid.querySelectorAll(':scope > .hi')].map(tile => tile.dataset.open);
+    state.layout.apps = [...onBoard, ...state.layout.dock];
+    if (state.placed) state.layout.pos = Object.fromEntries(Object.entries(state.placed).map(([key, spot]) => [key, [spot.c, spot.r]]));
     saveLayout();
   };
 
@@ -549,46 +587,71 @@ function setupHomeEdit() {
     item.classList.add('is-dragging');
     const box = item.getBoundingClientRect();
     // Anchored by the centre, so an icon that changes size in the dock stays under the finger.
-    drag = { item, widget: item.matches('[data-widget]'), x: press.x, y: press.y, cx: box.left + box.width / 2, cy: box.top + box.height / 2 };
+    drag = {
+      item, widget: item.matches('[data-widget]'), x: press.x, y: press.y,
+      cx: box.left + box.width / 2, cy: box.top + box.height / 2,
+      // Where in the item it was picked up, so its top-left cell follows that point.
+      grabX: press.x - box.left, grabY: press.y - box.top,
+    };
     try { home.setPointerCapture(press.id); } catch (_) { /* synthetic event */ }
     moveDrag(event);
   }
 
-  // Where an element sits in the layout, ignoring transforms and the slide
-  // animations, so a moving widget is judged by its slot, not its motion.
-  const layoutRect = el => {
-    let left = 0, top = 0;
-    for (let node = el; node; node = node.offsetParent) { left += node.offsetLeft; top += node.offsetTop; }
-    return { left, top, width: el.offsetWidth, height: el.offsetHeight };
-  };
-
   function moveDrag(event) {
     const { item } = drag;
     const under = document.elementFromPoint(event.clientX, event.clientY);
-    if (drag.widget) {
-      // Widgets differ in size, so one only moves past another once the finger
-      // crosses that widget's middle; otherwise the two would keep swapping.
-      const target = under && under.closest('#home-widgets > [data-widget]');
-      if (target && target !== item) {
-        const siblings = [...holder.children];
-        const before = siblings.indexOf(item) < siblings.indexOf(target);
-        const box = layoutRect(target), mine = layoutRect(item);
-        const sameRow = Math.abs(box.top - mine.top) < 8;
-        const mid = sameRow ? box.left + box.width / 2 : box.top + box.height / 2;
-        const at = sameRow ? event.clientX : event.clientY;
-        if (before ? at > mid : at < mid) flip(() => holder.insertBefore(item, before ? target.nextSibling : target));
-      }
-    } else {
-      // Apps are all one size: entering another app's place takes it.
-      const target = under && under.closest('#home-grid .hi, #home-dock .hi');
-      const into = target ? target.parentElement : under && under.closest('#home-dock, #home-grid');
-      const dockFull = into === dock && item.parentElement !== dock && dock.querySelectorAll('.hi').length >= DOCK_MAX;
-      if (into && !dockFull && target !== item && (target || into !== item.parentElement)) {
+    const overDock = under && under.closest('#home-dock');
+    if (!drag.widget && overDock) {
+      // Into the dock, or along it.
+      const target = under.closest('#home-dock .hi');
+      const full = item.parentElement !== dock && dock.querySelectorAll('.hi').length >= DOCK_MAX;
+      if (!full && target !== item && (target || item.parentElement !== dock)) {
         flip(() => {
-          if (!target) { into.appendChild(item); return; }
-          const siblings = [...into.children];
-          const after = item.parentElement === into && siblings.indexOf(target) > siblings.indexOf(item);
-          into.insertBefore(item, after ? target.nextSibling : target);
+          if (state.placed) delete state.placed[boardKey(item)];
+          item.style.gridColumn = ''; item.style.gridRow = '';
+          if (!target) { dock.appendChild(item); return; }
+          const siblings = [...dock.children];
+          const after = item.parentElement === dock && siblings.indexOf(target) > siblings.indexOf(item);
+          dock.insertBefore(item, after ? target.nextSibling : target);
+        });
+      }
+    } else if (state.placed && under && under.closest('#home-grid, .home-layout, .home-stage')) {
+      // Anywhere on the board: the item's top-left cell follows the point it
+      // was picked up by; a free spot takes it, an app swaps with an app.
+      const key = boardKey(item);
+      const [w, h] = sizeOf(key);
+      const area = grid.getBoundingClientRect();
+      const c = Math.min(state.cols - w, Math.max(0, Math.round((event.clientX - drag.grabX - area.left) / CELL)));
+      const r = Math.max(0, Math.round((event.clientY - drag.grabY - area.top) / CELL));
+      const now = state.placed[key];
+      if (!now || now.c !== c || now.r !== r) {
+        if (fits(state.placed, c, r, w, h, state.cols, key)) {
+          flip(() => {
+            if (item.parentElement !== grid) grid.appendChild(item);
+            state.placed[key] = { c, r, w, h };
+            placeOnBoard(item, state.placed[key]);
+          });
+        } else if (!drag.widget && now) {
+          const other = Object.keys(state.placed).find(k => k !== key && !k.startsWith('w:') && state.placed[k].c === c && state.placed[k].r === r);
+          const otherEl = other && grid.querySelector(`:scope > .hi[data-open="${other}"]`);
+          if (otherEl) {
+            flip(() => {
+              state.placed[other] = { ...now };
+              state.placed[key] = { c, r, w, h };
+              placeOnBoard(otherEl, state.placed[other]);
+              placeOnBoard(item, state.placed[key]);
+            });
+          }
+        }
+      }
+    } else if (!state.placed && !drag.widget) {
+      // A phone's flowing grid: apps swap places in order.
+      const target = under && under.closest('#home-grid > .hi');
+      if (target && target !== item) {
+        flip(() => {
+          if (item.parentElement !== grid) grid.appendChild(item);
+          const siblings = [...grid.children];
+          grid.insertBefore(item, siblings.indexOf(target) > siblings.indexOf(item) ? target.nextSibling : target);
         });
       }
     }
@@ -614,6 +677,8 @@ function setupHomeEdit() {
         const fresh = document.createElement('template');
         fresh.innerHTML = tileMarkup(app, size).trim();
         const tile = fresh.content.firstElementChild;
+        tile.style.gridColumn = item.style.gridColumn;
+        tile.style.gridRow = item.style.gridRow;
         item.replaceWith(tile);
         item = tile;
       }
@@ -659,6 +724,7 @@ function setupHomeEdit() {
       event.preventDefault(); event.stopPropagation();
       flip(() => {
         state.layout.widgets = state.layout.widgets.filter(id => id !== remove.dataset.remove);
+        delete state.layout.pos[`w:${remove.dataset.remove}`];
         applyWidgets();
       });
       saveLayout();
@@ -682,7 +748,7 @@ function setupHomeEdit() {
     const add = event.target.closest('[data-add]');
     if (!add) return;
     flip(() => {
-      state.layout.widgets.unshift(add.dataset.add);
+      state.layout.widgets.push(add.dataset.add);
       applyWidgets();
     });
     syncHomeWidget();
@@ -1192,6 +1258,15 @@ function bindEvents() {
   });
   window.addEventListener('hashchange', route);
   window.addEventListener('resize', () => { syncNavFade(); syncHomeBar(); });
+  // The board is laid out for the width it has, including when the deck first
+  // appears after the lock screen or an app (it measures 0 while hidden).
+  if (typeof ResizeObserver === 'function' && dom.homeGrid && dom.homeGrid.parentElement) {
+    let lastWidth = -1;
+    new ResizeObserver(entries => {
+      const width = Math.round(entries[0].contentRect.width);
+      if (width !== lastWidth) { lastWidth = width; positionBoard(); }
+    }).observe(dom.homeGrid.parentElement);
+  }
   dom.nav?.addEventListener('scroll', syncNavFade, { passive: true });
   document.addEventListener('keydown', event => {
     const target = event.target;

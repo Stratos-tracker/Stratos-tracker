@@ -2909,10 +2909,10 @@ body.lk-dragging .home-indicator { transition: none; }
 
 /* ── edit mode: hold the wallpaper, as on iPadOS ─────────────────────── */
 @keyframes hm-jiggle { 0% { transform: rotate(-1.4deg); } 50% { transform: rotate(1.4deg); } 100% { transform: rotate(-1.4deg); } }
-body.home-editing #efb-home .hi, body.home-editing .home-widgets > [data-widget] { animation: hm-jiggle .26s ease-in-out infinite; }
-body.home-editing #efb-home .hi:nth-child(2n), body.home-editing .home-widgets > [data-widget]:nth-child(2n) { animation-delay: -.13s; }
+body.home-editing #efb-home .hi, body.home-editing #home-grid > [data-widget] { animation: hm-jiggle .26s ease-in-out infinite; }
+body.home-editing #efb-home .hi:nth-child(2n), body.home-editing #home-grid > [data-widget]:nth-child(2n) { animation-delay: -.13s; }
 body.home-editing #efb-home { touch-action: none; }
-body.home-editing #efb-home .hi, body.home-editing .home-widgets > [data-widget] { cursor: grab; }
+body.home-editing #efb-home .hi, body.home-editing #home-grid > [data-widget] { cursor: grab; }
 /* The lifted item rides above the rest and lets the pointer see what is under it. */
 body.home-editing #efb-home .is-dragging { animation: none; transition: none !important; z-index: 50; position: relative; pointer-events: none; cursor: grabbing; filter: drop-shadow(0 16px 24px rgba(0, 0, 0, .5)); }
 body.home-editing .home-bar { visibility: hidden; }
@@ -2944,8 +2944,33 @@ body.home-editing .wg-remove { display: block; }
 .wg-list button { background: #0a84ff; }
 .wg-list p { margin: 4px 2px; color: rgba(255, 255, 255, .6); font-size: 13px; }
 @media (prefers-reduced-motion: reduce) {
-  body.home-editing #efb-home .hi, body.home-editing .home-widgets > [data-widget] { animation: none; }
+  body.home-editing #efb-home .hi, body.home-editing #home-grid > [data-widget] { animation: none; }
 }
 
 /* A long press edits the deck instead of opening the browser's link menu. */
 #efb-home .hi, #efb-home [data-widget] { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+
+/* ── the home board: apps and widgets on one grid of cells, as on iPadOS ── */
+.home-layout { display: block; }
+.home-layout > .home-widgets { display: none; }
+#home-grid:not(.is-flow) {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 8), 116px);
+  grid-auto-rows: 116px;
+  gap: 0;
+  justify-content: center;
+  align-content: start;
+}
+#home-grid > .hi { align-self: center; justify-self: center; }
+#home-grid > [data-widget] { position: relative; margin: 9px; min-width: 0; min-height: 0; max-width: none; }
+#home-grid:not(.is-flow) > .hw-tz { aspect-ratio: auto; }
+#home-grid:not(.is-flow) > .home-widget, #home-grid:not(.is-flow) > .home-clockw { min-height: 0; }
+/* The flight widget's photo takes whatever height its block leaves. */
+#home-grid > .hw-flight { display: flex; flex-direction: column; }
+#home-grid > .hw-flight .hf-photo { flex: 1 1 auto; height: auto; min-height: 110px; }
+#home-grid > .hw-flight .hf-body { flex: none; gap: 10px; }
+/* A phone: everything flows in order, widgets across the width. */
+#home-grid.is-flow { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); grid-auto-rows: auto; gap: 18px 6px; }
+#home-grid.is-flow > [data-widget] { grid-column: 1 / -1; margin: 0; }
+#home-grid.is-flow > .hw-tz { grid-column: span 2; }
+#home-grid.is-flow > .hw-flight .hf-photo { flex: none; height: 176px; }
