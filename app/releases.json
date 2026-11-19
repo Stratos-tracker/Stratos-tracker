@@ -3,53 +3,48 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.4.9",
-    "releasedAt": "2026-11-18",
+    "version": "2.4.10",
+    "releasedAt": "2026-11-19",
     "severity": "normal",
-    "summary": "A lock screen and home bar for the EFB, the Flight Deck map inside Navigator, and a quieter phone map.",
+    "summary": "A new EFB home screen: a flight tracking widget with the aircraft's photo, departure and arrival clocks, and apps and widgets you can put anywhere.",
     "changelog": {
       "features": [
-        "The EFB opens on a lock screen over its own wallpaper, with the airline's logo behind it: the time, UTC and local clocks, your flight, the simulator connection and a calendar. Swipe up to open it.",
-        "A home bar on the EFB home screen: swipe it up to return to the Flight Deck.",
-        "Navigator now shows the Flight Deck map itself, with every layer and control."
+        "Flight tracking widget: the aircraft's photo by registration, callsign, route, scheduled and estimated times, progress, altitude, speed and phase.",
+        "Departure and arrival clock widgets with each airport's local time from your SimBrief plan.",
+        "Hold the home screen to edit it: drag apps and widgets anywhere, move apps in and out of the dock, and add or remove widgets."
       ],
       "improvements": [
-        "The lock screen follows your finger and settles with the same motion as an iPad."
+        "Re-import your SimBrief plan once so the airport clocks can show local time."
       ],
-      "fixes": [
-        "The Stratos wing on the EFB home screen no longer shows a faint square around it."
-      ],
+      "fixes": [],
       "performance": [],
-      "ui": [
-        "On a phone, the telemetry strip and the aircraft card open when you tap an aircraft instead of staying on screen."
-      ],
+      "ui": [],
       "compatibility": [],
       "other": []
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.9/Stratos-Setup.exe",
-        "sha256": "c837830fbfd8e1240cabd39313ae49a84a16b338fe14f769fc538c83f75a74a6",
-        "size": 119514188
-      },
-      "mac-arm64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.9/Stratos-2.4.9-mac-arm64.dmg",
-        "sha256": "f0594a4b9c8840607db061999659a37c85cad2349165f9824be805db7e617605",
-        "size": 137658418
-      },
-      "mac-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.9/Stratos-2.4.9-mac-x64.dmg",
-        "sha256": "64cf06faa4274333fc47201cd278791c0adaf4793b2536c0f3aafe99ff027b4a",
-        "size": 143117643
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.9/Stratos-2.4.9-linux-x64.AppImage",
-        "sha256": "60b8e867228a53ed914ce500837de9422b718f4de58af1a18fc746218ee6c0d9",
-        "size": 160742415
-      }
     }
   },
   "releases": [
+    {
+      "version": "2.4.10",
+      "releasedAt": "2026-11-19",
+      "severity": "normal",
+      "summary": "A new EFB home screen: a flight tracking widget with the aircraft's photo, departure and arrival clocks, and apps and widgets you can put anywhere.",
+      "changelog": {
+        "features": [
+          "Flight tracking widget: the aircraft's photo by registration, callsign, route, scheduled and estimated times, progress, altitude, speed and phase.",
+          "Departure and arrival clock widgets with each airport's local time from your SimBrief plan.",
+          "Hold the home screen to edit it: drag apps and widgets anywhere, move apps in and out of the dock, and add or remove widgets."
+        ],
+        "improvements": [
+          "Re-import your SimBrief plan once so the airport clocks can show local time."
+        ],
+        "fixes": [],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.4.9",
       "releasedAt": "2026-11-18",
@@ -1300,68 +1295,6 @@
           "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.39/Stratos-2.1.39-linux-x64.AppImage",
           "sha256": "15d405c294132f42e3579673ae57d11b67d4098ae7c3512f0c3f6ecc5ec6047c",
           "size": 146793428
-        }
-      }
-    },
-    {
-      "version": "2.1.38",
-      "releasedAt": "2026-11-07",
-      "severity": "normal",
-      "summary": "The Flight Deck map can now show live rain, wind and turbulence, a solar night side, a configurable own-aircraft symbol and a 3D recorded track, all moving smoothly with the map.",
-      "changelog": {
-        "features": [
-          "The Flight Deck map gains optional animated RainViewer radar, Open-Meteo wind streamlines and a smoothed turbulence layer, each switched on from Map settings.",
-          "The aircraft you are flying now has its own colour, size, halo and trail width, while traffic keeps its own styling.",
-          "A 3D recorded-track view shows the flight in perspective: left-drag turns it, right-drag tilts it, and the latest point carries an aircraft marker."
-        ],
-        "improvements": [
-          "The map's day/night layer is a solar-elevation mask with a smooth twilight band, rebuilt as the map moves instead of lagging behind a pan.",
-          "The route ahead starts at the aircraft while the flown path stays behind it, and the 3D view uses the same recorded track as the map.",
-          "Weather requests are cached and refreshed on a timer, so radar frames and model fields stay smooth without repeated calls on every frame.",
-          "Turbulence is drawn as an interpolated amber-to-red field instead of separate blobs, and wind is drawn as moving streamlines instead of arrows."
-        ],
-        "fixes": [
-          "Panning with the day/night layer on no longer leaves a diagonal night wedge, because the mask follows the current map view.",
-          "A route saved before procedure geometry was versioned now re-resolves its departure instead of keeping the old runway turn.",
-          "The 3D view no longer opens a browser context menu on right-drag or changes pitch when the pointer only pans.",
-          "Turning off the own trail or changing its width no longer affects traffic trails or traffic colours."
-        ],
-        "performance": [
-          "Radar, wind and turbulence are built from cached, coarse rasters that update only when the map view or refresh timer changes.",
-          "The day/night mask rebuilds in the same frame as a pan, keeping map movement at a steady frame rate."
-        ],
-        "ui": [
-          "Map settings now has an Own aircraft & trail card with a colour picker, size and trail-width sliders, halo and trail switches, and a reset action.",
-          "Map layers are grouped in the Map settings panel, with short notes on the weather sources and what they do not replace."
-        ],
-        "compatibility": [
-          "Stored routes from earlier builds are upgraded in place, so no saved flight plan needs to be re-created.",
-          "The weather layers need a network connection to RainViewer and Open-Meteo; the rest of the map works without them."
-        ],
-        "other": [
-          "Rain, wind and turbulence are planning aids, not PIREPs, SIGMETs or official weather."
-        ]
-      },
-      "downloads": {
-        "windows": {
-          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.38/Stratos-Setup.exe",
-          "sha256": "580342bf53bd255c5ab0c7e9a17f05c46eb9af165eb4b85f7ab7a188d1b03e5d",
-          "size": 109852716
-        },
-        "mac-arm64": {
-          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.38/Stratos-2.1.38-mac-arm64.dmg",
-          "sha256": "289442275de4ccd3e2aba45cd1b6144ac846df60fe74444de55b21b132fb3389",
-          "size": 125687494
-        },
-        "mac-x64": {
-          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.38/Stratos-2.1.38-mac-x64.dmg",
-          "sha256": "a0528eeda1efaa67bd3bfe0af55174a3a900a2f46da38eaaca54591a89b5ac3e",
-          "size": 131161455
-        },
-        "linux-x64": {
-          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.38/Stratos-2.1.38-linux-x64.AppImage",
-          "sha256": "1f5b177808da29bfba2eee9232f1585d2af982e5d1920c034860ca51b305dee2",
-          "size": 146768784
         }
       }
     }
