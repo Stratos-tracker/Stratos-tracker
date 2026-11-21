@@ -33,6 +33,7 @@ import {
 } from '../lib/charts.js';
 import { defaultBridgeBase, isHostedPage, siteApi } from '../bridge.js';
 import { ChartViewer } from '../pilot/charts.js';
+import { chartfoxConnected, connectChartfox, disconnectChartfox } from '../lib/chartfox.js';
 import {
   FREENAV_HOME, FREENAV_NOTICE, freenavForIcao, isFreenavIcao, loadFreenavIndex,
 } from '../lib/freenav.js';
@@ -222,6 +223,15 @@ export async function mount(root, ctx) {
     </div>`;
 
   const listEl = root.querySelector('#chart-list');
+  // Linking a ChartFox account: the sign-in leaves for ChartFox and comes back here.
+  listEl.addEventListener('click', event => {
+    if (event.target.closest('[data-cf-connect]')) {
+      connectChartfox(location.href).catch(error => { listEl.insertAdjacentHTML('afterbegin', `<div class="e-notice bad">${esc(error.message)}</div>`); });
+    } else if (event.target.closest('[data-cf-disconnect]')) {
+      disconnectChartfox();
+      renderList();
+    }
+  });
   const countEl = root.querySelector('#chart-count');
   const noticeEl = root.querySelector('#chart-notice');
   const headerEl = root.querySelector('#chart-header');
@@ -301,6 +311,9 @@ export async function mount(root, ctx) {
       listEl.innerHTML = `<div class="ch-hint">
         <b>ChartFox · ${esc(icao)}</b>
         <span>Each group opens its ${esc(icao)} page on ChartFox in a new tab. ChartFox needs a free VATSIM login.${esc(fallbackNote)}</span>
+        ${chartfoxConnected()
+          ? '<span class="cf-link">ChartFox account connected · <button type="button" class="e-btn small" data-cf-disconnect>Disconnect</button></span>'
+          : '<button type="button" class="e-btn small" data-cf-connect style="margin-top:8px;align-self:flex-start">Connect ChartFox</button>'}
       </div>${shown.length ? shown.map(row => `<a class="e-list-item" href="${esc(row.external)}" target="_blank" rel="noopener noreferrer" data-chartfox="${esc(row.category)}">
         <div class="li-main"><b>${esc(row.title)}</b><span>${esc(row.categoryLabel)} · opens on ChartFox</span></div>
         <span class="e-badge">ChartFox ↗</span>

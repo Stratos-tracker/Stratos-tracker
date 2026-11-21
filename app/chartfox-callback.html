@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>Connecting ChartFox · Stratos EFB</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #070a0f; color: #e6edf6; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 420px; padding: 28px; text-align: center; }
+  b { display: block; font-size: 18px; margin-bottom: 6px; }
+  a { color: #45c4f5; }
+</style>
+</head>
+<body>
+<main><b id="cf-title">Connecting ChartFox…</b><span id="cf-text">Finishing the sign-in.</span></main>
+<script type="module">
+  import { completeChartfoxSignIn } from './js/lib/chartfox.js';
+  const title = document.getElementById('cf-title');
+  const text = document.getElementById('cf-text');
+  try {
+    const back = await completeChartfoxSignIn();
+    // The code and state leave the address bar before anything else loads.
+    history.replaceState(null, '', location.pathname);
+    title.textContent = 'ChartFox connected';
+    text.textContent = 'Taking you back to Charts…';
+    location.replace(back);
+  } catch (error) {
+    history.replaceState(null, '', location.pathname);
+    title.textContent = 'ChartFox was not connected';
+    text.innerHTML = '';
+    text.append(String(error && error.message || error), ' ');
+    const link = Object.assign(document.createElement('a'), { href: 'efb.html#/charts', textContent: 'Back to Charts' });
+    text.append(link);
+  }
+</script>
+</body>
+</html>
