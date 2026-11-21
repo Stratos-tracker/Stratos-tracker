@@ -1,48 +1,29 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.4.10",
+  "latestVersion": "2.4.11",
   "minimumSupportedVersion": "",
   "mandatory": false,
-  "releaseDate": "2026-11-19",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.10/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.10/Stratos-Setup.exe",
-      "sha256": "31dd14c359ead12413207bb54cf920898bb78629fb6bea476f0538c1eaa54d78",
-      "size": 119540196
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.10/Stratos-2.4.10-mac-arm64.dmg",
-      "sha256": "06bac16da6b032434f36966a75f9533d9846883ea87804cc627b79e59c05312a",
-      "size": 137726891
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.10/Stratos-2.4.10-mac-x64.dmg",
-      "sha256": "a6efd4551d01fe9f9858a88e6be46e325ed6cf7ad01aa59fffac44e5f6e22c00",
-      "size": 143153390
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.10/Stratos-2.4.10-linux-x64.AppImage",
-      "sha256": "be29886d7c4d6b21c30ddd42de4545df3320d6bd343ee9d13ebee29265978da7",
-      "size": 160784345
-    }
-  },
-  "summary": "A new EFB home screen: a flight tracking widget with the aircraft's photo, departure and arrival clocks, and apps and widgets you can put anywhere.",
+  "releaseDate": "2026-11-21",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "Automatic aircraft photography: the EFB finds a photo of the exact aircraft you are flying, with clearly labelled stand-ins when it cannot.",
   "reason": "",
   "releaseNotes": [
-    "Flight tracking widget: the aircraft's photo by registration, callsign, route, scheduled and estimated times, progress, altitude, speed and phase.",
-    "Departure and arrival clock widgets with each airport's local time from your SimBrief plan.",
-    "Hold the home screen to edit it: drag apps and widgets anywhere, move apps in and out of the dock, and add or remove widgets.",
-    "Re-import your SimBrief plan once so the airport clocks can show local time."
+    "Automatic aircraft photos in the EFB flight widget, by registration from X-Plane or MSFS, with the photographer's credit and a link to Planespotters.",
+    "When the exact aircraft has no photo: the aircraft flying your flight today, the same airline and type, the same type, or an illustration, each clearly labelled.",
+    "Find image retries the search, and Set reg adds a backup registration.",
+    "MSFS now reports the aircraft type and airline; X-Plane follows a switch to another aircraft.",
+    "Photo lookups are cached, spaced out and retried, so they never slow the simulator."
   ],
   "notes": {
     "features": [
-      "Flight tracking widget: the aircraft's photo by registration, callsign, route, scheduled and estimated times, progress, altitude, speed and phase.",
-      "Departure and arrival clock widgets with each airport's local time from your SimBrief plan.",
-      "Hold the home screen to edit it: drag apps and widgets anywhere, move apps in and out of the dock, and add or remove widgets."
+      "Automatic aircraft photos in the EFB flight widget, by registration from X-Plane or MSFS, with the photographer's credit and a link to Planespotters.",
+      "When the exact aircraft has no photo: the aircraft flying your flight today, the same airline and type, the same type, or an illustration, each clearly labelled.",
+      "Find image retries the search, and Set reg adds a backup registration."
     ],
     "improvements": [
-      "Re-import your SimBrief plan once so the airport clocks can show local time."
+      "MSFS now reports the aircraft type and airline; X-Plane follows a switch to another aircraft.",
+      "Photo lookups are cached, spaced out and retried, so they never slow the simulator."
     ],
     "fixes": [],
     "performance": [],
