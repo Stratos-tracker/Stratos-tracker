@@ -2989,3 +2989,20 @@ body.home-editing .wg-remove { display: block; }
 .cf-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin: 0 0 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(69, 196, 245, .28); background: rgba(69, 196, 245, .08); font-size: 13px; }
 .cf-bar b { color: #45c4f5; }
 .cf-bar .cf-error { flex-basis: 100%; margin: 0; }
+
+/* ChartFox charts for a linked account, under the ChartFox bar in Charts. */
+#cf-panel:empty { display: none; }
+.cfp { display: flex; flex-direction: column; gap: 8px; margin: 0 0 12px; padding: 12px; border-radius: 12px; border: 1px solid rgba(69, 196, 245, .2); background: rgba(13, 23, 41, .6); }
+.cfp-search { display: flex; gap: 8px; }
+.cfp-search input { flex: 1; min-width: 0; }
+.cfp-results:empty { display: none; }
+.cfp-results { display: flex; flex-direction: column; gap: 4px; }
+.cfp-airport { width: 100%; text-align: left; cursor: pointer; }
+.cfp-head { display: flex; flex-direction: column; gap: 2px; padding: 4px 2px; }
+.cfp-head b { color: #45c4f5; font-size: 15px; }
+.cfp-head span { font-size: 12.5px; opacity: .75; }
+.cfp-group summary { cursor: pointer; padding: 8px 2px; font-weight: 600; font-size: 13px; letter-spacing: .02em; }
+.cfp-group summary em { font-style: normal; opacity: .55; margin-left: 6px; }
+.cfp-chart { display: flex; align-items: center; gap: 8px; }
+.cfp-chart .li-main { flex: 1; min-width: 0; }
+.cfp-note { padding: 2px; }

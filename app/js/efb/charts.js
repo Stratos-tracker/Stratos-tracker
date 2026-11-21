@@ -34,6 +34,7 @@ import {
 import { defaultBridgeBase, isHostedPage, siteApi } from '../bridge.js';
 import { ChartViewer } from '../pilot/charts.js';
 import { chartfoxConnected, connectChartfox, disconnectChartfox } from '../lib/chartfox.js';
+import { createChartfoxPanel } from './chartfoxcharts.js';
 import {
   FREENAV_HOME, FREENAV_NOTICE, freenavForIcao, isFreenavIcao, loadFreenavIndex,
 } from '../lib/freenav.js';
@@ -185,6 +186,7 @@ export async function mount(root, ctx) {
 
   root.innerHTML = `
     <div id="cf-bar" class="cf-bar"></div>
+    <div id="cf-panel"></div>
     <div class="ch-workspace">
       <aside class="ch-side" aria-label="Chart library">
         <div class="ch-side-top">
@@ -232,12 +234,20 @@ export async function mount(root, ctx) {
       : '<span><b>ChartFox</b> worldwide charts with your ChartFox account</span><button type="button" class="e-btn small primary" data-cf-connect>Connect ChartFox</button>';
   };
   drawCfBar();
+  // The linked account's ChartFox charts for the airport in view.
+  const cfPanel = createChartfoxPanel(root.querySelector('#cf-panel'), pick => {
+    icao = pick;
+    if (searchInput) searchInput.value = pick;
+    load();
+  });
+  cfPanel.show(icao);
   cfBar.addEventListener('click', event => {
     if (event.target.closest('[data-cf-connect]')) {
       connectChartfox(location.href).catch(error => { cfBar.insertAdjacentHTML('beforeend', `<div class="e-notice bad cf-error">${esc(error.message)}</div>`); });
     } else if (event.target.closest('[data-cf-disconnect]')) {
       disconnectChartfox();
       drawCfBar();
+      cfPanel.show('');
     }
   });
   const countEl = root.querySelector('#chart-count');
@@ -795,6 +805,7 @@ export async function mount(root, ctx) {
       noticeEl.innerHTML = '<div class="e-notice warn">Enter an airport ICAO code or pick one of the suggestions.</div>';
       return;
     }
+    cfPanel.show(icao);
     destroyViewer();
     selected = null;
     catalogue = null;
