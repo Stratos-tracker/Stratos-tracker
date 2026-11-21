@@ -24,9 +24,16 @@ export const CHARTFOX_SCOPES = [
 const TOKEN_KEY = 'stratos.chartfox.token';
 const PENDING_KEY = 'stratos.chartfox.pending';
 
-/** The callback page beside the EFB, on whichever host serves it. */
-export function chartfoxRedirectUri(base = (typeof location !== 'undefined' ? location.href : '')) {
-  return new URL('chartfox-callback.html', base).href;
+/* The one redirect URI Stratos uses. It must be registered on the ChartFox
+   client exactly as written here, or ChartFox refuses the sign-in. The route
+   (api/auth/chartfox/callback.js) passes the response to chartfox-callback.html. */
+export const CHARTFOX_REDIRECT_URI = 'https://www.stratos-tracker.com/api/auth/chartfox/callback';
+export const CHARTFOX_SIGN_IN_ORIGIN = new URL(CHARTFOX_REDIRECT_URI).origin;
+
+/** True where the sign-in can finish: the code comes back to this origin, and
+ *  the PKCE verifier and the tokens must live here too. */
+export function canSignInHere(origin = (typeof location !== 'undefined' ? location.origin : '')) {
+  return origin === CHARTFOX_SIGN_IN_ORIGIN;
 }
 
 function base64url(bytes) {
@@ -93,9 +100,12 @@ export function disconnectChartfox() { writeToken(null); }
 
 /** Send the user to ChartFox's consent page; `returnTo` is where to come back. */
 export async function connectChartfox(returnTo = (typeof location !== 'undefined' ? location.href : '')) {
+  if (!canSignInHere()) {
+    throw new Error(`ChartFox sign-in works on ${CHARTFOX_SIGN_IN_ORIGIN} only, where its callback is registered. Open the EFB there to connect.`);
+  }
   const verifier = randomToken(48);
   const state = randomToken(24);
-  const redirectUri = chartfoxRedirectUri();
+  const redirectUri = CHARTFOX_REDIRECT_URI;
   try {
     sessionStorage.setItem(PENDING_KEY, JSON.stringify({ verifier, state, redirectUri, returnTo }));
   } catch (_) {
