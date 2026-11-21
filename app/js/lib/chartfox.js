@@ -139,13 +139,20 @@ async function postToken(form, fetchImpl = fetch) {
 
 /** The callback page: check the state, exchange the code, keep the tokens.
  *  Returns where to send the user back to. */
-export async function completeChartfoxSignIn(search = location.search, fetchImpl = fetch) {
+export async function completeChartfoxSignIn(search = location.search, fetchImpl = fetch, hash = (typeof location !== 'undefined' ? location.hash : '')) {
+  // The answer normally arrives in the query; a fragment (#code=...) is read too.
   const params = new URLSearchParams(search);
+  const fragment = new URLSearchParams(String(hash || '').replace(/^#/, ''));
+  for (const [key, value] of fragment) if (!params.has(key)) params.set(key, value);
   let pending = null;
   try { pending = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); } catch (_) { pending = null; }
   try { localStorage.removeItem(PENDING_KEY); } catch (_) { /* nothing to clear */ }
   if (params.get('error')) throw new Error(params.get('error_description') || `ChartFox did not grant access (${params.get('error')}).`);
-  if (!params.get('code')) throw new Error('ChartFox came back without a sign-in code. Start again from Charts → Connect ChartFox.');
+  if (!params.get('code')) {
+    // Names only, never values, so the message is safe to share.
+    const seen = [...params.keys()];
+    throw new Error(`ChartFox came back without a sign-in code (received: ${seen.length ? seen.join(', ') : 'nothing'}). Start again from Charts → Connect ChartFox.`);
+  }
   if (!pending) throw new Error('Stratos has no record of starting this sign-in in this browser. Start it from Charts → Connect ChartFox on www.stratos-tracker.com.');
   if (!(Date.now() - Number(pending.at) < 15 * 60 * 1000)) throw new Error('This sign-in took longer than 15 minutes and expired. Start it again from Charts.');
   if (params.get('state') !== pending.state) throw new Error('The sign-in did not match the one Stratos started, so it was refused.');
