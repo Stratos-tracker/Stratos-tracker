@@ -2984,3 +2984,8 @@ body.home-editing .wg-remove { display: block; }
 .hf-photo img.is-silhouette { object-fit: contain; padding: 18px 24px; filter: brightness(0) invert(1); opacity: .85; }
 .hf-air-row { flex-wrap: wrap; }
 .hf-air-row .hf-air { flex: 1 1 auto; min-width: 0; }
+
+/* ChartFox account bar in Charts: always visible, above the chart list. */
+.cf-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin: 0 0 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(69, 196, 245, .28); background: rgba(69, 196, 245, .08); font-size: 13px; }
+.cf-bar b { color: #45c4f5; }
+.cf-bar .cf-error { flex-basis: 100%; margin: 0; }
