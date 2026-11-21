@@ -509,12 +509,11 @@ function fmtMinutesLeft(minutes) {
   return m >= 60 ? `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m` : `${m}m`;
 }
 
-/* The aircraft's photo. A simulator reports its livery's default tail (every
-   copy of an aircraft says the same thing), so the real airframe is detected
-   instead, in this order: the registration in the SimBrief plan, one written
-   in the aircraft's title, the real aircraft flying this callsign right now,
-   then another real aircraft of the same airline and type, and only last the
-   simulator's own tail. The first with a Planespotters photo is shown, with
+/* The aircraft's photo, from the first of these with one on Planespotters:
+   the registration in the SimBrief plan, one written in the aircraft's title,
+   the livery's own tail (real on most downloaded liveries, a placeholder on
+   default ones), the real aircraft flying this callsign right now, then
+   another real aircraft of the same airline and type. The first with a Planespotters photo is shown, with
    the credit and link it requires and a note when it is a similar aircraft. */
 function showAircraftPhoto(sources, key) {
   const img = document.getElementById('hf-img');
@@ -529,6 +528,9 @@ function showAircraftPhoto(sources, key) {
   async function* candidates() {
     if (sources.ofp) yield { registration: sources.ofp, note: '' };
     if (sources.title) yield { registration: sources.title, note: '' };
+    // A downloaded livery usually carries its real tail; a default one (C-GTLZ)
+    // has no photo, so the search moves on to the real-world aircraft.
+    if (sources.sim) yield { registration: sources.sim, note: '' };
     if (sources.callsign) {
       const url = callsignLookupUrl(sources.callsign);
       const live = url ? registrationFromLive(await json(url)) : null;
@@ -541,7 +543,6 @@ function showAircraftPhoto(sources, key) {
         yield { registration: found.registration, note: 'Similar aircraft' };
       }
     }
-    if (sources.sim) yield { registration: sources.sim, note: '' };
   }
 
   (async () => {
