@@ -19,7 +19,8 @@ import { displayVersion } from './lib/version.js';
 import { airlineText, applyAirline, resolveAirline } from './lib/airlines.js';
 import { airlineMark } from './data/airline-marks.js';
 import { HOME_LAYOUT_KEY, WIDGETS, readLayout, offsetLabel, airportTime, flightProgress, fits, placeAll, sizeOf } from './efb/homewidgets.js';
-import { normalizeRegistration, photoRequest, photoFromPayload } from './lib/aircraftphoto.js';
+import { normalizeRegistration, photoRequest, photoFromPayload, representativeQuery, representativeCandidates } from './lib/aircraftphoto.js';
+import { callsignLookupUrl, registrationFromLive, registrationFromTitle } from './lib/aircraftreg.js';
 import { distanceNm } from './lib/geo.js';
 
 /* The rail, the router and the page titles all read this one list. */
@@ -443,7 +444,13 @@ function syncFlightWidget(status) {
   const t = snapshot && snapshot.telemetry;
   const callsign = (parts && parts.callsign) || (t && t.callsign) || '';
   const type = (parts && parts.aircraft) || '';
-  const registration = normalizeRegistration((t && t.registration) || (ofp && ofp.aircraft && ofp.aircraft.reg) || '');
+  const sources = {
+    ofp: normalizeRegistration(ofp && ofp.aircraft && ofp.aircraft.reg),
+    title: normalizeRegistration(registrationFromTitle(t && t.aircraft)),
+    sim: normalizeRegistration(t && t.registration),
+    callsign, type,
+  };
+  const registration = state.photoFound || sources.ofp || sources.title || '';
   const airline = state.airline && state.airline.airline;
 
   set('hf-cs', callsign || 'No flight');
@@ -489,9 +496,11 @@ function syncFlightWidget(status) {
   const phase = t ? flightPhase(snapshot) : null;
   set('hf-phase', phase ? phase.label : (status && status.status === 'live' ? 'Live' : 'Offline'));
 
-  if (registration !== state.photoReg) {
-    state.photoReg = registration;
-    showAircraftPhoto(registration);
+  const key = [sources.ofp, sources.title, sources.sim, callsign, type].join('|');
+  if (key !== state.photoKey) {
+    state.photoKey = key;
+    state.photoFound = '';
+    showAircraftPhoto(sources, key);
   }
 }
 
@@ -500,31 +509,64 @@ function fmtMinutesLeft(minutes) {
   return m >= 60 ? `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m` : `${m}m`;
 }
 
-/* The airframe's photo by registration, from Planespotters through Stratos'
-   own /api/photo endpoint, always shown with the credit and link it requires. */
-function showAircraftPhoto(registration) {
+/* The aircraft's photo. A simulator reports its livery's default tail (every
+   copy of an aircraft says the same thing), so the real airframe is detected
+   instead, in this order: the registration in the SimBrief plan, one written
+   in the aircraft's title, the real aircraft flying this callsign right now,
+   then another real aircraft of the same airline and type, and only last the
+   simulator's own tail. The first with a Planespotters photo is shown, with
+   the credit and link it requires and a note when it is a similar aircraft. */
+function showAircraftPhoto(sources, key) {
   const img = document.getElementById('hf-img');
   const credit = document.getElementById('hf-cred');
   const none = document.getElementById('hf-nophoto');
   if (!img || !credit || !none) return;
+  const current = () => state.photoKey === key;
   const clear = text => { img.hidden = true; img.removeAttribute('src'); credit.hidden = true; none.hidden = false; none.textContent = text; };
-  if (!registration) { clear('No aircraft photo'); return; }
-  clear(`Looking for a photo of ${registration}…`);
-  fetch(photoRequest(registration), { headers: { Accept: 'application/json' } })
-    .then(response => (response.ok ? response.json() : null))
-    .then(payload => {
-      if (state.photoReg !== registration) return;
-      const photo = photoFromPayload(payload);
-      if (!photo) { clear(`No photo of ${registration} yet`); return; }
+  const json = url => fetch(url, { headers: { Accept: 'application/json' } }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+  const photoOf = registration => json(photoRequest(registration)).then(photoFromPayload);
+
+  async function* candidates() {
+    if (sources.ofp) yield { registration: sources.ofp, note: '' };
+    if (sources.title) yield { registration: sources.title, note: '' };
+    if (sources.callsign) {
+      const url = callsignLookupUrl(sources.callsign);
+      const live = url ? registrationFromLive(await json(url)) : null;
+      if (live) yield { registration: normalizeRegistration(live.registration), note: `Today's ${sources.callsign}` };
+    }
+    const query = representativeQuery({ callsign: sources.callsign, type: sources.type });
+    if (query) {
+      const payload = await json(query.url);
+      for (const found of representativeCandidates(payload && payload.ac, query).slice(0, 4)) {
+        yield { registration: found.registration, note: 'Similar aircraft' };
+      }
+    }
+    if (sources.sim) yield { registration: sources.sim, note: '' };
+  }
+
+  (async () => {
+    clear('Finding the aircraft…');
+    const tried = new Set();
+    for await (const pick of candidates()) {
+      if (!current()) return;
+      if (!pick.registration || tried.has(pick.registration)) continue;
+      tried.add(pick.registration);
+      const photo = await photoOf(pick.registration);
+      if (!current()) return;
+      if (!photo) continue;
+      state.photoFound = pick.registration;
       img.src = photo.src;
-      img.alt = `${registration}, photographed by ${photo.photographer || 'a Planespotters contributor'}`;
+      img.alt = `${pick.registration}, photographed by ${photo.photographer || 'a Planespotters contributor'}`;
       img.hidden = false;
       none.hidden = true;
       credit.href = photo.link;
-      credit.textContent = `${registration} · © ${photo.photographer || 'Planespotters contributor'} · planespotters.net`;
+      credit.textContent = `${pick.note ? `${pick.note} · ` : ''}${pick.registration} · © ${photo.photographer || 'Planespotters contributor'} · planespotters.net`;
       credit.hidden = false;
-    })
-    .catch(() => { if (state.photoReg === registration) clear(`No photo of ${registration} available`); });
+      syncFlightWidget(state.live);
+      return;
+    }
+    if (current()) clear(tried.size ? 'No photo of this aircraft yet' : 'No aircraft photo');
+  })();
 }
 
 /* ── edit mode: hold the wallpaper ─────────────────────────────────── */
