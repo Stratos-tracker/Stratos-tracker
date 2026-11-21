@@ -107,7 +107,9 @@ export async function connectChartfox(returnTo = (typeof location !== 'undefined
   const state = randomToken(24);
   const redirectUri = CHARTFOX_REDIRECT_URI;
   try {
-    sessionStorage.setItem(PENDING_KEY, JSON.stringify({ verifier, state, redirectUri, returnTo }));
+    // localStorage, not sessionStorage: ChartFox's VATSIM login may come back in
+    // another tab or window, and the record must still be there. It expires.
+    localStorage.setItem(PENDING_KEY, JSON.stringify({ verifier, state, redirectUri, returnTo, at: Date.now() }));
   } catch (_) {
     throw new Error('This browser blocks the storage the ChartFox sign-in needs.');
   }
@@ -140,10 +142,12 @@ async function postToken(form, fetchImpl = fetch) {
 export async function completeChartfoxSignIn(search = location.search, fetchImpl = fetch) {
   const params = new URLSearchParams(search);
   let pending = null;
-  try { pending = JSON.parse(sessionStorage.getItem(PENDING_KEY) || 'null'); } catch (_) { pending = null; }
-  try { sessionStorage.removeItem(PENDING_KEY); } catch (_) { /* nothing to clear */ }
-  if (params.get('error')) throw new Error(params.get('error_description') || 'ChartFox access was not granted.');
-  if (!pending || !params.get('code')) throw new Error('This sign-in was not started from Stratos, or it expired. Start it again from Charts.');
+  try { pending = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); } catch (_) { pending = null; }
+  try { localStorage.removeItem(PENDING_KEY); } catch (_) { /* nothing to clear */ }
+  if (params.get('error')) throw new Error(params.get('error_description') || `ChartFox did not grant access (${params.get('error')}).`);
+  if (!params.get('code')) throw new Error('ChartFox came back without a sign-in code. Start again from Charts → Connect ChartFox.');
+  if (!pending) throw new Error('Stratos has no record of starting this sign-in in this browser. Start it from Charts → Connect ChartFox on www.stratos-tracker.com.');
+  if (!(Date.now() - Number(pending.at) < 15 * 60 * 1000)) throw new Error('This sign-in took longer than 15 minutes and expired. Start it again from Charts.');
   if (params.get('state') !== pending.state) throw new Error('The sign-in did not match the one Stratos started, so it was refused.');
   const payload = await postToken({
     grant_type: 'authorization_code',
