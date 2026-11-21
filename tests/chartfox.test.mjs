@@ -30,11 +30,13 @@ test('one fixed redirect URI, and sign-in only where it comes back', async () =>
   assert.equal(canSignInHere('https://www.stratos-tracker.com'), true);
   assert.equal(canSignInHere('https://stratos-tracker.com'), false, 'the bare domain is a different origin');
   assert.equal(canSignInHere('http://127.0.0.1:8765'), false);
-  const { default: handler } = await import('../api/auth/chartfox/callback.js');
-  const res = { headers: {}, setHeader(k, v) { this.headers[k] = v; }, end() { this.ended = true; } };
-  handler({ method: 'GET', url: '/api/auth/chartfox/callback?code=abc&state=xyz&evil=1' }, res);
-  assert.equal(res.statusCode, 302);
-  assert.equal(res.headers.Location, '/app/chartfox-callback.html?code=abc&state=xyz', 'only the OAuth answer is passed on');
+  // A redirect, not a function: the Hobby plan allows 12 functions and the site uses them all.
+  const fs = await import('node:fs');
+  const vercel = JSON.parse(fs.readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'));
+  const rule = vercel.redirects.find(r => r.source === '/api/auth/chartfox/callback');
+  assert.equal(rule && rule.destination, '/app/chartfox-callback.html', 'the code goes to the EFB page (Vercel keeps the query)');
+  assert.equal(rule.permanent, false);
+  assert.equal(fs.existsSync(new URL('../api/auth/chartfox/callback.js', import.meta.url)), false, 'no 13th function');
 });
 
 test('a token response keeps both tokens and when access ends', () => {

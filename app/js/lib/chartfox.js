@@ -25,8 +25,8 @@ const TOKEN_KEY = 'stratos.chartfox.token';
 const PENDING_KEY = 'stratos.chartfox.pending';
 
 /* The one redirect URI Stratos uses. It must be registered on the ChartFox
-   client exactly as written here, or ChartFox refuses the sign-in. The route
-   (api/auth/chartfox/callback.js) passes the response to chartfox-callback.html. */
+   client exactly as written here, or ChartFox refuses the sign-in. vercel.json
+   redirects it, query and all, to app/chartfox-callback.html. */
 export const CHARTFOX_REDIRECT_URI = 'https://www.stratos-tracker.com/api/auth/chartfox/callback';
 export const CHARTFOX_SIGN_IN_ORIGIN = new URL(CHARTFOX_REDIRECT_URI).origin;
 

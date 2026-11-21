@@ -5,6 +5,11 @@
   },
   "redirects": [
     {
+      "source": "/api/auth/chartfox/callback",
+      "destination": "/app/chartfox-callback.html",
+      "permanent": false
+    },
+    {
       "source": "/:path*",
       "has": [{ "type": "host", "value": "(.*)\\.vercel\\.app" }],
       "destination": "https://www.stratos-tracker.com/:path*",
