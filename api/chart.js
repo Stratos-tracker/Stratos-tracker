@@ -12,6 +12,8 @@
 //   - AIP Austria: CC BY 4.0, attribution shown beside the chart.
 //   - AIP France: Licence Ouverte, attribution shown beside the chart.
 //   - AIP UAE: CC BY 4.0 under the GCAA open data policy, attribution shown.
+//   - ChartFox (/api/chart?source=chartfox&id=<uuid>): the document ChartFox
+//     itself names for that chart, read with the user's own ChartFox token.
 // No other URL, header or credential is forwarded.
 
 import { EAIP_SOURCES, franceChartUrl, francePdfUrl, isEaipPdfName, uaeChartUrl } from '../app/js/lib/eaip.js';
@@ -101,8 +103,31 @@ export function documentUrl(query) {
   };
 }
 
+const CHARTFOX_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** A ChartFox chart's own document, read with the user's own ChartFox token.
+ *  The token is forwarded to api.chartfox.org only and never stored; the
+ *  document address is the one ChartFox returns for that chart, so this can
+ *  never fetch a URL the caller chose. Null when ChartFox gives no usable file. */
+export async function chartfoxDocument(id, authorization, fetchImpl = fetch) {
+  if (!CHARTFOX_ID.test(String(id || '')) || !/^Bearer [\w.~+/=-]+$/.test(String(authorization || ''))) return null;
+  const response = await fetchImpl(`https://api.chartfox.org/v2/charts/${id}`, {
+    headers: { Accept: 'application/json', Authorization: authorization },
+  });
+  if (!response.ok) return null;
+  const chart = await response.json().catch(() => null);
+  const url = chart && (chart.url || chart.source_url);
+  if (!url || chart.requires_preauth || !/^https:\/\//.test(url)) return null;
+  const credit = String((chart.source && (chart.source.copyright_statement_short || chart.source.display_name)) || 'ChartFox')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)));
+  return { url, credit: `${credit} via ChartFox`, private: true };
+}
+
 export default async function handler(req, res) {
-  const target = documentUrl(req.query || {});
+  const query = req.query || {};
+  const target = String(query.source || '').toLowerCase() === 'chartfox'
+    ? await chartfoxDocument(query.id, req.headers && req.headers.authorization).catch(() => null)
+    : documentUrl(query);
   if (!target) {
     fail(res, 400, 'bad-request', 'Invalid chart request.');
     return;
@@ -138,7 +163,8 @@ export default async function handler(req, res) {
     // rendered, not only in the page that requested it.
     res.setHeader('X-Chart-Attribution', headerText(target.credit));
     // The cycle is part of the URL, so a document never changes in place.
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    // A ChartFox document was read with one user's sign-in: no shared cache.
+    res.setHeader('Cache-Control', target.private ? 'private, no-store' : 'public, max-age=31536000, immutable');
     res.status(200).send(buffer);
   } catch (error) {
     fail(res, 502, 'upstream',

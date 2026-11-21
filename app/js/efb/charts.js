@@ -33,7 +33,7 @@ import {
 } from '../lib/charts.js';
 import { defaultBridgeBase, isHostedPage, siteApi } from '../bridge.js';
 import { ChartViewer } from '../pilot/charts.js';
-import { chartfoxConnected, connectChartfox, disconnectChartfox } from '../lib/chartfox.js';
+import { chartfoxConnected, chartfoxToken, connectChartfox, disconnectChartfox } from '../lib/chartfox.js';
 import { createChartfoxPanel } from './chartfoxcharts.js';
 import {
   FREENAV_HOME, FREENAV_NOTICE, freenavForIcao, isFreenavIcao, loadFreenavIndex,
@@ -130,6 +130,8 @@ function documentUrls(chart) {
   // Each provider keeps its own proxy parameters; the page never builds a
   // document URL from a name the provider did not publish.
   let query;
+  // ChartFox needs the user's token, which only the site's proxy forwards.
+  if (chart.source === 'chartfox') return [siteApi(`/api/chart?source=chartfox&id=${encodeURIComponent(chart.pdf)}`)];
   if (chart.source === 'austrocontrol-eaip') {
     query = `source=austrocontrol&icao=${encodeURIComponent(chart.icao || '')}&cycle=${encodeURIComponent(chart.cycle || '')}&pdf=${encodeURIComponent(chart.pdf)}`;
   } else if (chart.source === 'sia-france') {
@@ -239,7 +241,7 @@ export async function mount(root, ctx) {
     icao = pick;
     if (searchInput) searchInput.value = pick;
     load();
-  });
+  }, chart => openChart(chart));
   cfPanel.show(icao);
   cfBar.addEventListener('click', event => {
     if (event.target.closest('[data-cf-connect]')) {
@@ -688,11 +690,13 @@ export async function mount(root, ctx) {
       let fromCache = Boolean(bytes && isPdfBytes(bytes));
       if (!fromCache) {
         let lastError = 'The document source did not answer.';
+        const token = selected.source === 'chartfox' ? await chartfoxToken() : null;
+        if (selected.source === 'chartfox' && !token) throw new Error('Connect your ChartFox account to open its charts.');
         for (const candidate of documentUrls(selected)) {
           try {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), 25000);
-            const response = await fetch(candidate, { cache: 'no-store', signal: controller.signal });
+            const response = await fetch(candidate, { cache: 'no-store', signal: controller.signal, headers: token ? { Authorization: `Bearer ${token}` } : undefined });
             clearTimeout(timer);
             if (!response.ok) { lastError = `The document source answered ${response.status}.`; continue; }
             const buffer = await response.arrayBuffer();

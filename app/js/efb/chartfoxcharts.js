@@ -61,9 +61,19 @@ async function cachedGet(path) {
   return body;
 }
 
-/** Fill `panel` for `icao`; `onPick(icao)` loads another airport in Charts. */
-export function createChartfoxPanel(panel, onPick) {
+/** A ChartFox chart as a Charts record, opened in the Stratos viewer via the proxy. */
+export function chartRecord(chart, icao) {
+  return {
+    source: 'chartfox', sourceName: 'ChartFox', icao: String(chart.airport_icao || icao || '').toUpperCase(),
+    pdf: chart.id, code: chart.code || '', cycle: String(chart.updated_at || '').slice(0, 10) || 'chartfox',
+    title: chart.name || 'Chart', url: viewerUrl(chart.view_url) || null, attribution: 'Charts via ChartFox',
+  };
+}
+
+/** Fill `panel` for `icao`; `onPick(icao)` loads another airport, `onOpen(record)` shows a chart. */
+export function createChartfoxPanel(panel, onPick, onOpen = () => {}) {
   let current = '';
+  let shown = new Map();
   let filter = '';
 
   const shell = inner => `<div class="cfp">${inner}</div>`;
@@ -103,6 +113,7 @@ export function createChartfoxPanel(panel, onPick) {
       panel.innerHTML = shell(`${searchBox}${head}<div class="ch-hint"><b>No ChartFox charts for ${esc(current)}</b><span>ChartFox lists this airport but publishes no charts for it.</span></div>`);
       return;
     }
+    shown = new Map(sections.flatMap(s => s.charts).map(chart => [String(chart.id), chart]));
     const match = chart => !filter || `${chart.name} ${chart.code}`.toLowerCase().includes(filter);
     const body = sections.map(section => {
       const rows = section.charts.filter(match);
@@ -113,14 +124,15 @@ export function createChartfoxPanel(panel, onPick) {
         return `<div class="e-list-item cfp-chart">
           <div class="li-main"><b>${esc(chart.name || 'Chart')}</b><span>${esc([chart.code, ...meta].filter(Boolean).join(' · '))}</span></div>
           ${chart.has_georeferences ? '<span class="e-badge">Georeferenced</span>' : ''}
-          ${url ? `<a class="e-btn small" href="${esc(url)}" target="_blank" rel="noopener noreferrer">Open ↗</a>` : ''}
+          <button class="e-btn small primary" type="button" data-cfp-open="${esc(String(chart.id))}">View</button>
+          ${url ? `<a class="e-btn small ghost" href="${esc(url)}" target="_blank" rel="noopener noreferrer" title="Open in ChartFox">↗</a>` : ''}
         </div>`;
       }).join('')}</details>`;
     }).join('');
     panel.innerHTML = shell(`${searchBox}${head}
       <input class="e-input small cfp-filter" data-cfp-filter value="${esc(filter)}" placeholder="Filter ${total} ChartFox charts" aria-label="Filter ChartFox charts">
       ${body || '<div class="ch-hint"><b>No matching charts</b><span>Clear the filter to see them all.</span></div>'}
-      <div class="e-small e-faint cfp-note">Charts from ChartFox open in ChartFox's viewer.</div>`);
+      <div class="e-small e-faint cfp-note">ChartFox charts open in the viewer here; ↗ opens ChartFox's own page.</div>`);
   }
 
   async function search(query, page = 1) {
@@ -150,6 +162,8 @@ export function createChartfoxPanel(panel, onPick) {
     if (q) search(q);
   });
   panel.addEventListener('click', event => {
+    const open = event.target.closest('[data-cfp-open]');
+    if (open && shown.has(open.dataset.cfpOpen)) { onOpen(chartRecord(shown.get(open.dataset.cfpOpen), current)); return; }
     const pick = event.target.closest('[data-cfp-pick]');
     if (pick) { onPick(pick.dataset.cfpPick); return; }
     const more = event.target.closest('[data-cfp-more]');
