@@ -2979,3 +2979,8 @@ body.home-editing .wg-remove { display: block; }
 .hf-air-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .hf-setreg { flex: none; border: 0; border-radius: 99px; padding: 5px 10px; cursor: pointer; font: 600 11px/1 system-ui, sans-serif; color: #fff; background: rgba(255, 255, 255, .14); }
 .hf-setreg:hover { background: rgba(255, 255, 255, .22); }
+
+/* An illustration is shown whole and in white, so it never reads as a photograph. */
+.hf-photo img.is-silhouette { object-fit: contain; padding: 18px 24px; filter: brightness(0) invert(1); opacity: .85; }
+.hf-air-row { flex-wrap: wrap; }
+.hf-air-row .hf-air { flex: 1 1 auto; min-width: 0; }

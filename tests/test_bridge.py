@@ -994,6 +994,40 @@ class SimConnectSourceTests(unittest.TestCase):
         self.assertEqual(libs, [r"D:\custom\SimConnect.dll", "bundled.dll", p3d])
 
 
+class AircraftIdentityTests(unittest.TestCase):
+    def test_msfs_atc_model_gives_the_icao_type(self):
+        self.assertEqual(bridge.atc_model_type("TT:ATCCOM.AC_MODEL_A320.0.text"), "A320")
+        self.assertEqual(bridge.atc_model_type(b"A20N\x00"), "A20N")
+        self.assertEqual(bridge.atc_model_type("Airbus A320neo"), "", "a description is not a type code")
+        self.assertEqual(bridge.atc_model_type(None), "")
+        self.assertEqual(bridge.sim_text(b"C-FABC\x00 "), "C-FABC")
+
+    def _xplane(self, tail, icao, desc):
+        bridge._XPLANE_CHARS["tail"] = {i: ord(c) for i, c in enumerate(tail)}
+        bridge._XPLANE_CHARS["icao"] = {i: ord(c) for i, c in enumerate(icao)}
+        bridge._XPLANE_CHARS["desc"] = {i: ord(c) for i, c in enumerate(desc)}
+        bridge.apply_xplane_identity()
+
+    def test_xplane_follows_a_switch_to_another_aircraft(self):
+        saved_identity = bridge.load_aircraft_identity
+        saved_state = dict(bridge.state)
+        try:
+            bridge.load_aircraft_identity = lambda: {}
+            self._xplane("N123AB", "B738", "Boeing 737-800")
+            self.assertEqual((bridge.state["registration"], bridge.state["aircraftType"]), ("N123AB", "B738"))
+            self._xplane("D-AIZA", "A320", "Airbus A320")
+            self.assertEqual((bridge.state["registration"], bridge.state["aircraftType"]), ("D-AIZA", "A320"),
+                             "the new aircraft replaces the previous one")
+            bridge.load_aircraft_identity = lambda: {"registration": "HB-JHK"}
+            bridge.state["registration"] = "HB-JHK"
+            self._xplane("G-EUPT", "A319", "Airbus A319")
+            self.assertEqual(bridge.state["registration"], "HB-JHK", "a registration set by hand still wins")
+        finally:
+            bridge.load_aircraft_identity = saved_identity
+            bridge.state.clear()
+            bridge.state.update(saved_state)
+
+
 class IlsNavDataTests(unittest.TestCase):
     # Real X-Plane 12 earth_nav.dat (1200) lines, cycle 2610.
     LINES = [

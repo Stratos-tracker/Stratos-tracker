@@ -18,8 +18,9 @@
 
 import {
   normalizeRegistration, photoRequest, photoHexRequest, photoOutcome,
+  representativeQuery, representativeCandidates,
 } from './aircraftphoto.js';
-import { normalizeHex } from './aircraftreg.js';
+import { normalizeHex, callsignLookupUrl, registrationFromLive } from './aircraftreg.js';
 
 const SPOTTER_TTL = 7 * 24 * 60 * 60 * 1000;
 const MISS_TTL = 24 * 60 * 60 * 1000;
@@ -119,6 +120,8 @@ export function forgetSpotterPhoto(storage, key) {
 
 let chain = Promise.resolve();
 let lastLookupAt = 0;
+// One request per airframe at a time: a second caller shares the first's answer.
+const inFlight = new Map();
 
 /** Find the spotter photograph for an airframe.
  *
@@ -140,7 +143,8 @@ export function lookupPhoto({ registration = '', hex = '' } = {}, {
   }
   const url = photoRequest(registration) || photoHexRequest(hex);
   if (!url) return Promise.resolve({ state: 'none', reason: 'no-airframe' });
-  const ask = async () => {
+  if (inFlight.has(key)) return inFlight.get(key);
+  const once = async () => {
     const wait = Math.max(0, gap - (now() - lastLookupAt));
     if (wait) await new Promise(done => setTimeout(done, wait));
     lastLookupAt = now();
@@ -163,12 +167,149 @@ export function lookupPhoto({ registration = '', hex = '' } = {}, {
     }
     const outcome = status ? photoOutcome(status, payload) : { state: 'unavailable' };
     // A missing route (404) is not the airframe's answer; do not cache it as one.
-    if (status && status !== 404) writeSpotterCache(store, key, outcome, now());
-    return outcome;
+    // Nor is a server error: it is retried once and never remembered as "no photo".
+    if (status && status !== 404 && status < 500) writeSpotterCache(store, key, outcome, now());
+    return { outcome, temporary: !status || status >= 500 };
+  };
+  const ask = async () => {
+    const first = await once();
+    if (!first.temporary) return first.outcome;
+    await new Promise(done => setTimeout(done, 1500));
+    return (await once()).outcome;
   };
   const next = chain.then(ask, ask);
   chain = next.catch(() => {});
+  inFlight.set(key, next);
+  next.finally(() => inFlight.delete(key));
   return next;
+}
+
+/* ── Automatic aircraft photography ──────────────────────────────── */
+
+const RESOLVED_PREFIX = 'stratos.photo.resolved.';
+const LIVE_TTL = 10 * 60 * 1000;
+const liveAnswers = new Map();
+
+/* adsb.lol sends no CORS headers, so a page asks through Stratos' /api/traffic
+   proxy; the desktop app, which may call it directly, falls back. Identical
+   lookups share one request and are reused for ten minutes. */
+function liveJson(url, fetchImpl) {
+  const hit = liveAnswers.get(url);
+  if (hit && Date.now() - hit.at < LIVE_TTL) return hit.promise;
+  const fetcher = fetchImpl || (typeof fetch !== 'undefined' ? fetch : null);
+  const get = async target => {
+    if (!fetcher) return null;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 9000);
+    try {
+      const response = await fetcher(target, { signal: controller.signal, headers: { Accept: 'application/json' } });
+      return response.ok ? await response.json() : null;
+    } catch (_) {
+      return null;
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+  const promise = get(`/api/traffic?url=${encodeURIComponent(url)}`).then(found => found || get(url));
+  liveAnswers.set(url, { at: Date.now(), promise });
+  return promise;
+}
+
+/** Registrations of live aircraft of one ICAO type (any operator), for the
+ *  "same type" fallback. */
+export function sameTypeRegistrations(payload, type) {
+  const list = payload && Array.isArray(payload.ac) ? payload.ac : [];
+  const code = String(type || '').toUpperCase();
+  const found = [];
+  for (const record of list) {
+    if (String(record && record.t || '').toUpperCase() !== code) continue;
+    const registration = normalizeRegistration(record.r || record.reg);
+    if (registration && !found.includes(registration)) found.push(registration);
+  }
+  return found;
+}
+
+/** The kinds of picture, from the user's own airframe to an illustration. */
+export const PHOTO_KINDS = {
+  exact: 'This aircraft',
+  flight: 'Aircraft flying this flight today',
+  'airline-type': 'Same airline and type',
+  type: 'Same aircraft type',
+  silhouette: 'Illustration',
+};
+
+/** The picture for the aircraft being flown. `steps` is the search order (the
+ *  flight widget's photoSteps); `context` carries the callsign and ICAO type
+ *  for the live lookups, and `silhouette` the illustration used when nothing
+ *  is found. Every answer says which kind it is, so a stand-in is never shown
+ *  as the user's aircraft. The resolved answer is remembered for a week (a
+ *  day for an illustration); `force` (the Find Image button) asks again. */
+export async function findAircraftPhoto(steps, context = {}, {
+  force = false, storage = null, fetchImpl = null, live = null, now = () => Date.now(),
+} = {}) {
+  const store = cacheStorage(storage);
+  const { callsign = '', type = '', silhouette = '', identity = '' } = context;
+  const key = RESOLVED_PREFIX + identity;
+  const ask = live || (url => liveJson(url, fetchImpl));
+  const photoOf = registration => lookupPhoto({ registration }, { force, storage: store, fetchImpl, now });
+  const illustration = { kind: 'silhouette', label: PHOTO_KINDS.silhouette, image: silhouette, registration: '' };
+
+  if (!force && identity && store) {
+    try {
+      const saved = JSON.parse(store.getItem(key) || 'null');
+      const ttl = saved && saved.kind === 'silhouette' ? MISS_TTL : SPOTTER_TTL;
+      if (saved && now() - saved.at < ttl) {
+        if (saved.kind === 'silhouette') return { ...illustration, cached: true };
+        const outcome = await photoOf(saved.registration);
+        if (outcome.state === 'ok') return { ...saved, photo: outcome.photo, cached: true };
+      }
+    } catch (_) { /* a damaged entry is simply looked up again */ }
+  }
+
+  const remember = answer => {
+    if (!identity || !store) return answer;
+    try {
+      store.setItem(key, JSON.stringify({ at: now(), kind: answer.kind, label: answer.label, registration: answer.registration || '' }));
+    } catch (_) { /* storage full: the next visit looks it up again */ }
+    return answer;
+  };
+
+  const tried = new Set();
+  let reachable = false;
+  const attempt = async (registration, kind) => {
+    if (!registration || tried.has(registration)) return null;
+    tried.add(registration);
+    const outcome = await photoOf(registration);
+    if (outcome.state !== 'unavailable') reachable = true;
+    return outcome.state === 'ok' ? { kind, label: PHOTO_KINDS[kind], registration, photo: outcome.photo } : null;
+  };
+
+  for (const step of steps || []) {
+    let found = null;
+    if (step.reg) found = await attempt(step.reg, 'exact');
+    else if (step.find === 'callsign' && callsign) {
+      const url = callsignLookupUrl(callsign);
+      const flying = url ? registrationFromLive(await ask(url)) : null;
+      if (flying) found = await attempt(normalizeRegistration(flying.registration), 'flight');
+    } else if (step.find === 'similar') {
+      const query = representativeQuery({ callsign, type });
+      const payload = query ? await ask(query.url) : null;
+      for (const pick of representativeCandidates(payload && payload.ac, query).slice(0, 3)) {
+        found = await attempt(pick.registration, 'airline-type');
+        if (found) break;
+      }
+    } else if (step.find === 'type' && /^[A-Z][A-Z0-9]{1,3}$/.test(String(type).toUpperCase())) {
+      const payload = await ask(`https://api.adsb.lol/v2/type/${encodeURIComponent(String(type).toUpperCase())}`);
+      for (const registration of sameTypeRegistrations(payload, type).slice(0, 3)) {
+        found = await attempt(registration, 'type');
+        if (found) break;
+      }
+    }
+    if (found) return remember(found);
+  }
+  // Offline or the service down: show the illustration, but do not remember it,
+  // so the next visit looks again.
+  return reachable ? remember(illustration) : illustration;
 }
 
 /* ── Gallery: the pilot's own photographs ─────────────────────────── */

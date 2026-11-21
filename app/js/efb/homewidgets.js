@@ -120,5 +120,6 @@ export function photoSteps({ title = '', sim = '', ofp = '', own = '' } = {}) {
     { find: 'callsign' },
     own && { reg: own },
     { find: 'similar' },
+    { find: 'type' },
   ].filter(Boolean);
 }

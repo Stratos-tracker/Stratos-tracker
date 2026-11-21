@@ -1229,11 +1229,13 @@ def apply_xplane_identity():
                                   error="", at=int(time.time() * 1000))
     identity = load_aircraft_identity()
     with state_lock:
-        if desc and not identity.get("aircraft") and not state.get("aircraft"):
+        # The sim's current aircraft replaces the previous one's identity, so
+        # switching aircraft is followed; an identity set by hand still wins.
+        if desc and not identity.get("aircraft"):
             state["aircraft"] = desc
-        if icao and not state.get("aircraftType"):
+        if icao:
             state["aircraftType"] = icao
-        if tail and not identity.get("registration") and not state.get("registration"):
+        if not identity.get("registration"):
             state["registration"] = tail
 
 
@@ -1658,6 +1660,23 @@ def tile(z, x, y):
 
 
 # ── MSFS, Prepar3D and FSX (SimConnect) ─────────────────────────────
+def sim_text(value):
+    """A SimConnect string as text: the library may hand back bytes."""
+    if isinstance(value, (bytes, bytearray)):
+        value = value.decode("utf-8", "replace")
+    return str(value or "").strip("\x00 ").strip()
+
+
+def atc_model_type(value):
+    """The ICAO type from SimConnect's ATC MODEL: a plain code (A20N) or the
+    localisation key a default aircraft publishes (TT:ATCCOM.AC_MODEL_A320.0.text)."""
+    text = sim_text(value).upper()
+    match = re.search(r"AC_MODEL[_ ]?([A-Z0-9]{2,4})", text)
+    if match:
+        return match.group(1)
+    return text if re.fullmatch(r"[A-Z][A-Z0-9]{1,3}", text) else ""
+
+
 def simconnect_label(app_name):
     """Short source name from the application name SimConnect reports on open."""
     name = str(app_name or "")
@@ -1792,15 +1811,20 @@ def msfs_loop():
                 track = ground_track_from_motion(float(lat), float(lon), time.time())
 
             fuel = safe_get("FUEL_TOTAL_QUANTITY")
-            title = safe_get("TITLE") or ""
-            tail = safe_get("ATC_ID") or ""
-            call = safe_get("ATC CALLSIGN") or ""
+            title = sim_text(safe_get("TITLE"))
+            tail = sim_text(safe_get("ATC_ID"))
+            call = sim_text(safe_get("ATC CALLSIGN"))
+            # The livery's aircraft.cfg, as SimConnect publishes it: atc_id is
+            # ATC ID above, icao_type_designator arrives through ATC MODEL and
+            # the operator through ATC AIRLINE. Only the user's aircraft is read.
+            model = atc_model_type(safe_get("ATC MODEL"))
+            airline = sim_text(safe_get("ATC AIRLINE"))
             now = time.time()
             with state_lock:
                 state.update(lat=float(lat), lon=float(lon), alt=float(alt), agl=float(agl),
                              hdg=float(heading) % 360, gs=float(gs), t=now, src=source,
-                             aircraft=str(title)[:48], registration=str(tail)[:24],
-                             callsign=str(call)[:24])
+                             aircraft=title[:48], registration=tail[:24],
+                             callsign=call[:24], aircraftType=model, airline=airline[:32])
                 for key, value in (("hdgMag", heading_mag), ("trk", track),
                                    ("bank", bank), ("pitch", pitch),
                                    ("ias", ias), ("tas", tas),

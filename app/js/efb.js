@@ -19,8 +19,10 @@ import { displayVersion } from './lib/version.js';
 import { airlineText, applyAirline, resolveAirline } from './lib/airlines.js';
 import { airlineMark } from './data/airline-marks.js';
 import { HOME_LAYOUT_KEY, WIDGETS, readLayout, offsetLabel, airportTime, flightProgress, fits, placeAll, sizeOf, photoSteps } from './efb/homewidgets.js';
-import { normalizeRegistration, photoRequest, photoFromPayload, representativeQuery, representativeCandidates } from './lib/aircraftphoto.js';
-import { callsignLookupUrl, registrationFromLive, registrationFromTitle } from './lib/aircraftreg.js';
+import { normalizeRegistration } from './lib/aircraftphoto.js';
+import { registrationFromTitle } from './lib/aircraftreg.js';
+import { findAircraftPhoto } from './lib/aircraftgallery.js';
+import { identifyAircraft, IMAGES as AIRCRAFT_IMAGES } from './lib/aircraft.js';
 import { distanceNm } from './lib/geo.js';
 
 /* The rail, the router and the page titles all read this one list. */
@@ -451,7 +453,8 @@ function syncFlightWidget(status) {
     ofp: normalizeRegistration(ofp && ofp.aircraft && ofp.aircraft.reg),
     title: normalizeRegistration(registrationFromTitle(t && t.aircraft)),
     sim: normalizeRegistration(t && t.registration),
-    callsign, type,
+    // The simulator's own type first (X-Plane acf_ICAO, MSFS ATC MODEL), then the plan's.
+    callsign, type: (t && t.aircraftType) || type,
   };
   const registration = state.photoFound || sources.title || sources.sim || sources.ofp || sources.own || '';
   const airline = state.airline && state.airline.airline;
@@ -503,7 +506,8 @@ function syncFlightWidget(status) {
   if (key !== state.photoKey) {
     state.photoKey = key;
     state.photoFound = '';
-    showAircraftPhoto(sources, key);
+    showAircraftPhoto(sources, key, Boolean(state.photoForce));
+    state.photoForce = false;
   }
 }
 
@@ -532,66 +536,59 @@ function fmtMinutesLeft(minutes) {
   return m >= 60 ? `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m` : `${m}m`;
 }
 
-/* The aircraft's photo, from the first of these with one on Planespotters:
-   a tail written in the aircraft's title, the livery's own tail (real on most
-   downloaded liveries, a placeholder on default ones), the SimBrief plan's
-   registration, the real aircraft flying this callsign right now, the pilot's
-   backup entry, then another real aircraft of the same airline and type. The first with a Planespotters photo is shown, with
-   the credit and link it requires and a note when it is a similar aircraft. */
-function showAircraftPhoto(sources, key) {
+/* The aircraft's picture: the exact airframe when Stratos can find it, else a
+   labelled stand-in (the aircraft flying this flight today, the same airline
+   and type, the same type), else an illustration. findAircraftPhoto does the
+   search, caching and throttling; this only draws the answer, with the
+   photographer's credit and the Planespotters link the terms require. */
+function showAircraftPhoto(sources, key, force = false) {
   const img = document.getElementById('hf-img');
   const credit = document.getElementById('hf-cred');
   const none = document.getElementById('hf-nophoto');
   if (!img || !credit || !none) return;
   const current = () => state.photoKey === key;
-  const clear = text => { img.hidden = true; img.removeAttribute('src'); credit.hidden = true; none.hidden = false; none.textContent = text; };
-  const json = url => fetch(url, { headers: { Accept: 'application/json' } }).then(r => (r.ok ? r.json() : null)).catch(() => null);
-  const photoOf = registration => json(photoRequest(registration)).then(photoFromPayload);
-  // adsb.lol sends no CORS headers, so the browser asks through Stratos' own
-  // /api/traffic proxy; the desktop app, which can call it directly, falls back.
-  const live = url => json(`/api/traffic?url=${encodeURIComponent(url)}`).then(found => found || json(url));
-
-  async function* candidates() {
-    for (const step of photoSteps(sources)) {
-      if (step.reg) { yield { registration: step.reg, note: '' }; continue; }
-      if (step.find === 'callsign' && sources.callsign) {
-        const url = callsignLookupUrl(sources.callsign);
-        const flying = url ? registrationFromLive(await live(url)) : null;
-        if (flying) yield { registration: normalizeRegistration(flying.registration), note: `Today's ${sources.callsign}` };
-      }
-      if (step.find === 'similar') {
-        const query = representativeQuery({ callsign: sources.callsign, type: sources.type });
-        const payload = query ? await live(query.url) : null;
-        for (const found of representativeCandidates(payload && payload.ac, query).slice(0, 4)) {
-          yield { registration: found.registration, note: 'Similar aircraft' };
-        }
-      }
-    }
-  }
-
-  (async () => {
-    clear('Finding the aircraft…');
-    const tried = new Set();
-    for await (const pick of candidates()) {
-      if (!current()) return;
-      if (!pick.registration || tried.has(pick.registration)) continue;
-      tried.add(pick.registration);
-      const photo = await photoOf(pick.registration);
-      if (!current()) return;
-      if (!photo) continue;
-      state.photoFound = pick.registration;
-      img.src = photo.src;
-      img.alt = `${pick.registration}, photographed by ${photo.photographer || 'a Planespotters contributor'}`;
+  none.hidden = false;
+  none.textContent = 'Finding the aircraft…';
+  const silhouette = identifyAircraft({ simulator: sources.type }).image || AIRCRAFT_IMAGES.generic;
+  findAircraftPhoto(photoSteps(sources), {
+    callsign: sources.callsign, type: sources.type, silhouette, identity: key,
+  }, { force }).then(answer => {
+    if (!current()) return;
+    img.classList.toggle('is-silhouette', answer.kind === 'silhouette');
+    none.hidden = true;
+    if (answer.kind === 'silhouette') {
+      img.src = answer.image;
+      img.alt = 'Aircraft illustration: no photograph found';
       img.hidden = false;
-      none.hidden = true;
-      credit.href = photo.link;
-      credit.textContent = `${pick.note ? `${pick.note} · ` : ''}${pick.registration} · © ${photo.photographer || 'Planespotters contributor'} · planespotters.net`;
+      credit.removeAttribute('href');
+      credit.textContent = 'Illustration · no photograph of this aircraft found';
       credit.hidden = false;
-      syncFlightWidget(state.live);
+      state.photoFound = '';
       return;
     }
-    if (current()) clear(tried.size ? 'No photo of this aircraft yet' : 'No aircraft photo');
-  })();
+    state.photoFound = answer.kind === 'exact' ? answer.registration : '';
+    img.src = answer.photo.src;
+    img.alt = `${answer.registration}, photographed by ${answer.photo.photographer || 'a Planespotters contributor'}`;
+    img.hidden = false;
+    credit.href = answer.photo.link;
+    credit.textContent = `${answer.kind === 'exact' ? '' : `${answer.label} · `}${answer.registration} · © ${answer.photo.photographer || 'Planespotters contributor'} · planespotters.net`;
+    credit.hidden = false;
+    syncFlightWidget(state.live);
+  }).catch(() => {
+    // A lookup problem never touches the flight itself: the illustration stays.
+    if (!current()) return;
+    img.src = silhouette;
+    img.classList.add('is-silhouette');
+    img.hidden = false;
+    none.hidden = true;
+  });
+}
+
+/* The Find image button: search again, past the cache. */
+function findImageAgain() {
+  state.photoKey = '';
+  state.photoForce = true;
+  syncFlightWidget(state.live);
 }
 
 /* ── edit mode: hold the wallpaper ─────────────────────────────────── */
@@ -1412,6 +1409,7 @@ export async function boot() {
   bindEvents();
   syncNavFade();
   document.getElementById('hf-setreg')?.addEventListener('click', askRegistration);
+  document.getElementById('hf-findimg')?.addEventListener('click', findImageAgain);
   setupLock();
   setupHomeIndicator();
   setupHomeEdit();

@@ -98,6 +98,8 @@ export function parseTelemetry(raw) {
     onGround: typeof raw.onGround === 'boolean' ? raw.onGround : (num(raw.agl, 999) < 30),
     aircraft: typeof raw.aircraft === 'string' ? raw.aircraft.slice(0, 48) : '',
     registration: typeof raw.registration === 'string' ? raw.registration.slice(0, 24) : '',
+    aircraftType: typeof raw.aircraftType === 'string' ? raw.aircraftType.slice(0, 8) : '',
+    airline: typeof raw.airline === 'string' ? raw.airline.slice(0, 32) : '',
     callsign: typeof raw.callsign === 'string' ? raw.callsign.slice(0, 24) : '',
     src: typeof raw.src === 'string' ? raw.src.slice(0, 32) : 'Simulator',
     t: num(raw.t, Date.now() / 1000),

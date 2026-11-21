@@ -61,7 +61,7 @@ test('saved cells must be whole, positive numbers', () => {
 
 test('the aircraft photo is searched in the agreed order', () => {
   assert.deepEqual(photoSteps({ title: 'N8312C', sim: 'C-GTLZ', ofp: 'HB-JHK', own: 'HB-JHA' }), [
-    { reg: 'N8312C' }, { reg: 'C-GTLZ' }, { reg: 'HB-JHK' }, { find: 'callsign' }, { reg: 'HB-JHA' }, { find: 'similar' },
-  ], 'title, livery tail, SimBrief, live callsign, the backup entry, then a similar aircraft');
-  assert.deepEqual(photoSteps({}), [{ find: 'callsign' }, { find: 'similar' }], 'with nothing known it still detects');
+    { reg: 'N8312C' }, { reg: 'C-GTLZ' }, { reg: 'HB-JHK' }, { find: 'callsign' }, { reg: 'HB-JHA' }, { find: 'similar' }, { find: 'type' },
+  ], 'title, livery tail, SimBrief, live callsign, the backup entry, a similar aircraft, then the type alone');
+  assert.deepEqual(photoSteps({}), [{ find: 'callsign' }, { find: 'similar' }, { find: 'type' }], 'with nothing known it still detects');
 });
