@@ -453,7 +453,7 @@ function syncFlightWidget(status) {
     sim: normalizeRegistration(t && t.registration),
     callsign, type,
   };
-  const registration = state.photoFound || sources.own || sources.ofp || sources.title || '';
+  const registration = state.photoFound || sources.ofp || sources.title || sources.own || '';
   const airline = state.airline && state.airline.airline;
 
   set('hf-cs', callsign || 'No flight');
@@ -508,7 +508,7 @@ function syncFlightWidget(status) {
 }
 
 /* Registrations the pilot typed, per simulator aircraft (its livery title),
-   as Volanta lets you set one: it wins over every detected source. */
+   as Volanta lets you set one: a backup when detection finds no aircraft. */
 const REG_KEY = 'stratos.efb.registrations';
 function manualRegs() {
   try { return JSON.parse(localStorage.getItem(REG_KEY) || '{}') || {}; } catch (_) { return {}; }
@@ -517,7 +517,7 @@ function askRegistration() {
   const livery = state.liveryKey;
   if (!livery) { window.alert('Load a flight or connect the simulator first, so Stratos knows which aircraft this is.'); return; }
   const all = manualRegs();
-  const typed = window.prompt(`Registration for ${livery} (leave empty to detect it again):`, all[livery] || '');
+  const typed = window.prompt(`Backup registration for ${livery}, used when Stratos cannot detect the aircraft (leave empty to clear):`, all[livery] || '');
   if (typed === null) return;
   const reg = normalizeRegistration(typed);
   if (typed.trim() && !reg) { window.alert(`${typed.trim()} is not a registration Stratos can look up.`); return; }
@@ -549,7 +549,6 @@ function showAircraftPhoto(sources, key) {
   const photoOf = registration => json(photoRequest(registration)).then(photoFromPayload);
 
   async function* candidates() {
-    if (sources.own) yield { registration: sources.own, note: '' };
     if (sources.ofp) yield { registration: sources.ofp, note: '' };
     if (sources.title) yield { registration: sources.title, note: '' };
     // A downloaded livery usually carries its real tail; a default one (C-GTLZ)
@@ -560,6 +559,9 @@ function showAircraftPhoto(sources, key) {
       const live = url ? registrationFromLive(await json(url)) : null;
       if (live) yield { registration: normalizeRegistration(live.registration), note: `Today's ${sources.callsign}` };
     }
+    // The pilot's own entry is the backup: used when detection finds nothing,
+    // and still preferred to a stand-in photo of a similar aircraft.
+    if (sources.own) yield { registration: sources.own, note: '' };
     const query = representativeQuery({ callsign: sources.callsign, type: sources.type });
     if (query) {
       const payload = await json(query.url);
