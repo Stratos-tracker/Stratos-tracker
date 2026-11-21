@@ -2974,3 +2974,8 @@ body.home-editing .wg-remove { display: block; }
 #home-grid.is-flow > [data-widget] { grid-column: 1 / -1; margin: 0; }
 #home-grid.is-flow > .hw-tz { grid-column: span 2; }
 #home-grid.is-flow > .hw-flight .hf-photo { flex: none; height: 176px; }
+
+/* The pilot's own registration for this aircraft, as Volanta allows. */
+.hf-air-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.hf-setreg { flex: none; border: 0; border-radius: 99px; padding: 5px 10px; cursor: pointer; font: 600 11px/1 system-ui, sans-serif; color: #fff; background: rgba(255, 255, 255, .14); }
+.hf-setreg:hover { background: rgba(255, 255, 255, .22); }

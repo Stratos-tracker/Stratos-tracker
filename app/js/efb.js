@@ -444,13 +444,16 @@ function syncFlightWidget(status) {
   const t = snapshot && snapshot.telemetry;
   const callsign = (parts && parts.callsign) || (t && t.callsign) || '';
   const type = (parts && parts.aircraft) || '';
+  const livery = String((t && t.aircraft) || type || '').trim();
+  state.liveryKey = livery;
   const sources = {
+    own: normalizeRegistration(manualRegs()[livery]),
     ofp: normalizeRegistration(ofp && ofp.aircraft && ofp.aircraft.reg),
     title: normalizeRegistration(registrationFromTitle(t && t.aircraft)),
     sim: normalizeRegistration(t && t.registration),
     callsign, type,
   };
-  const registration = state.photoFound || sources.ofp || sources.title || '';
+  const registration = state.photoFound || sources.own || sources.ofp || sources.title || '';
   const airline = state.airline && state.airline.airline;
 
   set('hf-cs', callsign || 'No flight');
@@ -496,12 +499,32 @@ function syncFlightWidget(status) {
   const phase = t ? flightPhase(snapshot) : null;
   set('hf-phase', phase ? phase.label : (status && status.status === 'live' ? 'Live' : 'Offline'));
 
-  const key = [sources.ofp, sources.title, sources.sim, callsign, type].join('|');
+  const key = [sources.own, sources.ofp, sources.title, sources.sim, callsign, type].join('|');
   if (key !== state.photoKey) {
     state.photoKey = key;
     state.photoFound = '';
     showAircraftPhoto(sources, key);
   }
+}
+
+/* Registrations the pilot typed, per simulator aircraft (its livery title),
+   as Volanta lets you set one: it wins over every detected source. */
+const REG_KEY = 'stratos.efb.registrations';
+function manualRegs() {
+  try { return JSON.parse(localStorage.getItem(REG_KEY) || '{}') || {}; } catch (_) { return {}; }
+}
+function askRegistration() {
+  const livery = state.liveryKey;
+  if (!livery) { window.alert('Load a flight or connect the simulator first, so Stratos knows which aircraft this is.'); return; }
+  const all = manualRegs();
+  const typed = window.prompt(`Registration for ${livery} (leave empty to detect it again):`, all[livery] || '');
+  if (typed === null) return;
+  const reg = normalizeRegistration(typed);
+  if (typed.trim() && !reg) { window.alert(`${typed.trim()} is not a registration Stratos can look up.`); return; }
+  if (reg) all[livery] = reg; else delete all[livery];
+  try { localStorage.setItem(REG_KEY, JSON.stringify(all)); } catch (_) { /* private mode */ }
+  state.photoKey = '';
+  syncFlightWidget(state.live);
 }
 
 function fmtMinutesLeft(minutes) {
@@ -526,6 +549,7 @@ function showAircraftPhoto(sources, key) {
   const photoOf = registration => json(photoRequest(registration)).then(photoFromPayload);
 
   async function* candidates() {
+    if (sources.own) yield { registration: sources.own, note: '' };
     if (sources.ofp) yield { registration: sources.ofp, note: '' };
     if (sources.title) yield { registration: sources.title, note: '' };
     // A downloaded livery usually carries its real tail; a default one (C-GTLZ)
@@ -1387,6 +1411,7 @@ export async function boot() {
 
   bindEvents();
   syncNavFade();
+  document.getElementById('hf-setreg')?.addEventListener('click', askRegistration);
   setupLock();
   setupHomeIndicator();
   setupHomeEdit();
