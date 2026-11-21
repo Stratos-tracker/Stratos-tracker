@@ -453,7 +453,7 @@ function syncFlightWidget(status) {
     sim: normalizeRegistration(t && t.registration),
     callsign, type,
   };
-  const registration = state.photoFound || sources.ofp || sources.title || sources.own || '';
+  const registration = state.photoFound || sources.title || sources.sim || sources.ofp || sources.own || '';
   const airline = state.airline && state.airline.airline;
 
   set('hf-cs', callsign || 'No flight');
@@ -533,10 +533,10 @@ function fmtMinutesLeft(minutes) {
 }
 
 /* The aircraft's photo, from the first of these with one on Planespotters:
-   the registration in the SimBrief plan, one written in the aircraft's title,
-   the livery's own tail (real on most downloaded liveries, a placeholder on
-   default ones), the real aircraft flying this callsign right now, then
-   another real aircraft of the same airline and type. The first with a Planespotters photo is shown, with
+   a tail written in the aircraft's title, the livery's own tail (real on most
+   downloaded liveries, a placeholder on default ones), the SimBrief plan's
+   registration, the real aircraft flying this callsign right now, the pilot's
+   backup entry, then another real aircraft of the same airline and type. The first with a Planespotters photo is shown, with
    the credit and link it requires and a note when it is a similar aircraft. */
 function showAircraftPhoto(sources, key) {
   const img = document.getElementById('hf-img');
@@ -549,11 +549,12 @@ function showAircraftPhoto(sources, key) {
   const photoOf = registration => json(photoRequest(registration)).then(photoFromPayload);
 
   async function* candidates() {
-    if (sources.ofp) yield { registration: sources.ofp, note: '' };
     if (sources.title) yield { registration: sources.title, note: '' };
     // A downloaded livery usually carries its real tail; a default one (C-GTLZ)
     // has no photo, so the search moves on to the real-world aircraft.
     if (sources.sim) yield { registration: sources.sim, note: '' };
+    // SimBrief's registration is often left at an example tail, so it comes after the sim's own.
+    if (sources.ofp) yield { registration: sources.ofp, note: '' };
     if (sources.callsign) {
       const url = callsignLookupUrl(sources.callsign);
       const live = url ? registrationFromLive(await json(url)) : null;
