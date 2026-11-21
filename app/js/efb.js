@@ -18,7 +18,7 @@ import {
 import { displayVersion } from './lib/version.js';
 import { airlineText, applyAirline, resolveAirline } from './lib/airlines.js';
 import { airlineMark } from './data/airline-marks.js';
-import { HOME_LAYOUT_KEY, WIDGETS, readLayout, offsetLabel, airportTime, flightProgress, fits, placeAll, sizeOf } from './efb/homewidgets.js';
+import { HOME_LAYOUT_KEY, WIDGETS, readLayout, offsetLabel, airportTime, flightProgress, fits, placeAll, sizeOf, photoSteps } from './efb/homewidgets.js';
 import { normalizeRegistration, photoRequest, photoFromPayload, representativeQuery, representativeCandidates } from './lib/aircraftphoto.js';
 import { callsignLookupUrl, registrationFromLive, registrationFromTitle } from './lib/aircraftreg.js';
 import { distanceNm } from './lib/geo.js';
@@ -547,27 +547,24 @@ function showAircraftPhoto(sources, key) {
   const clear = text => { img.hidden = true; img.removeAttribute('src'); credit.hidden = true; none.hidden = false; none.textContent = text; };
   const json = url => fetch(url, { headers: { Accept: 'application/json' } }).then(r => (r.ok ? r.json() : null)).catch(() => null);
   const photoOf = registration => json(photoRequest(registration)).then(photoFromPayload);
+  // adsb.lol sends no CORS headers, so the browser asks through Stratos' own
+  // /api/traffic proxy; the desktop app, which can call it directly, falls back.
+  const live = url => json(`/api/traffic?url=${encodeURIComponent(url)}`).then(found => found || json(url));
 
   async function* candidates() {
-    if (sources.title) yield { registration: sources.title, note: '' };
-    // A downloaded livery usually carries its real tail; a default one (C-GTLZ)
-    // has no photo, so the search moves on to the real-world aircraft.
-    if (sources.sim) yield { registration: sources.sim, note: '' };
-    // SimBrief's registration is often left at an example tail, so it comes after the sim's own.
-    if (sources.ofp) yield { registration: sources.ofp, note: '' };
-    if (sources.callsign) {
-      const url = callsignLookupUrl(sources.callsign);
-      const live = url ? registrationFromLive(await json(url)) : null;
-      if (live) yield { registration: normalizeRegistration(live.registration), note: `Today's ${sources.callsign}` };
-    }
-    // The pilot's own entry is the backup: used when detection finds nothing,
-    // and still preferred to a stand-in photo of a similar aircraft.
-    if (sources.own) yield { registration: sources.own, note: '' };
-    const query = representativeQuery({ callsign: sources.callsign, type: sources.type });
-    if (query) {
-      const payload = await json(query.url);
-      for (const found of representativeCandidates(payload && payload.ac, query).slice(0, 4)) {
-        yield { registration: found.registration, note: 'Similar aircraft' };
+    for (const step of photoSteps(sources)) {
+      if (step.reg) { yield { registration: step.reg, note: '' }; continue; }
+      if (step.find === 'callsign' && sources.callsign) {
+        const url = callsignLookupUrl(sources.callsign);
+        const flying = url ? registrationFromLive(await live(url)) : null;
+        if (flying) yield { registration: normalizeRegistration(flying.registration), note: `Today's ${sources.callsign}` };
+      }
+      if (step.find === 'similar') {
+        const query = representativeQuery({ callsign: sources.callsign, type: sources.type });
+        const payload = query ? await live(query.url) : null;
+        for (const found of representativeCandidates(payload && payload.ac, query).slice(0, 4)) {
+          yield { registration: found.registration, note: 'Similar aircraft' };
+        }
       }
     }
   }

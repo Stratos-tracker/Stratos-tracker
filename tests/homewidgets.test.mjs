@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readLayout, offsetLabel, airportTime, flightProgress, DEFAULT_WIDGETS, fits, firstFit, placeAll } from '../app/js/efb/homewidgets.js';
+import { readLayout, offsetLabel, airportTime, flightProgress, DEFAULT_WIDGETS, fits, firstFit, placeAll, photoSteps } from '../app/js/efb/homewidgets.js';
 import { parseOfp } from '../app/js/lib/flightsummary.js';
 
 test('airport clocks label the UTC offset SimBrief publishes', () => {
@@ -57,4 +57,11 @@ test('apps and widgets go anywhere on the grid, gaps included, never overlapping
 test('saved cells must be whole, positive numbers', () => {
   const raw = JSON.stringify({ pos: { fuel: [2, 3], charts: [-1, 0], notepad: [1.5, 2], weather: 'x' } });
   assert.deepEqual(readLayout(raw, ['fuel']).pos, { fuel: [2, 3] });
+});
+
+test('the aircraft photo is searched in the agreed order', () => {
+  assert.deepEqual(photoSteps({ title: 'N8312C', sim: 'C-GTLZ', ofp: 'HB-JHK', own: 'HB-JHA' }), [
+    { reg: 'N8312C' }, { reg: 'C-GTLZ' }, { reg: 'HB-JHK' }, { find: 'callsign' }, { reg: 'HB-JHA' }, { find: 'similar' },
+  ], 'title, livery tail, SimBrief, live callsign, the backup entry, then a similar aircraft');
+  assert.deepEqual(photoSteps({}), [{ find: 'callsign' }, { find: 'similar' }], 'with nothing known it still detects');
 });

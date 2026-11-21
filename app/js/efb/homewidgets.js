@@ -108,3 +108,17 @@ export function placeAll(keys, saved, cols) {
   }
   return placed;
 }
+
+/** Where the flight widget looks for the aircraft, in order. A `reg` step is a
+ *  registration to try; a `find` step is a live lookup (the aircraft flying
+ *  this callsign, or a similar aircraft of the same airline and type). */
+export function photoSteps({ title = '', sim = '', ofp = '', own = '' } = {}) {
+  return [
+    title && { reg: title },
+    sim && { reg: sim },
+    ofp && { reg: ofp },
+    { find: 'callsign' },
+    own && { reg: own },
+    { find: 'similar' },
+  ].filter(Boolean);
+}
