@@ -417,8 +417,12 @@ def _analyse_landing(data, airports_list, recent=None, touchdown_t=None):
     if touchdown_t is not None:
         # Only samples up to first wheel contact: the ground roll is flat and would dilute the descent rate.
         recent = [s for s in recent if s.get("t") and s["t"] <= touchdown_t]
-    vs = _regression_fpm(recent[-12:])
-    vs_source = "derived from recorded altitude"
+    measured = data.get("touchdownVs")
+    if isinstance(measured, (int, float)) and -6000 < measured < 0:
+        vs, vs_source = float(measured), "measured by the simulator at touchdown"
+    else:
+        vs = _regression_fpm(recent[-12:])
+        vs_source = "derived from recorded altitude"
     if vs is None or vs >= 0:
         reported = data.get("vs")
         if isinstance(reported, (int, float)) and reported < 0:
@@ -471,7 +475,10 @@ def process_telemetry_for_logbook(data, airports_list=None):
     agl = data.get("agl", 0) or 0
     gs = data.get("gs", 0) or 0
     now_ms = _now_ms()
-    on_ground = agl < LANDED_AGL_FT
+    # The sim's gear contact when it reports one: AGL is measured to the aircraft's
+    # reference point, which sits above 20 ft on an airliner still in the flare.
+    reported_ground = data.get("onGround")
+    on_ground = bool(reported_ground) if isinstance(reported_ground, (bool, int, float)) else agl < LANDED_AGL_FT
 
     with _fs_lock:
         state = _flight_state

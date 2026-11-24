@@ -73,6 +73,37 @@ class LandingAnalysisTests(unittest.TestCase):
             samples, touchdown_t=base + 2000)
         self.assertAlmostEqual(result["vsFpm"], -200, delta=1)
 
+    def test_simulator_touchdown_rate_wins_over_the_altitude_slope(self):
+        base = 1_700_000_000_000
+        samples = [{"lat": 37.0, "lon": -122.01, "alt": 1000 - i * 5, "agl": 0, "gs": 130,
+                    "hdg": 90, "vs": -1200, "t": base + i * 250} for i in range(12)]
+        result = addon._analyse_landing(
+            telemetry(lat=37.0, lon=-122.01, alt=1000, agl=0, gs=40, hdg=90, touchdownVs=-142.6), AIRPORTS,
+            samples, touchdown_t=base + 3000)
+        self.assertEqual(result["vsFpm"], -143)
+        self.assertEqual(result["vsSource"], "measured by the simulator at touchdown")
+
+    def test_touchdown_is_wheel_contact_when_the_sim_reports_it(self):
+        clock = {"t": 1_700_000_000_000}
+        patcher = unittest.mock.patch.object(addon, "_now_ms", side_effect=lambda: clock["t"])
+        patcher.start()
+        try:
+            feed = lambda **kw: addon.process_telemetry_for_logbook(telemetry(lon=-122.01, **kw), AIRPORTS)
+            feed(gs=0, onGround=True)
+            feed(gs=15, onGround=True)
+            feed(gs=150, agl=2000, alt=2030, onGround=False)
+            # An airliner's reference point is still 15 ft up in the flare: not yet landed.
+            clock["t"] += 250
+            feed(gs=140, agl=15, alt=45, vs=-120, onGround=False)
+            with addon._fs_lock:
+                self.assertIsNone(addon._flight_state["touchdown_t"])
+            clock["t"] += 250
+            feed(gs=138, agl=12, alt=42, vs=-110, onGround=True)
+            with addon._fs_lock:
+                self.assertEqual(addon._flight_state["touchdown_t"], clock["t"])
+        finally:
+            patcher.stop()
+
     def test_runway_match_and_distance(self):
         result = addon._analyse_landing(
             telemetry(lat=37.0002, lon=-122.01, alt=10, agl=0, gs=120, hdg=90), AIRPORTS)

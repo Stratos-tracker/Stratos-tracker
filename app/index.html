@@ -2274,7 +2274,7 @@ rl.forEach(r=>{[[r.a,1,r.le,0],[r.b,-1,r.he,Math.PI]].forEach(([e,s,t,rot])=>{if
 /* Taxiway names, as on a ground chart: short ("B", not "Taxiway B"), once per
    stretch of taxiway, and never on top of another name. */
 if(T>1){const seen=[],placed=[];cx.font='700 11px Consolas,"Cascadia Mono",ui-monospace,monospace';os.forEach(o=>{if(o.t!='taxiway'||!o.r||o.p.length<2)return;const t=String(o.r).replace(/^(taxiway|twy)\s+/i,'').trim();if(!t||t.length>8)return;const q=o.p[o.p.length>>1],[sx,sy]=S(q[0],q[1]);if(sx<0||sx>W||sy<0||sy>H)return;if(seen.some(v=>v.t===t&&Math.hypot(v.x-sx,v.y-sy)<220))return;const w=Math.ceil(cx.measureText(t).width)+8,b={x:sx-w/2,y:sy-8,w,h:16};if(placed.some(p=>b.x<p.x+p.w+4&&b.x+b.w+4>p.x&&b.y<p.y+p.h+3&&b.y+b.h+3>p.y))return;placed.push(b);seen.push({t,x:sx,y:sy});cx.fillStyle=Y;cx.fillRect(b.x,b.y,w,16);cx.strokeStyle='#111';cx.lineWidth=1;cx.strokeRect(b.x+.5,b.y+.5,w-1,15);cx.fillStyle='#111';cx.fillText(t,sx,sy+.5)})}
-if(pf>.07){const lab=pf>.14;cx.font='700 10.5px Consolas,"Cascadia Mono",ui-monospace,monospace';os.forEach(o=>{if(o.t!='gate')return;const[sx,sy]=S(o.p[0][0],o.p[0][1]);if(sx<-30||sx>W+30||sy<-20||sy>H+20)return;if(lab&&o.r){const w=Math.ceil(cx.measureText(o.r).width)+8;cx.fillStyle='#111418';cx.fillRect(sx-w/2,sy-8,w,16);cx.strokeStyle='rgba(255,255,255,.35)';cx.lineWidth=1;cx.strokeRect(sx-w/2+.5,sy-7.5,w-1,15);cx.fillStyle='#fff';cx.fillText(o.r,sx,sy+.5)}else{cx.fillStyle='#111418';cx.fillRect(sx-3,sy-3,6,6)}})}
+if(pf>.03){const lab=pf>.06;cx.font='700 10.5px Consolas,"Cascadia Mono",ui-monospace,monospace';os.forEach(o=>{if(o.t!='gate')return;const[sx,sy]=S(o.p[0][0],o.p[0][1]);if(sx<-30||sx>W+30||sy<-20||sy>H+20)return;if(lab&&o.r){const w=Math.ceil(cx.measureText(o.r).width)+8;cx.fillStyle='#0e7490';cx.fillRect(sx-w/2,sy-8,w,16);cx.strokeStyle='#e0f2fe';cx.lineWidth=1;cx.strokeRect(sx-w/2+.5,sy-7.5,w-1,15);cx.fillStyle='#fff';cx.fillText(o.r,sx,sy+.5)}else{cx.fillStyle='#22d3ee';cx.beginPath();cx.arc(sx,sy,3,0,7);cx.fill()}})}
 cx.textAlign='left';cx.textBaseline='alphabetic'}}
 /* Taxi route: in taxi mode each click snaps to the nearest taxiway, and the
    route follows the taxiway network (shortest path) from the previous click,
@@ -3450,13 +3450,19 @@ if(l&&l.length){procOsm(a,l)}else{a.ost='fail';a.os=Date.now()+90000}}catch(_){a
 const OQ=[];let OB=false;
 function qOsm(a){a.ost='queued';OQ.push(a);pumpOsm()}
 async function pumpOsm(){if(OB)return;OB=true;try{while(OQ.length){const c=wpx(V.lon,V.lat);let bi=0,bd=1e18;OQ.forEach((a,i)=>{const p=wpx(a.lon,a.lat),d=Math.hypot(p[0]-c[0],p[1]-c[1]);if(d<bd){bd=d;bi=i}});const a=OQ.splice(bi,1)[0];if(bd>Math.max(W,H)*1.2){a.os=Date.now()+5000;a.ost='';continue}await loadOsm3(a);await new Promise(z=>setTimeout(z,1200))}}finally{OB=false}}
-async function loadOsm3(a){a.ost='loading';a.err='';let l=null;try{const c=await idb('get',0,'osm2:'+a.id);if(c)l=JSON.parse(c)}catch(_){}
-if(!l||!l.length){l=await tileWays(a);if(l&&l.length){}else if(location.protocol=='http:'){try{l=await(await fetch('/osm?id='+a.id+'&lat='+a.lat+'&lon='+a.lon)).json()}catch(e){a.err='bridge offline'}}else{
+async function loadOsm3(a){a.ost='loading';a.err='';let l=null;try{const c=await idb('get',0,'osm3:'+a.id);if(c)l=JSON.parse(c)}catch(_){}
+if(!l||!l.length){l=await tileWays(a);if(l&&l.length){l=l.concat(await terminalWays(a))}else if(location.protocol=='http:'){try{l=await(await fetch('/osm?id='+a.id+'&lat='+a.lat+'&lon='+a.lon)).json()}catch(e){a.err='bridge offline'}}else{
 const dl=.032,dn=dl/Math.cos(a.lat*R),q='[out:json][timeout:30];(way["aeroway"~"^(runway|taxiway|taxilane|apron|terminal)$"]('+(a.lat-dl).toFixed(5)+','+(a.lon-dn).toFixed(5)+','+(a.lat+dl).toFixed(5)+','+(a.lon+dn).toFixed(5)+'););out geom;',
 U=['https://overpass-api.de/api/interpreter','https://overpass.private.coffee/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.openstreetmap.fr/api/interpreter','https://overpass.osm.jp/api/interpreter'];
 for(const u of U){const hn=new URL(u).hostname;try{const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),30000),r=await fetch(u+'?data='+encodeURIComponent(q),{signal:ac.signal});clearTimeout(tm);if(!r.ok){a.err=hn+' HTTP '+r.status;if(r.status==429)await new Promise(z=>setTimeout(z,2500));continue}const d=await r.json();if(d.elements&&d.elements.length){l=d.elements.filter(e=>e.type=='way'&&e.geometry).map(e=>[e.tags.aeroway,e.tags.ref||'',e.geometry.map(p=>[p.lat,p.lon])]);break}a.err=hn+' returned no data'}catch(e){a.err=hn+' '+((e&&e.name)||'network error')}}}
-if(l&&l.length)idb('put',JSON.stringify(l),'osm2:'+a.id).catch(()=>{})}
+if(l&&l.length)idb('put',JSON.stringify(l),'osm3:'+a.id).catch(()=>{})}
 if(l&&l.length){procOsm(a,l);a.err=''}else{a.ost='fail';a.os=Date.now()+45000}}
+/* Terminal buildings from OpenStreetMap (Overpass): the vector tiles carry none. Empty on failure. */
+async function terminalWays(a){
+const dl=.032,dn=dl/Math.cos(a.lat*R),bb=(a.lat-dl).toFixed(5)+','+(a.lon-dn).toFixed(5)+','+(a.lat+dl).toFixed(5)+','+(a.lon+dn).toFixed(5),
+q='[out:json][timeout:25];(way["aeroway"="terminal"]('+bb+');way["building"="terminal"]('+bb+'););out geom;';
+for(const u of ['https://overpass-api.de/api/interpreter','https://overpass.private.coffee/api/interpreter']){try{const r=await fetch(u+'?data='+encodeURIComponent(q));if(!r.ok)continue;const d=await r.json();return(d.elements||[]).filter(e=>e.type=='way'&&e.geometry).map(e=>['terminal','',e.geometry.map(p=>[p.lat,p.lon])])}catch(_){}}
+return[]}
 /* Taxiways from OpenFreeMap vector tiles (OpenStreetMap data), decoded in the browser */
 let OFMT=null;
 function mvtAero(ab,z,tx,ty){

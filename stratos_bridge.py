@@ -1094,6 +1094,8 @@ XPLANE_POSITION_DATAREFS = (
     ("ias", "sim/flightmodel/position/indicated_airspeed", 4, 1.0),
     ("tas", "sim/flightmodel/position/true_airspeed", 4, 1.0),
     ("vs", "sim/flightmodel/position/vh_ind_fpm", 4, 1.0),
+    # Wheels on the ground, as X-Plane's gear model reports it: the touchdown moment.
+    ("onGround", "sim/flightmodel/failures/onground_any", 10, 1.0),
     ("windDir", "sim/cockpit2/gauges/indicators/wind_direction_degt", 2, 1.0),
     ("windSpd", "sim/cockpit2/gauges/indicators/wind_speed_kts", 2, 1.0),
     ("oat", "sim/cockpit2/temperature/outside_air_temp_degc", 1, 1.0),
@@ -1810,6 +1812,12 @@ def msfs_loop():
             if track is None:
                 track = ground_track_from_motion(float(lat), float(lon), time.time())
 
+            # The sim's own vertical speed, ground contact and touchdown rate (ft/s).
+            # A rate differentiated from altitude is noisy and lags the flare.
+            vs_fps = num("VERTICAL SPEED", -1000.0, 1000.0)
+            on_ground = safe_get("SIM ON GROUND")
+            touchdown_fps = num("PLANE TOUCHDOWN NORMAL VELOCITY", -100.0, 100.0)
+
             fuel = safe_get("FUEL_TOTAL_QUANTITY")
             title = sim_text(safe_get("TITLE"))
             tail = sim_text(safe_get("ATC_ID"))
@@ -1834,7 +1842,13 @@ def msfs_loop():
                         state[key] = round(value, 2)
                 if fuel is not None:
                     state["fuel"] = float(fuel)
-                if previous is None:
+                if on_ground is not None:
+                    state["onGround"] = bool(on_ground)
+                if touchdown_fps:
+                    state["touchdownVs"] = -abs(touchdown_fps) * 60.0
+                if vs_fps is not None:
+                    state["vs"] = vs_fps * 60.0
+                elif previous is None:
                     previous = (float(alt), now)
                 elif now - previous[1] >= 0.5:
                     state["vs"] = (float(alt) - previous[0]) / (now - previous[1]) * 60.0
