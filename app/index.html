@@ -1367,8 +1367,8 @@ for(const wx of worldShifts()){WORLD_DX=wx;try{
 if(L.nav&&!CH.on)N.forEach(n=>{const q=vis(n.lon,n.lat);if(!q||lblZ()<(W<600?7:6))return;const[x,y]=q;if(x<-20||x>W+20||y<-20||y>H+20)return;const t=String(n.type||'').toUpperCase(),kind=/NDB/.test(t)?'ndb':/VOR|TACAN|DME/.test(t)?'vor':'int';mkDraw(kind,x,y,mkRz()*.8);if(lblZ()>(W<600?7.5:5.5))mkText(n.id,x+Math.round(mkRz()*.55)-4,y+4,mkColor(kind),11,false)});
 if(L.apt&&clusterAirports()){}else if(L.apt)A.forEach(a=>{if(CH.on&&a!==CH.a)return;const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;if(a.x&&lblZ()<6)return;const mg=lblZ()>10?4000:60;if(x<-mg||x>W+mg||y<-mg||y>H+mg)return;
 if(V.mode!=='globe'&&V.z>8.5)drawReal(a,x,y);else a.det=false;if(0)pairs(a).forEach(pr=>{const n=pr[0],h=n*10,p=ppn(a.lat)*1.4,dx=Math.sin(h*R)*p,dy=-Math.cos(h*R)*p;cx.strokeStyle=C.ap;cx.lineWidth=Math.max(3,p/9);cx.lineCap='butt';cx.beginPath();cx.moveTo(x-dx,y-dy);cx.lineTo(x+dx,y+dy);cx.stroke()});
-if(a.det){}else if(V.mode!=='globe'&&V.z>8.5){cx.beginPath();cx.arc(x,y,3,0,7);cx.fillStyle=C.land;cx.fill();cx.strokeStyle=C.ap;cx.lineWidth=2.2;cx.stroke()}else mkRing(x,y,mkRz()*.9,mkColor('apt'),1);
-if(lblZ()>(a.x?7:4.8)&&x>-40&&x<W+40&&y>-40&&y<H+40&&!(L.rte&&planTocTod().ids.has(String(a.id).toUpperCase())))mkText(a.id,x+Math.round(mkRz()*.62)-3,y-6,SAT()?(DKM()?'#fff':'#111'):C.txt,12.5,true)});
+if(a.det){}else if(V.mode!=='globe'&&V.z>8.5){cx.beginPath();cx.arc(x,y,3,0,7);cx.fillStyle=C.land;cx.fill();cx.strokeStyle=C.ap;cx.lineWidth=2.2;cx.stroke()}else mkPin(x,y,mkRz()*.62);
+if(lblZ()>(a.x?7:4.8)&&x>-40&&x<W+40&&y>-40&&y<H+40&&!(L.rte&&planTocTod().ids.has(String(a.id).toUpperCase())))mkText(a.id,x+Math.round(mkRz()*.62)+5,y-Math.round(mkRz()*1.05),SAT()?(DKM()?'#fff':'#111'):C.txt,12.5,true)});
 if(!WORLD_DX)drawMapChart();drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.lineCap='round';cx.lineJoin='round';if(sp.flown.length>1){cx.globalAlpha=.5;cx.strokeStyle=C.route;cx.lineWidth=9;cx.setLineDash([14,12]);drawPlanLine(sp.flown);cx.setLineDash([])}if(sp.ahead.length>1){cx.globalAlpha=.9;cx.strokeStyle=RTE_CASE;cx.lineWidth=18;drawPlanLine(sp.ahead);cx.globalAlpha=1;cx.strokeStyle=C.route;cx.lineWidth=12;drawPlanLine(sp.ahead)}cx.restore()
 drawProcedureRouteLine();drawRouteMarkers();}
 trails();if(L.trf&&!CH.on)T.forEach(a=>{const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;drawAircraft(a.type,x,y,a.hdg,C.trf,32);if(lblZ()>6&&x>-40&&x<W+40&&y>-20&&y<H+20)mkText(a.id+(a.type?' '+a.type:'')+' '+Math.round(a.alt/100),x+4,y+4,C.trf,10,false)});
@@ -1433,6 +1433,23 @@ function mkSelHalo(x,y,r){
 function mkNdb(x,y,r,c){for(let k=0;k<12;k++){const a=k*Math.PI/6;mkDot(x+Math.cos(a)*r*.72,y+Math.sin(a)*r*.72,c,Math.max(1,r*.11))}for(let k=0;k<8;k++){const a=k*Math.PI/4;mkDot(x+Math.cos(a)*r*.42,y+Math.sin(a)*r*.42,c,Math.max(.9,r*.09))}mkDot(x,y,c,Math.max(1.4,r*.16))}
 function mkApt(x,y,r,c){mkPen(c,1.9);cx.arc(x,y,r*.56,0,7);cx.stroke();mkPen(c,2.2);for(let k=0;k<4;k++){const a=k*Math.PI/2+Math.PI/4;cx.moveTo(x+Math.cos(a)*r*.56,y+Math.sin(a)*r*.56);cx.lineTo(x+Math.cos(a)*r*.86,y+Math.sin(a)*r*.86)}cx.stroke();mkDot(x,y,c,Math.max(1.5,r*.18))}
 function mkFix(x,y,r,c){mkPen(c,1.9);cx.moveTo(x,y-r*.82);cx.lineTo(x+r*.74,y+r*.5);cx.lineTo(x-r*.74,y+r*.5);cx.closePath();cx.stroke()}
+/* An airport pin: the tip on the airport, a round head with a white aircraft. */
+function mkPin(x,y,r){
+  const cy=y-r*1.7;
+  cx.save();
+  cx.beginPath();cx.moveTo(x,y);
+  cx.bezierCurveTo(x-r*.35,y-r*.55,x-r,cy+r*.55,x-r,cy);
+  cx.arc(x,cy,r,Math.PI,0);
+  cx.bezierCurveTo(x+r,cy+r*.55,x+r*.35,y-r*.55,x,y);
+  cx.closePath();
+  cx.fillStyle='#1f6fe0';cx.fill();
+  cx.lineWidth=1.4;cx.strokeStyle='rgba(8,16,25,.85)';cx.stroke();
+  // Aircraft seen from above, nose up.
+  const k=r/10;cx.translate(x,cy);cx.scale(k,k);
+  cx.beginPath();cx.moveTo(0,-7);cx.lineTo(1.2,-5.5);cx.lineTo(1.2,-1.5);cx.lineTo(7,2);cx.lineTo(7,3.4);cx.lineTo(1.2,1.6);cx.lineTo(1.2,4.6);cx.lineTo(3,6);cx.lineTo(3,7);cx.lineTo(0,6.2);cx.lineTo(-3,7);cx.lineTo(-3,6);cx.lineTo(-1.2,4.6);cx.lineTo(-1.2,1.6);cx.lineTo(-7,3.4);cx.lineTo(-7,2);cx.lineTo(-1.2,-1.5);cx.lineTo(-1.2,-5.5);cx.closePath();
+  cx.fillStyle='#fff';cx.fill();
+  cx.restore()
+}
 function mkDraw(kind,x,y,r,override){
   const c=override||mkColor(kind);
   if(kind=='apt')mkApt(x,y,r,c);
