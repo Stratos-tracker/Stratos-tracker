@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-24",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.13/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.13/Stratos-Setup.exe",
+      "sha256": "903b496f9d386dbb49f433d7c614ecee06be4ef2d211ca03579d7b4195ff6c45",
+      "size": 119578193
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.13/Stratos-2.4.13-mac-arm64.dmg",
+      "sha256": "c729766a35246e3d50b860efea0598b817268a36cf19b1f353524486aacf1d90",
+      "size": 137775464
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.13/Stratos-2.4.13-mac-x64.dmg",
+      "sha256": "24742f6bb67f9a1038a595ec12a80129a4b066d1897bcae43bd3fa3015ddc7a1",
+      "size": 143192496
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.13/Stratos-2.4.13-linux-x64.AppImage",
+      "sha256": "d901793bcc8a89f0b8cbce78946249f303f5e0bdd665ba457ea76a94b963ccd4",
+      "size": 160821087
+    }
+  },
   "summary": "Connect ChartFox from the desktop app, and a cleaner phone and iPad experience.",
   "reason": "",
   "releaseNotes": [
