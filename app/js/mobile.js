@@ -305,9 +305,11 @@ function boot() {
   if (section === 'charts') mountEfbStrip();
   mountInstall();
 
-  // A dark status bar behind a translucent bar, matching the app's own navy.
+  // On the map no theme colour at all: iOS tints the status-bar area with it,
+  // which reads as a band over the map. Elsewhere, the app's own navy.
   const theme = document.querySelector('meta[name="theme-color"]');
-  if (theme) theme.setAttribute('content', '#060d14');
+  if (theme && section === 'map') theme.remove();
+  else if (theme) theme.setAttribute('content', '#060d14');
 
   document.body.classList.add('m-enter');
   setTimeout(() => document.body.classList.remove('m-enter'), 260);
