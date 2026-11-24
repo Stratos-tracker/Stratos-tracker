@@ -49,8 +49,37 @@ export function normaliseType(value) {
 }
 
 /** Return sprite sheet geometry for an ICAO type, or null if the atlas has no match. */
+/* Types the atlas has no frame for, drawn with the frame whose top-view shape is
+   the same layout: engines, wing and tail. A type with no true match is left out. */
+const SPRITE_ALIASES = {
+  // Boeing / Airbus families
+  B737: 'B738', B733: 'B738', B734: 'B738', B735: 'B738', B736: 'B738', B739: 'B738',
+  B37M: 'B38M', B39M: 'B38M', B3XM: 'B38M',
+  B77L: 'B772', B773: 'B77W', B778: 'B77W', B779: 'B77W',
+  B788: 'B789', B78X: 'B789',
+  B762: 'A310', B763: 'A310', B764: 'A310',
+  B741: 'A346', B742: 'A346', B743: 'A346', B744: 'A346', B748: 'A346', B703: 'A343',
+  BCS1: 'E290', BCS3: 'E290',
+  // Rear-engine, T-tail jets
+  B712: 'F100', B722: 'F100', MD81: 'F100', MD82: 'F100', MD83: 'F100', MD87: 'F100', MD88: 'F100', MD90: 'F100', T154: 'F100',
+  CRJ1: 'F70', CRJ2: 'F70', CRJ7: 'F70', CRJ9: 'F70', CRJX: 'F70', E135: 'F70', E145: 'F70', E45X: 'F70',
+  E170: 'E190', E75L: 'E190', E75S: 'E190', E195: 'E190', E290: 'E290', E295: 'E290', SU95: 'E190',
+  // Business jets
+  GLF4: 'GLEX', GLF5: 'GLEX', GLF6: 'GLEX', GL5T: 'GLEX', GL7T: 'GLEX', CL60: 'GLEX', CL35: 'GLEX', C700: 'GLEX', C750: 'GLEX', FA7X: 'GLEX', FA8X: 'GLEX', F900: 'GLEX', LEG2: 'GLEX',
+  H25B: 'H25A', FA50: 'H25A', FA20: 'H25A', LJ35: 'H25A', LJ45: 'H25A', LJ75: 'H25A', E55P: 'H25A', E50P: 'H25A',
+  C25A: 'C560', C25B: 'C560', C25C: 'C560', C510: 'C560', C525: 'C560', C56X: 'C560', C680: 'C560', C68A: 'C560',
+  // Turboprops and military transports
+  AT72: 'AT75', AT76: 'AT75', AT45: 'AT75', AT43: 'AT75',
+  C130: 'A400', C30J: 'A400', C17: 'A400', IL76: 'A400',
+  TBM7: 'PC12', TBM8: 'PC12', TBM9: 'PC12', KODI: 'C208',
+  // Light aircraft and helicopters
+  DA62: 'DA42', DA40: 'SR22', PA24: 'P28A', PA28: 'P28A', P28B: 'P28A', P28R: 'P28A', PA34: 'PA44', BE55: 'PA44', BE58: 'PA44', PA18: 'C172', C152: 'C172',
+  H60: 'B412', S76: 'A139', EC35: 'EC45', H145: 'EC45', H135: 'EC45',
+};
+
 export function aircraftSprite(value) {
-  const type = normaliseType(value);
+  const raw = normaliseType(value);
+  const type = spriteMap.airframeToSprite[raw] ? raw : (SPRITE_ALIASES[raw] || raw);
   const spriteName = spriteMap.airframeToSprite[type];
   if (!spriteName) return null;
   const sprite = spriteMap.sprites[spriteName];

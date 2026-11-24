@@ -1437,6 +1437,7 @@ function mkFix(x,y,r,c){mkPen(c,1.9);cx.moveTo(x,y-r*.82);cx.lineTo(x+r*.74,y+r*
 /* A major airport: a runway of 9,800 ft or more (the map carries no size class). */
 function aptBig(a){const l=RL[a.id]||[];return Math.max(0,...(Array.isArray(l)?l:[]).map(Number).filter(isFinite))>=9800}
 function mkPin(x,y,r,big){
+  if(big)r*=1.25;
   const cy=y-r*1.7;
   cx.save();
   cx.beginPath();cx.moveTo(x,y);
@@ -3735,15 +3736,12 @@ function clusterAirports(){
     const q=vis(a.lon,a.lat);if(!q)continue;
     const[x,y]=q;if(x<-60||x>W+60||y<-60||y>H+60)continue;
     const key=Math.floor(x/cell)+':'+Math.floor(y/cell),g=groups.get(key);
-    if(g)g.n+=1;else groups.set(key,{n:1,x,y,a});
+    if(!g)groups.set(key,{n:1,x,y,a});else{g.n+=1;if(aptBig(a)&&!aptBig(g.a))Object.assign(g,{x,y,a})}
   }
   const ink=SAT()?(DKM()?'#fff':'#111'):C.txt,ring=mkColor('apt');
   cx.save();
   for(const g of groups.values()){
-    if(g.n===1){mkPin(g.x,g.y,mkRz()*.62,aptBig(g.a));continue}
-    cx.beginPath();cx.arc(g.x,g.y,8,0,7);cx.fillStyle='rgba(8,19,30,.62)';cx.fill();
-    cx.strokeStyle=ring;cx.lineWidth=1.1;cx.stroke();
-    mkText(String(g.n),g.x,g.y+3,ink,9.5,true);
+    mkPin(g.x,g.y,mkRz()*.62,aptBig(g.a));
   }
   cx.restore();
   return true;
