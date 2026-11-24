@@ -190,6 +190,7 @@ export async function mount(root, ctx) {
     <div class="ch-workspace">
       <aside class="ch-side" aria-label="Chart library">
         <div class="ch-side-top">
+          <div id="cf-bar" class="cf-bar"></div>
           <div class="e-row" style="gap:5px">
             <select class="e-input small" id="chart-region" aria-label="Chart region">
               <option value="">All regions</option>
@@ -215,7 +216,6 @@ export async function mount(root, ctx) {
             ${CATEGORY_FILTERS.map(item => `<button type="button" data-cat="${item.key}" aria-pressed="${item.key === 'all' ? 'true' : 'false'}">${item.label}</button>`).join('')}
           </div>
           <input class="e-input small" id="chart-query" placeholder="Filter documents" aria-label="Filter charts">
-          <div id="cf-bar" class="cf-bar"></div>
         </div>
         <div id="chart-list" class="e-list ch-list"></div>
       </aside>
