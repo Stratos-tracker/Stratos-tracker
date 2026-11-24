@@ -558,7 +558,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 <div class="lay-body">
   <section class="lay-s"><h3>Map display</h3><div id="ms" class="lay-grid"></div><p class="m" id="msnote" hidden></p>
     <div class="lay-theme"><button type="button" data-theme-set="day">Day</button><button type="button" data-theme-set="night">Night</button><button type="button" data-theme-set="contrast">High contrast</button></div></section>
-  <section class="lay-s"><h3>Map</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="grid">Grid</button><button type="button" data-l="dn">Day / night</button><button type="button" id="bMc" aria-expanded="false" title="Find a chart and lay it on the map">Charts</button></div></section>
+  <section class="lay-s"><h3>Map</h3><div class="lay-chips"><button type="button" data-l="apt" class="on">Airports</button><button type="button" data-l="nav" class="on">Navaids</button><button type="button" data-l="rte" class="on">Route</button><button type="button" data-l="grid">Grid</button><button type="button" data-l="dn">Day / night</button><button type="button" data-l="cfx" class="on" title="Your route's ChartFox charts on the map">ChartFox</button><button type="button" id="bMc" aria-expanded="false" title="Find a chart and lay it on the map">Charts</button></div></section>
   <section class="lay-s"><h3>Weather</h3><div class="lay-chips"><button type="button" data-l="wxrain">Rain</button><button type="button" data-l="wxwind">Wind</button><button type="button" data-l="wxturb">Turbulence</button><button type="button" data-l="wxsig">SIGMETs</button><button type="button" data-l="wxapt">Airport weather</button></div></section>
   <section class="lay-s"><h3>Aeronautical</h3><div class="lay-chips"><button type="button" data-l="asp">Airspaces</button><button type="button" data-l="ifrlo">Airways low</button><button type="button" data-l="ifrhi">Airways high</button><button type="button" data-l="faavfr">FAA Sectional</button><button type="button" data-l="faatac">FAA Terminal</button><button type="button" data-l="faalo">FAA IFR Low</button><button type="button" data-l="faahi">FAA IFR High</button></div><p class="m">Airspaces: your simulator's airspace data (X-Plane, through the bridge) and, in the US, the FAA (public domain). US charts: FAA Aeronautical Information Services (public domain). Airport weather: NOAA Aviation Weather Center. Rain <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a> · wind, turbulence Open-Meteo (estimate) · SIGMETs NOAA AWC · ATC data.vatsim.net, <a href="https://github.com/vatsimnetwork/simaware-tracon-project" target="_blank" rel="noopener">SimAware TRACON Project</a> (CC BY-SA 4.0)</p></section>
   <section class="lay-s"><h3>Projection</h3><div id="pj"></div>
@@ -832,7 +832,7 @@ const RL={KSFO:[11870,8650],KOAK:[10520],KSJC:[11000],KSAC:[8600],KRNO:[11002],K
 function pairs(a){const o=[];a.rw.forEach(n=>{if(!o.some(p=>p[0]==n||p[1]==n))o.push([n,(n+17)%36+1])});return o}
 function liveOk(){return live.on&&live.d&&live.d.lat!=null&&live.d.age<3&&performance.now()-live.at<3000}
 const cv=$('#map'),cx=cv.getContext('2d');let W,H,dpr,C={};
-const V={lon:-119.5,lat:38.8,z:6,fol:false,mode:'plane',gz:1,gs:'vector'},L={apt:1,nav:1,trf:1,grid:0,rte:1,procSid:1,procStar:1,procApproach:1,procMissed:0,wxrain:0,wxwind:0,wxturb:0,wxsig:0,ifrlo:0,ifrhi:0,atc:0,dn:0,wxapt:0,faavfr:0,faatac:0,faalo:0,faahi:0,asp:0,style:(function(){try{const s=localStorage.getItem('dl.style')||'sat';return MS[s]?s:'sat'}catch(e){return'sat'}})()};
+const V={lon:-119.5,lat:38.8,z:6,fol:false,mode:'plane',gz:1,gs:'vector'},L={apt:1,nav:1,trf:1,grid:0,rte:1,procSid:1,procStar:1,procApproach:1,procMissed:0,wxrain:0,wxwind:0,wxturb:0,wxsig:0,ifrlo:0,ifrhi:0,atc:0,dn:0,wxapt:0,faavfr:0,faatac:0,faalo:0,faahi:0,asp:0,cfx:1,style:(function(){try{const s=localStorage.getItem('dl.style')||'sat';return MS[s]?s:'sat'}catch(e){return'sat'}})()};
 let plan=false,panel=null,sel=null,route=[],trav=0,own={lat:0,lon:0,hdg:0,alt:0,vs:0};
 const MAP_DEFAULTS={color:'#e040fb',size:1.35,halo:false,trail:true,trailWidth:1,icon:'triangle'};
 function readMapPrefs(){try{const raw=JSON.parse(localStorage.getItem('stratos.mapSettings')||'null')||{};const col=typeof raw.color==='string'&&/^#[0-9a-f]{6}$/i.test(raw.color.trim())?raw.color.trim():MAP_DEFAULTS.color;const size=Number(raw.size);const width=Number(raw.trailWidth);return{color:col,size:Number.isFinite(size)?Math.min(2,Math.max(.7,size)):MAP_DEFAULTS.size,halo:typeof raw.halo==='boolean'?raw.halo:MAP_DEFAULTS.halo,trail:typeof raw.trail==='boolean'?raw.trail:MAP_DEFAULTS.trail,trailWidth:Number.isFinite(width)?Math.min(2,Math.max(.5,width)):MAP_DEFAULTS.trailWidth,icon:raw.icon==='aircraft'?'aircraft':'triangle'}}catch(_){return{...MAP_DEFAULTS}}}
@@ -2372,7 +2372,7 @@ document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{L[b.dataset.l]^=
   // IFR Low and IFR High are two views of one chart: one at a time.
   const other={ifrlo:'ifrhi',ifrhi:'ifrlo'}[b.dataset.l];if(other&&L[b.dataset.l]){L[other]=0;const ob=document.querySelector('[data-l="'+other+'"]');if(ob)ob.classList.remove('on');IFR.key=''}
   b.classList.toggle('on',!!L[b.dataset.l]);turbLegendToggle();
-  try{localStorage.setItem(LKEY,JSON.stringify({apt:!!L.apt,nav:!!L.nav,trf:!!L.trf,trl:!!L.trl,rte:!!L.rte,grid:!!L.grid,wxrain:!!L.wxrain,wxwind:!!L.wxwind,wxturb:!!L.wxturb,wxsig:!!L.wxsig,ifrlo:!!L.ifrlo,ifrhi:!!L.ifrhi,atc:!!L.atc,dn:!!L.dn,wxapt:!!L.wxapt,faavfr:!!L.faavfr,faatac:!!L.faatac,faalo:!!L.faalo,faahi:!!L.faahi,asp:!!L.asp}))}catch(_){}
+  try{localStorage.setItem(LKEY,JSON.stringify({apt:!!L.apt,nav:!!L.nav,trf:!!L.trf,trl:!!L.trl,rte:!!L.rte,grid:!!L.grid,wxrain:!!L.wxrain,wxwind:!!L.wxwind,wxturb:!!L.wxturb,wxsig:!!L.wxsig,ifrlo:!!L.ifrlo,ifrhi:!!L.ifrhi,atc:!!L.atc,dn:!!L.dn,wxapt:!!L.wxapt,faavfr:!!L.faavfr,faatac:!!L.faatac,faalo:!!L.faalo,faahi:!!L.faahi,asp:!!L.asp,cfx:!!L.cfx}))}catch(_){}
   render()});
 /* Quick regions: a place and the scale it reads at, nothing else. */
 const REGIONS=[['World',18,-12,2.2],['Europe',50,10,4.4],['North America',39,-98,3.7],['South America',-16,-60,3.5],['Africa',4,20,3.3],['Middle East',27,45,4.1],['Asia',34,100,3.3],['Oceania',-25,141,3.5]];
@@ -4509,8 +4509,46 @@ async function mcShow(item){
     if(token===MC.token)mcStatus(item.icao+' · '+item.title,'This chart could not be loaded: '+esc(String((error&&error.message)||error)))
   }
 }
+/* The route's georeferenced ChartFox charts (SID, STAR, approach), laid on the map
+   by the same fix-name fit as above. Re-read when the route changes. */
+const CFX={key:'',at:0,list:[],token:0};
+async function cfxRefresh(){
+  const plan=deckProcedurePlan()||{},o=plan.origin||{},d=plan.destination||{};
+  const dep=String(o.icao||'').toUpperCase(),arr=String(d.icao||'').toUpperCase();
+  const key=[dep,o.sid,arr,d.star,d.approach,d.rwy||d.approachRwy].join('|');
+  if(key===CFX.key)return;
+  CFX.key=key;CFX.list=[];const token=++CFX.token;
+  const [cf,cfc]=await Promise.all([import('./js/lib/chartfox.js'),import('./js/efb/chartfoxcharts.js')]);
+  if(!cf.chartfoxConnected())return;
+  await mcLibs();
+  for(const [icao,want] of [[dep,{sid:o.sid}],[arr,{star:d.star,approach:d.approach,runway:d.rwy||d.approachRwy}]]){
+    if(!icao)continue;
+    try{
+      const grouped=await cf.chartfoxGet('/v2/airports/'+encodeURIComponent(icao)+'/charts/grouped');
+      const refs=await mcPlate.plateReferences(icao);
+      for(const chart of cfc.routeChartfoxCharts(grouped,want)){
+        const token2=await cf.chartfoxToken();if(!token2||token!==CFX.token)return;
+        const page=await mcPlate.renderChart('/api/chart?source=chartfox&id='+encodeURIComponent(chart.id),{maxWidth:2400,headers:{Authorization:'Bearer '+token2}});
+        const fit=mcFitLib.fitChart(page.labels,refs,(lat,lon)=>wpx(lon,lat,0),{metresPerUnit:lat=>40075016*Math.cos(lat*R)/SZ});
+        if(token!==CFX.token)return;
+        if(fit){CFX.list.push({canvas:page.canvas,fit,name:cfc.shortChartName(chart)});draw()}
+      }
+    }catch(_){/* no ChartFox charts here: the map is unchanged */}
+  }
+}
+function drawChartCanvas(canvas,f,alpha){
+  const k=2**V.z,c=wpx(V.lon,V.lat,V.z);
+  cx.save();cx.globalAlpha=alpha;cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';
+  cx.transform(k*f.a,k*f.b,-k*f.b,k*f.a,k*f.tx-c[0]+W/2,k*f.ty-c[1]+H/2);
+  cx.drawImage(canvas,0,0);cx.restore()
+}
 /* World units (zoom 0) to the screen, as one canvas transform. */
 function drawMapChart(){
+  if(L.cfx&&!CH.on){
+    const now=performance.now();
+    if(now-CFX.at>3000){CFX.at=now;cfxRefresh().catch(()=>{})}
+    for(const item of CFX.list)drawChartCanvas(item.canvas,item.fit,MC.opacity/100);
+  }
   if(!MC.canvas||!MC.fit||!MC.visible)return;
   const f=MC.fit,k=2**V.z,c=wpx(V.lon,V.lat,V.z);
   cx.save();

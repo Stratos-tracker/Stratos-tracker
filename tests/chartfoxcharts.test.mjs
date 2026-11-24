@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { groupedSections, metaText, viewerUrl } from '../app/js/efb/chartfoxcharts.js';
+import { groupedSections, metaText, viewerUrl, shortChartName, routeChartfoxCharts } from '../app/js/efb/chartfoxcharts.js';
 
 /* Shapes as ChartFox's v2 API returned them for EGLL. */
 const chart = (type, type_key, name) => ({ id: `${type}-${name}`, airport_icao: 'EGLL', name, code: '2-1', type, type_key, meta: [], view_url: `https://chartfox.org/EGLL#${type}`, has_georeferences: true });
@@ -46,4 +46,16 @@ test('a ChartFox chart opens through the proxy only with the document ChartFox n
   assert.equal(record.source, 'chartfox');
   assert.equal(record.pdf, id);
   assert.equal(record.cycle, '2026-10-29');
+});
+
+test('SIDs and STARs read short, and a route picks only its georeferenced charts', () => {
+  assert.equal(shortChartName({ type_key: 'SID', name: 'OSHNN FIVE (RNAV)' }), 'SID - OSHNN');
+  assert.equal(shortChartName({ type_key: 'SID', name: 'OSHNN5' }), 'SID - OSHNN');
+  assert.equal(shortChartName({ type_key: 'STAR', name: 'ANJLL FOUR (RNAV)' }), 'STAR - ANJLL');
+  assert.equal(shortChartName({ type_key: 'Approach', name: 'ILS OR LOC RWY 24R' }), 'ILS OR LOC RWY 24R');
+  const c = (type_key, name, geo = true) => ({ id: name, type_key, name, has_georeferences: geo });
+  const grouped = { data: { 4: [c('SID', 'GARDY FIVE'), c('SID', 'OSHNN FIVE (RNAV)'), c('SID', 'OSHNN FIVE (RNAV), CONT.1')], 6: [c('Approach', 'ILS OR LOC RWY 25L', false)] } };
+  assert.deepEqual(routeChartfoxCharts(grouped, { sid: 'OSHNN5' }).map(x => x.name), ['OSHNN FIVE (RNAV)']);
+  assert.deepEqual(routeChartfoxCharts(grouped, { approach: 'I25L' }), [], 'not georeferenced, not on the map');
+  assert.deepEqual(routeChartfoxCharts(null, { sid: 'OSHNN5' }), []);
 });

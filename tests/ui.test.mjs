@@ -1761,13 +1761,14 @@ test('the VATSIM ATC layer marks staffed airports and invents no coverage', asyn
 test('charts on the map: one panel with a search bar, placed only when to scale', async () => {
   const fs = await import('node:fs');
   const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
-  assert.ok(page.includes('data-l="dn">Day / night</button><button type="button" id="bMc"'), 'a Charts chip in the map settings Layers opens the panel');
+  assert.ok(page.includes('data-l="dn">Day / night</button><button type="button" data-l="cfx" class="on" title="Your route\'s ChartFox charts on the map">ChartFox</button><button type="button" id="bMc"'), 'a Charts chip in the map settings Layers opens the panel');
   assert.doesNotMatch(page, /id="bMc" class="fab"/, 'not a button on the map itself');
   assert.match(page, /<input id="mcQ" type="search"/, 'the panel has a search bar');
   assert.match(page, /'<h4>Your route<\/h4>'/, "the route's own charts come first");
   assert.match(page, /mcFitLib\.fitChart\(page\.labels,refs,/, 'a chart is placed from the names it prints');
   assert.match(page, /if\(!fit\)\{\s*mcStatus\([^)]*'Not on the map: this chart is not drawn to scale/, 'and kept off the map when it cannot be');
-  assert.match(page, /function drawMapChart\(\)\{\s*if\(!MC\.canvas\|\|!MC\.fit\|\|!MC\.visible\)return;/, 'only a placed chart is ever drawn');
+  assert.match(page, /if\(!MC\.canvas\|\|!MC\.fit\|\|!MC\.visible\)return;/, 'only a placed chart is ever drawn');
   assert.match(page, /drawMapChart\(\);drawSelectedAircraftRoute\(\);/, 'under the route and the aircraft');
+  assert.match(page, /if\(fit\)\{CFX\.list\.push/, 'a ChartFox chart is drawn only once it is placed');
   assert.doesNotMatch(page, /PLATE|platePick|plateAlign|data-plate/, 'nothing of the old overlay remains');
 });

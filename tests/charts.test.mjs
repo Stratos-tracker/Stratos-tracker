@@ -688,7 +688,7 @@ test('FreeNav is a German chart index, and only DFS links for the airport are sh
 
 test('ChartFox is an explicit external fallback, never a silent redirect', () => {
   const deck = read('app/index.html');
-  assert.doesNotMatch(deck, /chartfox/i);
+  assert.doesNotMatch(deck, /chartfox\.org/i, 'the map never sends anyone to ChartFox; it only draws a linked account\'s charts');
   assert.doesNotMatch(deck, /FAA_APD/);
   assert.doesNotMatch(deck, /aeronav\.faa\.gov\/d-tpp\/'\+/);
   assert.match(deck, /function openChartsPage\(icao\)\{location\.href='pilot\.html#charts'/);

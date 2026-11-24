@@ -9,6 +9,30 @@
 
 import { chartfoxConnected, chartfoxGet } from '../lib/chartfox.js';
 import { esc } from './common.js';
+import { namesApproach, namesProcedure } from '../lib/routecharts.js';
+
+const NUMBER_WORDS = /\s+(ZERO|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE)\b.*$/;
+
+/** A short chart name: the OSHNN5 SID is "SID - OSHNN". Other charts keep their own name. */
+export function shortChartName(chart) {
+  const name = String((chart && chart.name) || 'Chart').trim();
+  const kind = chart && chart.type_key;
+  if (kind !== 'SID' && kind !== 'STAR') return name;
+  const fix = name.toUpperCase().replace(/\(.*?\)/g, '').replace(NUMBER_WORDS, '').trim().split(/\s+/)[0].replace(/\d[A-Z]?$/, '');
+  return fix ? `${kind} - ${fix}` : name;
+}
+
+/** The georeferenced charts a route uses at one airport: its SID, STAR and approach. */
+export function routeChartfoxCharts(grouped, { sid = '', star = '', approach = '', runway = '' } = {}) {
+  const charts = Object.values((grouped && grouped.data) || {}).filter(Array.isArray).flat()
+    .filter(chart => chart && chart.has_georeferences && !/\bCONT/i.test(chart.name || ''));
+  const pick = (kind, test) => charts.find(chart => chart.type_key === kind && test(String(chart.name || '')));
+  return [
+    sid && pick('SID', name => namesProcedure(name, sid)),
+    star && pick('STAR', name => namesProcedure(name, star)),
+    (approach || runway) && pick('Approach', name => namesApproach(name, approach, runway)),
+  ].filter(Boolean);
+}
 
 const TTL = 15 * 60 * 1000;
 const CACHE = 'stratos.chartfox.cache.';
@@ -66,7 +90,7 @@ export function chartRecord(chart, icao) {
   return {
     source: 'chartfox', sourceName: 'ChartFox', icao: String(chart.airport_icao || icao || '').toUpperCase(),
     pdf: chart.id, code: chart.code || '', cycle: String(chart.updated_at || '').slice(0, 10) || 'chartfox',
-    title: chart.name || 'Chart', url: viewerUrl(chart.view_url) || null, attribution: 'Charts via ChartFox',
+    title: shortChartName(chart), url: viewerUrl(chart.view_url) || null, attribution: 'Charts via ChartFox',
   };
 }
 
@@ -122,7 +146,7 @@ export function createChartfoxPanel(panel, onPick, onOpen = () => {}) {
         const url = viewerUrl(chart.view_url);
         const meta = metaText(chart.meta);
         return `<div class="e-list-item cfp-chart">
-          <div class="li-main"><b>${esc(chart.name || 'Chart')}</b><span>${esc([chart.code, ...meta].filter(Boolean).join(' · '))}</span></div>
+          <div class="li-main"><b>${esc(shortChartName(chart))}</b><span>${esc([chart.code, ...meta].filter(Boolean).join(' · '))}</span></div>
           ${chart.has_georeferences ? '<span class="e-badge">Georeferenced</span>' : ''}
           <button class="e-btn small primary" type="button" data-cfp-open="${esc(String(chart.id))}">View</button>
           ${url ? `<a class="e-btn small ghost" href="${esc(url)}" target="_blank" rel="noopener noreferrer" title="Open in ChartFox">↗</a>` : ''}

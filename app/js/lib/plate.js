@@ -105,10 +105,11 @@ export function chartQuery(icao, entry, cycle) {
 }
 
 /** Render page one of a document to a canvas at a resolution the map can zoom. */
-export async function renderChart(url, { maxWidth = 2000, page: pageNumber = 1, labels: wantLabels = true, scale: wantScale = 0 } = {}) {
+export async function renderChart(url, { maxWidth = 2000, page: pageNumber = 1, labels: wantLabels = true, scale: wantScale = 0, headers } = {}) {
   const pdfjs = await loadPdfjs();
   const doc = await pdfjs.getDocument({
     url,
+    httpHeaders: headers,
     standardFontDataUrl: new URL('../../vendor/pdfjs/standard_fonts/', import.meta.url).href,
   }).promise;
   const page = await doc.getPage(Math.max(1, Math.min(pageNumber, doc.numPages)));
