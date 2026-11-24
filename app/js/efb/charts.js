@@ -33,7 +33,7 @@ import {
 } from '../lib/charts.js';
 import { defaultBridgeBase, isHostedPage, siteApi } from '../bridge.js';
 import { ChartViewer } from '../pilot/charts.js';
-import { chartfoxConnected, chartfoxToken, connectChartfox, disconnectChartfox } from '../lib/chartfox.js';
+import { canSignInHere, CHARTFOX_SIGN_IN_ORIGIN, chartfoxConnected, chartfoxToken, connectChartfox, disconnectChartfox } from '../lib/chartfox.js';
 import { cachedGet, chartRecord, groupedSections, metaText, shortChartName } from './chartfoxcharts.js';
 import {
   FREENAV_HOME, FREENAV_NOTICE, freenavForIcao, isFreenavIcao, loadFreenavIndex,
@@ -235,6 +235,10 @@ export async function mount(root, ctx) {
       : '<span><b>ChartFox</b></span><button type="button" class="e-btn small primary" data-cf-connect>Connect</button>';
   };
   drawCfBar();
+  // Opened from the app's Connect button: go straight to ChartFox's sign-in.
+  if (ctx.params.get('cfconnect') === '1' && canSignInHere() && !chartfoxConnected()) {
+    connectChartfox(location.href.replace(/([?&])cfconnect=1&?/, '$1').replace(/[?&]$/, '')).catch(() => {});
+  }
   // The linked account's ChartFox charts for the airport in view; they lead the list.
   let cf = null;
   async function loadCf(code) {
@@ -252,6 +256,12 @@ export async function mount(root, ctx) {
   }
   cfBar.addEventListener('click', event => {
     if (event.target.closest('[data-cf-connect]')) {
+      // The callback is registered on the website only: from the app or a local
+      // copy, open the web EFB in the browser and start the sign-in there.
+      if (!canSignInHere()) {
+        window.open(`${CHARTFOX_SIGN_IN_ORIGIN}/app/efb.html#/charts?cfconnect=1${icao ? `&icao=${encodeURIComponent(icao)}` : ''}`, '_blank', 'noopener');
+        return;
+      }
       connectChartfox(location.href).catch(error => { cfBar.insertAdjacentHTML('beforeend', `<div class="e-notice bad cf-error">${esc(error.message)}</div>`); });
     } else if (event.target.closest('[data-cf-disconnect]')) {
       disconnectChartfox();
