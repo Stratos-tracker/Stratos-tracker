@@ -1,54 +1,45 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.4.11",
+  "latestVersion": "2.4.12",
   "minimumSupportedVersion": "",
   "mandatory": false,
-  "releaseDate": "2026-11-21",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.11/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.11/Stratos-Setup.exe",
-      "sha256": "b227e39daf74b7e4b00cb6ecd7933b535051becc5f14af5e16dc2edbc1e911a2",
-      "size": 119549467
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.11/Stratos-2.4.11-mac-arm64.dmg",
-      "sha256": "1503d971ac4192f5088c17ff8b2ec3b4240ee2b1172224e50e5e857492be0c6d",
-      "size": 137755490
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.11/Stratos-2.4.11-mac-x64.dmg",
-      "sha256": "b7b57682a93f98303d6b4e27f7d9f1d808083578d16610ee4781ee42355f46b9",
-      "size": 143159240
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.11/Stratos-2.4.11-linux-x64.AppImage",
-      "sha256": "3f78606ec4afb18a8b2e1981422f1d46b116388551c33a4407e28f0e8116d9e6",
-      "size": 160792425
-    }
-  },
-  "summary": "Automatic aircraft photography: the EFB finds a photo of the exact aircraft you are flying, with clearly labelled stand-ins when it cannot.",
+  "releaseDate": "2026-11-24",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "ChartFox charts in the EFB and on the map, an accurate landing rate, terminals and gates at airports, and new airport and aircraft icons.",
   "reason": "",
   "releaseNotes": [
-    "Automatic aircraft photos in the EFB flight widget, by registration from X-Plane or MSFS, with the photographer's credit and a link to Planespotters.",
-    "When the exact aircraft has no photo: the aircraft flying your flight today, the same airline and type, the same type, or an illustration, each clearly labelled.",
-    "Find image retries the search, and Set reg adds a backup registration.",
-    "MSFS now reports the aircraft type and airline; X-Plane follows a switch to another aircraft.",
-    "Photo lookups are cached, spaced out and retried, so they never slow the simulator."
+    "Connect your ChartFox account in Charts: its charts lead the chart list by type and open in the Stratos viewer.",
+    "Your route's georeferenced ChartFox SID, STAR and approach are laid on the map automatically; turn them off with the ChartFox chip in Layers.",
+    "Airport terminals now appear on the airport map.",
+    "Landing rate comes from the simulator's own touchdown and wheel contact, not the flare. Restart the bridge to use it.",
+    "SIDs and STARs are named by their procedure, e.g. SID - OSHNN5.",
+    "Many more traffic aircraft show their real shape instead of a generic plane.",
+    "Charts no longer shows the previous airport's country and publisher after switching airports.",
+    "Gates are visible on the airport map at normal zoom.",
+    "Airports are shown as pins, with major airports in purple.",
+    "A new Charts icon, and a tidier Charts layout."
   ],
   "notes": {
     "features": [
-      "Automatic aircraft photos in the EFB flight widget, by registration from X-Plane or MSFS, with the photographer's credit and a link to Planespotters.",
-      "When the exact aircraft has no photo: the aircraft flying your flight today, the same airline and type, the same type, or an illustration, each clearly labelled.",
-      "Find image retries the search, and Set reg adds a backup registration."
+      "Connect your ChartFox account in Charts: its charts lead the chart list by type and open in the Stratos viewer.",
+      "Your route's georeferenced ChartFox SID, STAR and approach are laid on the map automatically; turn them off with the ChartFox chip in Layers.",
+      "Airport terminals now appear on the airport map."
     ],
     "improvements": [
-      "MSFS now reports the aircraft type and airline; X-Plane follows a switch to another aircraft.",
-      "Photo lookups are cached, spaced out and retried, so they never slow the simulator."
+      "Landing rate comes from the simulator's own touchdown and wheel contact, not the flare. Restart the bridge to use it.",
+      "SIDs and STARs are named by their procedure, e.g. SID - OSHNN5.",
+      "Many more traffic aircraft show their real shape instead of a generic plane."
     ],
-    "fixes": [],
+    "fixes": [
+      "Charts no longer shows the previous airport's country and publisher after switching airports.",
+      "Gates are visible on the airport map at normal zoom."
+    ],
     "performance": [],
-    "ui": [],
+    "ui": [
+      "Airports are shown as pins, with major airports in purple.",
+      "A new Charts icon, and a tidier Charts layout."
+    ],
     "compatibility": [],
     "other": []
   }

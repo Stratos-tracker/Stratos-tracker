@@ -1,4 +1,30 @@
 {
+  "2.4.12": {
+    "summary": "ChartFox charts in the EFB and on the map, an accurate landing rate, terminals and gates at airports, and new airport and aircraft icons.",
+    "changelog": {
+      "features": [
+        "Connect your ChartFox account in Charts: its charts lead the chart list by type and open in the Stratos viewer.",
+        "Your route's georeferenced ChartFox SID, STAR and approach are laid on the map automatically; turn them off with the ChartFox chip in Layers.",
+        "Airport terminals now appear on the airport map."
+      ],
+      "improvements": [
+        "Landing rate comes from the simulator's own touchdown and wheel contact, not the flare. Restart the bridge to use it.",
+        "SIDs and STARs are named by their procedure, e.g. SID - OSHNN5.",
+        "Many more traffic aircraft show their real shape instead of a generic plane."
+      ],
+      "fixes": [
+        "Charts no longer shows the previous airport's country and publisher after switching airports.",
+        "Gates are visible on the airport map at normal zoom."
+      ],
+      "performance": [],
+      "ui": [
+        "Airports are shown as pins, with major airports in purple.",
+        "A new Charts icon, and a tidier Charts layout."
+      ],
+      "compatibility": [],
+      "other": []
+    }
+  },
   "2.4.11": {
     "summary": "Automatic aircraft photography: the EFB finds a photo of the exact aircraft you are flying, with clearly labelled stand-ins when it cannot.",
     "changelog": {
