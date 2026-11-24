@@ -847,6 +847,7 @@ export async function mount(root, ctx) {
       noticeEl.innerHTML = '<div class="e-notice warn">Enter an airport ICAO code or pick one of the suggestions.</div>';
       return;
     }
+    const asked = icao; // a slower earlier load must not overwrite this airport
     loadCf(icao);
     destroyViewer();
     selected = null;
@@ -865,11 +866,11 @@ export async function mount(root, ctx) {
     renderViewer();
 
     const info = await searchAirports(icao, 6).catch(() => []);
-    if (destroyed) return;
+    if (destroyed || asked !== icao) return;
     airport = (info || []).find(row => String(row.id).toUpperCase() === icao) || null;
 
     const result = await loadChartCatalogue(icao);
-    if (destroyed) return;
+    if (destroyed || asked !== icao) return;
     loading = false;
     coverage = result.coverage || coverage;
     sourceLinks = result.sources && result.sources.length ? result.sources : chartSourcesFor(icao);
