@@ -8,14 +8,15 @@ import fs from 'node:fs';
 const LABELS = { features: '✨ New', improvements: '⚡ Better', fixes: '🛠️ Fixed', performance: '🚀 Faster', ui: '🎨 Looks', compatibility: '⚠️ Important' };
 
 /** The Discord message for one manifest release entry. */
-export function releaseMessage(release) {
+export function releaseMessage(release, pingRole = '') {
   const changelog = release.changelog || {};
   const fields = Object.entries(LABELS)
     .filter(([key]) => Array.isArray(changelog[key]) && changelog[key].length)
     .map(([key, name]) => ({ name, value: changelog[key].map(item => `• ${item}`).join('\n').slice(0, 1024) }));
   return {
     username: 'Stratos Releases',
-    content: `🚀 **Stratos ${release.version} has landed!**`,
+    content: `${/^\d+$/.test(pingRole) ? `<@&${pingRole}> ` : ''}🚀 **Stratos ${release.version} has landed!**`,
+    allowed_mentions: { roles: /^\d+$/.test(pingRole) ? [pingRole] : [] },
     embeds: [{
       title: `Stratos ${release.version}`,
       url: `https://github.com/Stratos-tracker/Stratos-tracker/releases/tag/v${release.version}`,
@@ -36,7 +37,7 @@ async function main() {
   const want = process.argv[3];
   const release = !want || manifest.latest.version === want ? manifest.latest : (manifest.releases || []).find(r => r.version === want);
   if (!release) throw new Error(`No release ${want} in the manifest`);
-  const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(releaseMessage(release)) });
+  const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(releaseMessage(release, process.env.DISCORD_PING_ROLE)) });
   if (!res.ok) throw new Error(`Discord answered ${res.status}: ${await res.text()}`);
   console.log(`Posted Stratos ${release.version} to Discord.`);
 }

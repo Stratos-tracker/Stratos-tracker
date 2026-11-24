@@ -548,6 +548,8 @@ jobs:
         continue-on-error: true
         env:
           DISCORD_RELEASES_WEBHOOK: ${{ secrets.DISCORD_RELEASES_WEBHOOK }}
+          # The server's "🔔 Update Pings" role: members who opted in are pinged.
+          DISCORD_PING_ROLE: '1574927728686272693'
         run: node scripts/discord-release.mjs dist/releases.json "$VERSION"
 
       # The website is built from main and serves app/releases.json from its own
