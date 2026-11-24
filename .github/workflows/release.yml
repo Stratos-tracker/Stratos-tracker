@@ -543,6 +543,13 @@ jobs:
           node scripts/check-release.mjs "$VERSION" ${ALLOW_MISSING:+--allow-missing="$ALLOW_MISSING"}
           echo "- Published $TAG" >> "$GITHUB_STEP_SUMMARY"
 
+      # Tell the Discord server. A missing secret or a Discord outage never fails the release.
+      - name: Announce on Discord
+        continue-on-error: true
+        env:
+          DISCORD_RELEASES_WEBHOOK: ${{ secrets.DISCORD_RELEASES_WEBHOOK }}
+        run: node scripts/discord-release.mjs dist/releases.json "$VERSION"
+
       # The website is built from main and serves app/releases.json from its own
       # origin; the browser reads the GitHub asset only when that copy cannot be
       # loaded. The generated manifest therefore has to be on main, or the site
