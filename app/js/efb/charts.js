@@ -34,7 +34,7 @@ import {
 import { defaultBridgeBase, isHostedPage, siteApi } from '../bridge.js';
 import { ChartViewer } from '../pilot/charts.js';
 import { chartfoxConnected, chartfoxToken, connectChartfox, disconnectChartfox } from '../lib/chartfox.js';
-import { createChartfoxPanel } from './chartfoxcharts.js';
+import { cachedGet, chartRecord, groupedSections, metaText, shortChartName } from './chartfoxcharts.js';
 import {
   FREENAV_HOME, FREENAV_NOTICE, freenavForIcao, isFreenavIcao, loadFreenavIndex,
 } from '../lib/freenav.js';
@@ -187,8 +187,6 @@ export async function mount(root, ctx) {
   let splitMap = null;
 
   root.innerHTML = `
-    <div id="cf-bar" class="cf-bar"></div>
-    <div id="cf-panel"></div>
     <div class="ch-workspace">
       <aside class="ch-side" aria-label="Chart library">
         <div class="ch-side-top">
@@ -217,6 +215,7 @@ export async function mount(root, ctx) {
             ${CATEGORY_FILTERS.map(item => `<button type="button" data-cat="${item.key}" aria-pressed="${item.key === 'all' ? 'true' : 'false'}">${item.label}</button>`).join('')}
           </div>
           <input class="e-input small" id="chart-query" placeholder="Filter documents" aria-label="Filter charts">
+          <div id="cf-bar" class="cf-bar"></div>
         </div>
         <div id="chart-list" class="e-list ch-list"></div>
       </aside>
@@ -232,24 +231,33 @@ export async function mount(root, ctx) {
   const cfBar = root.querySelector('#cf-bar');
   const drawCfBar = () => {
     cfBar.innerHTML = chartfoxConnected()
-      ? '<span><b>ChartFox</b> account connected</span><button type="button" class="e-btn small" data-cf-disconnect>Disconnect</button>'
-      : '<span><b>ChartFox</b> worldwide charts with your ChartFox account</span><button type="button" class="e-btn small primary" data-cf-connect>Connect ChartFox</button>';
+      ? '<span><b>ChartFox</b> connected</span><button type="button" class="e-btn small ghost" data-cf-disconnect>Disconnect</button>'
+      : '<span><b>ChartFox</b></span><button type="button" class="e-btn small primary" data-cf-connect>Connect</button>';
   };
   drawCfBar();
-  // The linked account's ChartFox charts for the airport in view.
-  const cfPanel = createChartfoxPanel(root.querySelector('#cf-panel'), pick => {
-    icao = pick;
-    if (searchInput) searchInput.value = pick;
-    load();
-  }, chart => openChart(chart));
-  cfPanel.show(icao);
+  // The linked account's ChartFox charts for the airport in view; they lead the list.
+  let cf = null;
+  async function loadCf(code) {
+    cf = chartfoxConnected() ? { icao: code, status: 'loading', sections: [] } : null;
+    if (!cf) return;
+    try {
+      const grouped = await cachedGet(`/v2/airports/${encodeURIComponent(code)}/charts/grouped`);
+      if (!cf || cf.icao !== code) return;
+      cf = { icao: code, status: 'ready', sections: groupedSections(grouped && grouped.data) };
+    } catch (_) {
+      if (!cf || cf.icao !== code) return;
+      cf = { icao: code, status: 'error', sections: [] }; // the other sources stay
+    }
+    if (!destroyed) renderList();
+  }
   cfBar.addEventListener('click', event => {
     if (event.target.closest('[data-cf-connect]')) {
       connectChartfox(location.href).catch(error => { cfBar.insertAdjacentHTML('beforeend', `<div class="e-notice bad cf-error">${esc(error.message)}</div>`); });
     } else if (event.target.closest('[data-cf-disconnect]')) {
       disconnectChartfox();
       drawCfBar();
-      cfPanel.show('');
+      cf = null;
+      renderList();
     }
   });
   const countEl = root.querySelector('#chart-count');
@@ -312,8 +320,38 @@ export async function mount(root, ctx) {
     return filterCharts(byCategory, query);
   }
 
+  const CF_FAMILY = { GroundLayout: 'diagram', SID: 'sid', STAR: 'star', Approach: 'approach' };
+  function cfList() {
+    if (!cf || cf.icao !== icao) return false;
+    if (cf.status === 'loading') {
+      countEl.textContent = '';
+      listEl.innerHTML = '<div class="e-loading"><i></i>Loading ChartFox…</div>';
+      return true;
+    }
+    if (cf.status !== 'ready' || !cf.sections.length) return false;
+    const needle = String(query || '').toLowerCase();
+    const groups = cf.sections
+      .filter(section => category === 'all' || (CF_FAMILY[section.key] || 'other') === category)
+      .map(section => ({ section, charts: section.charts.filter(chart => !needle || `${shortChartName(chart)} ${chart.name} ${chart.code}`.toLowerCase().includes(needle)) }))
+      .filter(group => group.charts.length);
+    const count = groups.reduce((n, group) => n + group.charts.length, 0);
+    countEl.textContent = `${count} ChartFox`;
+    listEl.innerHTML = groups.map(({ section, charts }) => `<div class="e-label" style="padding:8px 10px 2px">${esc(section.title)}</div>`
+      + charts.map(chart => `<button class="e-list-item" type="button" data-cfchart="${esc(String(chart.id))}" aria-current="${selected && selected.pdf === chart.id ? 'true' : 'false'}">
+        <div class="li-main"><b>${esc(shortChartName(chart))}</b><span>${esc([chart.code, ...metaText(chart.meta).filter(text => /^Runway/.test(text))].filter(Boolean).join(' · '))}</span></div>
+        ${chart.has_georeferences ? '<span class="e-badge good">Geo</span>' : ''}
+      </button>`).join('')).join('')
+      || '<div class="ch-hint"><b>No matching charts</b><span>Clear the filter to see them all.</span></div>';
+    listEl.querySelectorAll('[data-cfchart]').forEach(button => button.addEventListener('click', () => {
+      const chart = cf.sections.flatMap(section => section.charts).find(item => String(item.id) === button.dataset.cfchart);
+      if (chart) openChart(chartRecord(chart, icao));
+    }));
+    return true;
+  }
+
   function renderList() {
     renderQuick();
+    if (cfList()) return;
     if (loading) {
       listEl.innerHTML = '<div class="e-loading"><i></i>Loading the catalogue…</div>';
       countEl.textContent = '';
@@ -809,7 +847,7 @@ export async function mount(root, ctx) {
       noticeEl.innerHTML = '<div class="e-notice warn">Enter an airport ICAO code or pick one of the suggestions.</div>';
       return;
     }
-    cfPanel.show(icao);
+    loadCf(icao);
     destroyViewer();
     selected = null;
     catalogue = null;

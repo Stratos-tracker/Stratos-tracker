@@ -49,9 +49,11 @@ test('a ChartFox chart opens through the proxy only with the document ChartFox n
 });
 
 test('SIDs and STARs read short, and a route picks only its georeferenced charts', () => {
-  assert.equal(shortChartName({ type_key: 'SID', name: 'OSHNN FIVE (RNAV)' }), 'SID - OSHNN');
-  assert.equal(shortChartName({ type_key: 'SID', name: 'OSHNN5' }), 'SID - OSHNN');
-  assert.equal(shortChartName({ type_key: 'STAR', name: 'ANJLL FOUR (RNAV)' }), 'STAR - ANJLL');
+  assert.equal(shortChartName({ type_key: 'SID', name: 'OSHNN FIVE (RNAV)' }), 'SID - OSHNN5');
+  assert.equal(shortChartName({ type_key: 'SID', name: 'OSHNN5' }), 'SID - OSHNN5');
+  assert.equal(shortChartName({ type_key: 'STAR', name: 'ANJLL FOUR (RNAV)' }), 'STAR - ANJLL4');
+  assert.equal(shortChartName({ type_key: 'SID', name: 'RWY 07C/R OBOKA1E MARUN5E' }), 'SID - OBOKA1E/MARUN5E');
+  assert.equal(shortChartName({ type_key: 'SID', name: 'RNAV' }), 'SID - RNAV', 'no idents in the name: the name stays');
   assert.equal(shortChartName({ type_key: 'Approach', name: 'ILS OR LOC RWY 24R' }), 'ILS OR LOC RWY 24R');
   const c = (type_key, name, geo = true) => ({ id: name, type_key, name, has_georeferences: geo });
   const grouped = { data: { 4: [c('SID', 'GARDY FIVE'), c('SID', 'OSHNN FIVE (RNAV)'), c('SID', 'OSHNN FIVE (RNAV), CONT.1')], 6: [c('Approach', 'ILS OR LOC RWY 25L', false)] } };

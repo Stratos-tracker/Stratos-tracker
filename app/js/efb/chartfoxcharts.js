@@ -8,18 +8,18 @@
  */
 
 import { chartfoxConnected, chartfoxGet } from '../lib/chartfox.js';
-import { esc } from './common.js';
 import { namesApproach, namesProcedure } from '../lib/routecharts.js';
 
-const NUMBER_WORDS = /\s+(ZERO|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE)\b.*$/;
+const WORDS = ['ZERO', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'];
 
-/** A short chart name: the OSHNN5 SID is "SID - OSHNN". Other charts keep their own name. */
+/** SIDs and STARs by their idents: "OSHNN FIVE (RNAV)" is "SID - OSHNN5". Other charts keep their name. */
 export function shortChartName(chart) {
   const name = String((chart && chart.name) || 'Chart').trim();
   const kind = chart && chart.type_key;
   if (kind !== 'SID' && kind !== 'STAR') return name;
-  const fix = name.toUpperCase().replace(/\(.*?\)/g, '').replace(NUMBER_WORDS, '').trim().split(/\s+/)[0].replace(/\d[A-Z]?$/, '');
-  return fix ? `${kind} - ${fix}` : name;
+  const text = name.toUpperCase().replace(new RegExp(`\\b([A-Z]{2,5}) (${WORDS.join('|')})\\b`, 'g'), (_, fix, word) => fix + WORDS.indexOf(word));
+  const idents = [...new Set(text.match(/\b[A-Z]{2,5}\d[A-Z]?\b/g) || [])];
+  return `${kind} - ${idents.length ? idents.join('/') : name}`;
 }
 
 /** The georeferenced charts a route uses at one airport: its SID, STAR and approach. */
@@ -75,7 +75,7 @@ export function viewerUrl(value) {
   return /^https:\/\/chartfox\.org\//.test(raw) ? raw : '';
 }
 
-async function cachedGet(path) {
+export async function cachedGet(path) {
   try {
     const hit = JSON.parse(sessionStorage.getItem(CACHE + path) || 'null');
     if (hit && Date.now() - hit.at < TTL) return hit.body;
@@ -92,116 +92,4 @@ export function chartRecord(chart, icao) {
     pdf: chart.id, code: chart.code || '', cycle: String(chart.updated_at || '').slice(0, 10) || 'chartfox',
     title: shortChartName(chart), url: viewerUrl(chart.view_url) || null, attribution: 'Charts via ChartFox',
   };
-}
-
-/** Fill `panel` for `icao`; `onPick(icao)` loads another airport, `onOpen(record)` shows a chart. */
-export function createChartfoxPanel(panel, onPick, onOpen = () => {}) {
-  let current = '';
-  let shown = new Map();
-  let filter = '';
-
-  const shell = inner => `<div class="cfp">${inner}</div>`;
-  const searchBox = `<form class="cfp-search" data-cfp-search><input class="e-input small" name="q" placeholder="ChartFox: ICAO, IATA or airport name" aria-label="Search ChartFox airports"><button class="e-btn small" type="submit">Find</button></form><div class="cfp-results" data-cfp-results></div>`;
-
-  async function show(icao) {
-    current = String(icao || '').toUpperCase();
-    if (!chartfoxConnected()) { panel.innerHTML = ''; return; }
-    if (!current) { panel.innerHTML = shell(searchBox); return; }
-    panel.innerHTML = shell(`${searchBox}<div class="e-loading"><i></i>Loading ChartFox charts for ${esc(current)}…</div>`);
-    const asked = current;
-    try {
-      const [airport, grouped, runways] = await Promise.all([
-        cachedGet(`/v2/airports/${encodeURIComponent(asked)}`),
-        cachedGet(`/v2/airports/${encodeURIComponent(asked)}/charts/grouped`),
-        cachedGet(`/v2/airports/${encodeURIComponent(asked)}/runways`).catch(() => null),
-      ]);
-      if (asked !== current) return;
-      render(airport, grouped, runways);
-    } catch (error) {
-      if (asked !== current) return;
-      panel.innerHTML = shell(`${searchBox}<div class="e-notice ${error.code === 'signed-out' ? 'warn' : 'bad'}">${esc(error.message)}</div>`);
-    }
-  }
-
-  function render(airport, grouped, runways) {
-    if (!airport) {
-      panel.innerHTML = shell(`${searchBox}<div class="ch-hint"><b>${esc(current)} is not in ChartFox</b><span>The other chart sources below still apply.</span></div>`);
-      return;
-    }
-    const sections = groupedSections(grouped && grouped.data);
-    const total = sections.reduce((n, s) => n + s.charts.length, 0);
-    const rwys = (runways && Array.isArray(runways.data) ? runways.data : []).map(r => r && r.designator).filter(Boolean);
-    const head = `<div class="cfp-head"><b>${esc(airport.icao_code || airport.ident)}${airport.iata_code ? ` · ${esc(airport.iata_code)}` : ''}</b>
-      <span>${esc(airport.name || '')}${Number.isFinite(airport.elevation_ft) ? ` · ${esc(String(airport.elevation_ft))} ft` : ''}${rwys.length ? ` · RWY ${esc(rwys.join(' '))}` : ''}</span></div>`;
-    if (!total) {
-      panel.innerHTML = shell(`${searchBox}${head}<div class="ch-hint"><b>No ChartFox charts for ${esc(current)}</b><span>ChartFox lists this airport but publishes no charts for it.</span></div>`);
-      return;
-    }
-    shown = new Map(sections.flatMap(s => s.charts).map(chart => [String(chart.id), chart]));
-    const match = chart => !filter || `${chart.name} ${chart.code}`.toLowerCase().includes(filter);
-    const body = sections.map(section => {
-      const rows = section.charts.filter(match);
-      if (!rows.length) return '';
-      return `<details class="cfp-group" open><summary>${esc(section.title)} <em>${rows.length}</em></summary>${rows.map(chart => {
-        const url = viewerUrl(chart.view_url);
-        const meta = metaText(chart.meta);
-        return `<div class="e-list-item cfp-chart">
-          <div class="li-main"><b>${esc(shortChartName(chart))}</b><span>${esc([chart.code, ...meta].filter(Boolean).join(' · '))}</span></div>
-          ${chart.has_georeferences ? '<span class="e-badge">Georeferenced</span>' : ''}
-          <button class="e-btn small primary" type="button" data-cfp-open="${esc(String(chart.id))}">View</button>
-          ${url ? `<a class="e-btn small ghost" href="${esc(url)}" target="_blank" rel="noopener noreferrer" title="Open in ChartFox">↗</a>` : ''}
-        </div>`;
-      }).join('')}</details>`;
-    }).join('');
-    panel.innerHTML = shell(`${searchBox}${head}
-      <input class="e-input small cfp-filter" data-cfp-filter value="${esc(filter)}" placeholder="Filter ${total} ChartFox charts" aria-label="Filter ChartFox charts">
-      ${body || '<div class="ch-hint"><b>No matching charts</b><span>Clear the filter to see them all.</span></div>'}
-      <div class="e-small e-faint cfp-note">ChartFox charts open in the viewer here; ↗ opens ChartFox's own page.</div>`);
-  }
-
-  async function search(query, page = 1) {
-    const box = panel.querySelector('[data-cfp-results]');
-    if (!box) return;
-    box.innerHTML = '<div class="e-loading"><i></i>Searching ChartFox…</div>';
-    try {
-      const result = await cachedGet(`/v2/airports?query=${encodeURIComponent(query)}&page=${page}`);
-      const list = result && Array.isArray(result.data) ? result.data : [];
-      const more = result && result.meta && result.meta.current_page < result.meta.last_page;
-      box.innerHTML = list.length
-        ? list.map(a => `<button type="button" class="e-list-item cfp-airport" data-cfp-pick="${esc(a.icao_code || a.ident)}">
-            <div class="li-main"><b>${esc(a.icao_code || a.ident)}${a.iata_code ? ` · ${esc(a.iata_code)}` : ''}</b><span>${esc(a.name || '')}${a.iso_a2_country ? ` · ${esc(a.iso_a2_country)}` : ''}</span></div>
-            ${a.has_charts ? '<span class="e-badge">Charts</span>' : '<span class="e-badge">No charts</span>'}
-          </button>`).join('') + (more ? `<button type="button" class="e-btn small" data-cfp-more="${page + 1}" data-cfp-q="${esc(query)}">More results</button>` : '')
-        : '<div class="ch-hint"><b>No airports found</b><span>Try an ICAO or IATA code, or part of the name.</span></div>';
-    } catch (error) {
-      box.innerHTML = `<div class="e-notice bad">${esc(error.message)}</div>`;
-    }
-  }
-
-  panel.addEventListener('submit', event => {
-    const form = event.target.closest('[data-cfp-search]');
-    if (!form) return;
-    event.preventDefault();
-    const q = String(new FormData(form).get('q') || '').trim();
-    if (q) search(q);
-  });
-  panel.addEventListener('click', event => {
-    const open = event.target.closest('[data-cfp-open]');
-    if (open && shown.has(open.dataset.cfpOpen)) { onOpen(chartRecord(shown.get(open.dataset.cfpOpen), current)); return; }
-    const pick = event.target.closest('[data-cfp-pick]');
-    if (pick) { onPick(pick.dataset.cfpPick); return; }
-    const more = event.target.closest('[data-cfp-more]');
-    if (more) search(more.dataset.cfpQ, Number(more.dataset.cfpMore));
-  });
-  panel.addEventListener('input', event => {
-    if (!event.target.matches('[data-cfp-filter]')) return;
-    filter = event.target.value.trim().toLowerCase();
-    const at = event.target.selectionStart;
-    show(current).then(() => {
-      const box = panel.querySelector('[data-cfp-filter]');
-      if (box) { box.focus(); box.setSelectionRange(at, at); }
-    });
-  });
-
-  return { show };
 }

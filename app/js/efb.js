@@ -119,7 +119,7 @@ const ICONS = {
   // SF Symbols "cloud.sun".
   weather: '<circle cx="12.4" cy="8.2" r="2.4"/><path d="M12.4 3.6v1.2M7.8 4.9l.9.9M17 4.9l-.9.9"/><path d="M8 18.6a3 3 0 0 1 .4-6 3.9 3.9 0 0 1 7.4 1 2.8 2.8 0 0 1-.4 5z"/>',
   // SF Symbols "chart.xyaxis.line".
-  charts: '<path d="M4 4v16h16"/><path d="m7 15 3.4-4.2 2.8 2.3 4-5.6"/>',
+  charts: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M12 18v-5"/><path d="m9 11 3 2 3-2"/>',
   // SF Symbols "location".
   airport: '<path d="M12 20.8s6.6-5.8 6.6-10.4a6.6 6.6 0 1 0-13.2 0c0 4.6 6.6 10.4 6.6 10.4z"/><circle cx="12" cy="10.2" r="2.4"/>',
   // SF Symbols "gauge".
