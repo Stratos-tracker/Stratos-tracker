@@ -549,8 +549,11 @@ export function formatDate(value) {
  */
 export function platformKey(nav = typeof navigator !== 'undefined' ? navigator : null) {
   const agent = String((nav && nav.userAgent) || '');
+  // Phones and tablets run the web app and update by reloading, never an installer.
+  // iPadOS reports a Mac user agent, so a touch screen marks it.
+  if (/iPhone|iPad|iPod|Android/i.test(agent)) return '';
+  if (/Macintosh/i.test(agent) && Number(nav && nav.maxTouchPoints) > 1) return '';
   if (/Windows/i.test(agent)) return 'windows';
-  if (/Android/i.test(agent)) return 'linux-x64';
   if (/Mac OS X|Macintosh/i.test(agent)) {
     // Apple Silicon reports arm64; an Intel Mac must not be handed the arm64 build.
     return /arm64|aarch64/i.test(agent) ? 'mac-arm64' : 'mac-x64';

@@ -541,4 +541,7 @@ test('version.json drives the same update decision as the full manifest', async 
   assert.equal(platformKey({ userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' }), 'mac-x64');
   assert.equal(platformKey({ userAgent: 'Mozilla/5.0 (Macintosh; arm64 Mac OS X 14_0)' }), 'mac-arm64');
   assert.equal(platformKey({ userAgent: 'Mozilla/5.0 (X11; Linux x86_64)' }), 'linux-x64');
+  assert.equal(platformKey({ userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)' }), '', 'an iPhone is not a Mac');
+  assert.equal(platformKey({ userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', maxTouchPoints: 5 }), '', 'iPadOS reports a Mac with a touch screen');
+  assert.equal(platformKey({ userAgent: 'Mozilla/5.0 (Linux; Android 14)' }), '', 'Android gets no Linux installer');
 });

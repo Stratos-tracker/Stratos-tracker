@@ -159,7 +159,7 @@ function chip() {
 const STATUS_TEXT = {
   searching: 'Searching for your PC…',
   connecting: 'Found your PC — opening the live map…',
-  'not-found': 'PC not found — start Stratos on your PC',
+  'not-found': '',
   choose: 'Choose the PC to connect',
 };
 

@@ -836,3 +836,7 @@
 @media print {
   .m-nav, .m-grip { display: none !important; }
 }
+
+/* The phone map runs under the status bar (black-translucent); the controls
+   already sit below it by the safe-area inset. */
+html:has(body.pd) { padding-top: 0 !important; }

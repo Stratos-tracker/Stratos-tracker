@@ -572,6 +572,9 @@ export async function mountUpdateCenter({ root, installedVersion = APP_VERSION, 
       paint();
       return;
     }
+    // The web app (phone, tablet, browser without an installer) updates by
+    // loading the new build: nothing is downloaded.
+    if (!desktop && !platformKey()) { location.reload(); return; }
     // The published release ships installers, not updater feeds, so updating is a
     // download the pilot runs. Nothing here replaces the installed files, and a
     // failure never leaves the installation half-written.
