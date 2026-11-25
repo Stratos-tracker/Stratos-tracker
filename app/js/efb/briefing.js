@@ -17,7 +17,7 @@ import { parseMetar } from '../lib/routeweather.js';
 const CATEGORY_TONE = { VFR: 'good', MVFR: 'accent', IFR: 'warn', LIFR: 'bad' };
 
 function sourceTag(source) {
-  if (source === 'ofp') return '<span class="e-badge accent" title="From the imported SimBrief plan">OFP</span>';
+  // Values from the imported plan are the page's default, so they carry no tag.
   if (source === 'stratos') return '<span class="e-badge" title="Calculated by Stratos from the route">Calc</span>';
   if (source === 'live') return '<span class="e-badge good" title="Live simulator data">Live</span>';
   return '';
