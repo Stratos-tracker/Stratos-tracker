@@ -898,6 +898,9 @@ function setupLock() {
     const from = document.referrer ? new URL(document.referrer) : null;
     if (from && from.origin === location.origin && /\/(app|phone)(\/|$)/.test(from.pathname)) return;
   } catch (_) { /* unreadable referrer: show the lock */ }
+  // A link straight to an app (the phone's Flight and Charts tabs) opens that app:
+  // the lock belongs to opening the bag itself, at its home screen.
+  if (/^#\/(?!home)[a-z]/i.test(location.hash || '')) return;
   dom.lock = lock;
   for (const ticks of lock.querySelectorAll('.lkf-ticks')) {
     ticks.innerHTML = Array.from({ length: 12 }, (_, i) =>
