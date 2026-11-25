@@ -1353,6 +1353,17 @@ if(V.fol){const q=(sel&&sel.k=='trf')?sel:own;V.lon=q.lon;V.lat=q.lat}}
 /* drawing */
 const ACI=new Map();function acImg(t,col){const key=t+'|'+col;if(ACI.has(key))return ACI.get(key);const icon=window.aircraftIcon?.(t,col);if(icon)ACI.set(key,icon);return icon}
 /* Ownship as an EFB arrowhead: a notched triangle pointing along the track, dark-edged so it reads on any base map. */
+/* Where the aircraft will be in 1 and 2 minutes at its ground speed, along its track. */
+function drawTrackVector(x,y,trk,gs){
+  gs=Number(gs);if(!(gs>40)||!Number.isFinite(Number(trk)))return;
+  const nm=gs/60,pxPerNm=SZ*2**V.z/21600/Math.cos(own.lat*R),t=Number(trk)*R;
+  const len=pxPerNm*nm*2;if(len<14)return;
+  const ex=x+Math.sin(t)*len,ey=y-Math.cos(t)*len,mx=x+Math.sin(t)*len/2,my=y-Math.cos(t)*len/2;
+  cx.save();cx.lineCap='round';cx.setLineDash([7,5]);
+  cx.beginPath();cx.moveTo(x,y);cx.lineTo(ex,ey);cx.lineWidth=4;cx.strokeStyle='rgba(8,16,25,.8)';cx.stroke();cx.lineWidth=2;cx.strokeStyle='#ffffff';cx.stroke();
+  cx.setLineDash([]);const nx=Math.cos(t)*6,ny=Math.sin(t)*6;cx.beginPath();cx.moveTo(mx-nx,my-ny);cx.lineTo(mx+nx,my+ny);cx.lineWidth=2;cx.stroke();
+  cx.restore()
+}
 function drawOwnTri(x,y,heading,color,k){const s=11*k;cx.save();cx.translate(x,y);cx.rotate((Number(heading)||0)*R);cx.beginPath();cx.moveTo(0,-1.25*s);cx.lineTo(.95*s,s);cx.lineTo(0,.5*s);cx.lineTo(-.95*s,s);cx.closePath();cx.lineJoin='round';cx.lineWidth=3;cx.strokeStyle='#1b0a2a';cx.stroke();cx.fillStyle=color;cx.fill();cx.restore()}
 function drawAircraft(type,x,y,heading,color,size){const im=type&&acImg(type,color);cx.save();cx.translate(x,y);cx.rotate(((Number(heading)||0)*R));if(im){cx.drawImage(im,-size/2,-size/2,size,size)}else{cx.strokeStyle=color;cx.lineWidth=2;cx.beginPath();PL.forEach((p,i)=>i?cx.lineTo(p[0]*.7,p[1]*.7):cx.moveTo(p[0]*.7,p[1]*.7));cx.closePath();cx.fillStyle=color;cx.fill()}cx.restore()}
 function draw(){procTick();if(wpCard){const ck=V.lon.toFixed(5)+','+V.lat.toFixed(5)+','+V.z.toFixed(4)+','+W+'x'+H;if(ck!==cardView){cardView=ck;positionRouteCard()}}cx.setTransform(dpr,0,0,dpr,0,0);const vecBase=vecSync();if(vecBase)cx.clearRect(0,0,W,H);else{cx.fillStyle=C.bg;cx.fillRect(0,0,W,H)}
@@ -1367,16 +1378,16 @@ for(const wx of worldShifts()){WORLD_DX=wx;try{
 if(L.nav&&!CH.on)N.forEach(n=>{const q=vis(n.lon,n.lat);if(!q||lblZ()<(W<600?7:6))return;const[x,y]=q;if(x<-20||x>W+20||y<-20||y>H+20)return;const t=String(n.type||'').toUpperCase(),kind=/NDB/.test(t)?'ndb':/VOR|TACAN|DME/.test(t)?'vor':'int';mkDraw(kind,x,y,mkRz()*.8);if(lblZ()>(W<600?7.5:5.5))mkText(n.id,x+Math.round(mkRz()*.55)-4,y+4,mkColor(kind),11,false)});
 if(L.apt&&clusterAirports()){}else if(L.apt)A.forEach(a=>{if(CH.on&&a!==CH.a)return;const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;if(a.x&&lblZ()<6)return;const mg=lblZ()>10?4000:60;if(x<-mg||x>W+mg||y<-mg||y>H+mg)return;
 if(V.mode!=='globe'&&V.z>8.5)drawReal(a,x,y);else a.det=false;if(0)pairs(a).forEach(pr=>{const n=pr[0],h=n*10,p=ppn(a.lat)*1.4,dx=Math.sin(h*R)*p,dy=-Math.cos(h*R)*p;cx.strokeStyle=C.ap;cx.lineWidth=Math.max(3,p/9);cx.lineCap='butt';cx.beginPath();cx.moveTo(x-dx,y-dy);cx.lineTo(x+dx,y+dy);cx.stroke()});
-if(a.det){}else if(V.mode!=='globe'&&V.z>8.5){cx.beginPath();cx.arc(x,y,3,0,7);cx.fillStyle=C.land;cx.fill();cx.strokeStyle=C.ap;cx.lineWidth=2.2;cx.stroke()}else mkPin(x,y,mkRz()*.62,aptBig(a));
-if(lblZ()>(a.x?7:4.8)&&x>-40&&x<W+40&&y>-40&&y<H+40&&!(L.rte&&planTocTod().ids.has(String(a.id).toUpperCase())))mkText(a.id,x+Math.round(mkRz()*.62)+5,y-Math.round(mkRz()*1.05),SAT()?(DKM()?'#fff':'#111'):C.txt,12.5,true)});
-if(!WORLD_DX)drawMapChart();drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.lineCap='round';cx.lineJoin='round';if(sp.flown.length>1){cx.globalAlpha=.5;cx.strokeStyle=C.route;cx.lineWidth=9;cx.setLineDash([14,12]);drawPlanLine(sp.flown);cx.setLineDash([])}if(sp.ahead.length>1){cx.globalAlpha=.9;cx.strokeStyle=RTE_CASE;cx.lineWidth=18;drawPlanLine(sp.ahead);cx.globalAlpha=1;cx.strokeStyle=C.route;cx.lineWidth=12;drawPlanLine(sp.ahead)}cx.restore()
-drawProcedureRouteLine();drawRouteMarkers();}
-trails();if(L.trf&&!CH.on)T.forEach(a=>{const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;drawAircraft(a.type,x,y,a.hdg,C.trf,32);if(lblZ()>6&&x>-40&&x<W+40&&y>-20&&y<H+20)mkText(a.id+(a.type?' '+a.type:'')+' '+Math.round(a.alt/100),x+4,y+4,C.trf,10,false)});
-if(L.atc&&!CH.on){drawTracon();drawAtc()}if(liveOk()){const q=vis(own.lon,own.lat);if(q){const[x,y]=q;if(MP.halo){cx.beginPath();cx.arc(x,y,19+6*MP.size,0,7);cx.strokeStyle=MP.color;cx.globalAlpha=.32;cx.lineWidth=1.5;cx.stroke();cx.globalAlpha=1}const oh=(own.trk!=null&&(own.gs||live.d?.gs)>20)?own.trk:own.hdg;if(MP.icon==='aircraft')drawAircraft(live.d?.type||live.d?.aircraft||live.d?.aircraftType,x,y,oh,MP.color,42*MP.size);else drawOwnTri(x,y,oh,MP.color,MP.size)}}
+if(a.det){}else if(V.mode!=='globe'&&V.z>8.5){cx.beginPath();cx.arc(x,y,3,0,7);cx.fillStyle=C.land;cx.fill();cx.strokeStyle=C.ap;cx.lineWidth=2.2;cx.stroke()}else mkAptSym(x,y,mkRz()*.62,aptBig(a),a);
+if(lblZ()>(a.x?7:4.8)&&x>-40&&x<W+40&&y>-40&&y<H+40&&!(L.rte&&planTocTod().ids.has(String(a.id).toUpperCase())))mkText(a.id,x+Math.round(mkRz()*.62)+4,y+4,SAT()?(DKM()?'#fff':'#111'):C.txt,12.5,true)});
+if(!WORLD_DX)drawMapChart();drawSelectedAircraftRoute();drawProcedurePaths();if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.lineCap='round';cx.lineJoin='round';if(sp.flown.length>1){cx.globalAlpha=.5;cx.strokeStyle=C.route;cx.lineWidth=9;cx.setLineDash([14,12]);drawPlanLine(sp.flown);cx.setLineDash([])}if(sp.ahead.length>1){cx.globalAlpha=.9;cx.strokeStyle=RTE_CASE;cx.lineWidth=7;drawPlanLine(sp.ahead);cx.globalAlpha=1;cx.strokeStyle=C.route;cx.lineWidth=4;drawPlanLine(sp.ahead)}cx.restore()
+drawProcedureRouteLine();drawActiveLeg();drawRouteMarkers();}
+trails();if(L.trf&&!CH.on)T.forEach(a=>{const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;drawAircraft(a.type,x,y,a.hdg,C.trf,32);if((lblZ()>8.5||a===sel)&&x>-40&&x<W+40&&y>-20&&y<H+20)mkText(a.id+(a.type?' '+a.type:'')+' '+Math.round(a.alt/100),x+4,y+4,C.trf,10,false)});
+if(L.atc&&!CH.on){drawTracon();drawAtc()}if(liveOk()){const q=vis(own.lon,own.lat);if(q){const[x,y]=q;if(MP.halo){cx.beginPath();cx.arc(x,y,19+6*MP.size,0,7);cx.strokeStyle=MP.color;cx.globalAlpha=.32;cx.lineWidth=1.5;cx.stroke();cx.globalAlpha=1}const oh=(own.trk!=null&&(own.gs||live.d?.gs)>20)?own.trk:own.hdg;drawTrackVector(x,y,oh,own.gs||live.d?.gs);if(MP.icon==='aircraft')drawAircraft(live.d?.type||live.d?.aircraft||live.d?.aircraftType,x,y,oh,MP.color,42*MP.size);else drawOwnTri(x,y,oh,MP.color,MP.size)}}
 }finally{WORLD_DX=0}}
 if(view3d)sync3d();if(CH.on)chartFx();if(sel&&!CH.on&&sel.k!='own'){const s0=sel.k=='own'?own:sel,p0=vis(s0.lon,s0.lat);if(p0){const[x,y]=p0;
 // A selected airport pin is outlined in its own shape; anything else gets the ring.
-if(sel.k=='apt'&&!sel.det&&V.mode!=='globe'){const r=mkRz()*.62*(aptBig(sel)?1.25:1)+3;cx.save();pinPath(x,y+3,r);cx.lineJoin='round';cx.lineWidth=5;cx.strokeStyle='rgba(8,16,25,.85)';cx.stroke();cx.lineWidth=2.5;cx.strokeStyle='#fff';cx.stroke();cx.restore()}
+if(sel.k=='apt'&&!sel.det&&V.mode!=='globe'){const r=mkRz()*.62*(aptBig(sel)?1.25:1)*.62+4;cx.save();cx.beginPath();cx.arc(x,y,r,0,7);cx.lineWidth=5;cx.strokeStyle='rgba(8,16,25,.85)';cx.stroke();cx.lineWidth=2.5;cx.strokeStyle='#fff';cx.stroke();cx.restore()}
 else{cx.strokeStyle=C.txt;cx.lineWidth=2;cx.beginPath();cx.arc(x,y,16+(tk?3*Math.sin(performance.now()/260):0),0,7);cx.stroke()}}}}
 
 /* ── Waypoint markers ─────────────────────────────────────────────────
@@ -1447,6 +1458,18 @@ function pinPath(x,y,r){
   cx.bezierCurveTo(x+r,cy+r*.55,x+r*.35,y-r*.55,x,y);
   cx.closePath();
 }
+/* An airport as a chart symbol: a filled circle with its longest runway drawn
+   through it at the runway's heading, purple for a major airport. */
+function aptHeading(a){const rw=a&&a.rw||[],ln=RL[a&&a.id]||[];let best=-1,i0=0;rw.forEach((n,i)=>{const l=Number(ln[i])||0;if(l>best){best=l;i0=i}});return rw.length?Number(rw[i0])*10:null}
+function mkAptSym(x,y,r,big,a){
+  if(big)r*=1.25;
+  const k=r*.62,h=aptHeading(a);
+  cx.save();cx.beginPath();cx.arc(x,y,k,0,7);cx.fillStyle=big?'#8b5cf6':'#1f6fe0';cx.fill();
+  cx.lineWidth=1.6;cx.strokeStyle='rgba(8,16,25,.9)';cx.stroke();
+  if(h!=null){const t=h*R,dx=Math.sin(t)*k*1.45,dy=-Math.cos(t)*k*1.45;cx.beginPath();cx.moveTo(x-dx,y-dy);cx.lineTo(x+dx,y+dy);cx.lineCap='round';cx.lineWidth=4.6;cx.strokeStyle='rgba(8,16,25,.9)';cx.stroke();cx.lineWidth=2.4;cx.strokeStyle='#fff';cx.stroke()}
+  else{cx.beginPath();cx.arc(x,y,k*.32,0,7);cx.fillStyle='#fff';cx.fill()}
+  cx.restore()
+}
 function mkPin(x,y,r,big){
   if(big)r*=1.25;
   const cy=y-r*1.7;
@@ -1472,22 +1495,24 @@ function mkDraw(kind,x,y,r,override){
    and over the route line it sits on. */
 const RTE_CASE='#0b1726',RTE_INK='#0f2742';
 function mkRoutePoint(kind,x,y,r,override){
-  cx.beginPath();cx.arc(x,y,r*1.02,0,7);cx.fillStyle='#f8fafc';cx.fill();
-  cx.lineWidth=1.6;cx.strokeStyle=override||RTE_CASE;cx.stroke();
-  mkDraw(kind,x,y,r*.74,override||(kind=='apt'?'#0f6e5e':RTE_INK))}
+  const k=r*.42;cx.save();cx.lineJoin='round';cx.beginPath();
+  if(kind=='apt')cx.arc(x,y,k*1.05,0,7);
+  else{cx.moveTo(x,y-k*1.15);cx.lineTo(x+k,y+k*.72);cx.lineTo(x-k,y+k*.72);cx.closePath()}
+  cx.lineWidth=3.2;cx.strokeStyle=RTE_CASE;cx.stroke();
+  cx.fillStyle=override||(kind=='apt'?'#22d3ee':'#f8fafc');cx.fill();cx.restore()}
 /* An ident tag above a route point: a filled box with white monospaced text,
    coloured by what the point belongs to, moved up past tags already placed. */
-const TAG_FILL={apt:'#0f6e5e',sid:'#8a2f78',star:'#2f7a3d',app:'#9a5a12',approach:'#9a5a12'},TAG_FONT='700 13px Consolas,"Cascadia Mono","SF Mono",ui-monospace,monospace';
+const TAG_FILL={apt:'#0f6e5e',sid:'#8a2f78',star:'#2f7a3d',app:'#9a5a12',approach:'#9a5a12'},TAG_INK={apt:'#5eead4',sid:'#f0abfc',star:'#86efac',app:'#fcd34d',approach:'#fcd34d'},TAG_FONT='700 11px Consolas,"Cascadia Mono","SF Mono",ui-monospace,monospace';
 function mkTag(text,x,y,r,kind,override){
   const t=String(text||'').toUpperCase();if(!t)return null;
-  cx.font=TAG_FONT;cx.letterSpacing='0.6px';const w=Math.ceil(cx.measureText(t).width)+12,h=20;cx.letterSpacing='0px';
-  let lx=Math.round(x-w/2),top=Math.round(y-r-h-5);
+  cx.font=TAG_FONT;cx.letterSpacing='0.6px';const w=Math.ceil(cx.measureText(t).width)+8,h=15;cx.letterSpacing='0px';
+  let lx=Math.round(x-w/2),top=Math.round(y-r*.5-h-4);
   for(let pass=0;pass<3;pass++){const hit=MKL.find(b=>lx<b.x+b.w&&lx+w>b.x&&top<b.y+b.h&&top+h>b.y);if(!hit)break;top=hit.y-h-2}
   if(top<2||lx<2||lx+w>W-2)return null;
   MKL.push({x:lx,y:top,w,h});
   cx.beginPath();if(cx.roundRect)cx.roundRect(lx,top,w,h,3);else cx.rect(lx,top,w,h);
-  cx.fillStyle=override||TAG_FILL[kind]||'#12355b';cx.fill();cx.lineWidth=1;cx.strokeStyle='rgba(255,255,255,.28)';cx.stroke();
-  cx.font=TAG_FONT;cx.letterSpacing='0.6px';cx.fillStyle='#fff';cx.textBaseline='middle';cx.fillText(t,lx+6,top+h/2+.5);cx.textBaseline='alphabetic';cx.letterSpacing='0px';
+  cx.fillStyle=override||'rgba(8,16,25,.88)';cx.fill();cx.lineWidth=1;cx.strokeStyle='rgba(148,163,184,.3)';cx.stroke();
+  cx.font=TAG_FONT;cx.letterSpacing='0.6px';cx.fillStyle=override?'#fff':(TAG_INK[kind]||'#e2e8f0');cx.textBaseline='middle';cx.fillText(t,lx+4,top+h/2+.5);cx.textBaseline='alphabetic';cx.letterSpacing='0px';
   return {x:lx,y:top,w,h}}
 /* Map type is set in the shell's own technical face — a condensed DIN-style
    stack — instead of the default UI sans. It is narrower per character, so a
@@ -1593,10 +1618,19 @@ function routeSegmentKind(a,b){
   if(prev=='star'||next=='star')return 'star';
   return next=='sid'?'sid':''
 }
+/* The leg being flown, in cyan over the route: from the last passed point to the next one. */
+function drawActiveLeg(){
+  const pts=drawnRoutePoints();
+  if(!liveOk()||pts.length<2)return;
+  let best=0,bestD=Infinity;
+  // The leg whose detour through the aircraft is smallest is the one being flown.
+  for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],along=dist(a,own)+dist(own,b)-dist(a,b);if(along<bestD){bestD=along;best=i}}
+  cx.save();cx.lineCap='round';cx.strokeStyle='#22d3ee';cx.lineWidth=4;drawPlanLine([pts[best],pts[best+1]]);cx.restore()
+}
 function drawProcedureRouteLine(){
   const points=liveOk()?routeAhead():drawnRoutePoints();
   if(!points.length||CH.on||!L.rte)return;
-  cx.save();cx.lineCap='round';cx.lineJoin='round';cx.lineWidth=8;
+  cx.save();cx.lineCap='round';cx.lineJoin='round';cx.lineWidth=4;
   for(let i=1;i<points.length;){
     const kind=routeSegmentKind(points[i-1],points[i]);
     if(!kind||(kind=='sid'&&!L.procSid)||(kind=='star'&&!L.procStar)||(kind=='app'&&!L.procApproach)){i+=1;continue}
@@ -2202,9 +2236,7 @@ if(route.length&&L.rte){const wi=wpAt(x,y);if(wi>=0){wpIdx=wi;openRouteCard({kin
 closeRouteCard();wpIdx=null;sel=null;
 x-=rect.left;y-=rect.top;let best=null,bestD=Infinity;
 const items=[...(L.trf?T.map(o=>[o,18]):[]),...(L.atc?ATC.map(r=>[r.airport,17]):[]),...(L.apt?A.filter(a=>!a.x||V.z>=6).map(o=>[o,14]):[]),...(L.nav&&V.z>=6?N.map(o=>[o,12]):[]),...(liveOk()?[[{k:'own',id:'Own-ship',...own},22]]:[])];
-items.forEach(([o,rad])=>{const q=vis(o.lon,o.lat);if(!q)return;let d=Math.hypot(q[0]-x,q[1]-y);
-// An airport pin stands above its point: its round head counts as the airport too.
-if(o.k==='apt'&&!o.det){const r=mkRz()*.62*(aptBig(o)?1.25:1);d=Math.min(d,Math.hypot(q[0]-x,q[1]-r*1.7-y))}if(o.det&&o.rpx)d=Math.max(d-o.rpx,0);if(d<=rad&&d<bestD){bestD=d;best=o}});
+items.forEach(([o,rad])=>{const q=vis(o.lon,o.lat);if(!q)return;let d=Math.hypot(q[0]-x,q[1]-y);if(o.det&&o.rpx)d=Math.max(d-o.rpx,0);if(d<=rad&&d<bestD){bestD=d;best=o}});
 if(best){sel=best;if(best.k=='trf'){best._trackAt=Date.now();tk=true;setFol(false);trafficBackfill(best);if(best.source=='vatsim')loadVatsim().then(vatsimTraffic)}panel=best.k=='apt'?'sel':null;render();fCard()}
 else{panel=null;render()}}
 /* search */
@@ -3776,7 +3808,7 @@ function clusterAirports(){
   const ink=SAT()?(DKM()?'#fff':'#111'):C.txt,ring=mkColor('apt');
   cx.save();
   for(const g of groups.values()){
-    mkPin(g.x,g.y,mkRz()*.62,aptBig(g.a));
+    mkAptSym(g.x,g.y,mkRz()*.62,aptBig(g.a),g.a);
   }
   cx.restore();
   return true;

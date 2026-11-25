@@ -1151,7 +1151,7 @@ test('the map draws waypoint symbols over a route line it never rewrites', async
   // the one this test names, and it is painted before any marker. It draws the
   // plan through the sampled, date-line-aware path helper rather than joining
   // projected points, which is what made a Pacific leg sweep the whole chart.
-  const line = 'if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.lineCap=\'round\';cx.lineJoin=\'round\';if(sp.flown.length>1){cx.globalAlpha=.5;cx.strokeStyle=C.route;cx.lineWidth=9;cx.setLineDash([14,12]);drawPlanLine(sp.flown);cx.setLineDash([])}if(sp.ahead.length>1){cx.globalAlpha=.9;cx.strokeStyle=RTE_CASE;cx.lineWidth=18;drawPlanLine(sp.ahead);cx.globalAlpha=1;cx.strokeStyle=C.route;cx.lineWidth=12;drawPlanLine(sp.ahead)}cx.restore()';
+  const line = 'if(route.length&&!CH.on&&L.rte){const sp=routeSplit();cx.save();cx.lineCap=\'round\';cx.lineJoin=\'round\';if(sp.flown.length>1){cx.globalAlpha=.5;cx.strokeStyle=C.route;cx.lineWidth=9;cx.setLineDash([14,12]);drawPlanLine(sp.flown);cx.setLineDash([])}if(sp.ahead.length>1){cx.globalAlpha=.9;cx.strokeStyle=RTE_CASE;cx.lineWidth=7;drawPlanLine(sp.ahead);cx.globalAlpha=1;cx.strokeStyle=C.route;cx.lineWidth=4;drawPlanLine(sp.ahead)}cx.restore()';
   assert.ok(page.includes(line), 'the route line statement is unchanged');
   assert.ok(page.indexOf(line) < page.indexOf('drawRouteMarkers();}'), 'markers are painted after the line');
   // The whole plan stays on the chart. The legs already flown are dimmed rather
@@ -1220,7 +1220,7 @@ test('a selected waypoint turns purple without touching the route line', async (
   assert.match(page, /if\(act=='close'\)\{wpIdx=null;/, 'closing the card clears the selection');
   assert.match(page, /if\(e\.key=='Escape'\)\{if\(wpCard\)closeRouteCard\(\);wpIdx=null\}/, 'Escape clears it too');
   // The same statement that paints the line must still be there.
-  assert.ok(page.includes('cx.strokeStyle=C.route;cx.lineWidth=12;drawPlanLine(sp.ahead)'), 'the route line is never recoloured by a selection');
+  assert.ok(page.includes('cx.strokeStyle=C.route;cx.lineWidth=4;drawPlanLine(sp.ahead)'), 'the route line is never recoloured by a selection');
 });
 
 test('the tracking card minimizes to a SID and STAR summary', async () => {
