@@ -4,8 +4,24 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-25",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.15/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.15/Stratos-Setup.exe",
+      "sha256": "0fcd4988f32ab499567e61ca5b7882c6c1d8f65fa9b740483b7ad9813b3691c7",
+      "size": 119593337
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.15/Stratos-2.4.15-mac-x64.dmg",
+      "sha256": "0114b4be121d3ce1eba2ef6a73aafa553c3dcbdf018ad290feedd3597888451a",
+      "size": 143203062
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.15/Stratos-2.4.15-linux-x64.AppImage",
+      "sha256": "1ad11af227b36e94edb8666b9fad5283cea30031eb6a606a148ec4c572ee0d8a",
+      "size": 160837101
+    }
+  },
   "summary": "A Navigraph-style flight card, a Flight tab for your OFP, airport info on the map and a more professional map style.",
   "reason": "",
   "releaseNotes": [
