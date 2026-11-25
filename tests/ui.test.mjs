@@ -1774,3 +1774,10 @@ test('charts on the map: one panel with a search bar, placed only when to scale'
   assert.match(page, /if\(hit\.fit\)mcAddLayer\(/, 'a ChartFox chart is drawn only once it is placed');
   assert.doesNotMatch(page, /PLATE|platePick|plateAlign|data-plate/, 'nothing of the old overlay remains');
 });
+
+test('a chart placed only to within kilometres stays off the map', async () => {
+  const fs = await import('node:fs');
+  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+  assert.match(page, /return fit&&fit\.medianM<=MC_MAX_ERROR_M\?fit:null;/);
+  assert.match(page, /const MC_MAX_ERROR_M=1500;/);
+});

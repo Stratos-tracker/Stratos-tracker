@@ -4538,8 +4538,11 @@ function mcAddLayer(layer){
 }
 async function mcPlace(item,page){
   const refs=await mcPlate.plateReferences(item.icao);
-  return mcFitLib.fitChart(page.labels,refs,(lat,lon)=>wpx(lon,lat,0),{metresPerUnit:lat=>40075016*Math.cos(lat*R)/SZ});
+  const fit=mcFitLib.fitChart(page.labels,refs,(lat,lon)=>wpx(lon,lat,0),{metresPerUnit:lat=>40075016*Math.cos(lat*R)/SZ});
+  // Fixes that agree only to within kilometres mean a chart not drawn to scale (most STARs): keep it off the map.
+  return fit&&fit.medianM<=MC_MAX_ERROR_M?fit:null;
 }
+const MC_MAX_ERROR_M=1500;
 async function mcShow(item){
   const id=item.icao+'|'+item.title,token=++MC.token,key=(item.cf?'cf:'+item.cf.id:'faa:'+item.icao+':'+item.title);
   MC.current=id;mcRender();
