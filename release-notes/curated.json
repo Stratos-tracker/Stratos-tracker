@@ -1,4 +1,26 @@
 {
+  "2.4.15": {
+    "summary": "A Navigraph-style flight card, a Flight tab for your OFP, airport info on the map and a more professional map style.",
+    "changelog": {
+      "features": [
+        "The phone has a Flight tab that opens your OFP: departure and arrival side by side, the route, when it was imported, and the key figures.",
+        "Click an airport on the map to see its info, weather and charts."
+      ],
+      "improvements": [
+        "The map has an EFB look: a thin route with the active leg in cyan, small waypoint triangles, airport symbols showing their runway, a 2-minute track line and fewer traffic labels.",
+        "Phone tabs open their page directly, without the lock screen."
+      ],
+      "fixes": [
+        "The OFP shows at once instead of waiting for the weather."
+      ],
+      "performance": [],
+      "ui": [
+        "The OFP page no longer tags every value with OFP."
+      ],
+      "compatibility": [],
+      "other": []
+    }
+  },
   "2.4.14": {
     "summary": "Charts as layers on the map, the departure runway in your route, and a route that stays drawn while you fly.",
     "changelog": {
@@ -252,26 +274,6 @@
       "compatibility": [
         "Only what the export states is imported: landing rate, altitude and track stay empty and the logbook shows them as not measured."
       ],
-      "other": []
-    }
-  },
-  "2.1.43": {
-    "summary": "The flat map keeps only the six base styles it can really paint, FAA VFR and IFR charts load at the level that carries chart data when zoomed out, satellite imagery works in local development, and the side-panel toggle is gone.",
-    "changelog": {
-      "features": [],
-      "improvements": [
-        "Chart tiles are fetched one level above the current view, so VFR, Low IFR and High IFR gain detail as the map is zoomed in instead of staying at a coarse overview."
-      ],
-      "fixes": [
-        "FAA VFR, Low IFR and High IFR charts no longer request blank overview tiles when the map is slightly zoomed out; each layer starts at the level that actually carries chart data.",
-        "Satellite imagery loads again in local development: the dev server answers the /tile/ request the page makes over http instead of returning 404."
-      ],
-      "performance": [],
-      "ui": [
-        "The flat map offers six base styles: Satellite, Terrain, World, VFR, Low IFR and High IFR. Basic, Detailed, Light, Dark and Hybrid are retired, and a saved style that no longer exists falls back to Satellite.",
-        "The remove-side-panels control is gone from the map, along with the layout state it saved."
-      ],
-      "compatibility": [],
       "other": []
     }
   },

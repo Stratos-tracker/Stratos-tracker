@@ -1,64 +1,36 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.4.14",
+  "latestVersion": "2.4.15",
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-25",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.14/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.14/Stratos-Setup.exe",
-      "sha256": "ea0a029b2b9f9a28ff2f0918acf58559ce4c6f7f085d1b0f3a6fa708c58c6928",
-      "size": 119585582
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.14/Stratos-2.4.14-mac-arm64.dmg",
-      "sha256": "b48259440d4dac9a535e910fb837425b75f055f386c5e5da85e878d272bf52f1",
-      "size": 137765573
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.14/Stratos-2.4.14-mac-x64.dmg",
-      "sha256": "f15664e1c0ab07ada293d094b3fa576c6f33abbcacb6bd740631fc384d8dc1a4",
-      "size": 143193810
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.14/Stratos-2.4.14-linux-x64.AppImage",
-      "sha256": "07bccb6d7e2e81c664fd6247ef9d2d1b6b6d917c61a563958b9ae088bfe7ba63",
-      "size": 160832971
-    }
-  },
-  "summary": "Charts as layers on the map, the departure runway in your route, and a route that stays drawn while you fly.",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "A Navigraph-style flight card, a Flight tab for your OFP, airport info on the map and a more professional map style.",
   "reason": "",
   "releaseNotes": [
-    "Charts on the map are now layers: turn each one on or off, set its opacity, or remove it, plus Hide charts, Follow aircraft and Full screen.",
-    "ChartFox charts can be searched and placed on the map outside the US.",
-    "Your route now runs along the departure runway before the SID.",
-    "The whole route stays drawn while you fly; your aircraft flies over it.",
-    "Connect in the desktop app goes straight to the ChartFox sign-in.",
-    "Charts that are not drawn to scale are no longer placed on the map in the wrong spot.",
-    "Charts placed on the map are kept, so turning a layer back on is instant.",
-    "Your own trail is one dark purple.",
-    "The phone tab bar sits lower, right above the home indicator."
+    "The phone has a Flight tab that opens your OFP: departure and arrival side by side, the route, when it was imported, and the key figures.",
+    "Click an airport on the map to see its info, weather and charts.",
+    "The map has an EFB look: a thin route with the active leg in cyan, small waypoint triangles, airport symbols showing their runway, a 2-minute track line and fewer traffic labels.",
+    "Phone tabs open their page directly, without the lock screen.",
+    "The OFP shows at once instead of waiting for the weather.",
+    "The OFP page no longer tags every value with OFP."
   ],
   "notes": {
     "features": [
-      "Charts on the map are now layers: turn each one on or off, set its opacity, or remove it, plus Hide charts, Follow aircraft and Full screen.",
-      "ChartFox charts can be searched and placed on the map outside the US."
+      "The phone has a Flight tab that opens your OFP: departure and arrival side by side, the route, when it was imported, and the key figures.",
+      "Click an airport on the map to see its info, weather and charts."
     ],
     "improvements": [
-      "Your route now runs along the departure runway before the SID.",
-      "The whole route stays drawn while you fly; your aircraft flies over it.",
-      "Connect in the desktop app goes straight to the ChartFox sign-in."
+      "The map has an EFB look: a thin route with the active leg in cyan, small waypoint triangles, airport symbols showing their runway, a 2-minute track line and fewer traffic labels.",
+      "Phone tabs open their page directly, without the lock screen."
     ],
     "fixes": [
-      "Charts that are not drawn to scale are no longer placed on the map in the wrong spot."
+      "The OFP shows at once instead of waiting for the weather."
     ],
-    "performance": [
-      "Charts placed on the map are kept, so turning a layer back on is instant."
-    ],
+    "performance": [],
     "ui": [
-      "Your own trail is one dark purple.",
-      "The phone tab bar sits lower, right above the home indicator."
+      "The OFP page no longer tags every value with OFP."
     ],
     "compatibility": [],
     "other": []
