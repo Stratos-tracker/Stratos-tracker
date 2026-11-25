@@ -1374,7 +1374,10 @@ drawProcedureRouteLine();drawRouteMarkers();}
 trails();if(L.trf&&!CH.on)T.forEach(a=>{const q=vis(a.lon,a.lat);if(!q)return;const[x,y]=q;drawAircraft(a.type,x,y,a.hdg,C.trf,32);if(lblZ()>6&&x>-40&&x<W+40&&y>-20&&y<H+20)mkText(a.id+(a.type?' '+a.type:'')+' '+Math.round(a.alt/100),x+4,y+4,C.trf,10,false)});
 if(L.atc&&!CH.on){drawTracon();drawAtc()}if(liveOk()){const q=vis(own.lon,own.lat);if(q){const[x,y]=q;if(MP.halo){cx.beginPath();cx.arc(x,y,19+6*MP.size,0,7);cx.strokeStyle=MP.color;cx.globalAlpha=.32;cx.lineWidth=1.5;cx.stroke();cx.globalAlpha=1}const oh=(own.trk!=null&&(own.gs||live.d?.gs)>20)?own.trk:own.hdg;if(MP.icon==='aircraft')drawAircraft(live.d?.type||live.d?.aircraft||live.d?.aircraftType,x,y,oh,MP.color,42*MP.size);else drawOwnTri(x,y,oh,MP.color,MP.size)}}
 }finally{WORLD_DX=0}}
-if(view3d)sync3d();if(CH.on)chartFx();if(sel&&!CH.on&&sel.k!='own'){const s0=sel.k=='own'?own:sel,p0=vis(s0.lon,s0.lat);if(p0){const[x,y]=p0;cx.strokeStyle=C.txt;cx.lineWidth=2;cx.beginPath();cx.arc(x,y,16+(tk?3*Math.sin(performance.now()/260):0),0,7);cx.stroke()}}}
+if(view3d)sync3d();if(CH.on)chartFx();if(sel&&!CH.on&&sel.k!='own'){const s0=sel.k=='own'?own:sel,p0=vis(s0.lon,s0.lat);if(p0){const[x,y]=p0;
+// A selected airport pin is outlined in its own shape; anything else gets the ring.
+if(sel.k=='apt'&&!sel.det&&V.mode!=='globe'){const r=mkRz()*.62*(aptBig(sel)?1.25:1)+3;cx.save();pinPath(x,y+3,r);cx.lineJoin='round';cx.lineWidth=5;cx.strokeStyle='rgba(8,16,25,.85)';cx.stroke();cx.lineWidth=2.5;cx.strokeStyle='#fff';cx.stroke();cx.restore()}
+else{cx.strokeStyle=C.txt;cx.lineWidth=2;cx.beginPath();cx.arc(x,y,16+(tk?3*Math.sin(performance.now()/260):0),0,7);cx.stroke()}}}}
 
 /* ── Waypoint markers ─────────────────────────────────────────────────
    Standard chart symbols (ICAO Annex 4): a hexagon for a VOR, a dotted circle
@@ -1436,15 +1439,19 @@ function mkFix(x,y,r,c){mkPen(c,1.9);cx.moveTo(x,y-r*.82);cx.lineTo(x+r*.74,y+r*
 /* An airport pin: the tip on the airport, a round head with a white aircraft. */
 /* A major airport: a runway of 9,800 ft or more (the map carries no size class). */
 function aptBig(a){const l=RL[a.id]||[];return Math.max(0,...(Array.isArray(l)?l:[]).map(Number).filter(isFinite))>=9800}
-function mkPin(x,y,r,big){
-  if(big)r*=1.25;
+function pinPath(x,y,r){
   const cy=y-r*1.7;
-  cx.save();
   cx.beginPath();cx.moveTo(x,y);
   cx.bezierCurveTo(x-r*.35,y-r*.55,x-r,cy+r*.55,x-r,cy);
   cx.arc(x,cy,r,Math.PI,0);
   cx.bezierCurveTo(x+r,cy+r*.55,x+r*.35,y-r*.55,x,y);
   cx.closePath();
+}
+function mkPin(x,y,r,big){
+  if(big)r*=1.25;
+  const cy=y-r*1.7;
+  cx.save();
+  pinPath(x,y,r);
   cx.fillStyle=big?'#8b5cf6':'#1f6fe0';cx.fill();
   cx.lineWidth=1.4;cx.strokeStyle='rgba(8,16,25,.85)';cx.stroke();
   // Aircraft seen from above, nose up.
