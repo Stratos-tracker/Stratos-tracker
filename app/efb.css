@@ -2990,3 +2990,34 @@ body.home-editing .wg-remove { display: block; }
 .cf-bar b { color: #45c4f5; }
 .cf-bar .cf-error { flex-basis: 100%; margin: 0; }
 
+
+/* OFP flight card, Navigraph-style: two airport blocks joined by the flight. */
+.ofc { margin: 0 0 12px; padding: 14px 16px 12px; border-radius: 14px; border: 1px solid rgba(148, 163, 184, .16); background: linear-gradient(180deg, rgba(20, 30, 46, .92), rgba(12, 18, 28, .96)); }
+.ofc-top { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.ofc-callsign { font: 700 12px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; letter-spacing: .08em; color: #94a3b8; }
+.ofc-legs { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: start; gap: 10px; }
+.ofc-apt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ofc-arr { text-align: right; align-items: flex-end; }
+.ofc-role { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #64748b; }
+.ofc-icao { font: 700 30px/1.05 "Bahnschrift SemiCondensed", "DIN Alternate", system-ui, sans-serif; letter-spacing: .04em; color: #f1f5f9; }
+.ofc-name { font-size: 12px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.ofc-time { margin-top: 4px; font: 600 16px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; color: #e2e8f0; }
+.ofc-time i { margin-left: 6px; font-style: normal; font-size: 10px; letter-spacing: .1em; color: #64748b; }
+.ofc-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.ofc-arr .ofc-tags { justify-content: flex-end; }
+.ofc-tags em { font-style: normal; font: 600 10.5px/1 ui-monospace, Consolas, monospace; padding: 4px 6px; border-radius: 5px; background: rgba(69, 196, 245, .1); color: #7dd3fc; }
+.ofc-mid { display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 22px; min-width: 92px; color: #94a3b8; font: 600 11px/1 ui-monospace, Consolas, monospace; }
+.ofc-line { display: flex; align-items: center; gap: 4px; width: 100%; }
+.ofc-line i { flex: 1; height: 1px; background: repeating-linear-gradient(90deg, rgba(148, 163, 184, .5) 0 4px, transparent 4px 8px); }
+.ofc-line svg { width: 18px; height: 18px; fill: #45c4f5; transform: rotate(90deg); }
+.ofc-imported { margin-top: 2px; font-size: 11.5px; color: #64748b; }
+.ofc-stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; margin-top: 12px; border-radius: 10px; overflow: hidden; background: rgba(148, 163, 184, .14); }
+.ofc-stats div { display: flex; flex-direction: column; gap: 4px; padding: 9px 10px; background: rgba(12, 18, 28, .96); }
+.ofc-stats span { font-size: 9.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #64748b; }
+.ofc-stats b { font: 600 14px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; color: #f1f5f9; white-space: nowrap; }
+.ofc-stats b small { font-size: 10px; color: #64748b; }
+@media (max-width: 640px) {
+  .ofc-icao { font-size: 24px; }
+  .ofc-mid { min-width: 64px; }
+  .ofc-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

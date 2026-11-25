@@ -226,30 +226,46 @@ export async function mount(root, ctx) {
         ? `${esc(route[0].id)} <s>→</s> ${esc(route[route.length - 1].id)}`
         : 'No route');
 
+    const o = ofp || {}, dep = o.origin || {}, arr = o.destination || {}, t = o.times || {}, fl = o.flight || {}, fu = o.fuel || {}, wt = o.weights || {};
+    const unit = o.units || 'kg';
+    const wgt = v => (Number(v) ? `${fmtNum(Math.round(Number(v)), 0)}<small> ${esc(unit)}</small>` : '—');
+    const ete = (() => { const row = summary.overview.find(item => item.key === 'ete'); return row && row.value ? row.value : ''; })();
+    const end = (place, role, proc, procLabel, time) => `
+      <div class="ofc-apt ofc-${role}">
+        <span class="ofc-role">${role === 'dep' ? 'Departure' : 'Arrival'}</span>
+        <b class="ofc-icao">${esc(place.icao || (role === 'dep' ? (route[0] && route[0].id) : (route.length && route[route.length - 1].id)) || '----')}</b>
+        <span class="ofc-name">${esc(place.name || '')}</span>
+        <span class="ofc-time">${time ? esc(fmtUtc(time)) : '—'}<i>${role === 'dep' ? 'STD' : 'STA'}</i></span>
+        <span class="ofc-tags">${place.rwy ? `<em>RWY ${esc(place.rwy)}</em>` : ''}${proc ? `<em>${procLabel} ${esc(proc)}</em>` : ''}</span>
+      </div>`;
+    const stat = (label, value) => `<div><span>${label}</span><b>${value}</b></div>`;
+
     root.innerHTML = `
-      <div class="e-card" style="margin-bottom:12px">
-        <div class="e-row" style="align-items:flex-start">
-          <div style="min-width:0">
-            <div class="e-hero">${routeHero}</div>
-            <div class="e-small e-muted" style="margin-top:3px">${esc(identity || 'Aircraft not stated')}</div>
+      <section class="ofc">
+        <header class="ofc-top">
+          <span class="ofc-callsign">${esc(identity || 'Flight')}</span>
+          <span class="e-spacer"></span>${statusBadge}
+        </header>
+        <div class="ofc-legs">
+          ${end(dep, 'dep', dep.sid, 'SID', t.depUtc)}
+          <div class="ofc-mid" aria-hidden="true">
+            <span class="ofc-dist">${summary.route.totalNm != null ? `${fmtNum(summary.route.totalNm, 0)} nm` : ''}</span>
+            <span class="ofc-line"><i></i><svg viewBox="0 0 24 24"><path d="M21 12.4 13.6 10V4.6c0-.9-.7-1.6-1.6-1.6s-1.6.7-1.6 1.6V10L3 12.4V14l7.4-1.6v4.8l-2.1 1.5V20l3.7-1 3.7 1v-1.3l-2.1-1.5v-4.8L21 14z"/></svg><i></i></span>
+            <span class="ofc-ete">${esc(fmtMinutes(t.blockMin) || ete || '')}</span>
           </div>
-          <span class="e-spacer"></span>
-          <div class="e-row" style="justify-content:flex-end">
-            ${statusBadge}
-          </div>
+          ${end(arr, 'arr', arr.star, 'STAR', t.arrUtc)}
         </div>
         ${ofp && ofpRouteLine(ofp) ? `<div class="fp-ofp-route">${esc(ofpRouteLine(ofp))}</div>` : ''}
-        ${ofp && Number(ofp.fetchedAt) ? `<div class="e-small e-faint">Imported: ${esc(new Date(Number(ofp.fetchedAt)).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }))}</div>` : ''}
-        <div class="e-grid four" style="margin-top:14px">
-          <div><div class="e-label">Cruise</div><div class="e-big">${ofp && ofp.flight && ofp.flight.cruiseFt ? esc(fmtFl(ofp.flight.cruiseFt)) : '—'}</div></div>
-          <div><div class="e-label">Distance</div><div class="e-big">${summary.route.totalNm != null ? `${fmtNum(summary.route.totalNm, 0)}<small class="e-small e-faint"> nm</small>` : '—'}</div></div>
-          <div><div class="e-label">Flight time</div><div class="e-big">${(() => {
-            const row = summary.overview.find(item => item.key === 'ete');
-            return row && row.value ? esc(row.value) : '—';
-          })()}</div></div>
-          <div><div class="e-label">Departure</div><div class="e-big">${ofp && ofp.times && ofp.times.depUtc ? esc(fmtUtc(ofp.times.depUtc)) : '—'}</div></div>
+        ${ofp && Number(ofp.fetchedAt) ? `<div class="ofc-imported">Imported: ${esc(new Date(Number(ofp.fetchedAt)).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }))}${o.airac ? ` · AIRAC ${esc(o.airac)}` : ''}</div>` : ''}
+        <div class="ofc-stats">
+          ${stat('Cruise', fl.cruiseFt ? esc(fmtFl(fl.cruiseFt)) : '—')}
+          ${stat('Alternate', esc((o.alternate && o.alternate.icao) || '—'))}
+          ${stat('Block fuel', wgt(fu.block))}
+          ${stat('Trip fuel', wgt(fu.trip))}
+          ${stat('ZFW', wgt(wt.zfw))}
+          ${stat('TOW', wgt(wt.tow))}
         </div>
-      </div>
+      </section>
 
       ${summary.notes.length ? `<div class="e-notice" style="margin-bottom:12px">${summary.notes.map(note => esc(note)).join('<br>')}</div>` : ''}
 
