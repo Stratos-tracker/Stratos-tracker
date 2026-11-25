@@ -14,7 +14,7 @@ const SECTIONS = [
   { id: 'map', label: 'Map', href: 'index.html' },
   // Planning keeps its own destination now that the map's flight-plan bar is
   // gone: the same planner the Flight Planning tab opens on the PC.
-  { id: 'plan', label: 'Flight', href: 'efb.html#/flightplan' },
+  { id: 'plan', label: 'Flight', href: 'efb.html#/briefing' },
   { id: 'flights', label: 'Flights', href: 'logbook.html' },
   { id: 'charts', label: 'Charts', href: 'efb.html#/charts' },
   // The EFB is a product of its own on the desktop rail, not a section of the
@@ -52,7 +52,7 @@ const ICON = {
    page the current section comes from the route it is showing — #/flightplan is
    the Plan tab, #/charts is Charts, anything else is the EFB itself — rather
    than from the fixed attribute. Every other page keeps its own attribute. */
-const EFB_ROUTES = { '#/flightplan': 'plan', '#/charts': 'charts' };
+const EFB_ROUTES = { '#/briefing': 'plan', '#/flightplan': 'plan', '#/charts': 'charts' };
 function sectionNow() {
   const declared = document.body.dataset.mobileSection || '';
   if (!document.body.classList.contains('efb')) return declared;

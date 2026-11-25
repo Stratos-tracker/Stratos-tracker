@@ -11,7 +11,7 @@ import {
   esc, fmtAge, fmtDateUtc, fmtFl, fmtFt, fmtMinutes, fmtNum, fmtUtc, fmtVisibility,
   plannedRouteFromOfp, refreshPlan, weatherFor,
 } from './common.js';
-import { buildSummary } from '../lib/flightsummary.js';
+import { buildSummary, ofpRouteLine } from '../lib/flightsummary.js';
 import { parseMetar } from '../lib/routeweather.js';
 
 const CATEGORY_TONE = { VFR: 'good', MVFR: 'accent', IFR: 'warn', LIFR: 'bad' };
@@ -236,9 +236,10 @@ export async function mount(root, ctx) {
           <span class="e-spacer"></span>
           <div class="e-row" style="justify-content:flex-end">
             ${statusBadge}
-            ${ofp && ofp.fetchedAt ? `<span class="e-badge">imported ${esc(fmtAge(ofp.fetchedAt))}</span>` : ''}
           </div>
         </div>
+        ${ofp && ofpRouteLine(ofp) ? `<div class="fp-ofp-route">${esc(ofpRouteLine(ofp))}</div>` : ''}
+        ${ofp && Number(ofp.fetchedAt) ? `<div class="e-small e-faint">Imported: ${esc(new Date(Number(ofp.fetchedAt)).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }))}</div>` : ''}
         <div class="e-grid four" style="margin-top:14px">
           <div><div class="e-label">Cruise</div><div class="e-big">${ofp && ofp.flight && ofp.flight.cruiseFt ? esc(fmtFl(ofp.flight.cruiseFt)) : '—'}</div></div>
           <div><div class="e-label">Distance</div><div class="e-big">${summary.route.totalNm != null ? `${fmtNum(summary.route.totalNm, 0)}<small class="e-small e-faint"> nm</small>` : '—'}</div></div>
@@ -344,8 +345,9 @@ export async function mount(root, ctx) {
     });
   }
 
-  if (plan && plan.ofp) await loadWeather(plan.ofp);
+  // The plan shows at once; the airport weather fills in when it arrives.
   render();
+  if (plan && plan.ofp) loadWeather(plan.ofp).then(() => { if (!destroyed) render(); }).catch(() => {});
 
   const unsubscribe = (await import('./common.js')).onPlanChange(() => {
     if (!destroyed) render();

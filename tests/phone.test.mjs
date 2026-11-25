@@ -50,7 +50,7 @@ test('the phone nav carries the PC destinations and the EFB', () => {
   assert.match(mobileJs, /id: 'flights', label: 'Flights', href: 'logbook\.html'/);
   assert.match(mobileJs, /id: 'efb', label: 'EFB', href: 'efb\.html'/);
   assert.match(mobileJs, /id: 'profile', label: 'Profile', href: 'pilot\.html#settings'/);
-  assert.match(mobileJs, /id: 'plan', label: 'Flight', href: 'efb\.html#\/flightplan'/, 'planning stays one tap away once the map bar is gone');
+  assert.match(mobileJs, /id: 'plan', label: 'Flight', href: 'efb\.html#\/briefing'/, 'planning stays one tap away once the map bar is gone');
   assert.match(mobileCss, /grid-template-columns: repeat\(5, 1fr\)/, 'four tabs and More, so every label has room');
   assert.match(mobileJs, /const TABS = \['map', 'plan', 'flights', 'charts'\]/, 'Map, Plan, Flights and Charts are tabs');
   assert.match(mobileJs, /id: 'efb', label: 'EFB apps', href: 'efb\.html'/, 'the EFB stays one tap away in More');
@@ -105,7 +105,7 @@ test('the landing page keeps offering Phone Mode', () => {
 });
 
 test('the phone bar marks the section the page is actually showing', () => {
-  assert.match(mobileJs, /const EFB_ROUTES = \{ '#\/flightplan': 'plan', '#\/charts': 'charts' \}/, 'the EFB routes map to the bar destinations');
+  assert.match(mobileJs, /const EFB_ROUTES = \{ '#\/briefing': 'plan', '#\/flightplan': 'plan', '#\/charts': 'charts' \}/, 'the EFB routes map to the bar destinations');
   assert.match(mobileJs, /if \(!document\.body\.classList\.contains\('efb'\)\) return declared;/, 'every other page keeps its declared section');
   assert.match(mobileJs, /window\.addEventListener\('hashchange', markCurrent\)/, 'the bar follows an EFB route change without a reload');
   assert.match(mobileJs, /if \(link\.dataset\.mnav === sectionNow\(\)\)/, 'tapping the section already on screen scrolls instead of reloading');
