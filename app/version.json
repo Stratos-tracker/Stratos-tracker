@@ -1,55 +1,43 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.4.13",
+  "latestVersion": "2.4.14",
   "minimumSupportedVersion": "",
   "mandatory": false,
-  "releaseDate": "2026-11-24",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.13/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.13/Stratos-Setup.exe",
-      "sha256": "903b496f9d386dbb49f433d7c614ecee06be4ef2d211ca03579d7b4195ff6c45",
-      "size": 119578193
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.13/Stratos-2.4.13-mac-arm64.dmg",
-      "sha256": "c729766a35246e3d50b860efea0598b817268a36cf19b1f353524486aacf1d90",
-      "size": 137775464
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.13/Stratos-2.4.13-mac-x64.dmg",
-      "sha256": "24742f6bb67f9a1038a595ec12a80129a4b066d1897bcae43bd3fa3015ddc7a1",
-      "size": 143192496
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.13/Stratos-2.4.13-linux-x64.AppImage",
-      "sha256": "d901793bcc8a89f0b8cbce78946249f303f5e0bdd665ba457ea76a94b963ccd4",
-      "size": 160821087
-    }
-  },
-  "summary": "Connect ChartFox from the desktop app, and a cleaner phone and iPad experience.",
+  "releaseDate": "2026-11-25",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "Charts as layers on the map, the departure runway in your route, and a route that stays drawn while you fly.",
   "reason": "",
   "releaseNotes": [
-    "Connect in the desktop app's Charts opens the web EFB in your browser and starts the ChartFox sign-in.",
-    "The installed app can rotate on iPad.",
-    "Updating on iPhone or iPad reloads the app instead of downloading a desktop installer.",
-    "The phone map no longer has a dark bar under the status bar.",
-    "The 'PC not found' message no longer appears on phones."
+    "Charts on the map are now layers: turn each one on or off, set its opacity, or remove it, plus Hide charts, Follow aircraft and Full screen.",
+    "ChartFox charts can be searched and placed on the map outside the US.",
+    "Your route now runs along the departure runway before the SID.",
+    "The whole route stays drawn while you fly; your aircraft flies over it.",
+    "Connect in the desktop app goes straight to the ChartFox sign-in.",
+    "Charts that are not drawn to scale are no longer placed on the map in the wrong spot.",
+    "Charts placed on the map are kept, so turning a layer back on is instant.",
+    "Your own trail is one dark purple.",
+    "The phone tab bar sits lower, right above the home indicator."
   ],
   "notes": {
     "features": [
-      "Connect in the desktop app's Charts opens the web EFB in your browser and starts the ChartFox sign-in."
+      "Charts on the map are now layers: turn each one on or off, set its opacity, or remove it, plus Hide charts, Follow aircraft and Full screen.",
+      "ChartFox charts can be searched and placed on the map outside the US."
     ],
     "improvements": [
-      "The installed app can rotate on iPad."
+      "Your route now runs along the departure runway before the SID.",
+      "The whole route stays drawn while you fly; your aircraft flies over it.",
+      "Connect in the desktop app goes straight to the ChartFox sign-in."
     ],
     "fixes": [
-      "Updating on iPhone or iPad reloads the app instead of downloading a desktop installer.",
-      "The phone map no longer has a dark bar under the status bar."
+      "Charts that are not drawn to scale are no longer placed on the map in the wrong spot."
     ],
-    "performance": [],
+    "performance": [
+      "Charts placed on the map are kept, so turning a layer back on is instant."
+    ],
     "ui": [
-      "The 'PC not found' message no longer appears on phones."
+      "Your own trail is one dark purple.",
+      "The phone tab bar sits lower, right above the home indicator."
     ],
     "compatibility": [],
     "other": []

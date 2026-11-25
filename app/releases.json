@@ -3,52 +3,64 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.4.13",
-    "releasedAt": "2026-11-24",
+    "version": "2.4.14",
+    "releasedAt": "2026-11-25",
     "severity": "normal",
-    "summary": "Connect ChartFox from the desktop app, and a cleaner phone and iPad experience.",
+    "summary": "Charts as layers on the map, the departure runway in your route, and a route that stays drawn while you fly.",
     "changelog": {
       "features": [
-        "Connect in the desktop app's Charts opens the web EFB in your browser and starts the ChartFox sign-in."
+        "Charts on the map are now layers: turn each one on or off, set its opacity, or remove it, plus Hide charts, Follow aircraft and Full screen.",
+        "ChartFox charts can be searched and placed on the map outside the US."
       ],
       "improvements": [
-        "The installed app can rotate on iPad."
+        "Your route now runs along the departure runway before the SID.",
+        "The whole route stays drawn while you fly; your aircraft flies over it.",
+        "Connect in the desktop app goes straight to the ChartFox sign-in."
       ],
       "fixes": [
-        "Updating on iPhone or iPad reloads the app instead of downloading a desktop installer.",
-        "The phone map no longer has a dark bar under the status bar."
+        "Charts that are not drawn to scale are no longer placed on the map in the wrong spot."
       ],
-      "performance": [],
+      "performance": [
+        "Charts placed on the map are kept, so turning a layer back on is instant."
+      ],
       "ui": [
-        "The 'PC not found' message no longer appears on phones."
+        "Your own trail is one dark purple.",
+        "The phone tab bar sits lower, right above the home indicator."
       ],
       "compatibility": [],
       "other": []
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.13/Stratos-Setup.exe",
-        "sha256": "903b496f9d386dbb49f433d7c614ecee06be4ef2d211ca03579d7b4195ff6c45",
-        "size": 119578193
-      },
-      "mac-arm64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.13/Stratos-2.4.13-mac-arm64.dmg",
-        "sha256": "c729766a35246e3d50b860efea0598b817268a36cf19b1f353524486aacf1d90",
-        "size": 137775464
-      },
-      "mac-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.13/Stratos-2.4.13-mac-x64.dmg",
-        "sha256": "24742f6bb67f9a1038a595ec12a80129a4b066d1897bcae43bd3fa3015ddc7a1",
-        "size": 143192496
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.13/Stratos-2.4.13-linux-x64.AppImage",
-        "sha256": "d901793bcc8a89f0b8cbce78946249f303f5e0bdd665ba457ea76a94b963ccd4",
-        "size": 160821087
-      }
     }
   },
   "releases": [
+    {
+      "version": "2.4.14",
+      "releasedAt": "2026-11-25",
+      "severity": "normal",
+      "summary": "Charts as layers on the map, the departure runway in your route, and a route that stays drawn while you fly.",
+      "changelog": {
+        "features": [
+          "Charts on the map are now layers: turn each one on or off, set its opacity, or remove it, plus Hide charts, Follow aircraft and Full screen.",
+          "ChartFox charts can be searched and placed on the map outside the US."
+        ],
+        "improvements": [
+          "Your route now runs along the departure runway before the SID.",
+          "The whole route stays drawn while you fly; your aircraft flies over it.",
+          "Connect in the desktop app goes straight to the ChartFox sign-in."
+        ],
+        "fixes": [
+          "Charts that are not drawn to scale are no longer placed on the map in the wrong spot."
+        ],
+        "performance": [
+          "Charts placed on the map are kept, so turning a layer back on is instant."
+        ],
+        "ui": [
+          "Your own trail is one dark purple.",
+          "The phone tab bar sits lower, right above the home indicator."
+        ],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.4.13",
       "releasedAt": "2026-11-24",
@@ -1295,49 +1307,6 @@
         ],
         "compatibility": [],
         "other": []
-      }
-    },
-    {
-      "version": "2.1.42",
-      "releasedAt": "2026-11-10",
-      "severity": "normal",
-      "summary": "Live traffic labels now show both the callsign and the aircraft type, so a target is identifiable without opening its card.",
-      "changelog": {
-        "features": [
-          "The 2D map and 3D globe labels now show callsign, aircraft type and altitude or flight level together."
-        ],
-        "improvements": [
-          "The selected aircraft and own-ship marker show the same callsign and type, with the type normalised to an ICAO code."
-        ],
-        "fixes": [],
-        "performance": [],
-        "ui": [
-          "Longer 3D labels are width-limited and ellipsized instead of running off the map."
-        ],
-        "compatibility": [],
-        "other": []
-      },
-      "downloads": {
-        "windows": {
-          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.42/Stratos-Setup.exe",
-          "sha256": "a2b9bfac15c280c6c07fcf01e3b77e7278fa3f540523167de2ba76be1b775846",
-          "size": 118749841
-        },
-        "mac-arm64": {
-          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.42/Stratos-2.1.42-mac-arm64.dmg",
-          "sha256": "b2d74757b799b745d428bcae8016741263be53dbbbacdb7f9766e0f62662e597",
-          "size": 137314969
-        },
-        "mac-x64": {
-          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.42/Stratos-2.1.42-mac-x64.dmg",
-          "sha256": "7e08892fef6f08bf8d4a513d36650963251a1cfcc5da6e080d9355772986645f",
-          "size": 142732308
-        },
-        "linux-x64": {
-          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.42/Stratos-2.1.42-linux-x64.AppImage",
-          "sha256": "7105d13526624bdd1cc3d7d88db42df744e9d2502846311fa74af154923f6e43",
-          "size": 158672487
-        }
       }
     }
   ]

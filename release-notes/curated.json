@@ -1,4 +1,30 @@
 {
+  "2.4.14": {
+    "summary": "Charts as layers on the map, the departure runway in your route, and a route that stays drawn while you fly.",
+    "changelog": {
+      "features": [
+        "Charts on the map are now layers: turn each one on or off, set its opacity, or remove it, plus Hide charts, Follow aircraft and Full screen.",
+        "ChartFox charts can be searched and placed on the map outside the US."
+      ],
+      "improvements": [
+        "Your route now runs along the departure runway before the SID.",
+        "The whole route stays drawn while you fly; your aircraft flies over it.",
+        "Connect in the desktop app goes straight to the ChartFox sign-in."
+      ],
+      "fixes": [
+        "Charts that are not drawn to scale are no longer placed on the map in the wrong spot."
+      ],
+      "performance": [
+        "Charts placed on the map are kept, so turning a layer back on is instant."
+      ],
+      "ui": [
+        "Your own trail is one dark purple.",
+        "The phone tab bar sits lower, right above the home indicator."
+      ],
+      "compatibility": [],
+      "other": []
+    }
+  },
   "2.4.13": {
     "summary": "Connect ChartFox from the desktop app, and a cleaner phone and iPad experience.",
     "changelog": {
@@ -244,24 +270,6 @@
       "ui": [
         "The flat map offers six base styles: Satellite, Terrain, World, VFR, Low IFR and High IFR. Basic, Detailed, Light, Dark and Hybrid are retired, and a saved style that no longer exists falls back to Satellite.",
         "The remove-side-panels control is gone from the map, along with the layout state it saved."
-      ],
-      "compatibility": [],
-      "other": []
-    }
-  },
-  "2.1.42": {
-    "summary": "Live traffic labels now show both the callsign and the aircraft type, so a target is identifiable without opening its card.",
-    "changelog": {
-      "features": [
-        "The 2D map and 3D globe labels now show callsign, aircraft type and altitude or flight level together."
-      ],
-      "improvements": [
-        "The selected aircraft and own-ship marker show the same callsign and type, with the type normalised to an ICAO code."
-      ],
-      "fixes": [],
-      "performance": [],
-      "ui": [
-        "Longer 3D labels are width-limited and ellipsized instead of running off the map."
       ],
       "compatibility": [],
       "other": []
