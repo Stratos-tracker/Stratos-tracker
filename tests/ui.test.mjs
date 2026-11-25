@@ -1478,7 +1478,7 @@ test('a drawn trail is smoothed for the map without moving the recorded path', a
   assert.match(page, /function smoothTrail\(key,pts,hs\)/, 'one trail is smoothed per trail, not per frame');
   assert.match(page, /TRLSM\.set\(key,made\)/, 'the smoothed path is cached');
   assert.match(page, /const sm=smoothTrail\(key\|\|'own',pts,hs\)/, 'the drawn line uses it');
-  assert.match(page, /const inks=shs\.map\(trailInk\)/, 'altitude colouring follows the smoothed path');
+  assert.match(page, /const inks=own\?shs\.map\(\(\)=>OWN_TRAIL\):shs\.map\(trailInk\)/, 'others: altitude colouring follows the smoothed path; your own trail is one dark purple');
   assert.match(mini, /import \{ smoothPath \} from '\.\/lib\/trailpath\.js'/, 'the phone map uses the same smoothing');
   assert.match(mini, /const line = smoothPath\(/, 'its line is smoothed too');
 });

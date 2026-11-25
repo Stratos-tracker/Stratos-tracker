@@ -3705,6 +3705,7 @@ function trailCol(){if(DKM())return '#ffffff';if(TILED())return '#1e293b';return
 const TRAIL_EDGE='rgba(6,18,10,.55)';
 /* The ramp itself lives in the shared module so the phone's map and this one
    cannot drift apart; this wrapper is only the page-scope name it is used by. */
+const OWN_TRAIL='#6d28d9';
 function trailInk(h){return window.TRAILC?window.TRAILC.trailInk(h):'#ffffff'}
 /* One smoothed copy per trail, rebuilt only when the trail grows. Corner cutting
    through the recorded points is what makes a turn look like a turn instead of
@@ -3740,7 +3741,8 @@ const tw=own?MP.trailWidth:1;
 strokeRun(0,m-1,TRAIL_EDGE,7*tw);
 /* One stroke per run of points that share a colour: a climb changes colour in
    small steps instead of one stroke per segment, so the cost stays flat. */
-const inks=shs.map(trailInk);let start=0,ink=inks[0];
+// Your own trail is one dark purple; other aircraft keep the altitude colours.
+const inks=own?shs.map(()=>OWN_TRAIL):shs.map(trailInk);let start=0,ink=inks[0];
 const run=(from,to)=>strokeRun(from,to,ink,4*tw);
 for(let i=1;i<m;i++){if(inks[i]!==ink){run(start,i);start=i;ink=inks[i]}}
 run(start,m-1);
