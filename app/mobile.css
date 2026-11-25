@@ -34,8 +34,8 @@
     --m-nav-h: 62px;
     --m-safe-t: env(safe-area-inset-top, 0px);
     --m-safe-b: env(safe-area-inset-bottom, 0px);
-    /* The tab bar sits closer to the home indicator than the full inset. */
-    --m-nav-safe: max(4px, calc(env(safe-area-inset-bottom, 0px) - 20px));
+    /* The tab bar sits right on the home indicator (as low as iOS allows). */
+    --m-nav-safe: max(2px, calc(env(safe-area-inset-bottom, 0px) - 32px));
     --m-gutter: 12px;
     color-scheme: dark;
   }
