@@ -2195,8 +2195,10 @@ if(route.length&&L.rte){const wi=wpAt(x,y);if(wi>=0){wpIdx=wi;openRouteCard({kin
 closeRouteCard();wpIdx=null;sel=null;
 x-=rect.left;y-=rect.top;let best=null,bestD=Infinity;
 const items=[...(L.trf?T.map(o=>[o,18]):[]),...(L.atc?ATC.map(r=>[r.airport,17]):[]),...(L.apt?A.filter(a=>!a.x||V.z>=6).map(o=>[o,14]):[]),...(L.nav&&V.z>=6?N.map(o=>[o,12]):[]),...(liveOk()?[[{k:'own',id:'Own-ship',...own},22]]:[])];
-items.forEach(([o,rad])=>{const q=vis(o.lon,o.lat);if(!q)return;let d=Math.hypot(q[0]-x,q[1]-y);if(o.det&&o.rpx)d=Math.max(d-o.rpx,0);if(d<=rad&&d<bestD){bestD=d;best=o}});
-if(best){sel=best;if(best.k=='trf'){best._trackAt=Date.now();tk=true;setFol(false);trafficBackfill(best);if(best.source=='vatsim')loadVatsim().then(vatsimTraffic)}panel=null;render();fCard()}
+items.forEach(([o,rad])=>{const q=vis(o.lon,o.lat);if(!q)return;let d=Math.hypot(q[0]-x,q[1]-y);
+// An airport pin stands above its point: its round head counts as the airport too.
+if(o.k==='apt'&&!o.det){const r=mkRz()*.62*(aptBig(o)?1.25:1);d=Math.min(d,Math.hypot(q[0]-x,q[1]-r*1.7-y))}if(o.det&&o.rpx)d=Math.max(d-o.rpx,0);if(d<=rad&&d<bestD){bestD=d;best=o}});
+if(best){sel=best;if(best.k=='trf'){best._trackAt=Date.now();tk=true;setFol(false);trafficBackfill(best);if(best.source=='vatsim')loadVatsim().then(vatsimTraffic)}panel=best.k=='apt'?'sel':null;render();fCard()}
 else{panel=null;render()}}
 /* search */
 /* Search flights (traffic on the map, then every pilot on the VATSIM/IVAO feed),
