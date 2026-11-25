@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Connecting ChartFox · Stratos EFB</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #070a0f; color: #e6edf6; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 420px; padding: 28px; text-align: center; }
+  b { display: block; font-size: 18px; margin-bottom: 6px; }
+  a { color: #45c4f5; }
+</style>
+</head>
+<body>
+<main><b id="cf-title">Opening ChartFox…</b><span id="cf-text">Taking you to the ChartFox sign-in.</span></main>
+<script type="module">
+  /* Opened by Charts → Connect from the desktop app: straight to ChartFox's
+     sign-in, with no Stratos sign-in in between (that would drop the request).
+     ?back= is where to land afterwards; only a path on this site is accepted. */
+  import { connectChartfox } from './js/lib/chartfox.js';
+  const raw = new URLSearchParams(location.search).get('back') || '';
+  const back = /^\/app\/[\w./#?=&%-]*$/.test(raw) ? new URL(raw, location.origin).href : new URL('efb.html#/charts', location.href).href;
+  connectChartfox(back).catch(error => {
+    document.getElementById('cf-title').textContent = 'ChartFox could not be opened';
+    const text = document.getElementById('cf-text');
+    text.textContent = `${error.message} `;
+    text.append(Object.assign(document.createElement('a'), { href: back, textContent: 'Back to Charts' }));
+  });
+</script>
+</body>
+</html>

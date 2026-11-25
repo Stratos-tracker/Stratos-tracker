@@ -259,7 +259,8 @@ export async function mount(root, ctx) {
       // The callback is registered on the website only: from the app or a local
       // copy, open the web EFB in the browser and start the sign-in there.
       if (!canSignInHere()) {
-        window.open(`${CHARTFOX_SIGN_IN_ORIGIN}/app/efb.html#/charts?cfconnect=1${icao ? `&icao=${encodeURIComponent(icao)}` : ''}`, '_blank', 'noopener');
+        const back = `/app/efb.html#/charts${icao ? `?icao=${encodeURIComponent(icao)}` : ''}`;
+        window.open(`${CHARTFOX_SIGN_IN_ORIGIN}/app/chartfox-connect.html?back=${encodeURIComponent(back)}`, '_blank', 'noopener');
         return;
       }
       connectChartfox(location.href).catch(error => { cfBar.insertAdjacentHTML('beforeend', `<div class="e-notice bad cf-error">${esc(error.message)}</div>`); });
