@@ -1767,8 +1767,10 @@ test('charts on the map: one panel with a search bar, placed only when to scale'
   assert.match(page, /'<h4>Your route<\/h4>'/, "the route's own charts come first");
   assert.match(page, /mcFitLib\.fitChart\(page\.labels,refs,/, 'a chart is placed from the names it prints');
   assert.match(page, /if\(!fit\)\{\s*mcStatus\([^)]*'Not on the map: this chart is not drawn to scale/, 'and kept off the map when it cannot be');
-  assert.match(page, /if\(!MC\.canvas\|\|!MC\.fit\|\|!MC\.visible\)return;/, 'only a placed chart is ever drawn');
+  assert.match(page, /if\(l\.visible&&l\.fit&&/, 'only a placed, visible chart layer is ever drawn');
+  assert.match(page, /function mcAddLayer\(layer\)\{[\s\S]{0,160}l\.icao===layer\.icao&&l\.kind===layer\.kind/, 'one layer per airport and chart kind, so charts do not pile up');
+  assert.match(page, /data-layer-vis=[\s\S]{0,200}data-layer-op=[\s\S]{0,200}data-layer-off=/, 'each layer has its own toggle, opacity and remove');
   assert.match(page, /drawMapChart\(\);drawSelectedAircraftRoute\(\);/, 'under the route and the aircraft');
-  assert.match(page, /if\(fit\)\{CFX\.list\.push/, 'a ChartFox chart is drawn only once it is placed');
+  assert.match(page, /if\(hit\.fit\)mcAddLayer\(/, 'a ChartFox chart is drawn only once it is placed');
   assert.doesNotMatch(page, /PLATE|platePick|plateAlign|data-plate/, 'nothing of the old overlay remains');
 });

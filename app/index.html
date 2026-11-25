@@ -85,7 +85,7 @@ html{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}textar
 #mcMsg a{color:var(--acc)}
 #mcNow .mc-ctl{display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--mut)}
 #mcNow .mc-ctl input{flex:1;accent-color:var(--acc)}
-#mcNow .mc-ctl button{padding:5px 9px;border-radius:6px;border:1px solid color-mix(in srgb,var(--coast) 50%,transparent);background:none;color:var(--txt);font:600 11px/1 system-ui,sans-serif;cursor:pointer}
+#mcNow .mc-ctl button{padding:5px 9px;border-radius:6px;border:1px solid color-mix(in srgb,var(--coast) 50%,transparent);background:none;color:var(--txt);font:600 11px/1 system-ui,sans-serif;cursor:pointer}#mcNow .mc-ctl button[aria-pressed="true"]{border-color:var(--acc);color:var(--acc)}#mcLayers{display:flex;flex-direction:column;gap:6px}.mc-layer{display:grid;grid-template-columns:minmax(0,1fr) 84px 24px;align-items:center;gap:2px 8px;padding:6px 8px;border-radius:8px;background:color-mix(in srgb,var(--acc) 7%,transparent)}.mc-layer.off{opacity:.55}.mc-layer label{display:flex;align-items:center;gap:6px;min-width:0;cursor:pointer}.mc-layer label input{accent-color:var(--acc)}.mc-layer i{font:700 9.5px/1 system-ui,sans-serif;font-style:normal;letter-spacing:.06em;color:var(--acc)}.mc-layer b{font:600 11.5px/1.25 system-ui,sans-serif;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mc-layer input[type=range]{width:84px;accent-color:var(--acc)}.mc-layer button{width:24px;height:24px;padding:0;border:0;border-radius:6px;background:none;color:var(--mut);cursor:pointer}.mc-layer button:hover{color:var(--txt)}.mc-layer span{grid-column:1/-1;font-size:10px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:767px){#mc{left:8px;right:8px;top:118px;width:auto;max-height:52%;z-index:60}}
 @media(max-width:420px){#tel b{font-size:13px}#tel span{font-size:10px}#sb{padding:0 12px}#q{padding:12px 0;font-size:16px}#fab{right:8px;top:8px;gap:7px}.fab{width:42px;height:42px}#res{left:8px;right:8px}#sheet{left:8px;right:8px;bottom:72px;max-height:min(48dvh,420px);padding:12px;border-radius:16px}#tabs{padding-bottom:max(7px,env(safe-area-inset-bottom));}button{padding:8px 10px}}
 :root{--acc:#2563eb}:root[data-theme=contrast]{--acc:#fde047}
@@ -575,7 +575,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 
 <div id="cv"><div class="cvh"><button id="cvx" aria-label="Back">&#8592;</button><div class="cvt"><b id="cvi"></b><span id="cvn"></span><span id="cvm"></span></div><button id="cvf">Fit</button></div><div class="seg" id="cvs"></div></div><div id="ci"></div>
 <div id="chart"></div>
-<div id="mc" hidden role="dialog" aria-label="Charts on the map"><header>Charts on map<button type="button" id="mcX" aria-label="Close the charts panel">&#10005;</button></header><input id="mcQ" type="search" autocomplete="off" spellcheck="false" placeholder="Search: OMDB, OMDB STAR, EHAM ILS 18R" aria-label="Search charts"><div id="mcList"></div><div id="mcNow" hidden><b id="mcName"></b><span id="mcMsg"></span><div class="mc-ctl"><label for="mcO">Opacity</label><input id="mcO" type="range" min="10" max="100" value="80"><button type="button" id="mcHide">Hide</button><button type="button" id="mcOff">Remove</button></div></div></div>
+<div id="mc" hidden role="dialog" aria-label="Charts on the map"><header>Charts on map<button type="button" id="mcX" aria-label="Close the charts panel">&#10005;</button></header><input id="mcQ" type="search" autocomplete="off" spellcheck="false" placeholder="Search: OMDB, OMDB STAR, EHAM ILS 18R" aria-label="Search charts"><div id="mcList"></div><div id="mcNow" hidden><div class="mc-ctl"><button type="button" id="mcAll" aria-pressed="true">Hide charts</button><button type="button" id="mcFol" aria-pressed="false" title="Keep the aircraft in the middle of the map">Follow aircraft</button><button type="button" id="mcFull" title="Full-screen map">Full screen</button></div><div id="mcLayers"></div><b id="mcName"></b><span id="mcMsg"></span></div></div>
 <div id="sheet" class="box"></div>
 <div id="tel" class="box" aria-label="Live flight telemetry">
 <div class="tel-state" id="tST" data-k="offline" role="status"><span class="tel-k">STATUS</span><i aria-hidden="true"></i><b id="tSTl">Not connected</b><span id="tSTd"></span></div>
@@ -4438,20 +4438,29 @@ function fpTick(){const n=performance.now();if(n-fpTickAt<900)return;fpTickAt=n;
 /* The native Charts workspace owns chart viewing now. */
 function chartLauncherHtml(a){const id=(a&&a.id)||'';const url='pilot.html#charts'+(id?'?icao='+encodeURIComponent(id):'');let h='<div style="margin-top:12px"><b>'+esc(id)+'</b> <span class="m">'+esc((a&&a.name)||'')+'</span></div>';h+='<div class="m" style="margin-top:8px">Official terminal procedures open in the integrated Charts workspace: zoom, pan, fit, pages and full screen, without leaving Stratos.</div><div class="row" style="margin-top:10px"><a href="'+url+'"><button class="on">Open Charts'+(id?' for '+esc(id):'')+'</button></a><button type="button" data-mapchart="'+esc(id)+'" title="Show this airport\'s chart in a window over the map">Show over map</button></div>';return h}
 function openChartsPage(icao){location.href='pilot.html#charts'+(icao?'?icao='+encodeURIComponent(icao):'')}
-/* ── Charts on the map ─────────────────────────────────────────────────
-   One panel: a search bar, the route's own charts first, one tap to lay a chart
-   on the map. A chart is placed from the names it prints (lib/chartfit.js) and
-   only when three or more agree on one scale and rotation, which a chart not
-   drawn to scale cannot do; that one stays off the map and opens in Charts. */
-const MC={canvas:null,fit:null,opacity:80,visible:true,route:[],results:[],current:'',token:0,query:''};
+/* Chart layers on the map. Each placed chart is one layer with its own
+   visibility and opacity; one layer per airport and chart kind, so a second
+   SID replaces the first instead of piling up. Charts come from the FAA
+   catalogue and, with a linked account, ChartFox. A chart is placed only when
+   its printed fixes agree on one scale and rotation (lib/chartfit.js); a chart
+   that is not to scale stays off the map and opens in Charts instead. */
+const MC={layers:[],cache:new Map(),on:true,route:[],results:[],current:'',token:0,query:''};
 let mcPlate=null,mcFitLib=null,mcPick=null;
 async function mcLibs(){
   if(!mcPlate)[mcPlate,mcFitLib,mcPick]=await Promise.all([import('./js/lib/plate.js'),import('./js/lib/chartfit.js'),import('./js/lib/routecharts.js')]);
 }
 const MC_KIND={diagram:'AIRPORT',sid:'SID',star:'STAR',approach:'APP',other:'CHART'};
+const MC_CF_KIND={GroundLayout:'AIRPORT',SID:'SID',STAR:'STAR',Approach:'APP'};
 function mcItem(icao,chart,label){
   const kind=mcPick.chartFamily(chart);
   return {icao,chart,kind:label||MC_KIND[kind]||'CHART',title:String(chart.title||chart.code||'Chart')};
+}
+function mcCfItem(icao,chart,cfc){
+  return {icao,cf:chart,kind:MC_CF_KIND[chart.type_key]||'CHART',title:cfc.shortChartName(chart),geo:Boolean(chart.has_georeferences)};
+}
+async function mcChartfox(){
+  const [cf,cfc]=await Promise.all([import('./js/lib/chartfox.js'),import('./js/efb/chartfoxcharts.js')]);
+  return cf.chartfoxConnected()?{cf,cfc}:null;
 }
 /* The route's charts: departure aerodrome and SID, arrival STAR, approach and aerodrome. */
 async function mcRefreshRoute(){
@@ -4479,23 +4488,28 @@ async function mcSearch(text){
   const icao=/^[A-Z]{4}$/.test(words[0])?words[0]:'';
   const terms=icao?words.slice(1):words;
   const airports=icao?[icao]:[...new Set(MC.route.map(item=>item.icao))];
-  const found=[];
+  const found=[];let lastError='';
   await mcLibs();
+  const linked=await mcChartfox().catch(()=>null);
+  const match=item=>{const hay=(item.title+' '+item.kind+(item.kind==='APP'?' APPROACH IAC ILS RNAV VOR':'')+(item.kind==='AIRPORT'?' AERODROME DIAGRAM GROUND':'')).toUpperCase();return terms.every(t=>hay.includes(t))};
   for(const code of airports){
-    let entry=null;try{entry=await mcPlate.plateChart(code)}catch(error){if(icao&&token===MC.token){MC.results=[];mcRender(String(error.message||error));return}continue}
-    for(const chart of entry.charts){
-      const item=mcItem(code,chart);
-      const hay=(item.title+' '+item.kind+' '+mcPick.chartFamily(chart)+(item.kind==='APP'?' APPROACH IAC':'')+(item.kind==='AIRPORT'?' AERODROME DIAGRAM':'')).toUpperCase();
-      if(terms.every(t=>hay.includes(t)))found.push(item);
+    let entry=null;try{entry=await mcPlate.plateChart(code)}catch(error){lastError=String(error.message||error)}
+    if(entry)for(const chart of entry.charts){const item=mcItem(code,chart);if(match(item))found.push(item)}
+    else if(linked){
+      try{
+        const grouped=await linked.cfc.cachedGet('/v2/airports/'+encodeURIComponent(code)+'/charts/grouped');
+        for(const chart of Object.values((grouped&&grouped.data)||{}).flat()){const item=mcCfItem(code,chart,linked.cfc);if(match(item))found.push(item)}
+      }catch(error){lastError=String(error.message||error)}
     }
   }
   if(token!==MC.token)return;
-  MC.results=found.slice(0,60);
-  mcRender();
+  // Georeferenced charts first: they are the ones that can be placed.
+  MC.results=found.sort((a,b)=>Number(Boolean(b.geo))-Number(Boolean(a.geo))).slice(0,80);
+  mcRender(found.length?'':(icao&&lastError&&!linked?lastError+' Connect ChartFox in Charts for charts outside the US.':lastError));
 }
 function mcRow(item,i,set){
   const id=item.icao+'|'+item.title;
-  return '<button type="button" data-set="'+set+'" data-i="'+i+'" aria-current="'+(MC.current===id)+'"><i>'+esc(item.kind)+'</i><b>'+esc(item.title)+'</b><span>'+esc(item.icao)+'</span></button>'
+  return '<button type="button" data-set="'+set+'" data-i="'+i+'" aria-current="'+(MC.current===id)+'"><i>'+esc(item.kind)+'</i><b>'+esc(item.title)+'</b><span>'+esc(item.icao)+(item.cf?' · ChartFox':'')+(item.geo?' · Geo':'')+'</span></button>'
 }
 function mcRender(error){
   const list=$('#mcList');if(!list)return;
@@ -4503,58 +4517,90 @@ function mcRender(error){
   if(MC.route.length&&!MC.query)html+='<h4>Your route</h4>'+MC.route.map((item,i)=>mcRow(item,i,'route')).join('');
   if(MC.query)html+=MC.results.length?'<h4>Results</h4>'+MC.results.map((item,i)=>mcRow(item,i,'results')).join('')
     :'<p>'+esc(error||'No chart matches. Start with an airport code, e.g. OMDB STAR.')+'</p>';
-  if(!html)html='<p>Search an airport, e.g. KJFK or OMDB ILS. With a route loaded, its charts are listed here.</p>';
+  if(!html)html='<p>Search an airport, e.g. KJFK or EDDF ILS. With a route loaded, its charts are listed here.</p>';
   list.innerHTML=html
 }
 function mcStatus(name,msg){
   $('#mcNow').hidden=false;$('#mcName').textContent=name;$('#mcMsg').innerHTML=msg
 }
+/* The layer list under the chart picker: toggle, opacity and remove per chart. */
+function mcLayersRender(){
+  const box=$('#mcLayers');if(!box)return;
+  $('#mcNow').hidden=!MC.layers.length&&!$('#mcName').textContent;
+  box.innerHTML=MC.layers.map((l,i)=>'<div class="mc-layer'+(l.visible?'':' off')+'"><label><input type="checkbox" data-layer-vis="'+i+'"'+(l.visible?' checked':'')+'><i>'+esc(l.kind)+'</i><b title="'+esc(l.info)+'">'+esc(l.name)+'</b></label><input type="range" min="10" max="100" value="'+l.opacity+'" data-layer-op="'+i+'" aria-label="Opacity of '+esc(l.name)+'"><button type="button" data-layer-off="'+i+'" aria-label="Remove '+esc(l.name)+'">✕</button><span>'+esc(l.info)+'</span></div>').join('');
+  $('#mcAll').textContent=MC.on?'Hide charts':'Show charts';
+  $('#mcAll').setAttribute('aria-pressed',MC.on?'true':'false');
+}
+function mcAddLayer(layer){
+  // One layer per airport and kind: a new SID replaces the old one, it does not stack on it.
+  MC.layers=MC.layers.filter(l=>!(l.icao===layer.icao&&l.kind===layer.kind&&l.kind!=='CHART')&&l.key!==layer.key);
+  MC.layers.push(layer);mcLayersRender();draw()
+}
+async function mcPlace(item,page){
+  const refs=await mcPlate.plateReferences(item.icao);
+  return mcFitLib.fitChart(page.labels,refs,(lat,lon)=>wpx(lon,lat,0),{metresPerUnit:lat=>40075016*Math.cos(lat*R)/SZ});
+}
 async function mcShow(item){
-  const id=item.icao+'|'+item.title,token=++MC.token;
+  const id=item.icao+'|'+item.title,token=++MC.token,key=(item.cf?'cf:'+item.cf.id:'faa:'+item.icao+':'+item.title);
   MC.current=id;mcRender();
-  MC.canvas=null;MC.fit=null;MC.visible=true;$('#mcHide').textContent='Hide';draw();
   mcStatus(item.icao+' · '+item.title,'Placing the chart on the map…');
   try{
-    const entry=await mcPlate.plateChart(item.icao);
-    const page=await mcPlate.renderChart(mcPlate.chartDocumentUrl(item.icao,{chart:item.chart},entry.cycle),{maxWidth:2400});
-    const refs=await mcPlate.plateReferences(item.icao);
+    let hit=MC.cache.get(key);
+    if(!hit){
+      let page;
+      if(item.cf){
+        const cf=await import('./js/lib/chartfox.js'),tk=await cf.chartfoxToken();
+        if(!tk)throw new Error('Connect ChartFox in Charts to place its charts.');
+        page=await mcPlate.renderChart('/api/chart?source=chartfox&id='+encodeURIComponent(item.cf.id),{maxWidth:2400,headers:{Authorization:'Bearer '+tk}});
+      }else{
+        const entry=await mcPlate.plateChart(item.icao);
+        page=await mcPlate.renderChart(mcPlate.chartDocumentUrl(item.icao,{chart:item.chart},entry.cycle),{maxWidth:2400});
+      }
+      hit={canvas:page.canvas,fit:await mcPlace(item,page)};
+      MC.cache.set(key,hit);
+    }
     if(token!==MC.token)return;
-    const fit=mcFitLib.fitChart(page.labels,refs,(lat,lon)=>wpx(lon,lat,0),{metresPerUnit:lat=>40075016*Math.cos(lat*R)/SZ});
-    const viewer='<a href="pilot.html#charts?icao='+encodeURIComponent(item.icao)+'">Open it in Charts</a>';
+    const fit=hit.fit;
+    const viewer='<a href="efb.html#/charts?icao='+encodeURIComponent(item.icao)+'">Open it in Charts</a>';
     if(!fit){
       mcStatus(item.icao+' · '+item.title,'Not on the map: this chart is not drawn to scale, or it names no point the navigation data knows. '+viewer+'.');
       return
     }
-    MC.canvas=page.canvas;MC.fit=fit;
+    mcAddLayer({key,icao:item.icao,kind:item.kind,name:item.icao+' '+item.title,canvas:hit.canvas,fit,visible:true,opacity:80,
+      info:'Placed on '+fit.idents.slice(0,5).join(', ')+' (±'+fit.medianM+' m)'+(item.cf?' · ChartFox':' · FAA')});
     mcStatus(item.icao+' · '+item.title,'On the map, placed on '+fit.idents.slice(0,5).join(', ')+' (±'+fit.medianM+' m).');
-    draw()
   }catch(error){
     if(token===MC.token)mcStatus(item.icao+' · '+item.title,'This chart could not be loaded: '+esc(String((error&&error.message)||error)))
   }
 }
-/* The route's georeferenced ChartFox charts (SID, STAR, approach), laid on the map
-   by the same fix-name fit as above. Re-read when the route changes. */
-const CFX={key:'',at:0,list:[],token:0};
+/* The route's georeferenced ChartFox charts (SID, STAR, approach) join the layer
+   list by themselves, by the same fix-name fit. Re-read when the route changes. */
+const CFX={key:'',at:0,token:0};
 async function cfxRefresh(){
   const plan=deckProcedurePlan()||{},o=plan.origin||{},d=plan.destination||{};
   const dep=String(o.icao||'').toUpperCase(),arr=String(d.icao||'').toUpperCase();
   const key=[dep,o.sid,arr,d.star,d.approach,d.rwy||d.approachRwy].join('|');
   if(key===CFX.key)return;
-  CFX.key=key;CFX.list=[];const token=++CFX.token;
-  const [cf,cfc]=await Promise.all([import('./js/lib/chartfox.js'),import('./js/efb/chartfoxcharts.js')]);
-  if(!cf.chartfoxConnected())return;
+  CFX.key=key;const token=++CFX.token;
+  MC.layers=MC.layers.filter(l=>!l.auto);mcLayersRender();
+  const linked=await mcChartfox();
+  if(!linked)return;
   await mcLibs();
   for(const [icao,want] of [[dep,{sid:o.sid}],[arr,{star:d.star,approach:d.approach,runway:d.rwy||d.approachRwy}]]){
     if(!icao)continue;
     try{
-      const grouped=await cf.chartfoxGet('/v2/airports/'+encodeURIComponent(icao)+'/charts/grouped');
-      const refs=await mcPlate.plateReferences(icao);
-      for(const chart of cfc.routeChartfoxCharts(grouped,want)){
-        const token2=await cf.chartfoxToken();if(!token2||token!==CFX.token)return;
-        const page=await mcPlate.renderChart('/api/chart?source=chartfox&id='+encodeURIComponent(chart.id),{maxWidth:2400,headers:{Authorization:'Bearer '+token2}});
-        const fit=mcFitLib.fitChart(page.labels,refs,(lat,lon)=>wpx(lon,lat,0),{metresPerUnit:lat=>40075016*Math.cos(lat*R)/SZ});
+      const grouped=await linked.cf.chartfoxGet('/v2/airports/'+encodeURIComponent(icao)+'/charts/grouped');
+      for(const chart of linked.cfc.routeChartfoxCharts(grouped,want)){
+        const item=mcCfItem(icao,chart,linked.cfc),ck='cf:'+chart.id;
+        let hit=MC.cache.get(ck);
+        if(!hit){
+          const tk=await linked.cf.chartfoxToken();if(!tk||token!==CFX.token)return;
+          const page=await mcPlate.renderChart('/api/chart?source=chartfox&id='+encodeURIComponent(chart.id),{maxWidth:2400,headers:{Authorization:'Bearer '+tk}});
+          hit={canvas:page.canvas,fit:await mcPlace(item,page)};MC.cache.set(ck,hit);
+        }
         if(token!==CFX.token)return;
-        if(fit){CFX.list.push({canvas:page.canvas,fit,name:cfc.shortChartName(chart)});draw()}
+        if(hit.fit)mcAddLayer({key:ck,auto:true,icao,kind:item.kind,name:icao+' '+item.title,canvas:hit.canvas,fit:hit.fit,visible:true,opacity:80,
+          info:'Your route · placed on '+hit.fit.idents.slice(0,5).join(', ')+' (±'+hit.fit.medianM+' m) · ChartFox'});
       }
     }catch(_){/* no ChartFox charts here: the map is unchanged */}
   }
@@ -4562,30 +4608,21 @@ async function cfxRefresh(){
 function drawChartCanvas(canvas,f,alpha){
   const k=2**V.z,c=wpx(V.lon,V.lat,V.z);
   cx.save();cx.globalAlpha=alpha;cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';
+  // World units (zoom 0) to the screen, as one transform: the chart moves and scales with the map.
   cx.transform(k*f.a,k*f.b,-k*f.b,k*f.a,k*f.tx-c[0]+W/2,k*f.ty-c[1]+H/2);
   cx.drawImage(canvas,0,0);cx.restore()
 }
-/* World units (zoom 0) to the screen, as one canvas transform. */
+/* Drawn before routes, procedures, traffic and the own aircraft, so they stay on top. */
 function drawMapChart(){
-  if(L.cfx&&!CH.on){
-    const now=performance.now();
-    if(now-CFX.at>3000){CFX.at=now;cfxRefresh().catch(()=>{})}
-    for(const item of CFX.list)drawChartCanvas(item.canvas,item.fit,MC.opacity/100);
-  }
-  if(!MC.canvas||!MC.fit||!MC.visible)return;
-  const f=MC.fit,k=2**V.z,c=wpx(V.lon,V.lat,V.z);
-  cx.save();
-  cx.globalAlpha=MC.opacity/100;
-  cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';
-  cx.transform(k*f.a,k*f.b,-k*f.b,k*f.a,k*f.tx-c[0]+W/2,k*f.ty-c[1]+H/2);
-  cx.drawImage(MC.canvas,0,0);
-  cx.restore()
+  if(L.cfx&&!CH.on){const now=performance.now();if(now-CFX.at>3000){CFX.at=now;cfxRefresh().catch(()=>{})}}
+  if(!MC.on||CH.on)return;
+  for(const l of MC.layers)if(l.visible&&l.fit&&(!l.auto||L.cfx))drawChartCanvas(l.canvas,l.fit,l.opacity/100);
 }
 function mcOpen(query){
   const el=$('#mc');el.hidden=false;$('#bMc').setAttribute('aria-expanded','true');$('#bMc').classList.add('on');setLay(false);
   const q=$('#mcQ');
   if(query!=null){q.value=query;mcSearch(query)}else mcRender();
-  mcRefreshRoute();
+  mcRefreshRoute();mcLayersRender();
   q.focus()
 }
 function mcClose(){$('#mc').hidden=true;$('#bMc').setAttribute('aria-expanded','false');$('#bMc').classList.remove('on')}
@@ -4595,9 +4632,14 @@ function mcClose(){$('#mc').hidden=true;$('#bMc').setAttribute('aria-expanded','
   $('#mcX').onclick=mcClose;
   $('#mcQ').oninput=e=>{clearTimeout(timer);timer=setTimeout(()=>mcSearch(e.target.value),250)};
   $('#mcList').onclick=e=>{const b=e.target.closest('button[data-set]');if(!b)return;const item=(b.dataset.set==='route'?MC.route:MC.results)[Number(b.dataset.i)];if(item)mcShow(item)};
-  $('#mcO').oninput=e=>{MC.opacity=Number(e.target.value);draw()};
-  $('#mcHide').onclick=e=>{MC.visible=!MC.visible;e.target.textContent=MC.visible?'Hide':'Show';draw()};
-  $('#mcOff').onclick=()=>{MC.token++;MC.canvas=null;MC.fit=null;MC.current='';$('#mcNow').hidden=true;mcRender();draw()};
+  $('#mcLayers').addEventListener('input',e=>{const t=e.target;
+    if(t.dataset.layerOp!=null){const l=MC.layers[Number(t.dataset.layerOp)];if(l){l.opacity=Number(t.value);draw()}}
+    if(t.dataset.layerVis!=null){const l=MC.layers[Number(t.dataset.layerVis)];if(l){l.visible=t.checked;mcLayersRender();draw()}}});
+  $('#mcLayers').addEventListener('click',e=>{const b=e.target.closest('[data-layer-off]');if(!b)return;const l=MC.layers[Number(b.dataset.layerOff)];
+    MC.layers.splice(Number(b.dataset.layerOff),1);MC.current='';mcRender();mcLayersRender();draw()});
+  $('#mcAll').onclick=()=>{MC.on=!MC.on;mcLayersRender();draw()};
+  $('#mcFol').onclick=()=>{setFol(!V.fol);$('#mcFol').setAttribute('aria-pressed',V.fol?'true':'false')};
+  $('#mcFull').onclick=()=>{const d=document;if(d.fullscreenElement)d.exitFullscreen?.();else d.documentElement.requestFullscreen?.().catch(()=>{})};
   document.addEventListener('click',e=>{const b=e.target.closest('[data-mapchart]');if(b)mcOpen(b.dataset.mapchart)});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#mc').hidden)mcClose()});
   setTimeout(mcRefreshRoute,600);
