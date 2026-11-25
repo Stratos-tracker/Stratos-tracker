@@ -30,6 +30,7 @@ import {
 import { defaultBridgeBase, isHostedPage } from '../bridge.js';
 import { MiniMap } from '../minimap.js';
 import * as RP from '../lib/routeplan.js';
+import * as FS from '../lib/flightsummary.js';
 import { buildFromSimbrief, storageFromPlan } from '../lib/simbriefroute.js';
 import { endpointsFor } from '../lib/procdeck.js';
 import { parseWaypointText } from '../lib/planner.js';
@@ -201,6 +202,8 @@ export async function mount(root, ctx) {
     adoptedRoute = Boolean(stored.length && plan.points.length > 1);
   }
   if (!RP.STEP_IDS.includes(step)) step = 'departure';
+  // With a SimBrief plan imported, the page opens on it.
+  if (FS.loadOfp(localStorage)) step = 'ofp';
 
   getSavedRoutes().then(routes => { savedRoutes = Array.isArray(routes) ? routes : []; }).catch(() => {});
 
@@ -1551,7 +1554,8 @@ export async function mount(root, ctx) {
   function paintSteps() {
     if (!el.steps) return;
     const states = RP.stepState(plan, { burnPerHour: effectiveBurn() }).filter(entry => TAB_LABELS[entry.id]);
-    el.steps.innerHTML = states.map(entry => `<button class="fp-step${entry.id === step ? ' is-current' : ''}${entry.available || entry.id === 'route' ? '' : ' is-muted'}" type="button" data-act="step" data-step="${entry.id}" aria-current="${entry.id === step ? 'page' : 'false'}">${esc(TAB_LABELS[entry.id])}</button>`).join('');
+    const ofpTab = FS.loadOfp(localStorage) ? `<button class="fp-step${step === 'ofp' ? ' is-current' : ''}" type="button" data-act="step" data-step="ofp" aria-current="${step === 'ofp' ? 'page' : 'false'}">OFP</button>` : '';
+    el.steps.innerHTML = ofpTab + states.map(entry => `<button class="fp-step${entry.id === step ? ' is-current' : ''}${entry.available || entry.id === 'route' ? '' : ' is-muted'}" type="button" data-act="step" data-step="${entry.id}" aria-current="${entry.id === step ? 'page' : 'false'}">${esc(TAB_LABELS[entry.id])}</button>`).join('');
   }
 
   const procedureRecord = tag => (tag === 'SID' ? plan.sid : tag === 'STAR' ? plan.star : plan.approach);
@@ -2207,7 +2211,38 @@ export async function mount(root, ctx) {
       </div>`;
   }
 
+  /** The imported SimBrief plan: departure to arrival, the route, when it was imported, then the basics. */
+  function bodyOfp() {
+    const record = FS.loadOfp(localStorage);
+    if (!record) return '<div class="e-card fp-card"><h3>No OFP imported</h3><p class="e-small e-faint">Import your SimBrief plan in the OFP app.</p></div>';
+    const o = record.ofp, f = o.flight || {}, ac = o.aircraft || {}, t = o.times || {}, fu = o.fuel || {}, w = o.weights || {}, unit = o.units || 'kg';
+    const fact = (label, value) => (value ? `<dt>${esc(label)}</dt><dd>${esc(value)}</dd>` : '');
+    const when = Number(o.fetchedAt) ? new Date(Number(o.fetchedAt)).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '';
+    return `<div class="e-card fp-card fp-ofp">
+      <div class="fp-ofp-head"><b>${esc(o.origin?.icao || '—')}</b><span aria-hidden="true">→</span><b>${esc(o.destination?.icao || '—')}</b></div>
+      <div class="e-small e-faint">${esc([o.origin?.name, o.destination?.name].filter(Boolean).join(' → '))}</div>
+      <div class="fp-ofp-route">${esc(FS.ofpRouteLine(o)) || '<span class="e-faint">No route in the plan</span>'}</div>
+      ${when ? `<div class="e-small e-faint">Imported: ${esc(when)}</div>` : ''}
+      <dl class="fp-ofp-facts">
+        ${fact('Flight', f.callsign)}
+        ${fact('Aircraft', [ac.icao, ac.reg].filter(Boolean).join(' · '))}
+        ${fact('Cruise', FS.fmtAltitude(f.cruiseFt))}
+        ${fact('Distance', Number(o.distanceNm) ? `${Math.round(o.distanceNm).toLocaleString('en-US')} nm` : '')}
+        ${fact('Departure', FS.fmtUtc(t.depUtc))}
+        ${fact('Arrival', FS.fmtUtc(t.arrUtc))}
+        ${fact('Block time', FS.fmtMinutes(t.blockMin))}
+        ${fact('SID / STAR', [o.origin?.sid, o.destination?.star].filter(Boolean).join(' / '))}
+        ${fact('Block fuel', FS.fmtWeight(fu.block, unit))}
+        ${fact('Trip fuel', FS.fmtWeight(fu.trip, unit))}
+        ${fact('ZFW / TOW', [FS.fmtWeight(w.zfw, unit), FS.fmtWeight(w.tow, unit)].filter(Boolean).join(' / '))}
+        ${fact('Alternate', o.alternate?.icao)}
+        ${fact('AIRAC', o.airac)}
+      </dl>
+    </div>`;
+  }
+
   function bodyFor(id) {
+    if (id === 'ofp') return bodyOfp();
     if (id === 'route') return bodyRoute();
     if (id === 'procedures') return bodyProcedures();
     if (id === 'fuel') return bodyFuel();
@@ -2215,6 +2250,10 @@ export async function mount(root, ctx) {
   }
 
   function actionsFor(id) {
+    if (id === 'ofp') {
+      return `<a class="e-btn small" href="#/briefing">Full OFP</a><span class="e-spacer"></span>
+        <button class="e-btn small primary" type="button" data-act="step" data-step="route">Edit the route</button>`;
+    }
     const index = RP.STEP_IDS.indexOf(id);
     const prev = index > 0 ? RP.STEP_IDS[index - 1] : null;
     const next = index < RP.STEP_IDS.length - 1 ? RP.STEP_IDS[index + 1] : null;
@@ -2366,6 +2405,7 @@ export async function mount(root, ctx) {
     if (act === 'pick') { pickResult(target.dataset.kind, target.dataset.index); return; }
     if (act === 'step') {
       const id = target.dataset.step;
+      if (id === 'ofp') { panelOpen = true; step = 'ofp'; render(); return; }
       if (!RP.STEP_IDS.includes(id)) return;
       // A step is a place in the plan, and the plan is edited in the panel. On a
       // narrow screen the panel starts closed, so choosing a step opens it

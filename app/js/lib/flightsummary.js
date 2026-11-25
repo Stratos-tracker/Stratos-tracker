@@ -49,6 +49,14 @@ export function convertWeight(value, fromUnit, toUnit) {
   return fromUnit === 'lb' ? n * KG_PER_LB : n / KG_PER_LB;
 }
 
+/** The plan's route as one line: departure/runway, the filed route, arrival/runway. */
+export function ofpRouteLine(ofp) {
+  if (!ofp) return '';
+  const end = place => (place && place.icao ? place.icao + (place.rwy ? `/${place.rwy}` : '') : '');
+  const flight = ofp.flight || {};
+  return [end(ofp.origin), str(flight.routeIfps || flight.routeText), end(ofp.destination)].filter(Boolean).join(' ');
+}
+
 export function fmtWeight(value, unit = 'kg') {
   const n = num(value);
   if (n == null) return null;

@@ -14,7 +14,7 @@ const SECTIONS = [
   { id: 'map', label: 'Map', href: 'index.html' },
   // Planning keeps its own destination now that the map's flight-plan bar is
   // gone: the same planner the Flight Planning tab opens on the PC.
-  { id: 'plan', label: 'Plan', href: 'efb.html#/flightplan' },
+  { id: 'plan', label: 'Flight', href: 'efb.html#/flightplan' },
   { id: 'flights', label: 'Flights', href: 'logbook.html' },
   { id: 'charts', label: 'Charts', href: 'efb.html#/charts' },
   // The EFB is a product of its own on the desktop rail, not a section of the
@@ -40,7 +40,7 @@ const ICON = {
   map: svg('<path d="M3 6.6 9 4l6 2.6L21 4v13.4L15 20l-6-2.6L3 20z"/><path d="M9 4v13.4M15 6.6V20"/>'),
   flights: svg('<path d="M4 6h16M4 12h16M4 18h10"/><path d="M17.5 15.5 20 18l-2.5 2.5" stroke-width="1.6"/>'),
   charts: svg('<rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M4 8.5h16M9 8.5V20.5"/>'),
-  plan: svg('<circle cx="5.6" cy="18" r="2.2"/><circle cx="18.4" cy="6" r="2.2"/><path d="M7.5 16.5 16.5 7.5"/><path d="M12 3.4h6.6V10"/>'),
+  plan: svg('<path d="M3 20.5h18"/><path d="m4.2 14.6 2.3 2.1 13.2-4.3c1.1-.4 1.6-1.6 1-2.5-.5-.7-1.4-1-2.2-.7l-3.9 1.3-6.1-5-2 .7 3.6 5.6-3.9 1.3-2-1.6-1.5.5z"/>'),
   efb: svg('<rect x="3.5" y="5" width="17" height="14" rx="2.4"/><path d="M3.5 9.5h17M8 5V3.2M16 5V3.2"/>'),
   weather: svg('<circle cx="8.5" cy="8.5" r="3"/><path d="M6 19h11a3.4 3.4 0 0 0 .3-6.98A5 5 0 0 0 7.4 13A3.6 3.6 0 0 0 6 19z"/>'),
   profile: svg('<circle cx="12" cy="8" r="3.6"/><path d="M4.6 20c0-3.7 3.4-6 7.4-6s7.4 2.3 7.4 6"/>'),
