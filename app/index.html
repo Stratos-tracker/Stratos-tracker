@@ -1555,7 +1555,30 @@ function drawnRoutePoints(){
   if(route.length>1&&route[0].k==='apt'&&second&&/^RW/i.test(String(second.id||''))&&second.ss)start=1;
   const last=route[end-1],beforeLast=route[end-2];
   if(end>start+1&&last&&last.k==='apt'&&beforeLast&&/^RW/i.test(String(beforeLast.id||''))&&beforeLast.ss)end-=1;
-  return route.slice(start,end)
+  const pts=route.slice(start,end);
+  // The departure runway is part of the path: threshold to the far end, then the SID.
+  const rwy=route[0]&&route[0].k==='apt'&&second&&/^RW/i.test(String(second.id||''))?runwayFarEnd(route[0].id,second.id):null;
+  if(rwy&&pts[0]===second)pts.splice(1,0,{lat:rwy.lat,lon:rwy.lon,k:'rwyend',ss:second.ss});
+  return pts
+}
+/* The far end of a runway, from the airport's own runway list: 24L starts at 24L, ends at 06R. */
+const RWE=new Map();
+function runwayFarEnd(aptId,rwyId){
+  const id=v=>String(v||'').toUpperCase().replace(/^RW/,'').replace(/^0+(?=\d)/,'');
+  const want=id(rwyId),a=A.find(x=>x.id===aptId);
+  for(const r of (a&&a.rws)||[]){
+    if(id(r[0])===want&&isFinite(r[4])&&isFinite(r[5]))return {lat:+r[4],lon:+r[5]};
+    if(id(r[1])===want&&isFinite(r[2])&&isFinite(r[3]))return {lat:+r[2],lon:+r[3]};
+  }
+  // No runway list for this airport here: ask the site's runway data once, then draw again.
+  const key=String(aptId||'').toUpperCase();
+  if(!RWE.has(key)){RWE.set(key,null);import('./js/lib/plate.js').then(p=>p.plateRunways(key)).then(d=>{RWE.set(key,d&&d.runways||[]);draw()}).catch(()=>{})}
+  for(const r of RWE.get(key)||[]){
+    const e=r.ends||[];if(e.length!==2)continue;
+    const i=e.findIndex(x=>id(x.ident)===want);
+    if(i>=0&&isFinite(e[1-i].lat))return {lat:+e[1-i].lat,lon:+e[1-i].lon};
+  }
+  return null
 }
 function routeSegmentKind(a,b){
   const prev=String(a&&a.ss||'').toLowerCase(),next=String(b&&b.ss||'').toLowerCase();
@@ -3180,9 +3203,10 @@ function drawDayNight(){
    fix, so a SID or STAR is not painted twice: once behind the aircraft as part
    of the flown path, and once as published geometry. The planned route itself
    is not trimmed this way — routeSplit below keeps every leg on the chart. */
+/* The whole route stays drawn while flying: the aircraft flies over it, it is not eaten up. */
 function routeAhead(){
   const pts=drawnRoutePoints();
-  if(!liveOk()||pts.length<2)return pts;
+  if(pts)return pts;
   let best=0, bestD=Infinity;
   for(let i=0;i<pts.length;i++){const d=dist(own,pts[i]);if(d<bestD){bestD=d;best=i}}
   return [{lat:own.lat,lon:own.lon,k:'own'},...pts.slice(best+1)]
@@ -3195,7 +3219,7 @@ function routeAhead(){
    left nothing at all on the approach. */
 function routeSplit(){
   const pts=drawnRoutePoints();
-  if(!liveOk()||pts.length<2)return {flown:[],ahead:pts};
+  if(pts)return {flown:[],ahead:pts};
   let best=0,bestD=Infinity;
   for(let i=0;i<pts.length;i++){const d=dist(own,pts[i]);if(d<bestD){bestD=d;best=i}}
   return {
