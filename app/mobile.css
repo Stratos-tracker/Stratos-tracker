@@ -34,6 +34,8 @@
     --m-nav-h: 62px;
     --m-safe-t: env(safe-area-inset-top, 0px);
     --m-safe-b: env(safe-area-inset-bottom, 0px);
+    /* The tab bar sits closer to the home indicator than the full inset. */
+    --m-nav-safe: max(4px, calc(env(safe-area-inset-bottom, 0px) - 20px));
     --m-gutter: 12px;
     color-scheme: dark;
   }
@@ -46,7 +48,7 @@
     -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;
   }
-  body.has-mnav { padding-bottom: calc(var(--m-nav-h) + var(--m-safe-b)); }
+  body.has-mnav { padding-bottom: calc(var(--m-nav-h) + var(--m-nav-safe)); }
   /* The map is edge to edge: its sheet and controls already clear the bar. */
   body[data-mobile-section="map"].has-mnav { padding-bottom: 0; }
   img, video { max-width: 100%; }
@@ -66,7 +68,7 @@
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 2px;
-    padding: 5px 6px calc(5px + var(--m-safe-b));
+    padding: 5px 6px var(--m-nav-safe);
     background: linear-gradient(180deg, rgba(18, 19, 22, .82), rgba(11, 12, 15, .98) 42%);
     -webkit-backdrop-filter: blur(22px) saturate(1.25);
     backdrop-filter: blur(22px) saturate(1.25);
@@ -200,12 +202,12 @@
     position: fixed;
     top: auto;
     right: 10px;
-    bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 14px);
+    bottom: calc(var(--m-nav-h) + var(--m-nav-safe) + 14px);
     gap: 8px;
     z-index: 46;
     transition: bottom .24s ease;
   }
-  body[data-mobile-section="map"].m-flight #fab { bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 208px); }
+  body[data-mobile-section="map"].m-flight #fab { bottom: calc(var(--m-nav-h) + var(--m-nav-safe) + 208px); }
   body[data-mobile-section="map"] #fab .fab {
     width: 42px;
     height: 42px;
@@ -231,7 +233,7 @@
     left: 8px !important;
     right: 8px !important;
     top: auto !important;
-    bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 8px) !important;
+    bottom: calc(var(--m-nav-h) + var(--m-nav-safe) + 8px) !important;
     width: auto !important;
     max-width: none !important;
     z-index: 48;
@@ -287,7 +289,7 @@
     left: 8px !important;
     right: 8px !important;
     top: auto !important;
-    bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 8px) !important;
+    bottom: calc(var(--m-nav-h) + var(--m-nav-safe) + 8px) !important;
     width: auto !important;
     max-width: none !important;
     max-height: 46dvh;
@@ -596,7 +598,7 @@
   body[data-mobile-section="charts"] .home-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
   body[data-mobile-section="charts"] .home-stage { padding: 0 12px 12px; }
   /* The dock sits in the column above the tab bar; the wallpaper still runs under it. */
-  body[data-mobile-section="charts"] .efb-home { padding-bottom: calc(var(--m-nav-h) + var(--m-safe-b)); }
+  body[data-mobile-section="charts"] .efb-home { padding-bottom: calc(var(--m-nav-h) + var(--m-nav-safe)); }
   body[data-mobile-section="charts"] .home-dock { margin-bottom: 10px; }
 
   /* ── Profile: account and settings as a settings app ─────────────── */
@@ -734,7 +736,7 @@
     display: block !important;
     left: var(--m-gutter);
     right: var(--m-gutter);
-    bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 8px);
+    bottom: calc(var(--m-nav-h) + var(--m-nav-safe) + 8px);
     padding: 6px 8px;
     border-radius: 12px;
     overflow-x: auto;
@@ -757,7 +759,7 @@
      column, so it stays: the same follow / track / zoom controls as the PC. */
   html.phone-mode #app #fab {
     display: flex !important;
-    bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 128px);
+    bottom: calc(var(--m-nav-h) + var(--m-nav-safe) + 128px);
     z-index: 48;
   }
 }
@@ -791,7 +793,7 @@
 
   /* The tray: the plan's airports with their charts, and Sync with flight. */
   body.pd #pd-tray {
-    position: fixed; z-index: 48; left: 0; right: 0; bottom: calc(var(--m-nav-h) + var(--m-safe-b));
+    position: fixed; z-index: 48; left: 0; right: 0; bottom: calc(var(--m-nav-h) + var(--m-nav-safe));
     display: grid; gap: 8px; padding: 10px 10px 8px;
     background: linear-gradient(180deg, #141518, #0e0f12); border-top: 1px solid var(--m-line);
   }
@@ -814,13 +816,13 @@
   /* A chart sheet takes the whole map; the deck steps aside. */
   body.pd.pd-chart #pd-tray { display: none; }
   /* Phone Mode's Status panel sits on top of the tray, not behind it. */
-  html.phone-mode body.pd #tel { bottom: calc(var(--m-nav-h) + var(--m-safe-b) + var(--pd-tray, 100px) + 6px); }
+  html.phone-mode body.pd #tel { bottom: calc(var(--m-nav-h) + var(--m-nav-safe) + var(--pd-tray, 100px) + 6px); }
 
   /* More: the sections that are not tabs, in a sheet above the bar. */
   .m-more { position: fixed; inset: 0; z-index: 89; background: rgba(0, 0, 0, .35); }
   .m-more[hidden] { display: none; }
   .m-more-card {
-    position: absolute; right: 8px; bottom: calc(var(--m-nav-h) + var(--m-safe-b) + 8px); min-width: 220px;
+    position: absolute; right: 8px; bottom: calc(var(--m-nav-h) + var(--m-nav-safe) + 8px); min-width: 220px;
     display: grid; padding: 6px; border-radius: 16px; background: rgba(22, 23, 27, .98); border: 1px solid var(--m-line-2);
     box-shadow: 0 -12px 40px rgba(0, 0, 0, .5);
   }
