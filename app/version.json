@@ -4,8 +4,29 @@
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-25",
-  "downloadUrl": "",
-  "downloads": {},
+  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.14/Stratos-Setup.exe",
+  "downloads": {
+    "windows": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.14/Stratos-Setup.exe",
+      "sha256": "ea0a029b2b9f9a28ff2f0918acf58559ce4c6f7f085d1b0f3a6fa708c58c6928",
+      "size": 119585582
+    },
+    "mac-arm64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.14/Stratos-2.4.14-mac-arm64.dmg",
+      "sha256": "b48259440d4dac9a535e910fb837425b75f055f386c5e5da85e878d272bf52f1",
+      "size": 137765573
+    },
+    "mac-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.14/Stratos-2.4.14-mac-x64.dmg",
+      "sha256": "f15664e1c0ab07ada293d094b3fa576c6f33abbcacb6bd740631fc384d8dc1a4",
+      "size": 143193810
+    },
+    "linux-x64": {
+      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.14/Stratos-2.4.14-linux-x64.AppImage",
+      "sha256": "07bccb6d7e2e81c664fd6247ef9d2d1b6b6d917c61a563958b9ae088bfe7ba63",
+      "size": 160832971
+    }
+  },
   "summary": "Charts as layers on the map, the departure runway in your route, and a route that stays drawn while you fly.",
   "reason": "",
   "releaseNotes": [
