@@ -323,3 +323,21 @@ test('the estimate gives speeds, FLEX and field lengths that respond to weight, 
   assert.ok(med.vapp >= med.vref + 5);
   assert.ok(wet.stopFt > estimateLanding(a320, { weightKg: 62000, paFt: 0, oatC: 15, autobrake: 'MAX' }).stopFt, 'a wet runway limits braking');
 });
+
+test('takeoff uses per-type data: realistic speeds, climb gradient and weight limits', async () => {
+  const { estimateTakeoff } = await import('../app/js/lib/perfmodel.js');
+  const at = (id, kg, extra = {}) => estimateTakeoff(profileById(database, id), { weightKg: kg, paFt: 0, oatC: 15, toraFt: 10000, thrust: 'toga', ...extra });
+  const a320 = at('a320', 70000, { flaps: '1+F' });
+  assert.ok(a320.v2 >= 145 && a320.v2 <= 155, `A320 70 t V2 ${a320.v2}`);
+  const b77w = at('b777-300er', 345000, { flaps: '15' });
+  assert.ok(b77w.v2 >= 168 && b77w.v2 <= 180, `777-300ER V2 ${b77w.v2}`);
+  assert.ok(b77w.v2 > a320.v2 + 15, 'types are not one universal formula');
+  for (const e of [a320, b77w]) {
+    assert.ok(e.v1 <= e.vr && e.vr < e.v2);
+    assert.ok(e.agdFt > 0 && e.asdrFt > 0 && e.todrFt >= e.agdFt);
+    assert.ok(e.gradientPct >= e.minGradientPct);
+    assert.ok(e.maxTowKg > 0 && ['structural', 'runway', 'climb'].includes(e.limitedBy));
+  }
+  const short = at('a320', 70000, { toraFt: 5000 });
+  assert.ok(short.limits.runway < 78000 && short.limitedBy === 'runway', 'a short runway limits the weight');
+});

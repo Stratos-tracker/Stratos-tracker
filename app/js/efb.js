@@ -13,7 +13,7 @@
 
 import {
   esc, fmtFl, fmtFt, fmtKt, connectionText, loadPrefs, savePrefs, currentPlan,
-  loadRoute, loadRouteMeta, onLive, onPlanChange, DEFAULT_PREFS, flightPhase,
+  loadRoute, loadRouteMeta, onLive, onPlanChange, DEFAULT_PREFS, flightPhase, refreshPlan,
 } from './efb/common.js';
 import { displayVersion } from './lib/version.js';
 import { airlineText, applyAirline, resolveAirline } from './lib/airlines.js';
@@ -1381,6 +1381,25 @@ export async function boot() {
   syncHomeBar();
   if (state.clockTimer) clearInterval(state.clockTimer);
   state.clockTimer = setInterval(updateClock, 15000);
+
+  // IMPORT F-PLN: fetch the latest SimBrief plan now, on open, and every 5 minutes after.
+  const importBtns = [...document.querySelectorAll('[data-import]')];
+  const importPlan = async manual => {
+    const prefs = loadPrefs();
+    if (!manual && !(prefs.simbriefId || localStorage.getItem('stratos.simbriefId'))) return;
+    importBtns.forEach(b => { b.disabled = true; b.querySelector('b').textContent = 'IMPORTING…'; });
+    const result = await refreshPlan();
+    importBtns.forEach(b => {
+      b.disabled = false;
+      b.dataset.state = result.error ? 'bad' : 'ok';
+      b.title = result.error || 'Flight plan imported from SimBrief';
+      b.querySelector('b').textContent = result.error ? 'IMPORT FAILED' : 'IMPORT F-PLN';
+    });
+    if (result.error && manual) location.hash = '#/settings';
+  };
+  importBtns.forEach(b => b.addEventListener('click', () => importPlan(true)));
+  importPlan(false);
+  setInterval(() => { if (!document.hidden) importPlan(false); }, 5 * 60 * 1000);
 
   onPlanChange(plan => {
     state.plan = plan;

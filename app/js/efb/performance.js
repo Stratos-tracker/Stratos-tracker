@@ -628,10 +628,13 @@ export async function mount(root, ctx) {
         ${statusStrip(est, takeoff)}
         ${runwaySvg(est, takeoff)}
         ${takeoff ? `<div class="pf-legs">
-          <div><span>TODR</span><b>${fmtNum(est.todrFt)} ft</b><i>to 35 ft, engine-out or ×1.15</i></div>
-          <div><span>ASDR</span><b>${fmtNum(est.asdrFt)} ft</b><i>abort at V1, max braking</i></div>
-          <div><span>Liftoff</span><b>${fmtNum(est.liftoffFt)} ft</b><i>all engines</i></div>
-        </div>` : `<div class="pf-legs">
+          <div><span>TODR</span><b>${fmtNum(est.todrFt)} ft</b><i>takeoff distance required</i></div>
+          <div><span>ASDR</span><b>${fmtNum(est.asdrFt)} ft</b><i>accelerate-stop, abort at V1</i></div>
+          <div><span>AGD</span><b>${fmtNum(est.agdFt)} ft</b><i>accelerate-go, engine out to 35 ft</i></div>
+          <div><span>Climb grad.</span><b class="${est.gradientPct < est.minGradientPct ? 'bad' : ''}">${est.gradientPct}%</b><i>2nd segment OEI, min ${est.minGradientPct}%</i></div>
+          <div><span>Max TOW</span><b>${fmtNum(Math.round(convertWeight(est.maxTowKg, 'kg', unit)))} ${unit}</b><i>limited by ${esc(est.limitedBy)}</i></div>
+        </div>
+        <div class="pf-cond">${Object.entries(est.limits).filter(([, kg]) => kg != null).map(([k, kg]) => `<div><span>${k[0].toUpperCase() + k.slice(1)} limit</span><b class="${k === est.limitedBy ? 'warn' : ''}">${fmtNum(Math.round(convertWeight(kg, 'kg', unit)))} ${unit}</b></div>`).join('')}</div>` : `<div class="pf-legs">
           <div><span>Actual</span><b>${fmtNum(est.stopFt)} ft</b><i>50 ft to stop</i></div>
           <div><span>Factored</span><b>${fmtNum(est.factoredFt)} ft</b><i>×1.15 in-flight</i></div>
           <div><span>Air</span><b>${fmtNum(est.airFt)} ft</b><i>threshold to touchdown</i></div>
@@ -643,7 +646,7 @@ export async function mount(root, ctx) {
       </div>
       ${warnings.length ? `<div class="e-notice warn"><div>${warnings.map(esc).join('<br>')}</div></div>` : ''}
       <details class="pf-method"><summary>Stratos estimate · simulator use only</summary>
-        Speeds scale from the ${esc(current.name)} approach speed (${current.landing.vrefKt} kt at MLW, ${esc(current.source.name)}) and a typical thrust-to-weight ratio.
+        Takeoff speeds come from ${esc(current.name)} reference speeds per flap setting, scaled by weight and kept above VMCG/VMCA; thrust, engine count and climb L/D are type-specific. Landing scales from the approach speed (${current.landing.vrefKt} kt at MLW, ${esc(current.source.name)}).
         Takeoff picks the balanced V1 and the flap setting with the highest assumed temperature that fits, never more than 25% below full thrust.
         Wind is factored 50% head and 150% tail. Landing uses the autobrake deceleration the surface allows and the 1.15 in-flight factor.
         Not certified performance and not for real-world flight.

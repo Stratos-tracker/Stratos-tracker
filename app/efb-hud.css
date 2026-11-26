@@ -554,8 +554,8 @@ html.phone-mode #procpane, html.phone-mode #planpane { display: none !important;
   html[data-ui="new"] #tel {
     left: 362px;
     right: 12px;
-    top: 8px;
-    bottom: auto;
+    top: auto;
+    bottom: 12px;
     max-width: none;
     margin: 0;
     border-radius: 9px;
@@ -775,7 +775,7 @@ html.phone-mode #procpane, html.phone-mode #planpane { display: none !important;
 #txbar button:disabled { opacity: .4; cursor: default; }
 #txbar #txDone { background: #22c55e; border-color: transparent; color: #04140a; }
 @media (min-width: 768px) and (max-width: 1199px) {
-  html[data-ui="new"] #tel { left: 64px; top: 92px; }
+  html[data-ui="new"] #tel { left: 64px; top: auto; bottom: 12px; }
 }
 @media (max-width: 767px) {
   #txbar { left: 10px; right: 62px; top: 92px; max-width: none; }
@@ -784,3 +784,6 @@ html.phone-mode #procpane, html.phone-mode #planpane { display: none !important;
   /* The PLAN tab opens planning, so the old plan card no longer sits over the map (as on the desktop and in Phone Mode). */
   body[data-mobile-section="map"] #fp, body[data-mobile-section="map"] #procpane, body[data-mobile-section="map"] #planpane { display: none !important; }
 }
+
+/* The telemetry strip is shown only while your own simulator aircraft is live. */
+#app:not(.own-live) #tel { display: none !important; }

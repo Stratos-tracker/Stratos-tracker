@@ -18,14 +18,30 @@ const G = 9.80665;
 const KT = 0.514444; // m/s per knot
 const FT = 0.3048;
 
-// Type thrust-to-weight at MTOW (static, sea level) and engine count.
+/* Per-type takeoff data, so no aircraft goes through one generic formula.
+   spd: V1/VR/V2 (KIAS) per flap setting at refKg, sea level; speeds scale with sqrt(W/refKg).
+   kN: rated thrust per engine. vmcg/vmca: minimum control speeds. ld: lift/drag per flap (2nd segment).
+   Typical FCOM-style figures for simulator planning, not certified data. */
 const TYPES = {
-  A319: { tw: 0.33, engines: 2 }, A320: { tw: 0.31, engines: 2 }, A20N: { tw: 0.31, engines: 2 },
-  A321: { tw: 0.28, engines: 2 }, A21N: { tw: 0.29, engines: 2 }, A339: { tw: 0.27, engines: 2 },
-  A359: { tw: 0.28, engines: 2 }, A346: { tw: 0.25, engines: 4 }, A388: { tw: 0.23, engines: 4 },
-  B738: { tw: 0.30, engines: 2 }, B38M: { tw: 0.31, engines: 2 }, B772: { tw: 0.29, engines: 2 },
-  B77L: { tw: 0.30, engines: 2 }, B77W: { tw: 0.29, engines: 2 }, B789: { tw: 0.28, engines: 2 },
+  A319: { refKg: 64000, eng: 2, kN: 105, vmcg: 108, vmca: 113, spd: { '1+F': [136, 138, 142], 2: [131, 133, 137], 3: [127, 129, 133] }, ld: [12, 11, 10] },
+  A320: { refKg: 70000, eng: 2, kN: 120, vmcg: 109, vmca: 114, spd: { '1+F': [144, 146, 150], 2: [139, 141, 145], 3: [135, 137, 141] }, ld: [12, 11, 10] },
+  A20N: { refKg: 73000, eng: 2, kN: 121, vmcg: 109, vmca: 114, spd: { '1+F': [146, 148, 152], 2: [141, 143, 147], 3: [137, 139, 143] }, ld: [12.5, 11.5, 10.5] },
+  A321: { refKg: 89000, eng: 2, kN: 147, vmcg: 112, vmca: 117, spd: { '1+F': [155, 158, 162], 2: [150, 153, 157], 3: [146, 149, 153] }, ld: [12, 11, 10] },
+  A21N: { refKg: 93000, eng: 2, kN: 147, vmcg: 112, vmca: 117, spd: { '1+F': [154, 157, 161], 2: [149, 152, 156], 3: [145, 148, 152] }, ld: [12.5, 11.5, 10.5] },
+  A339: { refKg: 240000, eng: 2, kN: 320, vmcg: 120, vmca: 124, spd: { '1+F': [150, 155, 160], 2: [146, 150, 155], 3: [142, 146, 151] }, ld: [13, 12, 11] },
+  A346: { refKg: 365000, eng: 4, kN: 249, vmcg: 113, vmca: 118, spd: { '1+F': [152, 160, 166], 2: [148, 155, 161], 3: [144, 151, 157] }, ld: [11, 10.5, 10] },
+  A359: { refKg: 275000, eng: 2, kN: 375, vmcg: 118, vmca: 122, spd: { '1+F': [150, 155, 160], 2: [146, 151, 156], 3: [142, 147, 152] }, ld: [14, 13, 12] },
+  A388: { refKg: 560000, eng: 4, kN: 311, vmcg: 115, vmca: 120, spd: { '1+F': [150, 155, 161], 2: [146, 151, 157], 3: [142, 147, 153] }, ld: [12, 11.5, 11] },
+  B738: { refKg: 79000, eng: 2, kN: 117, vmcg: 107, vmca: 112, spd: { 1: [156, 160, 165], 5: [151, 155, 160], 15: [146, 150, 155] }, ld: [12, 11.5, 10.5] },
+  B38M: { refKg: 82000, eng: 2, kN: 130, vmcg: 108, vmca: 113, spd: { 1: [157, 161, 166], 5: [152, 156, 161], 15: [147, 151, 156] }, ld: [12.5, 12, 11] },
+  B772: { refKg: 290000, eng: 2, kN: 418, vmcg: 120, vmca: 124, spd: { 5: [160, 166, 172], 15: [154, 160, 166], 20: [151, 157, 163] }, ld: [13, 12, 11] },
+  B77L: { refKg: 340000, eng: 2, kN: 489, vmcg: 122, vmca: 126, spd: { 5: [166, 172, 178], 15: [160, 166, 172], 20: [157, 163, 169] }, ld: [13, 12, 11] },
+  B77W: { refKg: 345000, eng: 2, kN: 513, vmcg: 124, vmca: 128, spd: { 5: [167, 174, 180], 15: [161, 168, 174], 20: [158, 165, 171] }, ld: [13, 12, 11] },
+  B789: { refKg: 250000, eng: 2, kN: 320, vmcg: 118, vmca: 122, spd: { 5: [158, 164, 169], 15: [153, 158, 164], 20: [150, 155, 161] }, ld: [14, 13, 12] },
 };
+// Minimum second-segment gradient, engine out (CS/FAR 25.121).
+const MIN_GRADIENT = { 2: 2.4, 3: 2.7, 4: 3.0 };
+export const typeData = profile => TYPES[profile.icao] || null;
 
 // Takeoff flaps: stall speed relative to the landing configuration, and extra drag (fraction of weight).
 const TAKEOFF_FLAPS = {
@@ -73,36 +89,64 @@ function stallLanding(profile, weightKg) {
   return (profile.landing.vrefKt / 1.3) * Math.sqrt(weightKg / profile.limits.mlwKg);
 }
 
+const speedLapse = kt => 1 - 0.0012 * kt; // turbofan thrust falls with speed
+
 function takeoffRun(profile, input, flap, tempC) {
-  const type = TYPES[profile.icao] || { tw: 0.29, engines: 2 };
+  const type = typeData(profile);
+  if (!type) return null;
   const { weightKg, paFt, headwindKt = 0, surface = 'dry' } = input;
-  const vs = stallLanding(profile, weightKg) * flap.vs;
-  const v2 = Math.round(vs * 1.13);
-  const vr = v2 - 4;
-  const vlof = vr + 6;
-  const thrust = type.tw * (profile.limits.mtowKg / weightKg) * thrustFactor(paFt, tempC) * 0.8;
-  const resist = 0.02 + 0.03 + flap.drag;
-  const aAeo = G * (thrust - resist);
-  const aOei = G * (thrust * (type.engines - 1) / type.engines - resist);
+  const fi = takeoffFlaps(profile).findIndex(f => f.id === flap.id);
+  const [refV1, refVr, refV2] = type.spd[flap.id];
+  const k = Math.sqrt(weightKg / type.refKg);
+  // VR/V2 scale with weight but never below the control-speed limits.
+  const vr = Math.round(Math.max(refVr * k, 1.05 * type.vmca));
+  const v2 = Math.round(Math.max(refV2 * k, 1.1 * type.vmca, vr + 4));
+  const vlof = vr + 5;
+  const weightN = weightKg * G;
+  const staticN = type.eng * type.kN * 1000 * thrustFactor(paFt, tempC);
+  const roll = staticN * speedLapse(0.7 * vlof) / weightN; // mean thrust/weight over the roll
+  const resist = (surface === 'wet' ? 0.025 : 0.02) + 0.03 + flap.drag;
+  const aAeo = G * (roll - resist);
+  const aOei = G * (roll * (type.eng - 1) / type.eng - resist);
   if (aAeo <= 0.3 || aOei <= 0.05) return null;
+  // Second segment: engine out, gear up, at V2.
+  const gradient = 100 * ((staticN * (type.eng - 1) / type.eng) * speedLapse(v2) / weightN - 1 / type.ld[fi]);
   const w = factoredWind(headwindKt);
   const gs = kias => Math.max(1, tas(kias, paFt, tempC) - w);
   const run = (v, a) => (gs(v) ** 2) / (2 * a);
   const todAeo = run(vlof, aAeo) + gs(vlof) * 3;
-  const todrAeo = 1.15 * todAeo;
   const options = [];
-  for (let v1 = vr; v1 >= vr - 25; v1 -= 1) {
-    const todOei = run(v1, aAeo) + (gs(vlof) ** 2 - gs(v1) ** 2) / (2 * aOei) + gs(vlof) * 5;
+  const v1Low = Math.min(vr, Math.max(type.vmcg, Math.round(refV1 * k) - 20));
+  for (let v1 = vr; v1 >= v1Low; v1 -= 1) {
+    const agd = run(v1, aAeo) + (gs(vlof) ** 2 - gs(v1) ** 2) / (2 * aOei) + gs(vlof) * 5;
     const asd = run(v1, aAeo) + gs(v1) * 3 + (gs(v1) ** 2) / (2 * RTO_DECEL[surface]);
-    options.push({ v1, todr: Math.max(todrAeo, todOei), asdr: asd });
+    options.push({ v1, agd, todr: Math.max(1.15 * todAeo, agd), asdr: asd });
   }
   // Balanced V1: the one that makes the longer of the two distances shortest.
   const best = options.reduce((a, b) => (Math.max(b.todr, b.asdr) < Math.max(a.todr, a.asdr) ? b : a));
   return {
-    v1: best.v1, vr, v2, vlof,
-    todrM: best.todr, asdrM: best.asdr,
+    v1: best.v1, vr, v2, vlof, gradient,
+    todrM: best.todr, asdrM: best.asdr, agdM: best.agd,
     v1M: run(best.v1, aAeo), vrM: run(vr, aAeo), liftoffM: run(vlof, aAeo),
   };
+}
+
+/* The heaviest TOGA weight each limit allows with this flap: runway (field
+   length), climb (2nd segment) and structural MTOW. The lowest one governs. */
+function weightLimits(profile, input, flap, minGrad, toraM) {
+  const heaviest = test => {
+    let lo = profile.limits.mtowKg * 0.4, hi = profile.limits.mtowKg * 1.5;
+    if (!test(lo)) return null;
+    for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (test(mid)) lo = mid; else hi = mid; }
+    return Math.floor(lo / 100) * 100;
+  };
+  const runAt = kg => takeoffRun(profile, { ...input, weightKg: kg }, flap, input.oatC);
+  const runwayKg = toraM ? heaviest(kg => { const r = runAt(kg); return !!r && r.todrM <= toraM && r.asdrM <= toraM; }) : null;
+  const climbKg = heaviest(kg => { const r = runAt(kg); return !!r && r.gradient >= minGrad; });
+  const limits = { structural: profile.limits.mtowKg, runway: runwayKg ?? (toraM ? 0 : null), climb: climbKg ?? 0 };
+  const known = Object.entries(limits).filter(([, kg]) => kg != null);
+  const [limitedBy, maxTowKg] = known.reduce((a, b) => (b[1] < a[1] ? b : a));
+  return { maxTowKg, limitedBy, limits };
 }
 
 /**
@@ -114,7 +158,8 @@ export function estimateTakeoff(profile, input) {
   const chosenFlap = takeoffFlaps(profile).filter(f => f.id === input.flaps);
   // Auto picks the setting with the highest FLEX; with no runway length there is nothing to optimise.
   const flaps = chosenFlap.length ? chosenFlap : toraM ? takeoffFlaps(profile) : takeoffFlaps(profile).slice(0, 1);
-  const fits = r => r && (!toraM || (r.todrM <= toraM && r.asdrM <= toraM));
+  const minGrad = MIN_GRADIENT[(typeData(profile) || { eng: 2 }).eng];
+  const fits = r => !!r && r.gradient >= minGrad && (!toraM || (r.todrM <= toraM && r.asdrM <= toraM));
   const topTemp = Math.min(75, isaC(input.paFt) + 60);
   let chosen = null;
   for (const [index, flap] of flaps.entries()) {
@@ -144,8 +189,11 @@ export function estimateTakeoff(profile, input) {
     v1: run.v1, vr: run.vr, v2: run.v2,
     todrFt: Math.round(run.todrM / FT), asdrFt: Math.round(run.asdrM / FT),
     v1Ft: Math.round(run.v1M / FT), vrFt: Math.round(run.vrM / FT), liftoffFt: Math.round(run.liftoffM / FT),
+    agdFt: Math.round(run.agdM / FT),
     requiredFt: Math.round(neededM / FT),
-    fits: fits(run) !== false,
+    gradientPct: Math.round(run.gradient * 10) / 10, minGradientPct: minGrad,
+    ...weightLimits(profile, input, chosen.flap, minGrad, toraM),
+    fits: fits(run),
     marginFt: toraM ? Math.round((toraM - neededM) / FT) : null,
   };
 }
