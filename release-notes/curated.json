@@ -278,27 +278,6 @@
       ]
     }
   },
-  "2.1.44": {
-    "summary": "The logbook can now import a flight history from Volanta or ELEVATEX, matching columns by meaning and leaving everything the export does not state empty.",
-    "changelog": {
-      "features": [
-        "Settings → Data gains Import Volanta / ELEVATEX, which reads a Volanta CSV or JSON export, or the flights.csv from an ELEVATEX export, and merges the flights into the local logbook."
-      ],
-      "improvements": [
-        "Re-importing the same export updates the records it already wrote instead of duplicating them, because every imported flight gets a stable id from its route and departure time.",
-        "Columns are matched by meaning, so the two exports' different headers, day-first dates and clock, minute or hours-and-minutes durations are all read correctly."
-      ],
-      "fixes": [],
-      "performance": [],
-      "ui": [
-        "The import sits beside the existing backup controls and reports how many flights were added and how many are in the logbook afterwards."
-      ],
-      "compatibility": [
-        "Only what the export states is imported: landing rate, altitude and track stay empty and the logbook shows them as not measured."
-      ],
-      "other": []
-    }
-  },
   "2.2.2": {
     "summary": "Route Finder now finds any real airline flight, not just those airborne, with airport filters and a flight-time slider. Desktop updates now prompt on launch and install inside the app.",
     "changelog": {
