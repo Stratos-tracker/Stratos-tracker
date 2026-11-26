@@ -43,3 +43,29 @@ test('the map offers the new layers and keeps their state', () => {
   assert.match(page, /window\.VATSIM\.parseIvaoPilots\(feed\)/);
   assert.ok(page.includes('FAA Aeronautical Information Services (public domain)'), 'the charts are credited');
 });
+
+test('live chart tracking: the next fix on a route chart offers "Continue track on {chart}?"', async () => {
+  const fs = await import('node:fs');
+  const page = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+  assert.match(page, /<div id="ctAsk" role="dialog"/, 'the prompt has a place on the map');
+  assert.match(page, /Continue track on '\+esc\(item\.title\)\+'\?/, 'it names the chart');
+  assert.match(page, /data-ct="yes">Yes<\/button><button type="button" data-ct="no">No/, 'it asks yes or no');
+  assert.match(page, /if\(ok\)\{telHideEmpty\(\);ctTick\(\)\}/, 'it is checked only while your own aircraft is live');
+  assert.match(page, /if\(hit\.names\.has\(fix\)\)\{ctAsk/, 'a fix printed anywhere on the chart counts, scaled or not');
+  assert.match(page, /location\.href='efb\.html#\/charts\?icao='\+encodeURIComponent\(item\.icao\)\+'&chart='/, 'yes opens that chart in Charts');
+  const charts = fs.readFileSync(new URL('../app/js/efb/charts.js', import.meta.url), 'utf8');
+  assert.match(charts, /ctx\.params\.get\('chart'\)/, 'Charts opens the chart a link names');
+});
+
+test('the aircraft is placed on a chart from the fixes it prints, even when not to scale', async () => {
+  const { placeOnChart } = await import('../app/js/lib/chartfit.js');
+  const refs = new Map([['AAAAA', { lat: 47, lon: -122 }], ['BBBBB', { lat: 47.5, lon: -122 }], ['CCCCC', { lat: 47, lon: -121.5 }], ['DDDDD', { lat: 47.5, lon: -121.5 }]]);
+  const labels = [...refs].map(([text, r]) => ({ text, x: (r.lon + 123) * 100, y: (48 - r.lat) * 100 }));
+  const on = placeOnChart(labels, refs, 47.001, -122.001);
+  assert.equal(on.on, 'AAAAA', 'over a fix, the aircraft sits on that fix');
+  assert.deepEqual([on.x, on.y], [100, 100]);
+  const mid = placeOnChart(labels, refs, 47.25, -121.75);
+  assert.ok(Math.abs(mid.x - 125) < 1 && Math.abs(mid.y - 75) < 1, 'between fixes it is interpolated');
+  assert.ok(Math.abs(mid.rot) < .01, 'north up on a north-up chart');
+  assert.equal(placeOnChart(labels, refs, 10, 10), null, 'far from every printed fix, it is not shown');
+});

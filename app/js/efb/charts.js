@@ -33,6 +33,8 @@ import {
 } from '../lib/charts.js';
 import { defaultBridgeBase, isHostedPage, siteApi } from '../bridge.js';
 import { ChartViewer } from '../pilot/charts.js';
+import { plateReferences } from '../lib/plate.js';
+import { placeOnChart } from '../lib/chartfit.js';
 import { canSignInHere, CHARTFOX_SIGN_IN_ORIGIN, chartfoxConnected, chartfoxToken, connectChartfox, disconnectChartfox } from '../lib/chartfox.js';
 import { cachedGet, chartRecord, groupedSections, metaText, shortChartName } from './chartfoxcharts.js';
 import {
@@ -718,7 +720,7 @@ export async function mount(root, ctx) {
     });
     mountSplitMap();
     if (documentState.bytes) {
-      viewer.load(documentState.bytes.slice())/* pdf.js may detach the buffer it is given; keep ours for split/night re-renders */.catch(error => {
+      viewer.load(documentState.bytes.slice())/* pdf.js may detach the buffer it is given; keep ours for split/night re-renders */.then(() => syncOwnship()).catch(error => {
         if (destroyed) return;
         documentState = { status: 'error', error: error && error.message ? error.message : String(error) };
         renderViewer();
@@ -990,10 +992,28 @@ export async function mount(root, ctx) {
 
   renderCountries();
   renderQuick();
-  if (icao) load();
+  // A link can ask for one chart by title: efb.html#/charts?icao=KSEA&chart=HAROB%20SIX%20(RNAV)
+  const wantChart = String(ctx.params.get('chart') || '').trim().toUpperCase();
+  if (icao) load(wantChart ? chart => String(chart.title || '').trim().toUpperCase() === wantChart : null);
   else {
     noticeEl.innerHTML = `<div class="e-notice"><div>${planned.length ? `Charts for this flight: ${esc(planned.join(' → '))}.` : 'Search for any airport, or pick a country to see its chart publisher.'}</div></div>`;
     renderViewer();
+  }
+
+  /* The live aircraft on the open chart, where it is on the Flight Deck map:
+     placed from the fixes the chart prints, so it works on charts not drawn to scale. */
+  let ownRefs = null;
+  async function syncOwnship() {
+    const v = viewer;
+    if (!v || !telemetry) { if (v) v.setMarker(null); return; }
+    const code = icao;
+    if (!ownRefs || ownRefs.icao !== code) ownRefs = { icao: code, refs: await plateReferences(code).catch(() => new Map()) };
+    const labels = await v.pageLabels();
+    if (v !== viewer || !telemetry) return;
+    const at = placeOnChart(labels, ownRefs.refs, telemetry.lat, telemetry.lon);
+    if (!at) { v.setMarker(null); return; }
+    const track = Number.isFinite(telemetry.trk) ? telemetry.trk : Number(telemetry.hdg) || 0;
+    v.setMarker({ x: at.x, y: at.y, hdg: track + at.rot * 180 / Math.PI });
   }
 
   const offLive = onLive(next => {
@@ -1004,6 +1024,7 @@ export async function mount(root, ctx) {
       splitMap.setPosition({ lat: telemetry.lat, lon: telemetry.lon, gs: telemetry.gs, trk: telemetry.trk }, telemetry.hdg);
     }
     autoTick();
+    syncOwnship().catch(() => {});
   });
 
   return {

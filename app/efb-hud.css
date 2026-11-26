@@ -787,3 +787,12 @@ html.phone-mode #procpane, html.phone-mode #planpane { display: none !important;
 
 /* The telemetry strip is shown only while your own simulator aircraft is live. */
 #app:not(.own-live) #tel { display: none !important; }
+
+/* "Continue track on {chart}?" when the next fix is printed on a route chart. */
+#ctAsk { position: absolute; left: 50%; top: 70px; transform: translateX(-50%); z-index: 8; display: grid; gap: 6px; min-width: 300px; max-width: min(440px, calc(100% - 24px)); padding: 12px 14px; border-radius: 12px; background: rgba(14, 16, 20, .96); border: 1px solid rgba(56, 189, 248, .55); box-shadow: 0 14px 34px rgba(0, 0, 0, .45); color: #e8f1fa; font: 500 13px/1.3 system-ui, sans-serif; }
+#ctAsk[hidden] { display: none; }
+#ctAsk .ct-k { font: 600 11px ui-monospace, Menlo, monospace; letter-spacing: .06em; color: #7f93a8; text-transform: uppercase; }
+#ctAsk b { font-size: 15px; }
+#ctAsk .ct-b { display: flex; gap: 8px; margin-top: 2px; }
+#ctAsk button { flex: 1; height: 34px; border-radius: 8px; border: 1px solid rgba(120, 150, 175, .35); background: rgba(255, 255, 255, .06); color: #e8f1fa; font: 700 13px system-ui, sans-serif; cursor: pointer; }
+#ctAsk button[data-ct="yes"] { background: #38bdf8; border-color: transparent; color: #04121c; }

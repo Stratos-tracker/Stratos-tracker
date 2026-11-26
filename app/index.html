@@ -535,6 +535,7 @@ td,th{border-bottom:1px solid color-mix(in srgb,var(--ui2) 70%,transparent);padd
 <nav id="tabs" aria-label="Sections"><button class="tab act" id="bMap" data-group="Fly" data-label="Flight Deck"><b>&#8982;</b><span>Flight Deck</span></button><button class="tab" id="bRoute" data-group="Fly" data-label="Flight Planning"><b>&#8599;</b><span>Flight Planning</span></button><a class="tab" href="logbook.html" data-group="Fly" data-label="Logbook"><b>&#9776;</b><span>Logbook</span></a><a class="tab" href="discover.html" data-group="Explore" data-label="Explore"><b>&#10022;</b><span>Explore</span></a><a class="tab" href="pilot.html#settings" data-group="Account" data-label="Profile &amp; Settings"><b>&#9881;</b><span>Profile</span></a><a class="rail-product" href="efb.html" title="Stratos EFB — electronic flight bag" aria-label="Open Stratos EFB"><b>&#9635;</b><span>Stratos EFB<small>Briefing · charts</small></span></a><button class="tab rail-toggle" data-rail-toggle type="button" title="Collapse sidebar" aria-label="Collapse sidebar"><b>&#8249;</b><span>Collapse</span></button></nav>
 <div class="app-main">
 <div id="app">
+<div id="ctAsk" role="dialog" aria-live="polite" hidden></div>
 <div id="efbbar" aria-label="Flight status"><span class="eb-id"><b id="ebCall">STRATOS</b><i id="ebType">No simulator</i></span><span class="eb-phase" id="ebPhase">OFFLINE</span><span class="eb-gap"></span><span class="eb-wx" id="ebWx"></span><span class="eb-utc" id="ebUtc">--:--Z</span><span class="eb-link" id="ebLink">No link</span></div>
 <div id="vbase" hidden aria-hidden="true"></div><canvas id="map" aria-label="Aviation chart map"></canvas>
 <canvas id="map3d" hidden aria-label="3D track view"></canvas>
@@ -1346,7 +1347,7 @@ function addWp(o){route.push(wp(o));save();panel='route';trav=Math.min(trav,tota
 /* own-ship sim */
 function pos(d){const l=legs();let i=0;while(i<l.length-1&&d>l[i]){d-=l[i];i++}if(!route[i+1])return{lat:V.lat,lon:V.lon,hdg:0};const a=route[i],b=route[i+1],h=brg(a,b);return{...fwd(a,h,Math.min(d,l[i])),hdg:h}}
 function alt(d){const t=total();return Math.max(route[0]?.elev||0,Math.min(6500,route[0].elev+d*180,(route.at(-1).elev||0)+(t-d)*260))}
-function step(dt){fpTick();if(V.mode!=='globe'&&V.tz!=null){const diff=V.tz-V.z;if(Math.abs(diff)>0.001){const dz=diff*Math.min(1,dt*14);const newZ=Math.abs(diff)<0.002?V.tz:V.z+dz;if(V.anchor){const pNew=wpx(V.anchor.geo[0],V.anchor.geo[1],newZ);const dx=V.anchor.sx-W/2,dy=V.anchor.sy-H/2;const cNew=[pNew[0]-dx,pNew[1]-dy];const p=wun(cNew[0],cNew[1],newZ);V.lon=p[0];V.lat=p[1];V.z=newZ}else{V.z=newZ}if(V.z===V.tz){V.tz=null;V.anchor=null}}else{V.z=V.tz;V.tz=null;V.anchor=null}}if(V.mode!=='globe'&&V.in){const c=wpx(V.lon,V.lat,V.z),p=wun(c[0]-V.in[0]*dt,c[1]-V.in[1]*dt,V.z),f=Math.exp(-4*dt);V.lon=wrapLon(p[0]);V.lat=p[1];V.in=[V.in[0]*f,V.in[1]*f];if(Math.hypot(V.in[0],V.in[1])<8)V.in=null}const ok=!!liveOk(),tracked=trackedTraffic(),hudOn=ok||!!tracked;$('#app').classList.toggle('live',hudOn);$('#app').classList.toggle('own-live',ok);const tx=tracked?'● Tracking '+tracked.id+' · '+(tracked.source==='vatsim'?'VATSIM':'ADS-B'):(ok?'● Live from '+(live.d.src||'simulator'):(deskStatus&&deskStatus.state==='error'?'Bridge: '+(deskStatus.detail||'error — see Pilot → Settings'):deskStatus&&deskStatus.state!=='connected'&&deskStatus.state!=='stopped'?'Bridge: '+(deskStatus.detail||deskStatus.state):wtTxt()));if($('#st').textContent!=tx)$('#st').textContent=tx;if(deskStatus)$('#st').title=deskStatus.detail||deskStatus.state;if(ok)liveStep(dt);else wtStep(dt);if(tracked)trafficHud(tracked);efbBar(ok);if(ok)telHideEmpty();mapScale();fcRender(ok);olTick();if(viewT3)t3Sync(false);return;trav+=CRUISE/3600*dt*WARP;if(trav>=t)trav=0;const p=pos(trav);own.lat=p.lat;own.lon=p.lon;own.hdg=p.hdg;own.alt=alt(trav);own.vs=(alt(trav+.1)-own.alt)*CRUISE/6;
+function step(dt){fpTick();if(V.mode!=='globe'&&V.tz!=null){const diff=V.tz-V.z;if(Math.abs(diff)>0.001){const dz=diff*Math.min(1,dt*14);const newZ=Math.abs(diff)<0.002?V.tz:V.z+dz;if(V.anchor){const pNew=wpx(V.anchor.geo[0],V.anchor.geo[1],newZ);const dx=V.anchor.sx-W/2,dy=V.anchor.sy-H/2;const cNew=[pNew[0]-dx,pNew[1]-dy];const p=wun(cNew[0],cNew[1],newZ);V.lon=p[0];V.lat=p[1];V.z=newZ}else{V.z=newZ}if(V.z===V.tz){V.tz=null;V.anchor=null}}else{V.z=V.tz;V.tz=null;V.anchor=null}}if(V.mode!=='globe'&&V.in){const c=wpx(V.lon,V.lat,V.z),p=wun(c[0]-V.in[0]*dt,c[1]-V.in[1]*dt,V.z),f=Math.exp(-4*dt);V.lon=wrapLon(p[0]);V.lat=p[1];V.in=[V.in[0]*f,V.in[1]*f];if(Math.hypot(V.in[0],V.in[1])<8)V.in=null}const ok=!!liveOk(),tracked=trackedTraffic(),hudOn=ok||!!tracked;$('#app').classList.toggle('live',hudOn);$('#app').classList.toggle('own-live',ok);const tx=tracked?'● Tracking '+tracked.id+' · '+(tracked.source==='vatsim'?'VATSIM':'ADS-B'):(ok?'● Live from '+(live.d.src||'simulator'):(deskStatus&&deskStatus.state==='error'?'Bridge: '+(deskStatus.detail||'error — see Pilot → Settings'):deskStatus&&deskStatus.state!=='connected'&&deskStatus.state!=='stopped'?'Bridge: '+(deskStatus.detail||deskStatus.state):wtTxt()));if($('#st').textContent!=tx)$('#st').textContent=tx;if(deskStatus)$('#st').title=deskStatus.detail||deskStatus.state;if(ok)liveStep(dt);else wtStep(dt);if(tracked)trafficHud(tracked);efbBar(ok);if(ok){telHideEmpty();ctTick()}mapScale();fcRender(ok);olTick();if(viewT3)t3Sync(false);return;trav+=CRUISE/3600*dt*WARP;if(trav>=t)trav=0;const p=pos(trav);own.lat=p.lat;own.lon=p.lon;own.hdg=p.hdg;own.alt=alt(trav);own.vs=(alt(trav+.1)-own.alt)*CRUISE/6;
 T.forEach(a=>{const p=fwd(a,a.hdg,a.gs/3600*dt*WARP);a.lat=p.lat;a.lon=p.lon});
 const el=route.length>1?t-trav:0;$('#tGS').textContent=CRUISE;$('#tAL').textContent=Math.round(own.alt/10)*10;$('#tHD').textContent=String(Math.round(own.hdg)%360).padStart(3,'0');$('#tVS').textContent=Math.round(own.vs/50)*50;$('#tDS').textContent=el.toFixed(1);$('#tEt').textContent=hm(el/CRUISE);
 if(V.fol){const q=(sel&&sel.k=='trf')?sel:own;V.lon=q.lon;V.lat=q.lat}}
@@ -4614,13 +4615,11 @@ async function mcPlace(item,page){
   return fit&&fit.medianM<=MC_MAX_ERROR_M?fit:null;
 }
 const MC_MAX_ERROR_M=1500;
-async function mcShow(item){
-  const id=item.icao+'|'+item.title,token=++MC.token,key=(item.cf?'cf:'+item.cf.id:'faa:'+item.icao+':'+item.title);
-  MC.current=id;mcRender();
-  mcStatus(item.icao+' · '+item.title,'Placing the chart on the map…');
-  try{
-    let hit=MC.cache.get(key);
-    if(!hit){
+const mcKey=item=>item.cf?'cf:'+item.cf.id:'faa:'+item.icao+':'+item.title;
+/* Load a chart and fit it to the map once; cached for the layer list and the live chart tracking. */
+async function mcFit(item){
+  const key=mcKey(item);let hit=MC.cache.get(key);
+  if(!hit){
       let page;
       if(item.cf){
         const cf=await import('./js/lib/chartfox.js'),tk=await cf.chartfoxToken();
@@ -4630,9 +4629,21 @@ async function mcShow(item){
         const entry=await mcPlate.plateChart(item.icao);
         page=await mcPlate.renderChart(mcPlate.chartDocumentUrl(item.icao,{chart:item.chart},entry.cycle),{maxWidth:2400});
       }
-      hit={canvas:page.canvas,fit:await mcPlace(item,page)};
+      hit={canvas:page.canvas,fit:await mcPlace(item,page),names:new Set((page.labels||[]).map(l=>String(l.text||'').toUpperCase().replace(/[^A-Z0-9]/g,'')).filter(Boolean))};
       MC.cache.set(key,hit);
     }
+  return hit;
+}
+function mcLayerFor(item,key,hit){
+  return {key,icao:item.icao,kind:item.kind,name:item.icao+' '+item.title,canvas:hit.canvas,fit:hit.fit,visible:true,opacity:80,
+    info:'Placed on '+hit.fit.idents.slice(0,5).join(', ')+' (±'+hit.fit.medianM+' m)'+(item.cf?' · ChartFox':' · FAA')};
+}
+async function mcShow(item){
+  const id=item.icao+'|'+item.title,token=++MC.token,key=mcKey(item);
+  MC.current=id;mcRender();
+  mcStatus(item.icao+' · '+item.title,'Placing the chart on the map…');
+  try{
+    const hit=await mcFit(item);
     if(token!==MC.token)return;
     const fit=hit.fit;
     const viewer='<a href="efb.html#/charts?icao='+encodeURIComponent(item.icao)+'">Open it in Charts</a>';
@@ -4640,12 +4651,44 @@ async function mcShow(item){
       mcStatus(item.icao+' · '+item.title,'Not on the map: this chart is not drawn to scale, or it names no point the navigation data knows. '+viewer+'.');
       return
     }
-    mcAddLayer({key,icao:item.icao,kind:item.kind,name:item.icao+' '+item.title,canvas:hit.canvas,fit,visible:true,opacity:80,
-      info:'Placed on '+fit.idents.slice(0,5).join(', ')+' (±'+fit.medianM+' m)'+(item.cf?' · ChartFox':' · FAA')});
+    mcAddLayer(mcLayerFor(item,key,hit));
     mcStatus(item.icao+' · '+item.title,'On the map, placed on '+fit.idents.slice(0,5).join(', ')+' (±'+fit.medianM+' m).');
   }catch(error){
     if(token===MC.token)mcStatus(item.icao+' · '+item.title,'This chart could not be loaded: '+esc(String((error&&error.message)||error)))
   }
+}
+/* Live tracking on charts: when the next fix of your live flight is printed on one of the
+   route's charts, ask once whether to continue on that chart. Yes opens it in Charts.
+   The route's charts are read in the background while you fly, so the question comes
+   without a wait; the chart does not have to be drawn to scale. */
+const CT={at:0,busy:false,asked:new Set(),failed:new Set(),timer:0};
+const CT_RANGE_NM=40;
+async function ctPrefetch(){
+  if(CT.busy)return;CT.busy=true;
+  try{for(const item of MC.route){const key=mcKey(item);if(MC.cache.has(key)||CT.failed.has(key))continue;
+    try{await mcLibs();await mcFit(item)}catch(_){CT.failed.add(key)}}}
+  finally{CT.busy=false}
+}
+function ctTick(){
+  const now=performance.now();if(now-CT.at<2000)return;CT.at=now;
+  if(!liveOk()||!MC.route.length||!$('#ctAsk').hidden)return;
+  ctPrefetch();
+  const nx=liveNext();if(!nx||nx.nm>CT_RANGE_NM)return;
+  const fix=String(nx.point.id||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(fix.length<2)return;
+  for(const item of MC.route){
+    const key=mcKey(item),hit=MC.cache.get(key);
+    if(!hit||!hit.names||CT.asked.has(key))continue;
+    if(hit.names.has(fix)){ctAsk(item,key,fix);return}
+  }
+}
+function ctAsk(item,key,fix){
+  CT.asked.add(key);
+  const el=$('#ctAsk');
+  el.innerHTML='<span class="ct-k">'+esc(fix)+' is on '+esc(item.icao+' '+item.title)+'</span><b>Continue track on '+esc(item.title)+'?</b><div class="ct-b"><button type="button" data-ct="yes">Yes</button><button type="button" data-ct="no">No</button></div>';
+  el.hidden=false;clearTimeout(CT.timer);CT.timer=setTimeout(()=>{el.hidden=true},45000);
+  el.onclick=e=>{const b=e.target.closest('[data-ct]');if(!b)return;el.hidden=true;clearTimeout(CT.timer);
+    if(b.dataset.ct!=='yes')return;
+    location.href='efb.html#/charts?icao='+encodeURIComponent(item.icao)+'&chart='+encodeURIComponent(item.title)};
 }
 /* The route's georeferenced ChartFox charts (SID, STAR, approach) join the layer
    list by themselves, by the same fix-name fit. Re-read when the route changes. */

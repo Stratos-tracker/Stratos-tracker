@@ -77,3 +77,67 @@ export function fitChart(labels, refs, project, { metresPerUnit = () => 1, minAg
     medianM: Math.round(metres[Math.floor(metres.length / 2)]),
   };
 }
+
+/* ── Where the aircraft is on a chart, from the fixes the chart prints ──────
+   Works on charts that are not drawn to scale: the position comes from the
+   fixes nearest the aircraft, not from one fit of the whole sheet. Over a
+   printed fix (within snapNm) the aircraft sits on that fix's label; between
+   fixes it is mapped with the affine transform of the three nearest fixes
+   that are not in a line (two give a similarity, one alone is not enough).
+   labels: [{ text, x, y }] in sheet units; refs: Map(IDENT -> { lat, lon }).
+   -> { x, y, rot, on, via } or null. rot is the chart angle of true north. */
+const RAD = Math.PI / 180;
+const merc = (lat, lon) => [lon * RAD, Math.log(Math.tan(Math.PI / 4 + Math.max(-85, Math.min(85, lat)) * RAD / 2))];
+function gcNm(lat1, lon1, lat2, lon2) {
+  const a = Math.sin((lat2 - lat1) * RAD / 2) ** 2 + Math.cos(lat1 * RAD) * Math.cos(lat2 * RAD) * Math.sin((lon2 - lon1) * RAD / 2) ** 2;
+  return 3440.065 * 2 * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+export function placeOnChart(labels, refs, lat, lon, { snapNm = 0.6, maxNm = 60 } = {}) {
+  if (!refs || !Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  const byId = new Map();
+  for (const label of Array.isArray(labels) ? labels : []) {
+    const id = String((label && label.text) || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    // Two-letter tokens (runway sides, units) are too ambiguous to place by.
+    if (id.length < 3 || byId.has(id)) continue;
+    const ref = refs.get(id);
+    if (!ref || !Number.isFinite(ref.lat) || !Number.isFinite(ref.lon)) continue;
+    byId.set(id, { id, sx: label.x, sy: label.y, lat: ref.lat, lon: ref.lon, w: merc(ref.lat, ref.lon), d: gcNm(lat, lon, ref.lat, ref.lon) });
+  }
+  const pts = [...byId.values()].sort((a, b) => a.d - b.d);
+  if (!pts.length || pts[0].d > maxNm) return null;
+  const near = pts.slice(0, 8);
+  let T = null, via = [];
+  // Affine from the nearest three fixes that span an area.
+  for (let i = 0; i < near.length && !T; i++) for (let j = i + 1; j < near.length && !T; j++) for (let k = j + 1; k < near.length && !T; k++) {
+    const [p, q, r] = [near[i], near[j], near[k]];
+    const det = (q.w[0] - p.w[0]) * (r.w[1] - p.w[1]) - (r.w[0] - p.w[0]) * (q.w[1] - p.w[1]);
+    const span = Math.max(Math.hypot(q.w[0] - p.w[0], q.w[1] - p.w[1]), Math.hypot(r.w[0] - p.w[0], r.w[1] - p.w[1])) ** 2;
+    if (!(Math.abs(det) > span * 0.08)) continue;
+    const solve = (vp, vq, vr) => {
+      const a = ((vq - vp) * (r.w[1] - p.w[1]) - (vr - vp) * (q.w[1] - p.w[1])) / det;
+      const b = ((vr - vp) * (q.w[0] - p.w[0]) - (vq - vp) * (r.w[0] - p.w[0])) / det;
+      return [a, b, vp - a * p.w[0] - b * p.w[1]];
+    };
+    const X = solve(p.sx, q.sx, r.sx), Y = solve(p.sy, q.sy, r.sy);
+    T = (x, y) => [X[0] * x + X[1] * y + X[2], Y[0] * x + Y[1] * y + Y[2]];
+    via = [p.id, q.id, r.id];
+  }
+  if (!T && near.length >= 2) {
+    // Two fixes: rotation, scale and shift (the sheet's y runs down, so mirror it).
+    const [p, q] = near;
+    const dw = [q.w[0] - p.w[0], -(q.w[1] - p.w[1])], ds = [q.sx - p.sx, q.sy - p.sy];
+    const n = dw[0] ** 2 + dw[1] ** 2;
+    if (n > 0) {
+      const c = (ds[0] * dw[0] + ds[1] * dw[1]) / n, s = (ds[1] * dw[0] - ds[0] * dw[1]) / n;
+      T = (x, y) => { const u = x - p.w[0], v = -(y - p.w[1]); return [p.sx + c * u - s * v, p.sy + s * u + c * v]; };
+      via = [p.id, q.id];
+    }
+  }
+  const [ax, ay] = merc(lat, lon);
+  const on = pts[0].d <= snapNm ? pts[0].id : '';
+  let pos = on ? [pts[0].sx, pts[0].sy] : T ? T(ax, ay) : null;
+  if (!pos || !pos.every(Number.isFinite)) return null;
+  let rot = 0;
+  if (T) { const a = T(ax, ay), b = T(ax, ay + 0.001); rot = Math.atan2(b[0] - a[0], -(b[1] - a[1])); }
+  return { x: pos[0], y: pos[1], rot, on, via: on ? [on] : via };
+}

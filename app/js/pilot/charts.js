@@ -166,6 +166,7 @@ export class ChartViewer {
     const next = Math.max(1, Math.min(this.doc.numPages, Math.round(number)));
     if (next === this.pageNumber) return;
     this.pageNumber = next;
+    this.labelCache = null;
     this.offset = { x: 0, y: 0 };
     this.render().catch(error => this.onState({ error: error.message }));
   }
@@ -294,6 +295,52 @@ export class ChartViewer {
 
   apply() {
     this.canvas.style.transform = `translate3d(${this.offset.x.toFixed(1)}px, ${this.offset.y.toFixed(1)}px, 0)`;
+    this.placeMarker();
+  }
+
+  /* The labels the current page prints, in page units at scale 1 (see plate.js). */
+  async pageLabels() {
+    if (!this.doc) return [];
+    const key = this.pageNumber;
+    if (this.labelCache && this.labelCache.page === key) return this.labelCache.labels;
+    const page = await this.doc.getPage(key);
+    const viewport = page.getViewport({ scale: 1 });
+    const labels = [];
+    try {
+      const content = await page.getTextContent();
+      for (const item of content.items) {
+        const text = String((item && item.str) || '').trim();
+        const t = item && item.transform;
+        if (!text || !t) continue;
+        const [x0, y0] = viewport.convertToViewportPoint(t[4], t[5]);
+        const len = Math.hypot(t[0], t[1]) || 1, ux = t[0] / len, uy = t[1] / len, adv = Math.abs(Number(item.width) || 0);
+        labels.push({ text, x: x0 + ux * adv / 2, y: y0 - uy * adv / 2 });
+      }
+    } catch (_) { /* no text layer: nothing to place by */ }
+    this.labelCache = { page: key, labels };
+    return labels;
+  }
+
+  /* The live aircraft on the page: { x, y } in page units at scale 1, hdg in
+     degrees on the sheet (0 = up). null hides it. */
+  setMarker(marker) {
+    this.marker = marker;
+    if (marker && !this.markerEl) {
+      this.markerEl = document.createElement('div');
+      this.markerEl.className = 'chart-ownship';
+      this.markerEl.innerHTML = '<svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M12 2.5c.8 0 1.3.9 1.3 2v5.2l7.2 4.3v2l-7.2-2.2v4.6l2.2 1.7V22L12 21l-3.5 1v-1.9l2.2-1.7v-4.6L3.5 16v-2l7.2-4.3V4.5c0-1.1.5-2 1.3-2z" fill="#22d3ee" stroke="#04121c" stroke-width="1.1" stroke-linejoin="round"/></svg>';
+      this.stage.appendChild(this.markerEl);
+    }
+    this.placeMarker();
+  }
+
+  placeMarker() {
+    if (!this.markerEl) return;
+    const m = this.marker;
+    this.markerEl.hidden = !m;
+    if (!m) return;
+    const x = this.offset.x + m.x * this.scale, y = this.offset.y + m.y * this.scale;
+    this.markerEl.style.transform = `translate3d(${(x - 15).toFixed(1)}px, ${(y - 15).toFixed(1)}px, 0) rotate(${(m.hdg || 0).toFixed(1)}deg)`;
   }
 
   destroy() {
