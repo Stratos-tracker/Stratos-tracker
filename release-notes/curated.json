@@ -1,4 +1,26 @@
 {
+  "2.4.16": {
+    "summary": "Type-specific takeoff performance, a cleaner telemetry bar and one-tap flight plan import in the EFB.",
+    "changelog": {
+      "features": [
+        "The EFB has an IMPORT F-PLN button top right, and it fetches your SimBrief plan automatically when you open it and every 5 minutes.",
+        "Takeoff performance now shows accelerate-go distance, the engine-out climb gradient, the maximum takeoff weight and which limit sets it (structural, runway or climb)."
+      ],
+      "improvements": [
+        "Takeoff speeds, thrust and climb use data for each aircraft type (A320 family, 737, 777, A330, A340 and others) instead of one formula, so V1, VR and V2 are no longer too low.",
+        "ETE and ETA on the telemetry bar are now distance remaining along your route divided by groundspeed."
+      ],
+      "fixes": [
+        "The next-waypoint distance on the telemetry bar follows your aircraft."
+      ],
+      "performance": [],
+      "ui": [
+        "The telemetry bar sits at the bottom, appears only while your own aircraft is live, and hides fields with no value instead of showing dashes."
+      ],
+      "compatibility": [],
+      "other": []
+    }
+  },
   "2.4.15": {
     "summary": "A Navigraph-style flight card, a Flight tab for your OFP, airport info on the map and a more professional map style.",
     "changelog": {

@@ -1,52 +1,36 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.4.15",
+  "latestVersion": "2.4.16",
   "minimumSupportedVersion": "",
   "mandatory": false,
-  "releaseDate": "2026-11-25",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.15/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.15/Stratos-Setup.exe",
-      "sha256": "0fcd4988f32ab499567e61ca5b7882c6c1d8f65fa9b740483b7ad9813b3691c7",
-      "size": 119593337
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.15/Stratos-2.4.15-mac-x64.dmg",
-      "sha256": "0114b4be121d3ce1eba2ef6a73aafa553c3dcbdf018ad290feedd3597888451a",
-      "size": 143203062
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.15/Stratos-2.4.15-linux-x64.AppImage",
-      "sha256": "1ad11af227b36e94edb8666b9fad5283cea30031eb6a606a148ec4c572ee0d8a",
-      "size": 160837101
-    }
-  },
-  "summary": "A Navigraph-style flight card, a Flight tab for your OFP, airport info on the map and a more professional map style.",
+  "releaseDate": "2026-11-26",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "Type-specific takeoff performance, a cleaner telemetry bar and one-tap flight plan import in the EFB.",
   "reason": "",
   "releaseNotes": [
-    "The phone has a Flight tab that opens your OFP: departure and arrival side by side, the route, when it was imported, and the key figures.",
-    "Click an airport on the map to see its info, weather and charts.",
-    "The map has an EFB look: a thin route with the active leg in cyan, small waypoint triangles, airport symbols showing their runway, a 2-minute track line and fewer traffic labels.",
-    "Phone tabs open their page directly, without the lock screen.",
-    "The OFP shows at once instead of waiting for the weather.",
-    "The OFP page no longer tags every value with OFP."
+    "The EFB has an IMPORT F-PLN button top right, and it fetches your SimBrief plan automatically when you open it and every 5 minutes.",
+    "Takeoff performance now shows accelerate-go distance, the engine-out climb gradient, the maximum takeoff weight and which limit sets it (structural, runway or climb).",
+    "Takeoff speeds, thrust and climb use data for each aircraft type (A320 family, 737, 777, A330, A340 and others) instead of one formula, so V1, VR and V2 are no longer too low.",
+    "ETE and ETA on the telemetry bar are now distance remaining along your route divided by groundspeed.",
+    "The next-waypoint distance on the telemetry bar follows your aircraft.",
+    "The telemetry bar sits at the bottom, appears only while your own aircraft is live, and hides fields with no value instead of showing dashes."
   ],
   "notes": {
     "features": [
-      "The phone has a Flight tab that opens your OFP: departure and arrival side by side, the route, when it was imported, and the key figures.",
-      "Click an airport on the map to see its info, weather and charts."
+      "The EFB has an IMPORT F-PLN button top right, and it fetches your SimBrief plan automatically when you open it and every 5 minutes.",
+      "Takeoff performance now shows accelerate-go distance, the engine-out climb gradient, the maximum takeoff weight and which limit sets it (structural, runway or climb)."
     ],
     "improvements": [
-      "The map has an EFB look: a thin route with the active leg in cyan, small waypoint triangles, airport symbols showing their runway, a 2-minute track line and fewer traffic labels.",
-      "Phone tabs open their page directly, without the lock screen."
+      "Takeoff speeds, thrust and climb use data for each aircraft type (A320 family, 737, 777, A330, A340 and others) instead of one formula, so V1, VR and V2 are no longer too low.",
+      "ETE and ETA on the telemetry bar are now distance remaining along your route divided by groundspeed."
     ],
     "fixes": [
-      "The OFP shows at once instead of waiting for the weather."
+      "The next-waypoint distance on the telemetry bar follows your aircraft."
     ],
     "performance": [],
     "ui": [
-      "The OFP page no longer tags every value with OFP."
+      "The telemetry bar sits at the bottom, appears only while your own aircraft is live, and hides fields with no value instead of showing dashes."
     ],
     "compatibility": [],
     "other": []
