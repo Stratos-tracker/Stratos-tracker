@@ -1,4 +1,21 @@
 {
+  "2.4.17": {
+    "summary": "Live tracking on charts: Stratos offers the chart for the fix you're flying to and shows your aircraft on it.",
+    "changelog": {
+      "features": [
+        "When your next fix is printed on one of your route's charts, the Flight Deck asks \"Continue track on {chart}?\" and Yes opens that chart in Charts.",
+        "Charts shows your live aircraft on the open chart, in the same place as on the Flight Deck, even on charts that are not drawn to scale."
+      ],
+      "improvements": [
+        "Charts can be opened straight to one chart from a link."
+      ],
+      "fixes": [],
+      "performance": [],
+      "ui": [],
+      "compatibility": [],
+      "other": []
+    }
+  },
   "2.4.16": {
     "summary": "Type-specific takeoff performance, a cleaner telemetry bar and one-tap flight plan import in the EFB.",
     "changelog": {
@@ -251,31 +268,6 @@
       ],
       "compatibility": [],
       "other": []
-    }
-  },
-  "2.1.45": {
-    "summary": "A chart on the map can now be placed with two snapped clicks, then moved, turned and sized by hand. Charts are drawn in their own page scale and re-rendered sharper as you enlarge them, and Airmate joins as a source with the georeferencing it publishes.",
-    "changelog": {
-      "features": [
-        "Align takes two clicks: the chart click snaps to the end of a drawn runway band, the map click to a published threshold, so the pair names the runway ends that placed the sheet.",
-        "One lock replaces the eight nudge arrows: unlocked, drag moves the chart, Shift-drag turns it and Alt-drag sizes it, one screen pixel following the pointer at any zoom.",
-        "Turn and Size sliders set the same corrections to a tenth of a degree and a percent, from 1% to 400%, saved with the placement.",
-        "Airmate joins as a chart source: the catalogue is fetched server-side with the licence key, documents are proxied, and its georeferencing places a plate from metadata alone.",
-        "Charts are measured in the page own points and rendered again at the resolution the screen asks for, so an enlarged plate stays sharp instead of magnifying its pixels."
-      ],
-      "improvements": [
-        "US charts come from the licensed Airmate source; the FAA d-TPP sheets are no longer offered beside it.",
-        "Unlicensed, a US airport names the source its charts need instead of showing a second-best plate.",
-        "The catalogue no longer lets the browser HTTP cache answer with a source that has since changed hands.",
-        "A stored placement survives a change of render resolution, because its points are kept in page coordinates."
-      ],
-      "fixes": [
-        "Dragging a chart at a size other than 100% moved it a fraction of the distance the pointer did.",
-        "Chart labels are anchored at their printed centre and grouped along their own direction, which brought a STAR label fit from 1.6 km to 0.6 km of residual."
-      ],
-      "other": [
-        "Includes the in-cycle work on anchoring the estimated field and the VATSIM ATC layer."
-      ]
     }
   },
   "2.2.2": {

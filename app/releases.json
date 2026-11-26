@@ -3,53 +3,46 @@
   "product": "stratos",
   "source": "https://github.com/Stratos-tracker/Stratos-tracker",
   "latest": {
-    "version": "2.4.16",
+    "version": "2.4.17",
     "releasedAt": "2026-11-26",
     "severity": "normal",
-    "summary": "Type-specific takeoff performance, a cleaner telemetry bar and one-tap flight plan import in the EFB.",
+    "summary": "Live tracking on charts: Stratos offers the chart for the fix you're flying to and shows your aircraft on it.",
     "changelog": {
       "features": [
-        "The EFB has an IMPORT F-PLN button top right, and it fetches your SimBrief plan automatically when you open it and every 5 minutes.",
-        "Takeoff performance now shows accelerate-go distance, the engine-out climb gradient, the maximum takeoff weight and which limit sets it (structural, runway or climb)."
+        "When your next fix is printed on one of your route's charts, the Flight Deck asks \"Continue track on {chart}?\" and Yes opens that chart in Charts.",
+        "Charts shows your live aircraft on the open chart, in the same place as on the Flight Deck, even on charts that are not drawn to scale."
       ],
       "improvements": [
-        "Takeoff speeds, thrust and climb use data for each aircraft type (A320 family, 737, 777, A330, A340 and others) instead of one formula, so V1, VR and V2 are no longer too low.",
-        "ETE and ETA on the telemetry bar are now distance remaining along your route divided by groundspeed."
+        "Charts can be opened straight to one chart from a link."
       ],
-      "fixes": [
-        "The next-waypoint distance on the telemetry bar follows your aircraft."
-      ],
+      "fixes": [],
       "performance": [],
-      "ui": [
-        "The telemetry bar sits at the bottom, appears only while your own aircraft is live, and hides fields with no value instead of showing dashes."
-      ],
+      "ui": [],
       "compatibility": [],
       "other": []
-    },
-    "downloads": {
-      "windows": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.16/Stratos-Setup.exe",
-        "sha256": "dfe78cdc6d95259f05972358b38234e1a1dfccf1999d5a7950d88db02cbc668c",
-        "size": 119600660
-      },
-      "mac-arm64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.16/Stratos-2.4.16-mac-arm64.dmg",
-        "sha256": "065f03f761b4462e5d1edb65f76aba6497817220d3fe1154585ad1c3b33732d7",
-        "size": 137797295
-      },
-      "mac-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.16/Stratos-2.4.16-mac-x64.dmg",
-        "sha256": "e9e69aa3a4ff8104afc65f7f380123b91f6f2f79b16f4f9724d90848ac5eb8a7",
-        "size": 143217766
-      },
-      "linux-x64": {
-        "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.16/Stratos-2.4.16-linux-x64.AppImage",
-        "sha256": "d285312b6c78982a4cc36bec6e7e9627207e31acfe21af594f48567f497d265a",
-        "size": 160841386
-      }
     }
   },
   "releases": [
+    {
+      "version": "2.4.17",
+      "releasedAt": "2026-11-26",
+      "severity": "normal",
+      "summary": "Live tracking on charts: Stratos offers the chart for the fix you're flying to and shows your aircraft on it.",
+      "changelog": {
+        "features": [
+          "When your next fix is printed on one of your route's charts, the Flight Deck asks \"Continue track on {chart}?\" and Yes opens that chart in Charts.",
+          "Charts shows your live aircraft on the open chart, in the same place as on the Flight Deck, even on charts that are not drawn to scale."
+        ],
+        "improvements": [
+          "Charts can be opened straight to one chart from a link."
+        ],
+        "fixes": [],
+        "performance": [],
+        "ui": [],
+        "compatibility": [],
+        "other": []
+      }
+    },
     {
       "version": "2.4.16",
       "releasedAt": "2026-11-26",
@@ -1323,49 +1316,6 @@
           "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.2.0/Stratos-2.2.0-linux-x64.AppImage",
           "sha256": "24d774420464c0a2cb0860e7d256ed0ca7a8cea573c08f1b2ad3373bb4fbdd2a",
           "size": 158910518
-        }
-      }
-    },
-    {
-      "version": "2.1.45",
-      "releasedAt": "2026-11-13",
-      "severity": "normal",
-      "summary": "A chart on the map can now be placed with two snapped clicks, then moved, turned and sized by hand. Charts are drawn in their own page scale and re-rendered sharper as you enlarge them, and Airmate joins as a source with the georeferencing it publishes.",
-      "changelog": {
-        "features": [
-          "Align takes two clicks: the chart click snaps to the end of a drawn runway band, the map click to a published threshold, so the pair names the runway ends that placed the sheet.",
-          "One lock replaces the eight nudge arrows: unlocked, drag moves the chart, Shift-drag turns it and Alt-drag sizes it, one screen pixel following the pointer at any zoom.",
-          "Turn and Size sliders set the same corrections to a tenth of a degree and a percent, from 1% to 400%, saved with the placement.",
-          "Airmate joins as a chart source: the catalogue is fetched server-side with the licence key, documents are proxied, and its georeferencing places a plate from metadata alone.",
-          "Charts are measured in the page own points and rendered again at the resolution the screen asks for, so an enlarged plate stays sharp instead of magnifying its pixels."
-        ],
-        "improvements": [
-          "US charts come from the licensed Airmate source; the FAA d-TPP sheets are no longer offered beside it.",
-          "Unlicensed, a US airport names the source its charts need instead of showing a second-best plate.",
-          "The catalogue no longer lets the browser HTTP cache answer with a source that has since changed hands.",
-          "A stored placement survives a change of render resolution, because its points are kept in page coordinates."
-        ],
-        "fixes": [
-          "Dragging a chart at a size other than 100% moved it a fraction of the distance the pointer did.",
-          "Chart labels are anchored at their printed centre and grouped along their own direction, which brought a STAR label fit from 1.6 km to 0.6 km of residual."
-        ],
-        "performance": [],
-        "ui": [],
-        "compatibility": [],
-        "other": [
-          "Includes the in-cycle work on anchoring the estimated field and the VATSIM ATC layer."
-        ]
-      },
-      "downloads": {
-        "windows": {
-          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.45/Stratos-Setup.exe",
-          "sha256": "9964879e78b9bc76baa56cb00dd5d40e334ac88ce29e2f37cfc26a9229099343",
-          "size": 118894239
-        },
-        "linux-x64": {
-          "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.1.45/Stratos-2.1.45-linux-x64.AppImage",
-          "sha256": "27e2af5532020ff8e71864326bcaeb03e9198be72de67dd901027a9c4150b458",
-          "size": 158827916
         }
       }
     }

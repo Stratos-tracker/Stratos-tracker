@@ -1,58 +1,29 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.4.16",
+  "latestVersion": "2.4.17",
   "minimumSupportedVersion": "",
   "mandatory": false,
   "releaseDate": "2026-11-26",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.16/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.16/Stratos-Setup.exe",
-      "sha256": "dfe78cdc6d95259f05972358b38234e1a1dfccf1999d5a7950d88db02cbc668c",
-      "size": 119600660
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.16/Stratos-2.4.16-mac-arm64.dmg",
-      "sha256": "065f03f761b4462e5d1edb65f76aba6497817220d3fe1154585ad1c3b33732d7",
-      "size": 137797295
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.16/Stratos-2.4.16-mac-x64.dmg",
-      "sha256": "e9e69aa3a4ff8104afc65f7f380123b91f6f2f79b16f4f9724d90848ac5eb8a7",
-      "size": 143217766
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.16/Stratos-2.4.16-linux-x64.AppImage",
-      "sha256": "d285312b6c78982a4cc36bec6e7e9627207e31acfe21af594f48567f497d265a",
-      "size": 160841386
-    }
-  },
-  "summary": "Type-specific takeoff performance, a cleaner telemetry bar and one-tap flight plan import in the EFB.",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "Live tracking on charts: Stratos offers the chart for the fix you're flying to and shows your aircraft on it.",
   "reason": "",
   "releaseNotes": [
-    "The EFB has an IMPORT F-PLN button top right, and it fetches your SimBrief plan automatically when you open it and every 5 minutes.",
-    "Takeoff performance now shows accelerate-go distance, the engine-out climb gradient, the maximum takeoff weight and which limit sets it (structural, runway or climb).",
-    "Takeoff speeds, thrust and climb use data for each aircraft type (A320 family, 737, 777, A330, A340 and others) instead of one formula, so V1, VR and V2 are no longer too low.",
-    "ETE and ETA on the telemetry bar are now distance remaining along your route divided by groundspeed.",
-    "The next-waypoint distance on the telemetry bar follows your aircraft.",
-    "The telemetry bar sits at the bottom, appears only while your own aircraft is live, and hides fields with no value instead of showing dashes."
+    "When your next fix is printed on one of your route's charts, the Flight Deck asks \"Continue track on {chart}?\" and Yes opens that chart in Charts.",
+    "Charts shows your live aircraft on the open chart, in the same place as on the Flight Deck, even on charts that are not drawn to scale.",
+    "Charts can be opened straight to one chart from a link."
   ],
   "notes": {
     "features": [
-      "The EFB has an IMPORT F-PLN button top right, and it fetches your SimBrief plan automatically when you open it and every 5 minutes.",
-      "Takeoff performance now shows accelerate-go distance, the engine-out climb gradient, the maximum takeoff weight and which limit sets it (structural, runway or climb)."
+      "When your next fix is printed on one of your route's charts, the Flight Deck asks \"Continue track on {chart}?\" and Yes opens that chart in Charts.",
+      "Charts shows your live aircraft on the open chart, in the same place as on the Flight Deck, even on charts that are not drawn to scale."
     ],
     "improvements": [
-      "Takeoff speeds, thrust and climb use data for each aircraft type (A320 family, 737, 777, A330, A340 and others) instead of one formula, so V1, VR and V2 are no longer too low.",
-      "ETE and ETA on the telemetry bar are now distance remaining along your route divided by groundspeed."
+      "Charts can be opened straight to one chart from a link."
     ],
-    "fixes": [
-      "The next-waypoint distance on the telemetry bar follows your aircraft."
-    ],
+    "fixes": [],
     "performance": [],
-    "ui": [
-      "The telemetry bar sits at the bottom, appears only while your own aircraft is live, and hides fields with no value instead of showing dashes."
-    ],
+    "ui": [],
     "compatibility": [],
     "other": []
   }
