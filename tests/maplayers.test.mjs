@@ -69,3 +69,20 @@ test('the aircraft is placed on a chart from the fixes it prints, even when not 
   assert.ok(Math.abs(mid.rot) < .01, 'north up on a north-up chart');
   assert.equal(placeOnChart(labels, refs, 10, 10), null, 'far from every printed fix, it is not shown');
 });
+
+test('on a chart not drawn to scale, the aircraft stays on the printed leg and fixes sit on their symbols', async () => {
+  const { placeOnChart } = await import('../app/js/lib/chartfit.js');
+  // Three fixes in a line on the ground, printed as a dog-leg on the sheet.
+  const refs = new Map([['AAAAA', { lat: 47, lon: -122 }], ['BBBBB', { lat: 47.5, lon: -122 }], ['CCCCC', { lat: 48, lon: -122 }]]);
+  const labels = [{ text: 'AAAAA', x: 130, y: 500 }, { text: 'BBBBB', x: 330, y: 300 }, { text: 'CCCCC', x: 130, y: 100 }];
+  // Each symbol is printed 25 units left of its name.
+  const symbols = [{ x: 105, y: 500 }, { x: 305, y: 300 }, { x: 105, y: 100 }];
+  const route = ['AAAAA', 'BBBBB', 'CCCCC'];
+  const half = placeOnChart(labels, refs, 47.25, -122, { symbols, route });
+  assert.ok(half.leg, 'it follows the leg being flown');
+  assert.ok(Math.abs(half.x - 205) < 1 && Math.abs(half.y - 400) < 1, 'halfway along the first printed leg, between the two symbols');
+  const at = placeOnChart(labels, refs, 47.5, -122, { symbols, route });
+  assert.ok(Math.abs(at.x - 305) < 1 && Math.abs(at.y - 300) < 1, 'over a fix it sits on the symbol, not the name');
+  const off = placeOnChart(labels, refs, 47.25, -119, { symbols, route });
+  assert.ok(!off || !off.leg, 'far off the route it does not pretend to be on a leg');
+});

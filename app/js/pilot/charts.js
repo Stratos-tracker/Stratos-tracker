@@ -317,8 +317,49 @@ export class ChartViewer {
         labels.push({ text, x: x0 + ux * adv / 2, y: y0 - uy * adv / 2 });
       }
     } catch (_) { /* no text layer: nothing to place by */ }
-    this.labelCache = { page: key, labels };
+    this.labelCache = { page: key, labels, symbols: null };
     return labels;
+  }
+
+  /* Centres of the small, square-ish vector shapes on the page (fix and navaid
+     symbols), in the same units as pageLabels(). */
+  async pageSymbols() {
+    await this.pageLabels();
+    const cache = this.labelCache;
+    if (cache.symbols) return cache.symbols;
+    const symbols = [];
+    try {
+      const pdfjs = await loadPdfjs();
+      const O = pdfjs.OPS;
+      const page = await this.doc.getPage(cache.page);
+      const viewport = page.getViewport({ scale: 1 });
+      const ops = await page.getOperatorList();
+      const mul = (m, n) => [m[0] * n[0] + m[2] * n[1], m[1] * n[0] + m[3] * n[1], m[0] * n[2] + m[2] * n[3], m[1] * n[2] + m[3] * n[3], m[0] * n[4] + m[2] * n[5] + m[4], m[1] * n[4] + m[3] * n[5] + m[5]];
+      let ctm = [1, 0, 0, 1, 0, 0];
+      const stack = [], pieces = [];
+      ops.fnArray.forEach((fn, i) => {
+        const args = ops.argsArray[i];
+        if (fn === O.save) stack.push(ctm);
+        else if (fn === O.restore) ctm = stack.pop() || ctm;
+        else if (fn === O.transform) ctm = mul(ctm, args);
+        else if (fn === O.constructPath && args && args[2] && args[2].length >= 4) {
+          const [x0, y0, x1, y1] = args[2];
+          const pts = [[x0, y0], [x1, y1], [x0, y1], [x1, y0]].map(([x, y]) => [ctm[0] * x + ctm[2] * y + ctm[4], ctm[1] * x + ctm[3] * y + ctm[5]]);
+          const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+          const w = Math.max(...xs) - Math.min(...xs), h = Math.max(...ys) - Math.min(...ys);
+          if (w >= 1.5 && w <= 26 && h >= 1.5 && h <= 26) {
+            const [x, y] = viewport.convertToViewportPoint((Math.max(...xs) + Math.min(...xs)) / 2, (Math.max(...ys) + Math.min(...ys)) / 2);
+            pieces.push({ x, y, w, h });
+          }
+        }
+      });
+      // Fix symbols are compact, roughly square marks: a star about 10 pt across, a
+      // circled fly-over fix up to about 24 pt. Bigger or stretched shapes are lines,
+      // arrows and boxes.
+      for (const p of pieces) if (p.w >= 6 && p.w <= 24 && p.h >= 6 && p.h <= 24 && p.w / p.h > 0.8 && p.w / p.h < 1.25) symbols.push({ x: p.x, y: p.y });
+    } catch (_) { /* no vector layer: labels alone */ }
+    cache.symbols = symbols;
+    return symbols;
   }
 
   /* The live aircraft on the page: { x, y } in page units at scale 1, hdg in

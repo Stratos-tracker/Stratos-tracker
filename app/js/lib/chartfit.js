@@ -92,7 +92,7 @@ function gcNm(lat1, lon1, lat2, lon2) {
   const a = Math.sin((lat2 - lat1) * RAD / 2) ** 2 + Math.cos(lat1 * RAD) * Math.cos(lat2 * RAD) * Math.sin((lon2 - lon1) * RAD / 2) ** 2;
   return 3440.065 * 2 * Math.asin(Math.min(1, Math.sqrt(a)));
 }
-export function placeOnChart(labels, refs, lat, lon, { snapNm = 0.6, maxNm = 60 } = {}) {
+export function placeOnChart(labels, refs, lat, lon, { snapNm = 0.6, maxNm = 60, symbols = [], snapUnits = 36, route = [] } = {}) {
   if (!refs || !Number.isFinite(lat) || !Number.isFinite(lon)) return null;
   const byId = new Map();
   for (const label of Array.isArray(labels) ? labels : []) {
@@ -103,8 +103,37 @@ export function placeOnChart(labels, refs, lat, lon, { snapNm = 0.6, maxNm = 60 
     if (!ref || !Number.isFinite(ref.lat) || !Number.isFinite(ref.lon)) continue;
     byId.set(id, { id, sx: label.x, sy: label.y, lat: ref.lat, lon: ref.lon, w: merc(ref.lat, ref.lon), d: gcNm(lat, lon, ref.lat, ref.lon) });
   }
+  // The fix itself is the symbol printed next to its name, not the name: pair each
+  // named fix with a nearby symbol, closest pairs first, one symbol per fix.
+  const pairs = [];
+  for (const f of byId.values()) symbols.forEach((s, i) => { const d = Math.hypot(s.x - f.sx, s.y - f.sy); if (d <= snapUnits) pairs.push([d, f, i]); });
+  pairs.sort((a, b) => a[0] - b[0]);
+  const takenFix = new Set(), takenSym = new Set();
+  for (const [, f, i] of pairs) { if (takenFix.has(f.id) || takenSym.has(i)) continue; takenFix.add(f.id); takenSym.add(i); f.sx = symbols[i].x; f.sy = symbols[i].y; }
   const pts = [...byId.values()].sort((a, b) => a.d - b.d);
   if (!pts.length || pts[0].d > maxNm) return null;
+  const [ax0, ay0] = merc(lat, lon);
+  // Flying a leg of the route whose two fixes the chart prints: place the aircraft
+  // along that printed leg by how far along it is. Charts not drawn to scale still
+  // draw each leg as a line between its fixes, so this stays on the line.
+  const ids = (Array.isArray(route) ? route : []).map(r => String(r || '').toUpperCase().replace(/[^A-Z0-9]/g, ''));
+  let leg = null;
+  for (let i = 0; i < ids.length - 1; i++) {
+    const a = byId.get(ids[i]), b = byId.get(ids[i + 1]);
+    if (!a || !b) continue;
+    const dx = b.w[0] - a.w[0], dy = b.w[1] - a.w[1], L2 = dx * dx + dy * dy;
+    if (!L2) continue;
+    const u = ((ax0 - a.w[0]) * dx + (ay0 - a.w[1]) * dy) / L2;
+    if (u < -0.05 || u > 1.05) continue;
+    const cu = Math.max(0, Math.min(1, u)), xt = gcNm(lat, lon, a.lat + (b.lat - a.lat) * cu, a.lon + (b.lon - a.lon) * cu);
+    if (xt <= 8 && (!leg || xt < leg.xt)) leg = { a, b, u: cu, xt };
+  }
+  if (leg) {
+    const { a, b, u } = leg;
+    const chartAngle = Math.atan2(b.sx - a.sx, -(b.sy - a.sy));
+    const trueAngle = Math.atan2(b.w[0] - a.w[0], b.w[1] - a.w[1]);
+    return { x: a.sx + (b.sx - a.sx) * u, y: a.sy + (b.sy - a.sy) * u, rot: chartAngle - trueAngle, on: u < .02 ? a.id : u > .98 ? b.id : '', via: [a.id, b.id], leg: true };
+  }
   const near = pts.slice(0, 8);
   let T = null, via = [];
   // Affine from the nearest three fixes that span an area.

@@ -1009,8 +1009,13 @@ export async function mount(root, ctx) {
     const code = icao;
     if (!ownRefs || ownRefs.icao !== code) ownRefs = { icao: code, refs: await plateReferences(code).catch(() => new Map()) };
     const labels = await v.pageLabels();
+    const symbols = await v.pageSymbols();
     if (v !== viewer || !telemetry) return;
-    const at = placeOnChart(labels, ownRefs.refs, telemetry.lat, telemetry.lon);
+    // The flight plan's own fixes help too: their order picks the leg being flown.
+    const plan = loadRoute();
+    const refs = new Map(ownRefs.refs);
+    for (const p of plan) if (p.id && Number.isFinite(p.lat) && Number.isFinite(p.lon) && !refs.has(p.id)) refs.set(p.id, { lat: p.lat, lon: p.lon });
+    const at = placeOnChart(labels, refs, telemetry.lat, telemetry.lon, { symbols, route: plan.map(p => p.id) });
     if (!at) { v.setMarker(null); return; }
     const track = Number.isFinite(telemetry.trk) ? telemetry.trk : Number(telemetry.hdg) || 0;
     v.setMarker({ x: at.x, y: at.y, hdg: track + at.rot * 180 / Math.PI });
