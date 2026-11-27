@@ -1,4 +1,20 @@
 {
+  "2.4.18": {
+    "summary": "Your aircraft now follows the printed route on charts, even ones that are not drawn to scale.",
+    "changelog": {
+      "features": [],
+      "improvements": [
+        "On a chart in Charts, your live aircraft now moves along the printed leg between the two fixes you're flying between, and sits on each fix's symbol, not its name."
+      ],
+      "fixes": [
+        "On charts marked not to scale (most STARs and SIDs), the aircraft no longer drifts off the route between fixes."
+      ],
+      "performance": [],
+      "ui": [],
+      "compatibility": [],
+      "other": []
+    }
+  },
   "2.4.17": {
     "summary": "Live tracking on charts: Stratos offers the chart for the fix you're flying to and shows your aircraft on it.",
     "changelog": {
@@ -229,42 +245,6 @@
       "performance": [],
       "ui": [
         "The EFB home screen shows the Stratos wing as its default wallpaper; an airline's logo still replaces it when one is set."
-      ],
-      "compatibility": [],
-      "other": []
-    }
-  },
-  "2.2.0": {
-    "summary": "IFR en-route charts, a jet-stream and turbulence map with legends, SIGMETs, holding points and an ILS card, smoother live tracking, and a pro chart workspace with pinned charts, night mode, split view and Auto.",
-    "changelog": {
-      "features": [
-        "IFR Low and IFR High charts on the Flight Deck map and in the Flight Planner: airways with minimum altitudes, Class B/C/D and restricted airspace, and grid MORA, read from X-Plane 12 through the bridge.",
-        "Jet stream layer: upper-level wind speed at a chosen flight level (FL180 to FL450) with isotachs, from Open-Meteo.",
-        "Turbulence layer: the Ellrod clear-air turbulence index between two flight levels, outlined light, moderate and severe.",
-        "SIGMETs and US G-AIRMETs from NOAA: a map layer, and a card in the EFB weather page filtered to the route or station.",
-        "Holding points on the EFB ground chart, with the holds on the taxi route listed.",
-        "ILS and localizer card on the EFB airport page: frequency, course, glide slope and DME from X-Plane 12.",
-        "Chart clipboard, night rendering, split view with a moving map, and Auto chart selection by flight phase."
-      ],
-      "improvements": [
-        "The aircraft moves smoothly between position updates on every live map, phone included.",
-        "Rain radar uses RainViewer's sharper 512 px tiles up to its zoom limit, with a legend for every weather layer.",
-        "With the bridge offline, airport procedures fall back to the bundled FAA data and the ground chart reads OpenStreetMap directly.",
-        "The bridge tries several OpenStreetMap servers when one is down.",
-        "US airports show FAA charts again when no Airmate licence is configured.",
-        "One shared colour and type system for the Flight Deck, the EFB and phones.",
-        "Shorter on-screen text, frequencies as 118.300 and three-digit headings."
-      ],
-      "fixes": [
-        "The EFB airport page showed no published procedures for every airport.",
-        "Opening another airport in the EFB by link did not reload the page.",
-        "SIGMET areas crossing the 180 degree meridian were drawn across the whole map.",
-        "Airway endpoints could not be matched because fixes stored the wrong region."
-      ],
-      "performance": [],
-      "ui": [
-        "On phones, one panel opens at a time and the map starts clear.",
-        "Taxiways on the ground chart are drawn as yellow centrelines."
       ],
       "compatibility": [],
       "other": []

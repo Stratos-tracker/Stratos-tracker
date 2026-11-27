@@ -1,48 +1,25 @@
 {
   "schemaVersion": 1,
-  "latestVersion": "2.4.17",
+  "latestVersion": "2.4.18",
   "minimumSupportedVersion": "",
   "mandatory": false,
-  "releaseDate": "2026-11-26",
-  "downloadUrl": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.17/Stratos-Setup.exe",
-  "downloads": {
-    "windows": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.17/Stratos-Setup.exe",
-      "sha256": "ab9e7670fa36e3d0a82afaca9c18d4d62b84bd87ba98222b89a8ddc0f0a7b953",
-      "size": 119604984
-    },
-    "mac-arm64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.17/Stratos-2.4.17-mac-arm64.dmg",
-      "sha256": "b892a70e2bd362f800c0d3701fa272773572cde7ef2c8546e7460358034cad87",
-      "size": 137797088
-    },
-    "mac-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.17/Stratos-2.4.17-mac-x64.dmg",
-      "sha256": "923983bb26fa59e1e2f9f8c312aaa46a4a97896a1a64789c2d9f12caf5b27961",
-      "size": 143219253
-    },
-    "linux-x64": {
-      "url": "https://github.com/Stratos-tracker/Stratos-tracker/releases/download/v2.4.17/Stratos-2.4.17-linux-x64.AppImage",
-      "sha256": "4df88f491ee4d194b2605d32f0f80f4ade94fb86aca138914cdbd2d32f0dfac7",
-      "size": 160849495
-    }
-  },
-  "summary": "Live tracking on charts: Stratos offers the chart for the fix you're flying to and shows your aircraft on it.",
+  "releaseDate": "2026-11-27",
+  "downloadUrl": "",
+  "downloads": {},
+  "summary": "Your aircraft now follows the printed route on charts, even ones that are not drawn to scale.",
   "reason": "",
   "releaseNotes": [
-    "When your next fix is printed on one of your route's charts, the Flight Deck asks \"Continue track on {chart}?\" and Yes opens that chart in Charts.",
-    "Charts shows your live aircraft on the open chart, in the same place as on the Flight Deck, even on charts that are not drawn to scale.",
-    "Charts can be opened straight to one chart from a link."
+    "On a chart in Charts, your live aircraft now moves along the printed leg between the two fixes you're flying between, and sits on each fix's symbol, not its name.",
+    "On charts marked not to scale (most STARs and SIDs), the aircraft no longer drifts off the route between fixes."
   ],
   "notes": {
-    "features": [
-      "When your next fix is printed on one of your route's charts, the Flight Deck asks \"Continue track on {chart}?\" and Yes opens that chart in Charts.",
-      "Charts shows your live aircraft on the open chart, in the same place as on the Flight Deck, even on charts that are not drawn to scale."
-    ],
+    "features": [],
     "improvements": [
-      "Charts can be opened straight to one chart from a link."
+      "On a chart in Charts, your live aircraft now moves along the printed leg between the two fixes you're flying between, and sits on each fix's symbol, not its name."
     ],
-    "fixes": [],
+    "fixes": [
+      "On charts marked not to scale (most STARs and SIDs), the aircraft no longer drifts off the route between fixes."
+    ],
     "performance": [],
     "ui": [],
     "compatibility": [],
